@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#101713">
-  <title>Touchline 26 — Classic 2D</title>
+  <meta name="theme-color" content="#1b1e2c">
+  <title>Touchline 26 — Club Home</title>
   <style>{{CSS}}</style>
 </head>
 <body>
@@ -25,12 +25,17 @@
     <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
     <symbol id="i-swap" viewBox="0 0 24 24"><path d="M4 8h15m-4-4 4 4-4 4m5 4H5m4-4-4 4 4 4"/></symbol>
     <symbol id="i-shirt" viewBox="0 0 24 24"><path d="m8 3-6 3.5 2.3 5L7 10.2V21h10V10.2l2.7 1.3L22 6.5 16 3h-1a3 3 0 0 1-6 0Z" fill="currentColor" stroke="none"/><path d="M8 3h1a3 3 0 0 0 6 0h1m1 7.2V21H7V10.2" fill="none" stroke="rgba(255,255,255,.34)" stroke-width=".8"/></symbol>
+    {{HOME_ICONS}}
   </svg>
 
+  {{HOME}}
+
+  <div id="matchScreen" hidden>
   <header class="sitebar">
     <div class="sitebar-inner shell">
       <div class="identity" aria-label="Touchline 26"><span class="brandmark"><svg class="icon" aria-hidden="true"><use href="#i-pitch"/></svg></span><span class="wordmark">TOUCHLINE<span>26</span></span></div>
       <span class="site-path">Match centre</span>
+      <button class="button match-home" id="matchHome" type="button" data-return-home><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg><span>Home</span></button>
       <div class="view-label"><svg class="icon" aria-hidden="true"><use href="#i-pitch"/></svg><span>Classic 2D</span></div>
     </div>
   </header>
@@ -38,7 +43,7 @@
   <main class="shell main">
     <section class="fixture-head" aria-label="Fixture">
       <div class="fixture-title">
-        <div class="eyebrow"><i></i> Friendly <span></span> Match centre</div>
+        <div class="eyebrow"><i></i><b id="fixtureCompetition">Friendly</b><span></span>Match centre</div>
         <h1 id="fixtureTitle">Quayside Park</h1>
         <p id="fixtureTeams">Riverside FC <span>vs</span> Northbridge United</p>
       </div>
@@ -152,10 +157,11 @@
 
   <dialog id="breakDialog" class="dialog break-dialog" aria-labelledby="breakTitle">
     <div class="dialog-head"><div><div class="eyebrow"><i></i> Match summary</div><h2 id="breakTitle">Half time</h2></div></div>
-    <div class="dialog-body"><div id="breakScore" class="break-score"></div><div id="breakStats"></div><div class="dialog-actions"><button class="button" id="btnBreakDesk" type="button"><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg> Touchline desk</button><button class="button primary" id="btnBreakContinue" type="button">Second half</button></div></div>
+    <div class="dialog-body"><div id="breakScore" class="break-score"></div><div id="breakStats"></div><div class="dialog-actions"><button class="button break-home" type="button" data-return-home><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg>Home</button><button class="button" id="btnBreakDesk" type="button"><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg> Touchline desk</button><button class="button primary" id="btnBreakContinue" type="button">Second half</button></div></div>
   </dialog>
   <div id="toast" class="toast" role="status" hidden></div>
-  <noscript><p class="noscript">Enable JavaScript to view the pitch and play Touchline 26.</p></noscript>
+  </div>
+  <noscript><p class="noscript">Enable JavaScript to open your club and play Touchline 26.</p></noscript>
   <script>{{JS}}</script>
 </body>
 </html>

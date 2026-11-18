@@ -32,7 +32,7 @@
     selected: null, subMode: null, desk: 'tactics', returnBreak: false,
     buffer: [], replay: null, replayQueue: null, goalFrames: null, events: [], meta: {},
     scout: null, scan: null, scanJob: null, scene: null, visiblePlay: null, nextSearch: null, lineupDirty: false,
-    lastFrame: null, lastFeedWall: 0, previousFlight: null, tileT: 0,
+    frameJob: null, lastFrame: null, lastFeedWall: 0, previousFlight: null, tileT: 0,
     goalTimer: 0, toastTimer: 0, breakQueued: null
   };
 
@@ -43,6 +43,7 @@
   const colorCond = p => p.cond >= .75 ? '#b3da90' : p.cond >= .55 ? '#eed08a' : '#e69482';
   const shapeLabel = s => s.replace(/-/g, '–');
   const portraitKit = color => color === '#334155' ? '#647690' : color === '#15803d' ? '#35a75c' : color;
+  const viewingMatch = () => !$('matchScreen').hidden;
   const activeDialog = () => ['setupDialog', 'deskDialog', 'breakDialog'].some(id => $(id).open);
   const chosenMode = () => V.modeFor(state.config.highlights);
   const filmView = () => state.scene || state.scan;
@@ -117,6 +118,7 @@
     document.documentElement.style.setProperty('--home', home.primary);
     document.documentElement.style.setProperty('--away', away.primary);
     text('fixtureTitle', home.stadium);
+    text('fixtureCompetition', config.competition || 'Friendly');
     text('stadiumStamp', home.stadium);
     $('fixtureTeams').innerHTML = `${html(home.name)} <span>vs</span> ${html(away.name)}`;
     text('nameH', home.short); text('nameA', away.short); text('teamTitle', home.name);
@@ -471,7 +473,7 @@
     if (state.lineupDirty) renderLineup();
   }
 
-  const canScan = () => state.scan && !state.paused && !state.replay && !document.hidden && !activeDialog();
+  const canScan = () => viewingMatch() && state.scan && !state.paused && !state.replay && !document.hidden && !activeDialog();
 
   function stopScanWork() {
     clearTimeout(state.scanJob);
@@ -745,7 +747,8 @@
     });
   }
   function loop(t) {
-    requestAnimationFrame(loop);
+    if (!viewingMatch()) { state.frameJob = null; state.lastFrame = null; return; }
+    state.frameJob = requestAnimationFrame(loop);
     const dt = state.lastFrame == null ? 0 : Math.max(0, Math.min(MAX_FRAME_DT, (t - state.lastFrame) / 1000));
     state.lastFrame = t;
     if (state.breakQueued && !activeDialog()) showBreak(state.breakQueued);
@@ -796,6 +799,7 @@
     $('setupForm').addEventListener('submit', e => {
       e.preventDefault();
       const config = { home: +$('preHome').value, away: +$('preAway').value, formation: $('preForm').value, mentality: +$('preMent').value, auto: $('preReplay').checked, sound: $('preSound').checked, highlights: $('preHighlights').value };
+      if (config.home === state.config.home && config.away === state.config.away) config.competition = state.config.competition;
       $('setupDialog').close(); prepare(config);
     });
     for (const b of document.querySelectorAll('[data-close]')) b.addEventListener('click', () => $(b.dataset.close).close());
@@ -851,7 +855,7 @@
       } else prepare({ ...state.config, formation: state.match.teams[0].tactics.formation, mentality: state.match.teams[0].tactics.mentality });
     });
     document.addEventListener('keydown', e => {
-      if (activeDialog() || e.altKey || e.ctrlKey || e.metaKey || e.repeat || e.target.matches('input, select, textarea, [contenteditable]')) return;
+      if (!viewingMatch() || activeDialog() || e.altKey || e.ctrlKey || e.metaKey || e.repeat || e.target.matches('input, select, textarea, [contenteditable]')) return;
       const key = e.key.toLowerCase();
       if (e.code === 'Space' && !e.target.closest('button')) { e.preventDefault(); togglePlay(); }
       else if (Object.hasOwn(SPEED_SHORTCUTS, key)) setSpeed(SPEED_SHORTCUTS[key]);
@@ -861,12 +865,30 @@
       else if (key === 'escape') { if (state.replay) endReplay(); else selectPlayer(null); }
     });
   }
-  function init() {
-    state.renderer = new global.TLRender.Renderer($('pitch'));
-    wire(); prepare(state.config);
-    if (document.fonts) document.fonts.ready.then(draw);
-    requestAnimationFrame(loop);
+  // Home hides the broadcast without rebuilding its match or advancing a tick.
+  function open(config) {
+    if (!viewingMatch()) return;
+    if (!state.renderer) {
+      state.renderer = new global.TLRender.Renderer($('pitch'));
+      wire(); prepare({ ...state.config, ...config });
+      if (document.fonts) document.fonts.ready.then(() => { if (viewingMatch()) draw(); });
+    } else {
+      state.renderer.resize();
+      A.setMuted(!state.sound);
+      if (V.atBreak(state.match) && !activeDialog()) showBreak(state.match.phase === 'halftime' ? 'ht' : 'ft');
+      else updateHUD();
+      draw();
+    }
+    state.lastFrame = null;
+    if (state.frameJob == null) state.frameJob = requestAnimationFrame(loop);
+    queueScan();
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
-  else init();
+  function suspend() {
+    stopScanWork();
+    if (state.frameJob != null) cancelAnimationFrame(state.frameJob);
+    state.frameJob = state.lastFrame = null;
+    A.setMuted(true);
+    if ($('breakDialog').open) $('breakDialog').close();
+  }
+  global.TLMatchView = { open, suspend };
 })(typeof window !== 'undefined' ? window : globalThis);

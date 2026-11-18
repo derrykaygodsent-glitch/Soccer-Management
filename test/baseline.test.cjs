@@ -58,6 +58,9 @@ test('the browser bundle loads its modules without external script or style file
   assert.equal(typeof context.TLReferee.Referee, 'function');
   assert.equal(context.TLBroadcast.matchSeconds(1, 1), 1);
   assert.equal(typeof context.TLAudio.init, 'function');
+  assert.equal(typeof context.TLMatchView.open, 'function');
+  assert.equal(typeof context.TLMatchView.suspend, 'function');
+  assert.equal(context.TLHomeData.matchConfig().competition, 'League Cup Fourth Round');
   assert.equal(Object.keys(context.TLHighlights.MODES).length, 4);
   assert.equal(context.TLHighlights.DEFAULT_MODE, 'extended');
   assert.equal(typeof context.TLHighlights.scanBatch, 'function');

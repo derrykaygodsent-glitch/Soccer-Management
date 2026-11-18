@@ -2,9 +2,15 @@
 
 **Classic 2D is the main game.** The approved fixed overhead pitch and match engine are the foundation. Make future changes in `touchline-26/`; `touchline-classic/` remains a copy of the approved motion review.
 
+## Club Home
+
+Touchline opens on **Club Home**, with your upcoming match, fixtures, league table, player leaders and budgets. It starts from a fictional season snapshot, not a simulated league or transfer market. The working panel headings and inbox open details; destinations reserved for later screens are visibly unavailable. There is no sign-in or network requirement.
+
+Press **Continue** to move from the starter calendar to the displayed Riverside FC fixture. This opens the match centre without kicking off. **Home** takes you back and holds the current match, including the visible playhead, while you are away. Continue returns to the same match. The approved pitch, rules and speed controls are still there.
+
 ## Watch a match
 
-Choose **Highlights** beneath the pitch or in **Match setup**, then press **Kick off**. You can change the viewing mode mid-match without restarting. A passage already on screen plays out before the new setting takes over.
+In the match centre, choose **Highlights** beneath the pitch or in **Match setup**, then press **Kick off**. You can change the viewing mode mid-match without restarting. A passage already on screen plays out before the new setting takes over.
 
 | Mode | Best for | Approx. viewing time at 1× | What you'll see |
 | --- | --- | ---: | --- |
