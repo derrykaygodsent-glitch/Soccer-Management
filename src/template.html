@@ -60,7 +60,7 @@
       <div id="pitchwrap" class="pitchwrap">
         <canvas id="pitch" role="img" aria-label="Fixed overhead view of the full football pitch. Select a player from the lineup below for details."></canvas>
         <div class="field-stamp" aria-hidden="true"><i></i><span id="stadiumStamp">Quayside Park</span></div>
-        <div class="pitch-indicator" id="replayIndicator" hidden><i></i><span id="indicatorText">Replay</span></div>
+        <div class="pitch-indicator" id="replayIndicator" role="status" hidden><i></i><span id="indicatorText">Replay</span></div>
         <div class="goal-card" id="goalBanner" hidden>
           <div class="goal-kicker"><span id="goalSide"></span><span id="goalTime"></span></div>
           <strong id="goalScorer"></strong>
@@ -89,8 +89,9 @@
           <button class="button skip-button" id="btnSkip" type="button" disabled title="Next highlight (S)"><svg class="icon" aria-hidden="true"><use href="#i-skip"/></svg><span id="skipLabel">Next highlight</span></button>
         </div>
         <div class="view-controls">
-          <button class="button view-button" id="btnNames" type="button" aria-pressed="false" title="Toggle all names (N)"><svg class="icon" aria-hidden="true"><use href="#i-names"/></svg><span>Names</span></button>
-          <button class="button view-button" id="btnReplay" type="button" disabled title="Replay last goal (R)"><svg class="icon" aria-hidden="true"><use href="#i-replay"/></svg><span>Replay</span></button>
+          <label class="watch-mode"><span>Highlights</span><select id="highlightMode" aria-label="Highlights"></select></label>
+          <button class="button view-button" id="btnNames" type="button" aria-label="Names" aria-pressed="false" title="Toggle all names (N)"><svg class="icon" aria-hidden="true"><use href="#i-names"/></svg><span>Names</span></button>
+          <button class="button view-button" id="btnReplay" type="button" aria-label="Replay" disabled title="Replay last goal (R)"><svg class="icon" aria-hidden="true"><use href="#i-replay"/></svg><span>Replay</span></button>
           <button class="button view-button sound-button" id="btnSound" type="button" aria-pressed="false" aria-label="Stadium sound" title="Stadium sound"><svg class="icon" aria-hidden="true"><use id="soundIcon" href="#i-mute"/></svg><span>Sound</span></button>
         </div>
       </div>
@@ -124,6 +125,7 @@
         <label class="pick-club"><span class="pick-crest" id="setupAwayCrest"></span><span>Opposition</span><select id="preAway" required></select></label>
       </div>
       <div class="settings-row"><label>Formation<select id="preForm"></select></label><label>Mentality<select id="preMent"></select></label></div>
+      <div class="settings-row watch-settings"><label>Highlights<select id="preHighlights" aria-describedby="watchDetail"></select></label><p class="help-text" id="watchDetail"></p></div>
       <div class="setup-checks"><label><input type="checkbox" id="preReplay" checked> Auto goal replays</label><label><input type="checkbox" id="preSound"> Stadium sound</label></div>
       <p class="help-text" id="setupNote">Set your fixture and starting instructions.</p>
       <div class="dialog-actions"><button class="button" data-close="setupDialog" type="button">Cancel</button><button class="button primary" type="submit">Load fixture <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>

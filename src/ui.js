@@ -1,14 +1,14 @@
 /* Touchline 26 — Classic 2D match controls and replay playback. */
 (function (global) {
   'use strict';
-  const D = global.TLData, E = global.TLEngine, A = global.TLAudio;
+  const D = global.TLData, E = global.TLEngine, A = global.TLAudio, V = global.TLHighlights;
   const $ = id => document.getElementById(id);
   // Physics uses a fixed step; display speed never changes the simulation outcome.
-  const H = 1 / 40, RATES = [0, 1.65, 3.3, 6.6], REPLAY_RATE = 1.5;
+  const H = V.STEP, RATES = [0, 1.65, 3.3, 6.6], REPLAY_RATE = 1.5;
   const REPLAY_BUILDUP = 12, REPLAY_AFTERMATH = 1.05;
-  const GOALS = new Set(['goal', 'og', 'penscore']);
-  const HIGHLIGHTS = new Set(['goal', 'og', 'penscore', 'pen', 'penmiss', 'red', 'post', 'ht', 'ft']);
-  const CHANCES = new Set(['save', 'catch', 'block', 'miss', 'chance']);
+  const HISTORY = Math.ceil((V.MODES.comprehensive.lead + 6) / (H * 2));
+  const GOALS = V.GOALS, BREAKS = V.BREAKS;
+  const LINEUP_EVENTS = new Set(['sub', 'red', 'yellow']);
   const TACTICS = [
     ['formation', 'Formation', Object.keys(D.FORMATIONS)], ['mentality', 'Mentality', D.MENTALITIES],
     ['passing', 'Passing', D.PASSING], ['tempo', 'Tempo', D.TEMPO], ['press', 'Pressing', D.PRESS],
@@ -26,9 +26,10 @@
   };
   const state = {
     match: null, renderer: null, ready: true, paused: true, speed: 1, acc: 0,
-    config: { home: 1, away: 0, auto: true, sound: false }, names: false, sound: false,
+    config: { home: 1, away: 0, auto: true, sound: false, highlights: 'full' }, names: false, sound: false,
     selected: null, subMode: null, desk: 'tactics', returnBreak: false,
-    buffer: [], replay: null, replayQueue: null, goalFrames: null, events: [], meta: {}, skip: null,
+    buffer: [], replay: null, replayQueue: null, goalFrames: null, events: [], meta: {},
+    scout: null, scan: null, scene: null, visiblePlay: null, nextSearch: null, lineupDirty: false,
     lastFrame: null, lastFeedWall: 0, previousFlight: null, tileT: 0,
     goalTimer: 0, toastTimer: 0, breakQueued: null
   };
@@ -41,6 +42,9 @@
   const shapeLabel = s => s.replace(/-/g, '–');
   const portraitKit = color => color === '#334155' ? '#647690' : color === '#15803d' ? '#35a75c' : color;
   const activeDialog = () => ['setupDialog', 'deskDialog', 'breakDialog'].some(id => $(id).open);
+  const chosenMode = () => V.modeFor(state.config.highlights);
+  const filmView = () => state.scene || state.scan;
+  const clockAt = t => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 
   function crest(club) {
     const fore = club.id === 'swl' ? '#243947' : '#f5f4e9';
@@ -79,9 +83,11 @@
   }
 
   function prepare(config) {
-    state.config = { ...config };
+    state.config = { ...config, highlights: V.modeFor(config.highlights).id };
     state.ready = state.paused = true;
-    state.speed = 1; state.acc = 0; state.skip = null; state.replay = null;
+    state.speed = 1; state.acc = 0; state.replay = null;
+    state.scan = state.scene = state.visiblePlay = state.nextSearch = null;
+    state.lineupDirty = false;
     state.goalFrames = null; state.replayQueue = null; state.buffer = []; state.events = []; state.previousFlight = null;
     state.selected = null; state.subMode = null; state.returnBreak = false; state.breakQueued = null;
     $('goalBanner').hidden = $('playerFocus').hidden = $('toast').hidden = true;
@@ -95,10 +101,12 @@
       homeTactics,
       onEvent,
       onSnapshot: snapshot => {
-        state.buffer.push(snapshot);
-        if (state.buffer.length > 350) state.buffer.splice(0, 35);
+        state.buffer.push(state.scan ? withView(snapshot) : snapshot);
+        if (state.buffer.length > HISTORY) state.buffer.splice(0, 44);
       }
     });
+    state.scout = new V.Scout(state.match);
+    syncWatchMode();
     state.meta = Object.fromEntries(state.match.teams.flatMap(t => t.players.map(p => [p.id, p])));
     document.documentElement.style.setProperty('--home', home.primary);
     document.documentElement.style.setProperty('--away', away.primary);
@@ -118,27 +126,32 @@
     if (state.replay) return ['replay', 'Replay'];
     if (state.match.phase === 'halftime') return ['paused', 'Half time'];
     if (state.match.phase === 'fulltime') return ['paused', 'Full time'];
-    if (state.skip) return ['live', 'Skipping'];
     if (state.paused) return ['paused', 'Paused'];
+    if (state.scan) return ['live', 'Skipping'];
+    if (state.scene) return ['live', 'Highlight'];
     return ['live', state.match.half === 1 ? '1st half' : '2nd half'];
   }
   function updateHUD() {
     const m = state.match;
     if (!m) return;
-    text('clock', m.clockStr());
-    const added = m.added[m.half - 1];
-    $('added').hidden = !(m.t >= 2700 && added);
+    const film = filmView();
+    const time = film ? film.view.t + Math.max(0, film.time - film.view.elapsed) : m.t + (m.half === 2 ? 2700 : 0);
+    text('clock', film ? clockAt(time) : m.clockStr());
+    const half = film ? film.view.half : m.half;
+    const added = m.added[half - 1];
+    $('added').hidden = !(time >= half * 2700 && added);
     if (!$('added').hidden) text('added', '+' + Math.ceil(added / 60));
-    const score = `${m.teams[0].score}:${m.teams[1].score}`;
+    const [homeScore, awayScore] = film ? film.view.score : [m.teams[0].score, m.teams[1].score];
+    const score = `${homeScore}:${awayScore}`;
     if ($('score').dataset.score !== score) {
       $('score').dataset.score = score;
-      $('score').innerHTML = `${m.teams[0].score}<span class="score-dash">–</span>${m.teams[1].score}`;
-      attr($('score'), 'aria-label', `${m.teams[0].club.name} ${m.teams[0].score}, ${m.teams[1].club.name} ${m.teams[1].score}`);
+      $('score').innerHTML = `${homeScore}<span class="score-dash">–</span>${awayScore}`;
+      attr($('score'), 'aria-label', `${m.teams[0].club.name} ${homeScore}, ${m.teams[1].club.name} ${awayScore}`);
     }
     const [status, phase] = currentStatus();
     if ($('matchStatus').dataset.status !== status) $('matchStatus').dataset.status = status;
     text('phaseBadge', phase);
-    const atBreak = ['halftime', 'fulltime'].includes(m.phase);
+    const atBreak = V.atBreak(m);
     const stopped = state.ready || (state.replay ? state.replay.paused : state.paused);
     const label = state.ready ? 'Kick off' : atBreak ? phase : stopped ? 'Resume' : 'Pause';
     text('playLabel', label); attr($('playIcon'), 'href', stopped || atBreak ? '#i-play' : '#i-pause');
@@ -146,46 +159,87 @@
     $('btnPlay').disabled = atBreak;
     for (const b of document.querySelectorAll('[data-speed]')) attr(b, 'aria-pressed', Number(b.dataset.speed) === state.speed);
     const replayButton = $('btnReplay');
-    replayButton.disabled = !state.goalFrames || !!state.replayQueue || state.ready || atBreak;
+    replayButton.disabled = !state.goalFrames || !!state.replayQueue || state.ready || atBreak || !!state.scene;
     textReplayButton(state.replay ? 'Exit replay' : 'Replay');
-    $('btnSkip').disabled = state.ready || atBreak;
-    const skipLabel = state.replay ? 'Exit replay' : state.skip ? 'Cancel skip' : 'Next highlight';
+    $('btnSkip').disabled = state.ready || atBreak || (!!state.replayQueue && !state.replay);
+    const skipLabel = state.replay ? 'Exit replay' : state.scan ? 'Watch live' : 'Next highlight';
     text('skipLabel', skipLabel);
-    $('btnSkip').title = `${skipLabel} (S)`;
-    $('replayIndicator').hidden = !state.replay && !state.skip;
-    if (!$('replayIndicator').hidden) text('indicatorText', state.replay ? state.replay.paused ? 'Replay paused' : 'Goal replay' : 'Scanning for a highlight');
+    attr($('btnSkip'), 'aria-label', skipLabel);
+    $('btnSkip').title = state.scan ? 'Stop searching and switch to Full Match (S)' : `${skipLabel} (S)`;
+    const indicator = $('replayIndicator');
+    const view = state.replay ? 'replay' : state.scan ? 'search' : state.scene || (state.visiblePlay && !state.paused) ? 'highlight' : '';
+    indicator.hidden = !view;
+    if (view) {
+      if (indicator.dataset.view !== view) indicator.dataset.view = view;
+      text('indicatorText', state.replay ? (state.replay.paused ? 'Replay paused' : 'Goal replay') :
+        state.scan ? (state.paused ? 'Search paused' : 'Skipping to next highlight') :
+        state.paused ? 'Highlight paused' : `${(state.scene || state.visiblePlay).policy.label} highlight`);
+    }
   }
   function textReplayButton(message) {
     const el = $('btnReplay').querySelector('span');
     if (el.textContent !== message) el.textContent = message;
+    attr($('btnReplay'), 'aria-label', message);
     $('btnReplay').title = message === 'Replay' ? 'Replay last goal (R)' : 'Exit replay (R)';
   }
 
   function togglePlay() {
     const m = state.match;
-    if (!m || ['halftime', 'fulltime'].includes(m.phase)) return;
+    if (!m || V.atBreak(m)) return;
     if (state.replay) { state.replay.paused = !state.replay.paused; updateHUD(); return; }
     if (state.ready) {
       state.ready = false; state.paused = false; state.acc = 0;
       setSound(state.sound, true); A.whistle(false);
       const event = { type: 'kickoff', minute: 1, team: 0, text: `We’re underway at ${m.teams[0].club.stadium}.`, key: true };
       state.events.push(event); setFeed(event.text, event, 'Kick-off');
+      startOpening();
     } else {
-      state.skip = null; state.acc = 0;
+      state.acc = 0;
       state.paused = !state.paused;
     }
-    updateHUD();
+    updateHUD(); draw();
   }
   function setSpeed(speed) {
-    state.speed = speed; state.skip = null; state.acc = 0;
+    state.speed = speed; state.acc = 0;
     if (state.replay) endReplay();
     updateHUD();
   }
+
+  function syncWatchMode() {
+    const policy = chosenMode();
+    $('highlightMode').value = policy.id;
+    $('highlightMode').title = `${policy.label} — ${policy.detail}`;
+  }
+
+  function setWatchMode(id) {
+    if (state.config.highlights === id) return;
+    closeCut();
+    state.config.highlights = V.modeFor(id).id;
+    state.visiblePlay = state.nextSearch = null;
+    state.acc = 0;
+    syncWatchMode(); updateHUD(); draw();
+  }
+
+  function startOpening() {
+    const policy = chosenMode();
+    state.visiblePlay = policy.rank ? { policy, until: state.match.elapsed + policy.opening } : null;
+  }
+
   function toggleSkip() {
     if ($('btnSkip').disabled) return;
     if (state.replay) { endReplay(); return; }
-    if (state.skip) state.skip = null;
-    else { state.skip = { remaining: 150 }; state.paused = false; state.acc = 0; }
+    if (state.scan) {
+      if (chosenMode().rank) setWatchMode('full');
+      else { closeCut(); updateHUD(); draw(); }
+      return;
+    }
+    closeCut();
+    state.paused = false;
+    const policy = chosenMode().rank ? chosenMode() : V.MODES.key;
+    if (state.replayQueue) {
+      state.replayQueue.auto = false;
+      state.nextSearch = policy;
+    } else beginSearch(policy);
     updateHUD();
   }
 
@@ -207,7 +261,7 @@
       if (j >= 0 && Math.abs(next.arr[j * 2] - x) + Math.abs(next.arr[j * 2 + 1] - y) < 2.8) {
         x = mix(x, next.arr[j * 2], amount); y = mix(y, next.arr[j * 2 + 1], amount);
       }
-      players.push({ id, team: meta.team, name: meta.name, num: meta.num, role: meta.role, pos: meta.pos, yellow: meta.yellow, x, y });
+      players.push({ id, team: meta.team, name: meta.name, num: meta.num, role: snap.roles ? snap.roles[i] : meta.role, pos: meta.pos, yellow: snap.cards ? snap.cards[i] : meta.yellow, x, y });
     }
     const i = snap.n * 2, j = next.n * 2;
     const w = Math.abs(snap.arr[i] - next.arr[j]) + Math.abs(snap.arr[i + 1] - next.arr[j + 1]) < 3 ? amount : 0;
@@ -215,8 +269,9 @@
     return { players, ball, ownerId: snap.ids[snap.arr[i + 3]] };
   }
   function startReplay() {
-    if (!state.goalFrames || state.replayQueue) return;
-    state.skip = null; state.acc = 0;
+    if (!state.goalFrames || state.replayQueue || state.scene) return;
+    closeCut();
+    state.nextSearch = null; state.acc = 0;
     const frames = state.goalFrames;
     state.replay = { frames, time: frames[0].elapsed, index: 0, frame: replayFrame(frames[0]), paused: false };
     $('goalBanner').hidden = true;
@@ -243,42 +298,118 @@
     if (queue.auto) startReplay();
   }
 
+  // Simulation events are recorded immediately but played only when the viewing cursor
+  // reaches them. The score, goal audio and celebration cannot spoil a buffered attack.
   function onEvent(ev) {
-    if (state.ready || !state.match) return; // Constructor/setup events belong to the parked fixture.
+    if (state.ready || !state.match) return;
+    const film = filmView();
+    if (film) film.entries.push({ elapsed: state.match.elapsed, ev });
+    else publishEvent(ev);
+  }
+
+  function publishEvent(ev, quiet = false) {
     const m = state.match;
-    const goal = GOALS.has(ev.type);
-    const key = goal || HIGHLIGHTS.has(ev.type) || !!ev.key;
+    const goal = GOALS.has(ev.type), end = BREAKS.has(ev.type);
+    const key = V.DECISIVE.has(ev.type) || end || !!ev.key;
     const message = ev.type === 'kickoff' && ev.half === 2 && ev.t < .1 ? 'The second half is underway.' : ev.text;
     if (message && ev.type !== 'preview') {
       state.events.push({ ...ev, text: message, key });
       if (state.events.length > 245) state.events.shift();
-      setFeed(message, ev, goal ? 'Goal' : ev.type === 'pen' ? 'Penalty' : null);
+      if (!quiet || goal || end) setFeed(message, ev, goal ? 'Goal' : ev.type === 'pen' ? 'Penalty' : null);
     }
-    if (state.skip && (HIGHLIGHTS.has(ev.type) || (ev.key && CHANCES.has(ev.type)))) { state.skip = null; state.acc = 0; }
     if (goal) {
-      const g = m.lastGoal, club = m.teams[ev.team].club;
-      text('goalSide', `Goal · ${club.short}`); text('goalTime', clockMinute(ev.minute));
-      text('goalScorer', g && g.scorer ? g.scorer + (g.og ? ' (OG)' : '') : club.name);
-      $('goalBanner').style.setProperty('--accent', portraitKit(club.primary));
-      $('goalBanner').hidden = false;
-      clearTimeout(state.goalTimer);
-      state.goalTimer = setTimeout(() => { $('goalBanner').hidden = true; }, 3900);
-      A.goal();
+      if (!quiet) {
+        const g = m.lastGoal, club = m.teams[ev.team].club;
+        text('goalSide', `Goal · ${club.short}`); text('goalTime', clockMinute(ev.minute));
+        text('goalScorer', g && g.scorer ? g.scorer + (g.og ? ' (OG)' : '') : club.name);
+        $('goalBanner').style.setProperty('--accent', portraitKit(club.primary));
+        $('goalBanner').hidden = false;
+        clearTimeout(state.goalTimer);
+        state.goalTimer = setTimeout(() => { $('goalBanner').hidden = true; }, 3900);
+        A.goal();
+      }
       state.goalFrames = recordReplay(ev);
       if (state.goalFrames) {
-        state.replayQueue = { goal: m.elapsed, end: m.elapsed + REPLAY_AFTERMATH, half: m.half, auto: state.config.auto };
+        state.replayQueue = { goal: m.elapsed, end: m.elapsed + REPLAY_AFTERMATH, half: m.half, auto: state.config.auto && !quiet };
       }
-    } else if (ev.type === 'ht' || ev.type === 'ft') {
-      state.paused = true; state.skip = null; state.acc = 0; state.breakQueued = ev.type;
+    } else if (end) {
+      state.paused = true; state.visiblePlay = state.nextSearch = null; state.acc = 0; state.breakQueued = ev.type;
       A.whistle(ev.type === 'ht', ev.type === 'ft');
-    } else if (ev.type === 'pen' || ev.type === 'offside') { A.whistle(false); }
-    else if (ev.type === 'post' || ev.type === 'save') { A.kick(.7); if (ev.key) A.bigChance(); }
-    else if (ev.type === 'foul' || ev.type === 'red' || ev.type === 'yellow') { A.foul(); }
-    if (['sub', 'red', 'yellow'].includes(ev.type)) renderLineup();
-    updateHUD();
+    } else if (!quiet) {
+      if (ev.type === 'pen' || ev.type === 'offside') A.whistle(false);
+      else if (ev.type === 'post' || ev.type === 'save') { A.kick(.7); if (ev.key) A.bigChance(); }
+      else if (ev.type === 'foul' || ev.type === 'red' || ev.type === 'yellow') A.foul();
+    }
+    if (LINEUP_EVENTS.has(ev.type)) state.lineupDirty = true;
+  }
+
+  function withView(snap = state.match.snapshotFrame()) {
+    const m = state.match;
+    snap.score = m.teams.map(team => team.score);
+    snap.stats = m.teams.map(team => ({ ...team.stats }));
+    snap.poss = m.possTime.slice();
+    snap.shotCount = m.shotMap.length;
+    snap.lastOutcome = m.shotMap.at(-1)?.outcome;
+    snap.roles = m.playersCache.map(p => p.role);
+    snap.cards = m.playersCache.map(p => p.yellow);
+    return snap;
+  }
+
+  function drainEntries(entries, until, quiet) {
+    let i = 0;
+    while (i < entries.length && entries[i].elapsed <= until + 1e-6) {
+      const { ev } = entries[i++];
+      publishEvent(ev, quiet && !BREAKS.has(ev.type));
+    }
+    if (i) entries.splice(0, i);
+  }
+
+  function closeCut(quiet = true) {
+    const film = filmView();
+    if (!film) return;
+    state.scan = state.scene = null;
+    state.acc = 0;
+    drainEntries(film.entries, Infinity, quiet);
+    if (state.lineupDirty) renderLineup();
+  }
+
+  function beginSearch(policy) {
+    const first = withView();
+    state.visiblePlay = state.nextSearch = null;
+    state.scan = { first, view: first, time: first.elapsed, policy, entries: [], still: replayFrame(first) };
+    state.acc = 0;
+    updateHUD(); draw();
+  }
+
+  function advanceSearch() {
+    const m = state.match, scan = state.scan;
+    const result = V.scanBatch(m, state.scout, scan.policy);
+    if (result.type === 'break') { closeCut(); return; }
+    scan.time = V.visibleStart(scan.first.elapsed, m.elapsed, scan.policy);
+    scan.view = V.frameAt(state.buffer, scan.time, scan.first);
+    drainEntries(scan.entries, scan.time, true);
+    if (result.type === 'moment') {
+      const last = withView(), frames = V.clipFrames(state.buffer, scan.first, last, scan.time);
+      state.scan = null;
+      state.visiblePlay = { policy: scan.policy, until: last.elapsed + scan.policy.tail };
+      state.scene = { policy: scan.policy, entries: scan.entries, frames, view: frames[0], time: scan.time, frame: null };
+      advanceScene(0);
+    }
+  }
+
+  function advanceScene(dt) {
+    const scene = state.scene, frames = scene.frames, last = frames.at(-1);
+    scene.time = Math.min(last.elapsed, scene.time + dt * RATES[state.speed]);
+    const i = V.indexAt(frames, scene.time), a = frames[i], b = frames[Math.min(i + 1, frames.length - 1)];
+    const f = a === b ? 0 : Math.max(0, Math.min(1, (scene.time - a.elapsed) / (b.elapsed - a.elapsed)));
+    scene.view = a;
+    scene.frame = replayFrame(a, b, f);
+    drainEntries(scene.entries, scene.time, false);
+    if (scene.time >= last.elapsed) closeCut(false);
   }
 
   function renderLineup() {
+    state.lineupDirty = false;
     const home = state.match.teams[0];
     const lineup = $('lineup'), from = lineup.scrollLeft;
     text('formationLabel', shapeLabel(home.tactics.formation));
@@ -315,7 +446,8 @@
     $('setupHomeCrest').innerHTML = crest(D.CLUBS[h]); $('setupAwayCrest').innerHTML = crest(D.CLUBS[a]);
   }
   function openSetup() {
-    state.skip = null;
+    $('preHighlights').value = chosenMode().id;
+    text('watchDetail', chosenMode().detail);
     $('preHome').value = state.config.home; $('preAway').value = state.config.away;
     $('preForm').value = state.match.teams[0].tactics.formation; $('preMent').value = state.match.teams[0].tactics.mentality;
     $('preReplay').checked = state.config.auto; $('preSound').checked = state.sound;
@@ -351,9 +483,11 @@
 
   const statLine = (title, a, b) => `<div class="stat-line"><strong>${a}</strong><span>${title}</span><strong>${b}</strong></div>`;
   function statsMarkup(short) {
-    const m = state.match, [a, b] = m.teams.map(t => t.stats);
-    const total = m.possTime[0] + m.possTime[1];
-    const possession = total ? Math.round(m.possTime[0] / total * 100) : 50;
+    const m = state.match, view = filmView()?.view;
+    const [a, b] = view ? view.stats : m.teams.map(t => t.stats);
+    const poss = view ? view.poss : m.possTime;
+    const total = poss[0] + poss[1];
+    const possession = total ? Math.round(poss[0] / total * 100) : 50;
     const passPct = s => s.passes ? Math.round(s.passWon / s.passes * 100) + '%' : '–';
     return statLine('Possession', possession + '%', (100 - possession) + '%') +
       statLine('Shots', a.shots, b.shots) + statLine('On target', a.onTarget, b.onTarget) +
@@ -371,9 +505,11 @@
     ctx.strokeRect(pad, y(E.CY - E.BOX_HALF), x(E.BOX_L) - pad, y(E.CY + E.BOX_HALF) - y(E.CY - E.BOX_HALF));
     ctx.strokeRect(x(E.L - E.BOX_L), y(E.CY - E.BOX_HALF), x(E.BOX_L) - pad, y(E.CY + E.BOX_HALF) - y(E.CY - E.BOX_HALF));
     ctx.beginPath(); ctx.moveTo(w / 2, pad); ctx.lineTo(w / 2, h - pad); ctx.stroke();
-    for (const shot of m.shotMap) {
+    const view = filmView()?.view, count = view ? view.shotCount : m.shotMap.length;
+    for (let i = 0; i < count; i++) {
+      const shot = m.shotMap[i], outcome = view && i === count - 1 ? view.lastOutcome : shot.outcome;
       ctx.beginPath(); ctx.arc(x(shot.x), y(shot.y), 4 + shot.xg * 14, 0, Math.PI * 2);
-      ctx.fillStyle = shot.outcome === 'goal' ? '#e6f6c5' : portraitKit(m.teams[shot.team].club.primary);
+      ctx.fillStyle = outcome === 'goal' ? '#e6f6c5' : portraitKit(m.teams[shot.team].club.primary);
       ctx.fill(); ctx.strokeStyle = '#f0f9e5bc'; ctx.stroke();
     }
   }
@@ -391,7 +527,6 @@
     $('deskDialog').scrollTop = 0;
   }
   function openDesk(tab) {
-    state.skip = null;
     setDesk(tab);
     if (!$('deskDialog').open) $('deskDialog').showModal();
     updateHUD();
@@ -411,7 +546,7 @@
     const m = state.match, ball = m.ball, f = ball.flight;
     if (f === state.previousFlight) return;
     state.previousFlight = f;
-    if (!f || state.skip || state.replay || !ball.lastTouch) return;
+    if (!f || filmView() || state.replay || !ball.lastTouch) return;
     const from = ball.lastTouch.name, to = f.intended && f.intended.name;
     const loft = ['chip', 'switch', 'long', 'clearance'].includes(f.technique);
     if (performance.now() - state.lastFeedWall < (loft ? 930 : 2150)) return;
@@ -428,26 +563,37 @@
   }
 
   function advance(dt) {
-    const m = state.match;
-    if (state.skip) {
-      const limit = performance.now() + 7;
-      for (let i = 0; state.skip && i < 160 && (i < 2 || performance.now() < limit); i++) {
-        m.step(H);
-        if (state.skip && (state.skip.remaining -= H) <= 0) { state.skip = null; notify('No highlight in the next 2½ match minutes.'); }
-      }
-    } else {
-      state.acc += dt * RATES[state.speed];
-      let n = 0;
-      while (state.acc >= H && n++ < 48 && !state.replay && !state.paused) { state.acc -= H; m.step(H); }
-      if (state.acc > .6) state.acc = 0;
+    const m = state.match, policy = chosenMode();
+    if (state.scene) { advanceScene(dt); return; }
+    if (state.scan) { advanceSearch(); return; }
+    if (!state.replayQueue) {
+      if (state.nextSearch) { beginSearch(state.nextSearch); return; }
+      if (state.visiblePlay && m.elapsed >= state.visiblePlay.until && !V.holdingAction(m, state.visiblePlay.policy)) state.visiblePlay = null;
+      if (policy.rank && !state.visiblePlay && !V.holdingAction(m, policy)) { beginSearch(policy); return; }
     }
+    state.acc += dt * RATES[state.speed];
+    let n = 0;
+    while (state.acc >= H && n++ < 48 && !state.replay && !state.paused) {
+      state.acc -= H;
+      m.step(H);
+      const rank = state.scout.check(m);
+      if (state.visiblePlay && rank <= state.visiblePlay.policy.rank) {
+        state.visiblePlay.until = Math.max(state.visiblePlay.until, m.elapsed + state.visiblePlay.policy.tail);
+      } else if (policy.rank && rank <= policy.rank && !state.paused) {
+        state.visiblePlay = { policy, until: m.elapsed + policy.tail };
+      }
+    }
+    if (state.acc > .6) state.acc = 0;
+    if (state.lineupDirty) renderLineup();
     observePlay(); completeReplayCapture();
   }
+
   function draw() {
+    const frame = state.replay?.frame || state.scene?.frame || state.scan?.still;
     state.renderer.draw(state.match, {
       ready: state.ready, names: state.names, selected: state.selected,
-      live: !state.ready && !(state.skip && !state.replay), frame: state.replay && state.replay.frame,
-      alpha: !state.replay && !state.paused && !state.skip ? Math.max(0, Math.min(1, state.acc / H)) : 1
+      live: !state.ready && !state.scan, frame,
+      alpha: !frame && !state.paused ? Math.max(0, Math.min(1, state.acc / H)) : 1
     });
   }
   function loop(t) {
@@ -460,14 +606,18 @@
       if (state.replay && !state.replay.paused) { tickReplay(dt); changed = true; }
       else if (!state.replay && !state.ready && !state.paused) { advance(dt); changed = true; }
     }
-    if (changed && t - state.tileT > 540) { state.tileT = t; if (!state.replay) updateLineupCondition(); }
+    if (changed && t - state.tileT > 540) { state.tileT = t; if (!state.replay && !filmView()) updateLineupCondition(); }
     if (changed) updateHUD();
-    if (changed || state.renderer.needsPaint) draw();
+    if ((changed && !state.scan) || state.renderer.needsPaint) draw();
   }
 
   function wire() {
     $('btnPlay').addEventListener('click', togglePlay);
     $('btnSkip').addEventListener('click', toggleSkip);
+    const modeOptions = Object.values(V.MODES).map(mode => `<option value="${mode.id}">${mode.label}</option>`).join('');
+    $('highlightMode').innerHTML = $('preHighlights').innerHTML = modeOptions;
+    $('highlightMode').addEventListener('change', e => setWatchMode(e.target.value));
+    $('preHighlights').addEventListener('change', e => text('watchDetail', V.modeFor(e.target.value).detail));
     for (const b of document.querySelectorAll('[data-speed]')) b.addEventListener('click', () => setSpeed(+b.dataset.speed));
     $('btnNames').addEventListener('click', () => { state.names = !state.names; attr($('btnNames'), 'aria-pressed', state.names); draw(); });
     $('btnSound').addEventListener('click', () => { setSound(!state.sound, true); state.config.sound = state.sound; });
@@ -490,7 +640,7 @@
     $('preMent').innerHTML = options(D.MENTALITIES);
     $('setupForm').addEventListener('submit', e => {
       e.preventDefault();
-      const config = { home: +$('preHome').value, away: +$('preAway').value, formation: $('preForm').value, mentality: +$('preMent').value, auto: $('preReplay').checked, sound: $('preSound').checked };
+      const config = { home: +$('preHome').value, away: +$('preAway').value, formation: $('preForm').value, mentality: +$('preMent').value, auto: $('preReplay').checked, sound: $('preSound').checked, highlights: $('preHighlights').value };
       $('setupDialog').close(); prepare(config);
     });
     for (const b of document.querySelectorAll('[data-close]')) b.addEventListener('click', () => $(b.dataset.close).close());
@@ -536,7 +686,7 @@
     $('btnBreakContinue').addEventListener('click', () => {
       $('breakDialog').close();
       if (state.match.phase === 'halftime') {
-        state.paused = false; state.acc = 0; state.match.continueSecondHalf(); renderLineup(); updateHUD();
+        state.paused = false; state.acc = 0; state.match.continueSecondHalf(); startOpening(); renderLineup(); updateHUD();
       } else prepare({ ...state.config, formation: state.match.teams[0].tactics.formation, mentality: state.match.teams[0].tactics.mentality });
     });
     document.addEventListener('keydown', e => {
