@@ -66,7 +66,7 @@ h1{font:700 clamp(35px,4vw,45px)/.99 'Barlow Condensed','Arial Narrow',sans-seri
 .match-status{display:flex;align-items:center;gap:6px;padding:3px 0 3px 12px;border-left:1px solid #36493a;font-weight:750;color:#c3cfc2;font-size:10px;line-height:1.2;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
 .match-status i{width:6px;height:6px;border-radius:50%;background:#9da59b;flex:none}
 .match-status[data-status=live] i{background:#a9e88b;box-shadow:0 0 7px #a9e88b4f}
-.match-status[data-status=paused] i,.match-status[data-status=replay] i,.match-status[data-status=review] i{background:#efc580}
+.match-status[data-status=paused] i,.match-status[data-status=replay] i,.match-status[data-status=review] i,.match-status[data-status=restart] i{background:#efc580}
 .match-status[data-status=ready] i{background:#c6e8a8}
 .board-meta{display:flex;align-items:center;gap:10px;margin-left:auto;font-size:10px;font-weight:750;letter-spacing:.12em;white-space:nowrap;color:#a2b1a1}
 .meta-divider{height:10px;width:1px;background:#46574a}
@@ -76,7 +76,15 @@ h1{font:700 clamp(35px,4vw,45px)/.99 'Barlow Condensed','Arial Narrow',sans-seri
 .field-stamp i{width:4px;height:4px;border-radius:1px;background:#7d957e}
 .pitch-indicator,.goal-card,.player-focus{position:absolute;background:#111d16eF;border:1px solid #577050;border-radius:8px;color:var(--text);box-shadow:0 6px 25px #080f0bb0}
 .pitch-indicator{top:14px;left:15px;display:flex;align-items:center;gap:6px;padding:6px 9px;letter-spacing:.12em;font-size:10px;font-weight:800;text-transform:uppercase;pointer-events:none}
-.pitch-indicator i{width:6px;height:6px;background:#efc580;border-radius:50%}
+.pitch-indicator i{width:6px;height:6px;background:#efc580;border-radius:50%;flex:none}
+#indicatorDetail{display:none}
+.pitch-indicator[data-restart]{align-items:flex-start;gap:8px;padding:7px 10px;max-width:min(240px,64%);border-color:#879674;background:#142117f5;line-height:1.2;letter-spacing:.085em}
+.pitch-indicator[data-side=right]{left:auto;right:15px}
+.pitch-indicator[data-restart] i{margin-top:3px;width:7px;height:7px;border-radius:2px;background:#d7eaa9}
+.pitch-indicator[data-restart=offside] i{width:12px;height:10px;margin-top:0;border-radius:0;background:linear-gradient(135deg,#ffe3a2 0 49%,#e8a74d 51%);clip-path:polygon(0 0,100% 0,72% 42%,100% 78%,13% 78%,13% 100%,0 100%)}
+.pitch-indicator[data-restart=offside],.pitch-indicator[data-restart=indirect]{border-color:#b39d68}
+.pitch-indicator[data-restart=indirect] i{background:#efc580}
+.pitch-indicator[data-restart] #indicatorDetail{display:block;margin-top:3px;color:#d7e0d3;text-transform:none;letter-spacing:0;font-size:10px;font-weight:620}
 .goal-card{top:14px;right:15px;max-width:64%;padding:10px 13px;border-left:3px solid var(--accent);pointer-events:none}
 .goal-kicker{display:flex;align-items:center;gap:8px;font-size:9px;font-weight:760;color:#d5e9c8;letter-spacing:.1em;text-transform:uppercase}
 #goalScorer{display:block;font:700 26px/.98 'Barlow Condensed',sans-serif;margin-top:3px}
@@ -100,7 +108,7 @@ h1{font:700 clamp(35px,4vw,45px)/.99 'Barlow Condensed','Arial Narrow',sans-seri
 .watch-mode>span{font-size:9px;font-weight:790;letter-spacing:.082em;text-transform:uppercase;color:#b9c7b7;white-space:nowrap}
 .watch-mode #highlightMode{width:135px;min-height:34px;padding:0 23px 0 6px;border:0;border-radius:7px;color:#e4f4d8;font-size:12px;font-weight:720;cursor:pointer;appearance:none;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23c9e7ae' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 7px center}
 .watch-mode #highlightMode option{background:#17251c;color:#e8efe7}
-.pitch-indicator[data-view=highlight] i{background:var(--accent)}
+.pitch-indicator[data-view=highlight]:not([data-restart]) i{background:var(--accent)}
 .pitch-indicator[data-view=search] i{background:#a9e88b;animation:scan-pulse 1.1s ease-in-out infinite alternate}
 /* Hold the last clear pitch frame during a cut; the clock and indicator stay live. */
 .pitchwrap[data-view=search] #pitch{opacity:.65}
@@ -199,7 +207,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   .score-crest{width:12px;height:14px}#score{min-width:44px;gap:4px;font-size:16px}
   .match-status{padding-left:8px;gap:4px;font-size:9px;letter-spacing:.035em;white-space:normal}.match-status span{max-width:60px}
   .feed-label>span:last-child{display:none}.feed-label{border:0;padding:0}#feedText{font-size:11px}
-  #feedTime{font-size:10px}.goal-card{right:8px;top:8px;padding:6px 8px}.pitch-indicator{left:8px;top:8px}.player-focus{bottom:6px;right:7px;padding:6px;gap:4px}
+  #feedTime{font-size:10px}.goal-card{right:8px;top:8px;padding:6px 8px}.pitch-indicator{left:8px;top:8px}.pitch-indicator[data-side=right]{left:auto;right:8px}.player-focus{bottom:6px;right:7px;padding:6px;gap:4px}
   .team-actions{gap:4px}.team-button{padding-inline:7px;gap:4px;font-size:11px}.team-button .icon{width:15px;height:15px}.and-subs{display:none}
 }
 @media(max-width:355px){

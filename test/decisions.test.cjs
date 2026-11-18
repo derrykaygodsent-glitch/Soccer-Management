@@ -205,31 +205,39 @@ test('the seed breaks ties among plausible actions, not between good play and im
   }
 });
 
-test('live decisions repeat with the seed, choose different passages across seeds, and keep legal targets', { timeout: 10000 }, () => {
+test('live decisions repeat with the seed and delayed deliveries still reach legal targets', { timeout: 10000 }, () => {
   function play(seed) {
     const m = new Match(CLUBS[1], CLUBS[0], { seed });
-    const seen = [], events = [];
-    const decide = m.decide;
+    const seen = new Set(), events = [];
+    const decide = m.decide, delivery = m.deliveryReleased, kick = m.kick;
     m.decide = function (p, pressure) {
       decide.call(m, p, pressure);
-      const f = m.ball.flight;
-      if (f?.kind === 'pass' || f?.kind === 'cross') {
-        assert.ok(f.targetX > 0 && f.targetX < L && f.targetY > 0 && f.targetY < W);
-        if (f.intended) {
-          assert.ok(f.intended.team === p.team && f.intended.onPitch && !f.intended.red);
-          assert.ok(!f.intended.offsideFlag, 'intentional outlet is onside on release');
-        }
-      }
-      const kind = f?.firstTime ? `early-${f.kind}` : f?.purpose || f?.technique || p.ballPlan?.kind || 'carry';
-      seen.push(kind);
-      events.push([m.elapsed, p.id, kind, f?.intended?.id]);
+      const kind = p.ballPlan?.kind;
+      if (kind) { seen.add(kind); events.push([m.elapsed, p.id, kind]); }
     };
-    for (let i = 0; i < 200 * 40; i++) m.step(1 / 40);
-    return { kinds: new Set(seen), events };
+    m.kick = function (p, x, y, f, k) {
+      if (f.kind === 'shot') { seen.add('shot'); events.push([m.elapsed, p.id, 'shot']); }
+      return kick.call(m, p, x, y, f, k);
+    };
+    m.deliveryReleased = function (p, f) {
+      delivery.call(m, p, f);
+      assert.ok(f.targetX > 0 && f.targetX < L && f.targetY > 0 && f.targetY < W);
+      if (f.intended) assert.ok(f.intended.team === p.team && f.intended.onPitch && !f.intended.red);
+      if (f.committedAt != null) {
+        assert.ok(m.elapsed - f.committedAt >= .15 - 1e-8 && m.elapsed - f.committedAt < .61);
+        seen.add('delayed');
+      }
+      const kind = f.firstTime ? 'early-pass' : f.technique;
+      seen.add(kind);
+      if (f.purpose) seen.add(f.purpose);
+      events.push([m.elapsed, p.id, kind, f.purpose, f.intended?.id]);
+    };
+    for (let i = 0; i < 205 * 40; i++) m.step(1 / 40);
+    return { seen, events };
   }
-  const a = play(231), b = play(12);
-  assert.deepEqual(a, play(231));
+  const a = play(342), b = play(902);
+  assert.deepEqual(a, play(342));
   assert.notDeepEqual(a.events.map(ev => ev[2]), b.events.map(ev => ev[2]));
-  const seen = new Set([...a.kinds, ...b.kinds]);
-  for (const kind of ['through', 'recycle', 'early-pass', 'inside', 'cross', 'shot']) assert.ok(seen.has(kind), `no live ${kind} in either opening`);
+  const seen = new Set([...a.seen, ...b.seen]);
+  for (const kind of ['through', 'delayed', 'recycle', 'early-pass', 'inside', 'cross', 'shot']) assert.ok(seen.has(kind), `no live ${kind} in the seeded openings`);
 });

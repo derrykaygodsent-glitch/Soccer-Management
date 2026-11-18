@@ -8,7 +8,7 @@ const font = name => readFileSync(join(src, 'fonts', name)).toString('base64');
 const css = read('style.css')
   .replace('{{INTER}}', () => font('inter-variable.woff2'))
   .replace('{{BARLOW}}', () => font('barlow-condensed-700.woff2'));
-const files = ['data.js', 'physics.js', 'decisions.js', 'engine.js', 'referee.js', 'render.js', 'audio.js', 'highlights.js', 'broadcast.js', 'ui.js'];
+const files = ['data.js', 'physics.js', 'decisions.js', 'engine.js', 'referee.js', 'render.js', 'audio.js', 'broadcast.js', 'highlights.js', 'ui.js'];
 const js = files.map(name => `/* ===== ${name} ===== */\n${read(name)}`).join('\n;\n');
 const html = read('template.html').replace('{{CSS}}', () => css).replace('{{JS}}', () => js);
 writeFileSync(join(__dirname, 'index.html'), html);

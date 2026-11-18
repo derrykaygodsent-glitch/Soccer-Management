@@ -2,7 +2,7 @@
 
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
-const { Match, L, W, CY, BOX_L, BOX_HALF, PEN } = require('../src/engine.js');
+const { Match, L, W, CX, CY, BOX_L, BOX_HALF, PEN } = require('../src/engine.js');
 const { CLUBS } = require('../src/data.js');
 const P = require('../src/physics.js');
 const H = require('../src/highlights.js');
@@ -93,7 +93,7 @@ test('a deeper foul restarts with a pass; replacing the taker during a stoppage 
   m.executeSetPiece();
   assert.equal(m.ball.flight.from, sub);
   assert.equal(m.ball.flight.kind, 'pass');
-  assert.equal(m.ball.flight.indirectRestart, false);
+  assert.equal(m.ball.restart.indirect, false);
   assert.equal(old.onPitch, false);
 });
 
@@ -268,7 +268,7 @@ test('a throw or indirect free kick cannot score directly without a second playe
     const m = match();
     m.startSetPiece(type, 0, L - 17, type === 'throwin' ? .3 : CY, { indirect: type === 'freekick' });
     m.executeSetPiece();
-    assert.equal(m.ball.flight.indirectRestart, true);
+    assert.equal(m.ball.restart.indirect, true);
     if (type === 'throwin') assert.equal(m.ball.flight.offsideCheck, false);
     crossLine(m, m.ball.flight.from, CY);
     assert.equal(m.teams[0].score, 0);
@@ -317,4 +317,192 @@ test('dismissal leaves a side short-handed, including when a keeper has to be re
   assert.ok(m.substitute(1, deputy.id, benchKeeper.id).ok);
   assert.equal(m.gk(m.teams[1]).id, benchKeeper.id);
   assert.equal(m.teams[1].slots.length, 10);
+});
+
+// A passer sees a level run, but the line and the runner keep moving before
+// contact. The exact positions at release, and the later involvement, count.
+function offsidePlay(half = 1, gap = 1.5) {
+  const m = match(half), p = pick(m, 0, 'CM'), runner = pick(m, 0, 'ST');
+  const defender = pick(m, 1, 'DC'), keeper = pick(m, 1, 'GK');
+  const ix = x => half === 1 ? x : L - x;
+  m.playersCache = [p, runner, defender, keeper];
+  Object.assign(p, { x: ix(71), y: CY, vx: 0, vy: 0 });
+  Object.assign(runner, { x: ix(83.75), y: CY, vx: direction(m) * 4.8, vy: 0 });
+  Object.assign(defender, { x: ix(84), y: CY + 8 });
+  Object.assign(keeper, { x: ix(101), y: CY });
+  Object.assign(m.ball, { owner: p, lastTouch: p, x: p.x, y: p.y, z: 0 });
+  p.releasePlan = { since: m.elapsed, at: m.elapsed + .38, x: runner.x, y: runner.y, purpose: 'through',
+    pass: { target: runner, lead: { x: ix(88), y: CY }, technique: 'through', through: true } };
+  m.interactions(STEP);
+  assert.equal(m.ball.owner, p, 'the passer is still taking the extra stride');
+  m.elapsed += .4;
+  runner.x = ix(84 + gap);
+  m.interactions(STEP);
+  assert.ok(!m.ball.owner && m.ball.flight?.intended === runner);
+  assert.ok(Math.abs(runner.offsideGap - gap) < 1e-8);
+  assert.equal(runner.offsideFlag, gap > .33);
+  return { m, p, runner, defender, keeper, ix };
+}
+
+test('a mistimed run is flagged at the kick but only called when involved, at the touch rather than the original offside line', () => {
+  for (const half of [1, 2]) {
+    const { m, runner, ix } = offsidePlay(half);
+    assert.equal(events(m, 'offside').length, 0, 'being in an offside position is not itself an offence');
+    const touch = ix(82.6);
+    m.elapsed += 1.3;
+    runner.x = touch;
+    Object.assign(m.ball, { x: touch, y: CY, z: 0, vx: direction(m) * 6, vy: 0 });
+    m.interactions(STEP);
+    assert.equal(events(m, 'offside').length, 1);
+    assert.equal(events(m, 'offside')[0].awardedTo, 1);
+    assert.equal(m.teams[0].stats.offsides, 1);
+    assert.equal(m.teams[0].stats.passWon, 0);
+    assert.equal(m.setpiece.reason, 'offside');
+    assert.equal(m.setpiece.indirect, true);
+    assert.equal(m.setpiece.x, touch);
+    assert.equal(m.setpiece.team, 1);
+    m.executeSetPiece();
+    assert.equal(m.ball.restart.indirect, true);
+    assert.equal(m.ball.flight.team, 1);
+    assert.equal(events(m, 'restartkick').at(-1).reason, 'offside');
+  }
+});
+
+test('a level runner can receive; a passive flagged runner does not stop clean defensive possession', () => {
+  const level = offsidePlay(2, 0);
+  level.m.rnd = () => .01;
+  level.m.elapsed++;
+  Object.assign(level.m.ball, { x: level.runner.x, y: level.runner.y, z: 0 });
+  level.m.interactions(STEP);
+  assert.equal(level.m.ball.owner, level.runner);
+  assert.equal(events(level.m, 'offside').length, 0);
+  const { m, defender } = offsidePlay();
+  m.elapsed++;
+  m.rnd = () => .01;
+  Object.assign(m.ball, { x: defender.x, y: defender.y, z: 0 });
+  m.interactions(STEP);
+  assert.equal(m.ball.owner, defender);
+  assert.equal(m.ball.offside, null);
+  assert.equal(events(m, 'offside').length, 0);
+});
+
+test('an offside runner actively challenging for the ball can be called before first contact', () => {
+  const { m, runner, defender } = offsidePlay();
+  m.elapsed++;
+  Object.assign(defender, { x: 89, y: CY });
+  Object.assign(runner, { x: 88.18, y: CY, vx: 4.8 });
+  Object.assign(m.ball, { x: 89, y: CY, z: .1, vx: 9, vy: 0 });
+  m.interactions(STEP);
+  assert.match(events(m, 'offside').at(-1).text, new RegExp(runner.name));
+  assert.equal(m.phase, 'freekick');
+  assert.equal(m.ball.owner, null);
+});
+
+test('a ricochet off a defender preserves the original offside picture, unlike deliberate control', () => {
+  const { m, runner, defender } = offsidePlay();
+  const original = m.ball.offside;
+  m.elapsed++;
+  m.rnd = () => .995; // hurried, heavy defensive touch
+  Object.assign(m.ball, { x: defender.x, y: defender.y, z: .36, vx: 17, vy: 0 });
+  m.interactions(STEP);
+  assert.equal(m.ball.lastTouch, defender);
+  assert.equal(m.ball.flight, null);
+  assert.equal(m.ball.offside, original);
+  m.elapsed++;
+  Object.assign(m.ball, { x: runner.x, y: runner.y, z: .18 });
+  m.interactions(STEP);
+  assert.equal(events(m, 'offside').length, 1);
+  assert.equal(m.setpiece.team, 1);
+});
+
+test('a keeper tip can go behind for a corner, but only after the ball actually crosses the line', () => {
+  for (const half of [1, 2]) {
+    const m = match(half), shooter = pick(m, 0, 'ST'), keeper = pick(m, 1, 'GK');
+    m.playersCache = [shooter, keeper];
+    Object.assign(shooter, { x: xFromGoal(m, 9), y: CY + 3.1 });
+    Object.assign(keeper, { x: xFromGoal(m, 1.7), y: CY + 3.1 });
+    Object.assign(m.ball, { x: shooter.x, y: shooter.y, z: .12, owner: shooter });
+    const shot = m.doShot(shooter);
+    shot.onFrame = true;
+    P.aerial(m.ball, xFromGoal(m, -.19), shooter.y, .52, .7);
+    const rolls = [.012, .96, .025];
+    m.rnd = () => rolls.shift() ?? .8;
+    for (let i = 0; i < 35 && m.ball.flight === shot; i++) { m.elapsed += STEP; m.updateBall(STEP); }
+    assert.equal(shot.shot.outcome, 'save');
+    assert.equal(m.ball.lastTouch, keeper);
+    assert.equal(m.phase, 'open');
+    assert.equal(events(m, 'corner').length, 0);
+    assert.ok(Math.hypot(m.ball.vx, m.ball.vy) > 3);
+    for (let i = 0; i < 45 && m.phase === 'open'; i++) { m.elapsed += STEP; m.updateBall(STEP); }
+    assert.equal(m.phase, 'corner');
+    assert.equal(m.setpiece.team, 0);
+    assert.equal(m.setpiece.y, W - .42);
+    assert.equal(m.teams[0].stats.corners, 0, 'awarded, not yet kicked');
+    assert.equal(m.teams[0].score, 0);
+  }
+});
+
+test('a short corner is a real pass, exempt only until the next attacking touch', () => {
+  const m = match(), kicker = pick(m, 0, 'W'), outlet = pick(m, 0, 'CM');
+  for (const p of m.playersCache) Object.assign(p, { x: CX, y: CY });
+  Object.assign(kicker, { x: L - 2, y: 1 });
+  Object.assign(outlet, { x: L - 8, y: 4 });
+  m.startSetPiece('corner', 0, L - .42, .42);
+  assert.equal(m.setpiece.taker, kicker);
+  assert.equal(outlet.spRole, 'outlet');
+  m.choiceRnd = () => .01;
+  m.executeSetPiece();
+  assert.equal(m.ball.flight.intended, outlet);
+  assert.equal(m.ball.flight.kind, 'pass');
+  assert.equal(m.ball.offside, null);
+  assert.equal(events(m, 'restartkick').at(-1).technique, 'ground');
+  const target = pick(m, 0, 'ST');
+  Object.assign(target, { x: L - 2, y: CY });
+  Object.assign(m.ball, { x: outlet.x, y: outlet.y, owner: outlet });
+  m.doPassTo(outlet, { target, lead: target });
+  assert.ok(m.ball.flight.offsideCheck);
+  assert.ok(target.offsideFlag, 'the next pass is judged normally');
+});
+
+test('a dead ball waits for its taker to approach and a second kick before another touch awards an indirect free kick', () => {
+  const m = match();
+  m.startSetPiece('freekick', 0, 58, 15);
+  const taker = m.setpiece.taker;
+  Object.assign(taker, { x: 19, y: 19 });
+  m.phaseTimer = .1;
+  for (let i = 0; i < 44; i++) m.step(STEP);
+  assert.equal(m.phase, 'freekick');
+  assert.equal(m.ball.x, 58);
+  assert.equal(m.ball.vx, 0);
+  for (let i = 0; i < 840 && m.phase !== 'open'; i++) m.step(STEP);
+  assert.equal(m.phase, 'open');
+  assert.equal(m.ball.x, 58);
+  assert.equal(m.ball.y, 15);
+  assert.ok(Math.hypot(taker.x - 58, taker.y - 15) <= 1);
+  assert.equal(m.ball.restart.taker, taker);
+  assert.equal(events(m, 'restartkick').length, 1);
+  m.elapsed += .8;
+  m.playersCache = [taker];
+  Object.assign(m.ball, { x: taker.x, y: taker.y, z: .3 });
+  m.interactions(STEP);
+  assert.equal(m.phase, 'freekick');
+  assert.equal(m.setpiece.team, 1);
+  assert.equal(m.setpiece.indirect, true);
+  assert.equal(m.setpiece.reason, 'double-touch');
+});
+
+test('the ball, the halfway line and the second-last opponent each bound offside position', () => {
+  for (const half of [1, 2]) {
+    const { m, p, runner, defender, keeper, ix } = offsidePlay(half);
+    m.ball.x = ix(88);
+    m.setOffside(p, true);
+    assert.equal(runner.offsideFlag, false, 'behind the ball');
+    m.ball.x = ix(75);
+    m.setOffside(p, true);
+    assert.ok(runner.offsideFlag, 'the keeper alone does not keep the runner onside');
+    runner.x = ix(CX); defender.x = ix(47); keeper.x = ix(50);
+    m.ball.x = ix(40);
+    m.setOffside(p, true);
+    assert.equal(runner.offsideFlag, false, 'halfway line is not the opponents’ half');
+  }
 });

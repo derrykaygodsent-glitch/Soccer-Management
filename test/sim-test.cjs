@@ -40,6 +40,8 @@ for (let m = 0; m < N; m++) {
       assert.equal(shots.length, team.stats.shots);
       assert.equal(shots.filter(s => s.outcome === 'goal' || s.outcome === 'save').length, team.stats.onTarget);
       assert.ok(team.stats.passWon <= team.stats.passes);
+      assert.equal(team.stats.corners, events.filter(e => e.type === 'restartkick' && e.restart === 'corner' && e.team === team.idx).length);
+      assert.equal(team.stats.offsides, events.filter(e => e.type === 'offside' && e.team === team.idx).length);
     }
     const s0 = match.teams[0].stats, s1 = match.teams[1].stats;
     tot.goals += match.teams[0].score + match.teams[1].score;
@@ -82,3 +84,5 @@ console.log('corners/team     ', avg(tot.corners[0]), avg(tot.corners[1]), ' (ta
 console.log('offsides/team    ', avg(tot.off[0]), avg(tot.off[1]), ' (target 1-3)');
 console.log('yellows/match    ', avg(tot.yellow), ' reds/match', avg(tot.red), ' pens/match', avg(tot.pens));
 console.log('saves/team       ', avg(tot.saves[0]), avg(tot.saves[1]));
+
+if (errors) process.exitCode = 1;

@@ -242,6 +242,12 @@
         }
         return { p, xy: toScreen(x, y) };
       }).sort((a, b) => a.xy[1] - b.xy[1]);
+      const restart = options.restart;
+      if (restart && !restart.taken) {
+        const [x, y] = toScreen(restart.x, restart.y);
+        ctx.beginPath(); ctx.arc(x, y, clamp(s * 1.62, 6.8, 14), 0, TAU);
+        ctx.strokeStyle = restart.indirect ? '#ffe3a2d9' : '#ebf3c2db'; ctx.lineWidth = 1.25; ctx.stroke();
+      }
       this.drawn = [];
       for (const { p, xy: [x, y] } of positions) {
         const club = match.teams[p.team].club, keeper = (p.role || p.pos) === 'GK';

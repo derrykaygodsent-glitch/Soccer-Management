@@ -46,6 +46,7 @@
   const chosenMode = () => V.modeFor(state.config.highlights);
   const filmView = () => state.scene || state.scan;
   const viewingReview = () => !state.scan && (state.scene?.view.phase ?? state.match.phase) === 'review';
+  const viewingRestart = () => state.ready || state.scan || state.replay ? null : state.scene ? state.scene.view.restart : restartFrame();
   const fraction = (t, a, b) => b > a ? Math.max(0, Math.min(1, (t - a) / (b - a))) : 0;
   const clockAt = t => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 
@@ -129,7 +130,7 @@
     renderLineup(); updateHUD(); draw();
   }
 
-  function currentStatus() {
+  function currentStatus(restart) {
     if (state.ready) return ['ready', 'Ready'];
     if (state.replay) return ['replay', 'Replay'];
     if (state.match.phase === 'halftime') return ['paused', 'Half time'];
@@ -137,6 +138,7 @@
     if (state.paused) return ['paused', 'Paused'];
     if (state.scan) return ['live', 'Skipping'];
     if (viewingReview()) return ['review', 'VAR check'];
+    if (restart) return ['restart', restart.type === 'corner' ? 'Corner' : restart.reason === 'offside' && !restart.taken ? 'Offside' : 'Free kick'];
     if (state.scene?.policy.rank || state.visiblePlay) return ['live', 'Highlight'];
     return ['live', state.match.half === 1 ? '1st half' : '2nd half'];
   }
@@ -157,7 +159,8 @@
       $('score').innerHTML = `${homeScore}<span class="score-dash">–</span>${awayScore}`;
       attr($('score'), 'aria-label', `${m.teams[0].club.name} ${homeScore}, ${m.teams[1].club.name} ${awayScore}`);
     }
-    const [status, phase] = currentStatus();
+    const restart = viewingRestart();
+    const [status, phase] = currentStatus(restart);
     if ($('matchStatus').dataset.status !== status) $('matchStatus').dataset.status = status;
     text('phaseBadge', phase);
     const atBreak = V.atBreak(m);
@@ -178,14 +181,24 @@
     $('btnSkip').title = state.scan ? 'Show this passage without changing highlight mode (S)' : `${skipLabel} (S)`;
     const indicator = $('replayIndicator');
     const view = state.replay ? 'replay' : state.scan ? 'search' : state.scene || (state.visiblePlay && !state.paused) ? 'highlight' : '';
-    indicator.hidden = !view;
+    indicator.hidden = !(view || restart);
     if ($('pitchwrap').dataset.view !== view) $('pitchwrap').dataset.view = view;
-    if (view) {
-      if (indicator.dataset.view !== view) indicator.dataset.view = view;
-      const policy = (state.scene || state.visiblePlay)?.policy;
-      text('indicatorText', state.replay ? (state.replay.paused ? 'Replay paused' : 'Goal replay') :
-        state.scan ? (state.paused ? 'Search paused' : 'Skipping quiet play') :
-        state.paused ? 'Playback paused' : policy.rank ? `${policy.label} highlights` : 'Returning to live play');
+    if (indicator.dataset.view !== view) indicator.dataset.view = view;
+    if (restart) {
+      const { title, detail, kind } = restartCopy(restart, m);
+      if (indicator.dataset.restart !== kind) indicator.dataset.restart = kind;
+      // Don't sit over the taker at the upper-left flag on a narrow pitch.
+      const side = restart.x < E.CX && restart.y < 19 ? 'right' : 'left';
+      if (indicator.dataset.side !== side) indicator.dataset.side = side;
+      text('indicatorText', title); text('indicatorDetail', detail);
+    } else {
+      if (indicator.dataset.restart) { delete indicator.dataset.restart; delete indicator.dataset.side; }
+      if (view) {
+        const policy = (state.scene || state.visiblePlay)?.policy;
+        text('indicatorText', state.replay ? (state.replay.paused ? 'Replay paused' : 'Goal replay') :
+          state.scan ? (state.paused ? 'Search paused' : 'Skipping quiet play') :
+          state.paused ? 'Playback paused' : policy.rank ? `${policy.label} highlights` : 'Returning to live play');
+      }
     }
   }
   function textReplayButton(message) {
@@ -351,7 +364,9 @@
     if (message && ev.type !== 'preview') {
       state.events.push({ ...ev, text: message, key });
       if (state.events.length > 245) state.events.shift();
-      const label = goal ? 'Goal' : ev.type === 'pen' ? 'Penalty' : ev.type === 'varcheck' ? 'VAR check' : ev.type === 'varresult' ? 'VAR decision' : null;
+      const label = goal ? 'Goal' : ev.type === 'pen' ? 'Penalty' : ev.type === 'varcheck' ? 'VAR check' : ev.type === 'varresult' ? 'VAR decision' :
+        ev.type === 'offside' ? 'Offside' : ev.type === 'foul' ? 'Free kick' : ev.type === 'corner' ? 'Corner' :
+        ev.type === 'restartkick' ? (ev.restart === 'corner' ? 'Corner' : ev.indirect ? 'Indirect free kick' : 'Free kick') : null;
       if (!quiet || goal || end) setFeed(message, ev, label);
     }
     if (goal) {
@@ -374,6 +389,7 @@
       A.whistle(ev.type === 'ht', ev.type === 'ft');
     } else if (!quiet) {
       if (ev.type === 'pen' || ev.type === 'offside' || ev.type === 'varcheck') A.whistle(false);
+      else if (ev.type === 'restartkick') A.kick(.48);
       else if (ev.type === 'post' || ev.type === 'save') { A.kick(.7); if (ev.key) A.bigChance(); }
       else if (ev.type === 'foul' || ev.type === 'red' || ev.type === 'yellow') A.foul();
     }
@@ -385,9 +401,27 @@
     return { ...match.snapshotFrame(), referee: referee.current, screen: broadcast.stamp(match.elapsed) };
   }
 
+  function restartFrame() {
+    const sp = B.restartAt(state.match, 5.5);
+    if (!sp) return null;
+    return { type: sp.type, reason: sp.reason, indirect: !!sp.indirect, taken: sp.takenAt != null, technique: sp.technique,
+      team: sp.team, x: sp.x, y: sp.y, taker: sp.taker?.name || state.match.teams[sp.team].club.short };
+  }
+
+  function restartCopy(sp, match) {
+    const club = match.teams[sp.team].club.short;
+    if (sp.reason === 'offside' && !sp.taken) {
+      return { title: `Offside · ${match.teams[1 - sp.team].club.short}`, detail: `Indirect free kick · ${club}`, kind: 'offside' };
+    }
+    const title = sp.type === 'corner' ? 'Corner' : sp.indirect ? 'Indirect free kick' : 'Free kick';
+    const action = !sp.taken ? 'to take' : sp.technique === 'shot' ? 'shoots' : sp.technique === 'cross' ? 'delivers' : sp.type === 'corner' ? 'plays it short' : 'restarts play';
+    return { title: `${title} · ${club}`, detail: `${sp.taker} ${action}`, kind: sp.type === 'corner' ? 'corner' : sp.indirect ? 'indirect' : 'free' };
+  }
+
   function withView(snap = captureFrame()) {
     const m = state.match;
     snap.phase = m.phase;
+    snap.restart = restartFrame();
     snap.score = m.teams.map(team => team.score);
     snap.stats = m.teams.map(team => ({ ...team.stats }));
     snap.poss = m.possTime.slice();
@@ -446,8 +480,8 @@
     updateHUD(); draw(); queueScan();
   }
 
-  function updateScanView(scan, rank) {
-    scan.time = V.visibleStart(scan.first.elapsed, state.match.elapsed, scan.policy, scan.time, rank);
+  function updateScanView(scan, rank, cue) {
+    scan.time = V.visibleStart(scan.first.elapsed, state.match.elapsed, scan.policy, scan.time, rank, cue);
     scan.view = V.frameAt(state.buffer, scan.time, scan.first);
     drainEntries(scan.entries, scan.time, true);
   }
@@ -467,8 +501,8 @@
     const scan = state.scan;
     const result = V.scanBatch(state.match, state.scout, scan.policy, { afterStep: match => state.broadcast.observe(match) });
     if (result.type === 'break') { closeCut(); return; }
-    updateScanView(scan, result.rank);
-    if (result.type === 'moment') showBuffered(scan, scan.policy, V.tailFor(scan.policy, result.rank));
+    updateScanView(scan, result.rank, result.cue);
+    if (result.type === 'moment') showBuffered(scan, scan.policy, V.tailFor(scan.policy, result.rank, result.cue));
   }
 
   function advanceScene(dt) {
@@ -584,7 +618,7 @@
     return statLine('Possession', possession + '%', (100 - possession) + '%') +
       statLine('Shots', a.shots, b.shots) + statLine('On target', a.onTarget, b.onTarget) +
       statLine('Expected goals', a.xG.toFixed(2), b.xG.toFixed(2)) + statLine('Passes completed', a.passWon, b.passWon) +
-      (short ? '' : statLine('Pass accuracy', passPct(a), passPct(b)) + statLine('Corners', a.corners, b.corners) + statLine('Fouls', a.fouls, b.fouls) + statLine('Saves', a.saves, b.saves));
+      (short ? '' : statLine('Pass accuracy', passPct(a), passPct(b)) + statLine('Corners', a.corners, b.corners) + statLine('Offsides', a.offsides, b.offsides) + statLine('Fouls', a.fouls, b.fouls) + statLine('Saves', a.saves, b.saves));
   }
   function renderStats() {
     const m = state.match;
@@ -661,8 +695,8 @@
     if (state.scan) return;
     if (!state.replayQueue) {
       if (state.nextSearch) { beginSearch(state.nextSearch); return; }
-      if (state.visiblePlay && m.elapsed >= state.visiblePlay.until && !V.holdingAction(m, state.visiblePlay.policy)) state.visiblePlay = null;
-      if (policy.rank && !state.visiblePlay && !V.holdingAction(m, policy)) { beginSearch(policy); return; }
+      if (state.visiblePlay && m.elapsed >= state.visiblePlay.until && !V.holdingAction(m)) state.visiblePlay = null;
+      if (policy.rank && !state.visiblePlay && !V.holdingAction(m)) { beginSearch(policy); return; }
     }
     const clock = state.broadcast;
     state.acc += dt * B.multiplier(state.speed);
@@ -671,11 +705,11 @@
       state.acc -= cost;
       m.step(H);
       clock.observe(m);
-      const rank = state.scout.check(m);
+      const rank = state.scout.check(m), cue = state.scout.cue;
       if (state.visiblePlay && rank <= state.visiblePlay.policy.rank) {
-        state.visiblePlay.until = Math.max(state.visiblePlay.until, m.elapsed + V.tailFor(state.visiblePlay.policy, rank));
+        state.visiblePlay.until = Math.max(state.visiblePlay.until, m.elapsed + V.tailFor(state.visiblePlay.policy, rank, cue));
       } else if (policy.rank && rank <= policy.rank && !state.paused) {
-        state.visiblePlay = { policy, until: m.elapsed + V.tailFor(policy, rank) };
+        state.visiblePlay = { policy, until: m.elapsed + V.tailFor(policy, rank, cue) };
       }
     }
     if (state.acc > .6) state.acc = 0;
@@ -688,7 +722,7 @@
     const alpha = !frame && !state.paused ? fraction(state.acc, 0, state.broadcast.cost(H)) : 1;
     state.renderer.draw(state.match, {
       ready: state.ready, names: state.names, selected: state.selected,
-      live: !state.ready && !state.scan, frame, alpha,
+      live: !state.ready && !state.scan, frame, alpha, restart: viewingRestart(),
       referee: frame ? null : state.referee.view(state.match.elapsed + (state.paused ? 0 : H * alpha))
     });
   }

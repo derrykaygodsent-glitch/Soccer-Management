@@ -51,3 +51,18 @@ test('the broadcast clock integrates fixed ticks and preserves the timestamp of 
   assert.equal(indexAt(frames, goal.screen, 'screen'), frames.length - 1);
   assert.ok(clock.time > m.elapsed / quietRate, 'slower moments take longer to display without changing match time');
 });
+
+test('a placed free kick and its delivery get time at the shared pace without slowing unrelated play', () => {
+  const m = match(), routine = targetPace(m);
+  assert.equal(m.elapsed, 0);
+  assert.equal(m.phase, 'open');
+  m.phase = 'freekick'; m.setpiece = { type: 'freekick', team: 0 };
+  assert.ok(targetPace(m) < routine);
+  m.setpiece.indirect = true;
+  assert.ok(targetPace(m) <= 2.42);
+  m.phase = 'open'; m.lastRestart = { ...m.setpiece, takenAt: 20 }; m.setpiece = null;
+  m.elapsed = 20.5;
+  assert.ok(targetPace(m) <= 2.42);
+  m.elapsed = 26;
+  assert.equal(targetPace(m), routine);
+});
