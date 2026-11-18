@@ -1,0 +1,14 @@
+{
+  "name": "touchline-26",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A standalone browser football management game with a live 2D match engine.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node build.cjs",
+    "preview": "node build.cjs && node preview.cjs",
+    "test": "node --test test/baseline.test.cjs",
+    "test:sim": "node test/sim-test.cjs",
+    "test:smoke": "node test/dom-smoke.cjs"
+  }
+}

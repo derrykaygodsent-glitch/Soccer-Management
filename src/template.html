@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOUCHLINE 26 — 2D Match Engine</title>
+<style>
+{{CSS}}
+</style>
+</head>
+<body>
+
+<!-- ============ PREMATCH ============ -->
+<div id="prematch">
+  <div class="pre-inner">
+    <div class="pre-logo">TOUCHLINE<span>26</span></div>
+    <div class="pre-tag">THE 2D MATCH ENGINE · ORIGINAL CLUBS · REAL-TIME SIMULATION</div>
+    <div class="pre-cols">
+      <div class="pre-sec">
+        <h3>YOUR CLUB</h3>
+        <div class="club-grid" id="homeGrid"></div>
+      </div>
+      <div class="pre-sec">
+        <h3>OPPOSITION</h3>
+        <div class="club-grid" id="awayGrid"></div>
+      </div>
+    </div>
+    <div class="pre-row">
+      <label>FORMATION<select id="preForm"></select></label>
+      <label>MENTALITY<select id="preMent"></select></label>
+    </div>
+    <div class="pre-xi" id="preXI"></div>
+    <div class="pre-checks">
+      <label><input type="checkbox" id="preReplay" checked> Auto goal replays</label>
+      <label><input type="checkbox" id="preSound" checked> Stadium sound</label>
+    </div>
+    <button id="btnKick">KICK OFF ▸</button>
+    <div class="pre-hint">Space pause · 1/2/3 speed · C camera · N names · D debug · R replay · S skip to highlight</div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hidden">
+  <header id="topbar">
+    <div class="brand">TOUCHLINE<span>26</span><small>2D MATCH ENGINE</small></div>
+    <div id="scoreboard">
+      <div class="sb-team"><span class="badge" id="badgeH"></span><span id="nameH"></span></div>
+      <div id="score">0 – 0</div>
+      <div class="sb-team"><span id="nameA"></span><span class="badge" id="badgeA"></span></div>
+      <div id="clockwrap"><span id="clock">00:00</span><span id="added"></span><span id="phaseBadge">1ST HALF</span></div>
+    </div>
+    <div id="speedctl">
+      <button id="btnPause" title="Pause (Space)">⏸</button>
+      <button class="spd active" data-s="1" title="Normal speed">1×</button>
+      <button class="spd" data-s="2" title="Fast">2×</button>
+      <button class="spd" data-s="3" title="Very fast">4×</button>
+      <button id="btnSkip" title="Skip to next highlight (S)">⏭</button>
+    </div>
+  </header>
+
+  <div id="main">
+    <aside id="sidebar">
+      <nav id="tabs">
+        <button data-tab="tactics" class="active">TACTICS</button>
+        <button data-tab="squad">SQUAD</button>
+        <button data-tab="stats">STATS</button>
+      </nav>
+      <section id="tab-tactics" class="tab active"></section>
+      <section id="tab-squad" class="tab">
+        <div id="subsLeft"></div>
+        <div id="xiList"></div>
+        <div class="bench-head">BENCH</div>
+        <div id="benchList"></div>
+      </section>
+      <section id="tab-stats" class="tab">
+        <div id="statsBody"></div>
+        <div class="mom-wrap"><h4>MATCH MOMENTUM</h4><canvas id="momCv"></canvas></div>
+        <div class="shot-wrap"><h4>SHOT MAP · YOU ATTACK →</h4><canvas id="shotCv"></canvas>
+          <div class="shot-legend">
+            <span><i style="background:#ffd700"></i>Goal</span>
+            <span><i style="background:#38e1ff"></i>Saved</span>
+            <span><i style="background:#f97316"></i>Blocked</span>
+            <span><i style="background:#8b98a5"></i>Off target</span>
+            <span><i style="background:#c084fc"></i>Post</span>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <div id="center">
+      <div id="pitchwrap">
+        <canvas id="pitch"></canvas>
+        <div id="replayBars" class="hidden"></div>
+        <div id="replayBadge" class="hidden">● REPLAY</div>
+        <div id="ffBadge" class="hidden">⏩ FAST-FORWARD</div>
+        <div id="goalBanner" class="hidden">
+          <div id="gbTeam"></div>
+          <div id="gbScorer"></div>
+          <div id="gbMeta"></div>
+        </div>
+        <div id="subBanner" class="hidden"></div>
+        <div id="playerCard" class="hidden"></div>
+        <div id="toast" class="hidden"></div>
+      </div>
+      <div id="pitchbar">
+        <button id="optCamera">📷 Full pitch</button>
+        <button id="optNames">🏷 Names</button>
+        <button id="optDebug">🧠 AI debug</button>
+        <button id="optReplayGoal">▶ Replay last goal</button>
+        <span class="spacer"></span>
+        <label><input type="checkbox" id="optReplay" checked> Auto replay</label>
+        <label><input type="checkbox" id="optSound" checked> 🔊 Sound</label>
+        <span class="keys">Space · 1/2/3 · C · N · D · R · S</span>
+      </div>
+      <div id="commentary">
+        <div id="comhead"><span>MATCH COMMENTARY</span><button id="comFilter">KEY ONLY</button></div>
+        <div id="comlist"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="overlay" class="hidden">
+    <div class="ov-card">
+      <div id="ovTitle"></div>
+      <div id="ovScore"></div>
+      <div id="ovScorers"></div>
+      <div id="ovStats"></div>
+      <div id="ovMotm"></div>
+      <button id="ovContinue"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+{{JS}}
+</script>
+</body>
+</html>
