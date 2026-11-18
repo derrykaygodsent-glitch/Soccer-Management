@@ -2,17 +2,22 @@
 
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
-const { matchSeconds, restartAt } = require('../src/broadcast.js');
+const { NORMAL_SPEED, SPEEDS, matchSeconds, speedFor, restartAt } = require('../src/broadcast.js');
 const { STEP } = require('../src/highlights.js');
 
-test('1× is real time, and 2× and 4× scale the same visible footage', () => {
+test('finer viewing speeds are real multipliers, with 1× remaining real time', () => {
+  assert.equal(NORMAL_SPEED, 1);
+  assert.deepEqual(SPEEDS, [.75, 1, 1.25, 1.5, 1.75, 2, 4]);
   for (const wall of [0, .016, STEP, .1, 1, 10]) {
-    assert.equal(matchSeconds(wall, 1), wall);
-    assert.equal(matchSeconds(wall, 2), wall * 2);
-    assert.equal(matchSeconds(wall, 3), wall * 4);
+    for (const rate of SPEEDS) assert.equal(matchSeconds(wall, rate), wall * rate);
   }
-  assert.equal(matchSeconds(5), 5, 'an absent or invalid setting defaults to real time');
-  assert.equal(matchSeconds(5, 4), 5);
+});
+
+test('absent or invalid speed settings fall back to real time', () => {
+  for (const bad of [undefined, NaN, Infinity, null, 0, -1, 3]) {
+    assert.equal(speedFor(bad), NORMAL_SPEED);
+    assert.equal(matchSeconds(5, bad), 5);
+  }
 });
 
 test('the active set piece is shown during setup, cards and the taker’s windup', () => {

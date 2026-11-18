@@ -5,6 +5,7 @@
   const $ = id => document.getElementById(id);
   // Physics uses a fixed step; display speed never changes the simulation outcome.
   const H = V.STEP;
+  const SPEED_SHORTCUTS = { 1: B.NORMAL_SPEED, 2: 2, 3: 4 };
   const REPLAY_BUILDUP = 12, REPLAY_AFTERMATH = 1.05;
   const HISTORY = Math.ceil((V.MODES.comprehensive.lead + 6) / (H * 2));
   const SCAN_YIELD = 6, MAX_FRAME_DT = .12;
@@ -26,7 +27,7 @@
     crl: '<path d="M12.3 7.5c.7 3.8-4.8 4.1-3.7 7.6.8 2.6 6.3 2.4 7-.8.5-2.4-.8-4.7-3.3-6.8Zm-.2 6c.9.7 1.2 1.4.4 2-.6.6-1.9-.1-1.3-1 .2-.4.6-.6.9-1Z" fill="currentColor" stroke="none"/>'
   };
   const state = {
-    match: null, renderer: null, ready: true, paused: true, speed: 1, acc: 0,
+    match: null, renderer: null, ready: true, paused: true, speed: B.NORMAL_SPEED, acc: 0,
     config: { home: 1, away: 0, auto: true, sound: false, highlights: V.DEFAULT_MODE }, names: false, sound: false,
     selected: null, subMode: null, desk: 'tactics', returnBreak: false,
     buffer: [], replay: null, replayQueue: null, goalFrames: null, events: [], meta: {},
@@ -89,7 +90,7 @@
   function prepare(config) {
     state.config = { ...config, highlights: V.modeFor(config.highlights).id };
     state.ready = state.paused = true;
-    state.speed = 1; state.acc = 0; state.replay = null;
+    state.speed = B.NORMAL_SPEED; state.acc = 0; state.replay = null;
     stopScanWork();
     state.scan = state.scene = state.visiblePlay = state.nextSearch = null;
     state.lineupDirty = false;
@@ -111,7 +112,7 @@
       }
     });
     state.scout = new V.Scout(state.match);
-    syncWatchMode();
+    syncSpeed(); syncWatchMode();
     state.meta = Object.fromEntries(state.match.teams.flatMap(t => t.players.map(p => [p.id, p])));
     document.documentElement.style.setProperty('--home', home.primary);
     document.documentElement.style.setProperty('--away', away.primary);
@@ -165,7 +166,6 @@
     text('playLabel', label); attr($('playIcon'), 'href', stopped || atBreak ? '#i-play' : '#i-pause');
     $('btnPlay').title = atBreak ? label : `${label} (Space)`;
     $('btnPlay').disabled = atBreak;
-    for (const b of document.querySelectorAll('[data-speed]')) attr(b, 'aria-pressed', Number(b.dataset.speed) === state.speed);
     const replayButton = $('btnReplay');
     const reviewing = viewingReview();
     replayButton.disabled = !state.goalFrames || !!state.replayQueue || state.ready || atBreak || reviewing || !!state.scene;
@@ -221,9 +221,14 @@
     }
     updateHUD(); draw(); queueScan();
   }
+  function syncSpeed() {
+    const picker = $('playbackSpeed'), speed = state.speed;
+    picker.value = String(speed);
+    picker.title = speed === B.NORMAL_SPEED ? '1× · Normal speed (100%)' : `${speed}× · ${speed * 100}% of normal speed`;
+  }
   function setSpeed(speed) {
-    state.speed = speed;
-    updateHUD();
+    state.speed = B.speedFor(speed);
+    syncSpeed();
   }
 
   const timingLabel = policy => `${policy.estimate} min at 1×`;
@@ -766,7 +771,9 @@
     $('preHighlights').addEventListener('change', e => updateWatchGuide(V.modeFor(e.target.value)));
     document.addEventListener('visibilitychange', queueScan);
     for (const id of ['setupDialog', 'deskDialog', 'breakDialog']) $(id).addEventListener('close', queueScan);
-    for (const b of document.querySelectorAll('[data-speed]')) b.addEventListener('click', () => setSpeed(+b.dataset.speed));
+    const speedPicker = $('playbackSpeed');
+    speedPicker.innerHTML = B.SPEEDS.map(speed => `<option value="${speed}"${speed === B.NORMAL_SPEED ? ' aria-label="1×, normal speed"' : ''}>${speed}×</option>`).join('');
+    speedPicker.addEventListener('change', e => setSpeed(Number(e.target.value)));
     $('btnNames').addEventListener('click', () => { state.names = !state.names; attr($('btnNames'), 'aria-pressed', state.names); draw(); });
     $('btnSound').addEventListener('click', () => { setSound(!state.sound, true); state.config.sound = state.sound; });
     $('btnReplay').addEventListener('click', () => state.replay ? endReplay() : startReplay());
@@ -847,7 +854,7 @@
       if (activeDialog() || e.altKey || e.ctrlKey || e.metaKey || e.repeat || e.target.matches('input, select, textarea, [contenteditable]')) return;
       const key = e.key.toLowerCase();
       if (e.code === 'Space' && !e.target.closest('button')) { e.preventDefault(); togglePlay(); }
-      else if (['1', '2', '3'].includes(key)) setSpeed(+key);
+      else if (Object.hasOwn(SPEED_SHORTCUTS, key)) setSpeed(SPEED_SHORTCUTS[key]);
       else if (key === 'n') $('btnNames').click();
       else if (key === 's') toggleSkip();
       else if (key === 'r' && !$('btnReplay').disabled) $('btnReplay').click();

@@ -111,15 +111,15 @@ h1{font:700 clamp(35px,4vw,45px)/.99 'Barlow Condensed','Arial Narrow',sans-seri
 .controls{min-height:51px;padding:7px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#17221a}
 .playback,.view-controls{display:flex;align-items:center;gap:7px;min-width:0}
 .play-button{min-width:94px}
-.speeds{display:flex;align-items:center;background:#111b14;border:1px solid #344537;border-radius:8px;padding:2px;flex:none;min-height:36px;gap:2px}
-.speeds button{border:0;background:transparent;border-radius:5px;padding:0 8px;height:28px;min-width:31px;font-size:11px;font-weight:740;color:#a9b8a9;font-variant-numeric:tabular-nums}
-.speeds button:hover{color:#e7efe2;background:#263a2d}.speeds button[aria-pressed=true]{background:#d9f99c;color:#202c1d}
 .skip-button{background:#17221a;color:#dfe8da}.view-button{color:#cfdbca;background:#17221a}.view-button .icon,.skip-button .icon{width:16px;height:16px}
-.watch-mode{position:relative;display:flex;align-items:center;min-width:0;flex:none;gap:4px;border:1px solid #405942;border-radius:8px;background:#1c2b20;min-height:36px;padding-left:9px}
-.watch-mode:hover,.watch-mode:focus-within{border-color:#718d60}
-.watch-mode>span{font-size:9px;font-weight:790;letter-spacing:.082em;text-transform:uppercase;color:#b9c7b7;white-space:nowrap}
-.watch-mode #highlightMode{width:135px;min-height:34px;padding:0 23px 0 6px;border:0;border-radius:7px;color:#e4f4d8;font-size:12px;font-weight:720;cursor:pointer;appearance:none;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23c9e7ae' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 7px center}
-.watch-mode #highlightMode option{background:#17251c;color:#e8efe7}
+.watch-mode,.speed-mode{position:relative;display:flex;align-items:center;min-width:0;flex:none;gap:4px;border:1px solid #405942;border-radius:8px;background:#1c2b20;min-height:36px;padding-left:9px}
+.watch-mode:hover,.watch-mode:focus-within,.speed-mode:hover,.speed-mode:focus-within{border-color:#718d60}
+.watch-mode>span,.speed-mode>span{font-size:9px;font-weight:790;letter-spacing:.082em;text-transform:uppercase;color:#b9c7b7;white-space:nowrap}
+.watch-mode #highlightMode,.speed-mode #playbackSpeed{min-height:34px;padding:0 23px 0 6px;border:0;border-radius:7px;color:#e4f4d8;font-size:12px;font-weight:720;cursor:pointer;appearance:none;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23c9e7ae' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 7px center}
+.watch-mode #highlightMode{width:135px}
+.speed-mode{padding-left:8px;gap:2px}
+.speed-mode #playbackSpeed{width:63px;padding-left:3px;padding-right:19px;font-variant-numeric:tabular-nums;color:var(--accent)}
+.watch-mode #highlightMode option,.speed-mode #playbackSpeed option{background:#17251c;color:#e8efe7}
 .pitch-indicator[data-view=highlight]:not([data-restart]) i{background:var(--accent)}
 .pitch-indicator[data-view=search] i{background:#a9e88b;animation:scan-pulse 1.1s ease-in-out infinite alternate}
 /* Hold the last clear pitch frame during a cut; the clock and indicator stay live. */
@@ -198,8 +198,8 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   .broadcast-head{min-height:47px;gap:9px;padding:6px 8px}
   .commentary{padding-left:9px;gap:7px;min-height:37px}.feed-label{padding-right:6px}.feed-button{min-height:34px;width:34px;margin-block:2px}
   .controls{padding:7px 8px;gap:7px;flex-wrap:wrap}.playback,.view-controls{gap:5px}
-  .button,.speeds{min-height:44px}.speeds button{height:38px;min-width:32px}.play-button{min-width:90px}
-  .watch-mode{min-height:44px}.watch-mode #highlightMode{min-height:42px}
+  .button,.watch-mode,.speed-mode{min-height:44px}.play-button{min-width:90px}
+  .watch-mode #highlightMode,.speed-mode #playbackSpeed{min-height:42px}
   .view-button,.skip-button{padding-inline:8px}.view-controls{width:100%}.view-button{flex:1}.playback{width:100%}.skip-button{margin-left:auto}
   .team-head{margin-bottom:7px}.team-button{min-height:41px}.lineup{grid-auto-columns:100px;padding-bottom:7px}
   .shortcut{display:none!important}.footer{padding-top:6px}.footer>div{flex-wrap:wrap}
@@ -207,8 +207,10 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
 }
 @media(max-width:565px){
   .watch-mode{flex:1;padding:0;min-width:122px}
-  .watch-mode>span{position:absolute;top:5px;left:9px;line-height:1;font-size:8px;pointer-events:none}
+  .speed-mode{padding-left:0}
+  .watch-mode>span,.speed-mode>span{position:absolute;top:5px;left:9px;line-height:1;font-size:8px;pointer-events:none}
   .watch-mode #highlightMode{width:100%;padding:12px 21px 0 8px}
+  .speed-mode #playbackSpeed{width:69px;padding:12px 20px 0 8px}
   .view-controls .view-button{flex:none;width:44px;padding-inline:0}.view-controls .view-button span{display:none}
 }
 @media(max-width:480px){
@@ -226,15 +228,15 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   .shell{width:calc(100% - 18px)}
   .fixture-head{align-items:center}.fixture-button{min-height:40px}
   h1{font-size:32px}.fixture-title p{font-size:10px}.pitchwrap{aspect-ratio:1.45}
-  .speeds button{min-width:27px;padding-inline:5px}.play-button{min-width:76px;padding-inline:7px}.skip-button{font-size:10px;padding-inline:6px;gap:4px}.skip-button .icon{width:14px;height:14px}
+  .play-button{min-width:76px;padding-inline:7px}.skip-button{font-size:10px;padding-inline:6px;gap:4px}.skip-button .icon{width:14px;height:14px}
   .lineup-crest{width:25px}.lineup-crest svg{width:23px;height:28px}.team-title{gap:5px}#teamTitle{font-size:21px}
   .dialog-actions{gap:5px}.dialog-actions .button{padding-inline:8px}
 }
 @media(orientation:landscape) and (max-height:580px) and (min-width:560px){
   .sitebar-inner{height:40px}.main{padding-top:7px}.fixture-head{margin-bottom:6px;align-items:center}.fixture-title{display:flex;align-items:baseline;gap:9px}.fixture-title .eyebrow{display:none}.fixture-title h1{font-size:31px;margin:0}.fixture-title p{font-size:11px}.fixture-button{min-height:34px}
   .broadcast-head{min-height:43px;padding-block:4px}.commentary{min-height:33px}.pitchwrap{height:clamp(167px,calc(100svh - 213px),320px);aspect-ratio:auto;max-height:none}
-  .watch-mode{min-height:36px}.watch-mode #highlightMode{min-height:34px}
-  .view-controls,.playback{width:auto}.view-button{flex:none}.controls{min-height:46px;padding-block:4px}.controls .button,.controls .speeds{min-height:36px}.controls .speeds button{height:28px}
+  .watch-mode,.speed-mode{min-height:36px}.watch-mode #highlightMode,.speed-mode #playbackSpeed{min-height:34px}
+  .view-controls,.playback{width:auto}.view-button{flex:none}.controls{min-height:46px;padding-block:4px}.controls .button{min-height:36px}
 }
 @media(orientation:landscape) and (max-height:580px) and (min-width:560px) and (max-width:700px){
   .pitchwrap{height:clamp(106px,calc(100svh - 221px),320px)}
@@ -320,11 +322,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
       <div class="controls" aria-label="Match controls">
         <div class="playback">
           <button class="button primary play-button" id="btnPlay" type="button" title="Kick off (Space)"><svg class="icon" aria-hidden="true"><use id="playIcon" href="#i-play"/></svg><span id="playLabel">Kick off</span></button>
-          <div class="speeds" role="group" aria-label="Playback speed">
-            <button type="button" data-speed="1" aria-pressed="true" aria-label="1×, normal speed" title="Real time · 100% (1)">1×</button>
-            <button type="button" data-speed="2" aria-pressed="false" aria-label="2×, double speed" title="Twice real time · 200% (2)">2×</button>
-            <button type="button" data-speed="3" aria-pressed="false" aria-label="4×, quadruple speed" title="Four times real time · 400% (3)">4×</button>
-          </div>
+          <label class="speed-mode"><span>Speed</span><select id="playbackSpeed" aria-label="Playback speed"></select></label>
           <button class="button skip-button" id="btnSkip" type="button" disabled title="Next highlight (S)"><svg class="icon" aria-hidden="true"><use href="#i-skip"/></svg><span id="skipLabel">Next highlight</span></button>
         </div>
         <div class="view-controls">
@@ -3536,10 +3534,12 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
 /* Touchline 26 — playback rate and on-screen restart context. */
 (function (global) {
   'use strict';
-  const SPEEDS = [1, 2, 4];
+  const NORMAL_SPEED = 1;
+  const SPEEDS = Object.freeze([.75, NORMAL_SPEED, 1.25, 1.5, 1.75, 2, 4]);
+  const speedFor = speed => SPEEDS.includes(speed) ? speed : NORMAL_SPEED;
   // One real second is one simulation second at 1×, regardless of the action.
   // Highlight selection can skip time, but never rescales the footage itself.
-  const matchSeconds = (realSeconds, speed) => realSeconds * (SPEEDS[speed - 1] ?? SPEEDS[0]);
+  const matchSeconds = (realSeconds, speed) => realSeconds * speedFor(speed);
 
   // Read-only view of an active set piece or its just-taken delivery.
   function restartAt(match, follow = 7.5) {
@@ -3550,7 +3550,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     return elapsed - lastRestart.takenAt < follow || delivery ? lastRestart : null;
   }
 
-  const api = { matchSeconds, restartAt };
+  const api = { NORMAL_SPEED, SPEEDS, speedFor, matchSeconds, restartAt };
   global.TLBroadcast = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -3773,6 +3773,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   const $ = id => document.getElementById(id);
   // Physics uses a fixed step; display speed never changes the simulation outcome.
   const H = V.STEP;
+  const SPEED_SHORTCUTS = { 1: B.NORMAL_SPEED, 2: 2, 3: 4 };
   const REPLAY_BUILDUP = 12, REPLAY_AFTERMATH = 1.05;
   const HISTORY = Math.ceil((V.MODES.comprehensive.lead + 6) / (H * 2));
   const SCAN_YIELD = 6, MAX_FRAME_DT = .12;
@@ -3794,7 +3795,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     crl: '<path d="M12.3 7.5c.7 3.8-4.8 4.1-3.7 7.6.8 2.6 6.3 2.4 7-.8.5-2.4-.8-4.7-3.3-6.8Zm-.2 6c.9.7 1.2 1.4.4 2-.6.6-1.9-.1-1.3-1 .2-.4.6-.6.9-1Z" fill="currentColor" stroke="none"/>'
   };
   const state = {
-    match: null, renderer: null, ready: true, paused: true, speed: 1, acc: 0,
+    match: null, renderer: null, ready: true, paused: true, speed: B.NORMAL_SPEED, acc: 0,
     config: { home: 1, away: 0, auto: true, sound: false, highlights: V.DEFAULT_MODE }, names: false, sound: false,
     selected: null, subMode: null, desk: 'tactics', returnBreak: false,
     buffer: [], replay: null, replayQueue: null, goalFrames: null, events: [], meta: {},
@@ -3857,7 +3858,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   function prepare(config) {
     state.config = { ...config, highlights: V.modeFor(config.highlights).id };
     state.ready = state.paused = true;
-    state.speed = 1; state.acc = 0; state.replay = null;
+    state.speed = B.NORMAL_SPEED; state.acc = 0; state.replay = null;
     stopScanWork();
     state.scan = state.scene = state.visiblePlay = state.nextSearch = null;
     state.lineupDirty = false;
@@ -3879,7 +3880,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
       }
     });
     state.scout = new V.Scout(state.match);
-    syncWatchMode();
+    syncSpeed(); syncWatchMode();
     state.meta = Object.fromEntries(state.match.teams.flatMap(t => t.players.map(p => [p.id, p])));
     document.documentElement.style.setProperty('--home', home.primary);
     document.documentElement.style.setProperty('--away', away.primary);
@@ -3933,7 +3934,6 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     text('playLabel', label); attr($('playIcon'), 'href', stopped || atBreak ? '#i-play' : '#i-pause');
     $('btnPlay').title = atBreak ? label : `${label} (Space)`;
     $('btnPlay').disabled = atBreak;
-    for (const b of document.querySelectorAll('[data-speed]')) attr(b, 'aria-pressed', Number(b.dataset.speed) === state.speed);
     const replayButton = $('btnReplay');
     const reviewing = viewingReview();
     replayButton.disabled = !state.goalFrames || !!state.replayQueue || state.ready || atBreak || reviewing || !!state.scene;
@@ -3989,9 +3989,14 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     }
     updateHUD(); draw(); queueScan();
   }
+  function syncSpeed() {
+    const picker = $('playbackSpeed'), speed = state.speed;
+    picker.value = String(speed);
+    picker.title = speed === B.NORMAL_SPEED ? '1× · Normal speed (100%)' : `${speed}× · ${speed * 100}% of normal speed`;
+  }
   function setSpeed(speed) {
-    state.speed = speed;
-    updateHUD();
+    state.speed = B.speedFor(speed);
+    syncSpeed();
   }
 
   const timingLabel = policy => `${policy.estimate} min at 1×`;
@@ -4534,7 +4539,9 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     $('preHighlights').addEventListener('change', e => updateWatchGuide(V.modeFor(e.target.value)));
     document.addEventListener('visibilitychange', queueScan);
     for (const id of ['setupDialog', 'deskDialog', 'breakDialog']) $(id).addEventListener('close', queueScan);
-    for (const b of document.querySelectorAll('[data-speed]')) b.addEventListener('click', () => setSpeed(+b.dataset.speed));
+    const speedPicker = $('playbackSpeed');
+    speedPicker.innerHTML = B.SPEEDS.map(speed => `<option value="${speed}"${speed === B.NORMAL_SPEED ? ' aria-label="1×, normal speed"' : ''}>${speed}×</option>`).join('');
+    speedPicker.addEventListener('change', e => setSpeed(Number(e.target.value)));
     $('btnNames').addEventListener('click', () => { state.names = !state.names; attr($('btnNames'), 'aria-pressed', state.names); draw(); });
     $('btnSound').addEventListener('click', () => { setSound(!state.sound, true); state.config.sound = state.sound; });
     $('btnReplay').addEventListener('click', () => state.replay ? endReplay() : startReplay());
@@ -4615,7 +4622,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
       if (activeDialog() || e.altKey || e.ctrlKey || e.metaKey || e.repeat || e.target.matches('input, select, textarea, [contenteditable]')) return;
       const key = e.key.toLowerCase();
       if (e.code === 'Space' && !e.target.closest('button')) { e.preventDefault(); togglePlay(); }
-      else if (['1', '2', '3'].includes(key)) setSpeed(+key);
+      else if (Object.hasOwn(SPEED_SHORTCUTS, key)) setSpeed(SPEED_SHORTCUTS[key]);
       else if (key === 'n') $('btnNames').click();
       else if (key === 's') toggleSkip();
       else if (key === 'r' && !$('btnReplay').disabled) $('btnReplay').click();

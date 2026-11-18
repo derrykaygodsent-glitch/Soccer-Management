@@ -13,7 +13,7 @@ Choose **Highlights** beneath the pitch or in **Match setup**, then press **Kick
 | **Extended** (default) | Normal league matches | 30–50 min | Everything in Key, plus other free kicks, offsides, throw-ins and selected attacks. |
 | **Key** | Quick season progression | 10–25 min | Goals, major chances, dangerous free kicks, corners, penalties, cards, woodwork and VAR. |
 
-**1× is real time:** one second of visible play takes one real second. **2×** and **4×** show two and four match seconds per real second. The same setting applies to continuous play, highlight clips and goal replays. There is no automatic speed-up in midfield or slowdown near goal. For a shorter watch at normal speed, use **Key at 1×**. Automatic goal replays can be turned off in Match setup.
+**1× is real time** and is the default for each new fixture. The **Speed** menu offers **0.75×** to slow down, **1.25× / 1.5× / 1.75×** for smaller steps above normal, and **2× / 4×** for faster viewing. The same rate applies to continuous play, highlight clips and goal replays. The keyboard shortcuts **1**, **2** and **3** still select **1×**, **2×** and **4×**. For a shorter watch at normal speed, use **Key at 1×**. Automatic goal replays can be turned off in Match setup.
 
 Highlight modes save time by cutting between passages. The times above are rough guides from seeded fixtures, not limits; they exclude pauses and replays. All modes still simulate 90 in-game minutes plus stoppage time. The engine plays every tick and records all events and stats. With the same seed and instructions at the same match times, the four modes produce identical results.
 

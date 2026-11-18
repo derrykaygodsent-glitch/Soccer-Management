@@ -81,11 +81,7 @@
       <div class="controls" aria-label="Match controls">
         <div class="playback">
           <button class="button primary play-button" id="btnPlay" type="button" title="Kick off (Space)"><svg class="icon" aria-hidden="true"><use id="playIcon" href="#i-play"/></svg><span id="playLabel">Kick off</span></button>
-          <div class="speeds" role="group" aria-label="Playback speed">
-            <button type="button" data-speed="1" aria-pressed="true" aria-label="1×, normal speed" title="Real time · 100% (1)">1×</button>
-            <button type="button" data-speed="2" aria-pressed="false" aria-label="2×, double speed" title="Twice real time · 200% (2)">2×</button>
-            <button type="button" data-speed="3" aria-pressed="false" aria-label="4×, quadruple speed" title="Four times real time · 400% (3)">4×</button>
-          </div>
+          <label class="speed-mode"><span>Speed</span><select id="playbackSpeed" aria-label="Playback speed"></select></label>
           <button class="button skip-button" id="btnSkip" type="button" disabled title="Next highlight (S)"><svg class="icon" aria-hidden="true"><use href="#i-skip"/></svg><span id="skipLabel">Next highlight</span></button>
         </div>
         <div class="view-controls">
