@@ -2,55 +2,72 @@
 
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
-const { Match, CX, CY } = require('../src/engine.js');
+const { Match, L, CX, CY } = require('../src/engine.js');
 const { CLUBS } = require('../src/data.js');
 const V = require('../src/highlights.js');
-const { full, comprehensive, extended, standard, key } = V.MODES;
+const { full, comprehensive, extended, key } = V.MODES;
 
 function game() {
   return new Match(CLUBS[1], CLUBS[0], { seed: 231 });
 }
 
-test('the four highlight settings have cumulative coverage and distinct buildup lengths', () => {
+test('four cumulative viewing settings, with Extended as the default', () => {
   const m = game();
+  assert.deepEqual(Object.keys(V.MODES), ['full', 'comprehensive', 'extended', 'key']);
+  assert.equal(V.modeFor(V.DEFAULT_MODE), extended);
+  assert.equal(V.modeFor('standard'), extended, 'an old or unrecognized selection falls back to Extended');
+  assert.equal(full.rank, 0, 'Full Match bypasses the highlight filter');
+  assert.deepEqual([key, extended, comprehensive].map(p => p.rank), [1, 2, 3]);
+  for (const period of ['lead', 'tail', 'opening']) {
+    assert.ok(key[period] > 0 && extended[period] > key[period] && comprehensive[period] > extended[period]);
+  }
   for (const ev of ['goal', 'og', 'penscore', 'penmiss', 'pen', 'red', 'post']) assert.equal(V.eventRank({ type: ev }, m), key.rank);
-  for (const ev of ['corner', 'cross']) assert.equal(V.eventRank({ type: ev }, m), extended.rank);
+  assert.equal(V.eventRank({ type: 'corner' }, m), extended.rank);
   for (const ev of ['offside', 'yellow', 'catch']) assert.equal(V.eventRank({ type: ev }, m), comprehensive.rank);
   for (const ev of ['throwin', 'goalkick', 'preview']) assert.equal(V.eventRank({ type: ev }, m), Infinity);
+  const cross = { type: 'cross', team: 0 };
+  m.ball.flight = { kind: 'cross', intended: {}, targetX: L - 11, targetY: CY + 4 };
+  assert.equal(V.eventRank(cross, m), extended.rank);
+  m.ball.flight.targetX = L - 19;
+  assert.equal(V.eventRank(cross, m), comprehensive.rank);
+  m.teams[0].attackDir = -1; m.ball.flight.targetX = 12;
+  assert.equal(V.eventRank(cross, m), extended.rank);
+  m.phase = 'freekick'; m.setpiece = { direct: true, team: 0 };
+  assert.equal(V.eventRank({ type: 'foul' }, m), extended.rank);
   assert.equal(V.shotRank({ outcome: 'miss', xg: .30 }), key.rank);
-  assert.equal(V.shotRank({ outcome: 'save', xg: .04 }), standard.rank);
-  assert.equal(V.shotRank({ outcome: 'block', xg: .19 }), standard.rank);
-  assert.equal(V.shotRank({ outcome: 'miss', xg: .09 }), extended.rank);
+  assert.equal(V.shotRank({ outcome: 'save', xg: .23 }), key.rank);
+  assert.equal(V.shotRank({ outcome: 'save', xg: .04 }), extended.rank);
+  assert.equal(V.shotRank({ outcome: 'block', xg: .14 }), extended.rank);
+  assert.equal(V.shotRank({ outcome: 'miss', xg: .09 }), comprehensive.rank);
   assert.equal(V.shotRank({ outcome: 'pending', xg: .60 }), Infinity);
   assert.equal(V.shotRank({ outcome: 'goal', xg: .04 }), key.rank, 'even an unlikely goal must make Key');
-  assert.equal(V.modeFor('invalid'), full);
-  for (const [i, p] of [full, key, standard, extended, comprehensive].entries()) {
-    assert.equal(p.rank, i);
-    if (i > 1) assert.ok(p.lead > [full, key, standard, extended][i - 1].lead);
-  }
 });
 
-test('a scout notes a promising entry once per spell, without letting it mask big moments', () => {
+test('scouting preserves possession across passes and distinguishes progression from recovery', () => {
   const m = game(), scout = new V.Scout(m);
+  const [home, away] = m.teams.map(t => t.slots.find(s => s.role !== 'GK').player);
+  const control = (owner, x, elapsed) => {
+    Object.assign(m, { elapsed }); Object.assign(m.ball, { owner, x });
+    return scout.check(m);
+  };
   m.phase = 'open';
-  m.ball.owner = m.teams[0].slots.find(slot => slot.role === 'ST').player;
-  m.ball.x = 79;
-  assert.equal(scout.check(m), comprehensive.rank);
-  assert.equal(scout.check(m), Infinity);
-  m.ball.x = 61; m.elapsed = 8;
-  scout.check(m);
-  m.ball.x = 84;
-  assert.equal(scout.check(m), Infinity, 'small gaps between attacks do not create back-to-back previews');
+  assert.equal(control(home, 48, 0), Infinity, 'ordinary possession is not a highlight');
+  assert.equal(control(null, 56, 2), Infinity, 'an airborne pass keeps the spell alive');
+  assert.equal(control(home, 79, 3), extended.rank, 'a progressive attack can qualify without a shot');
+  assert.equal(control(home, 84, 4), Infinity, 'do not repeat the same attack');
+  assert.equal(control(away, 83, 5), Infinity, 'the regain must be controlled');
+  assert.equal(control(away, 81, 6.1), comprehensive.rank, 'a defensive recovery provides extra context');
+  assert.equal(control(away, 79, 7), Infinity, 'do not repeat the same recovery');
   m.events.push({ type: 'goal' });
-  assert.equal(scout.check(m), key.rank);
+  assert.equal(scout.check(m), key.rank, 'progression cannot mask a decisive incident');
 });
 
 function stub(makeEvent) {
-  return { ticks: 0, half: 1, elapsed: 0, phase: 'open', events: [], shotMap: [], ball: { x: CX, y: CY, owner: null },
+  return { ticks: 0, half: 1, elapsed: 0, phase: 'open', events: [], shotMap: [], teams: [], ball: { x: CX, y: CY, owner: null },
     step(h) { this.elapsed += h; makeEvent(this, ++this.ticks); } };
 }
 
-test('search is bounded per animation frame, with an independent wall-time deadline', () => {
+test('each search batch has a tick cap, with an independent wall-time deadline', () => {
   const m = stub(() => {}), scout = new V.Scout(m);
   let wall = 0;
   const wait = V.scanBatch(m, scout, key, { maxSteps: 2000, budget: 3, now: () => wall += 8 });
@@ -79,35 +96,50 @@ test('a cut starts at the published clock and cannot include frames from the pre
   const s = (elapsed, half) => ({ elapsed, half, t: elapsed, score: elapsed === 107 ? [1, 0] : [0, 0] });
   const first = s(78, 2), last = s(107, 2);
   const hidden = V.visibleStart(first.elapsed, last.elapsed, key);
-  const history = [s(74, 1), s(79, 2), s(91, 2), s(97.98, 2), s(98.03, 2), s(102, 2), last];
-  assert.equal(hidden, 98);
+  const history = [s(74, 1), s(79, 2), s(91, 2), s(97.48, 2), s(97.53, 2), s(102, 2), last];
+  assert.equal(hidden, 97.5);
+  assert.equal(V.visibleStart(first.elapsed, last.elapsed, comprehensive, hidden), hidden);
   assert.ok(hidden >= V.visibleStart(first.elapsed, 106, key));
   const film = V.clipFrames(history, first, last, hidden);
-  assert.deepEqual(film.map(x => x.elapsed), [97.98, 98.03, 102, 107]);
+  assert.deepEqual(film.map(x => x.elapsed), [97.48, 97.53, 102, 107]);
   assert.deepEqual(film[V.indexAt(film, hidden)].score, [0, 0]);
   assert.deepEqual(film[V.indexAt(film, 106.99)].score, [0, 0]);
   assert.deepEqual(film[V.indexAt(film, 107)].score, [1, 0]);
   assert.equal(V.frameAt(history, 78, first), first);
 });
 
-test('an equivalent seed and tick count yield the same events, ball and score during a search', () => {
-  const live = game(), highlights = game(), scout = new V.Scout(highlights);
-  const n = 40 * 305;
-  for (let i = 0; i < n; i++) live.step(V.STEP);
-  let left = n, seen = 0;
-  while (left > 0) {
-    const r = V.scanBatch(highlights, scout, key, { now: () => 0, maxSteps: Math.min(left, V.MAX_SCAN_STEPS) });
-    assert.ok(r.ticks > 0);
-    left -= r.ticks;
-    if (r.type === 'moment') seen++;
-  }
-  const brief = m => ({
-    score: m.teams.map(team => team.score),
-    events: m.events.map(e => [e.type, e.clock, e.text]),
-    shotMap: m.shotMap,
-    frame: m.snapshotFrame()
-  });
-  assert.ok(seen > 0);
-  assert.ok(live.teams.some(team => team.score));
-  assert.deepEqual(brief(live), brief(highlights));
+test('the same seed and changes on the same tick give identical play under all four policies', () => {
+  const n = 40 * 445, changeAt = 40 * 305;
+  const simulate = policy => {
+    const m = game(), scout = new V.Scout(m);
+    let ticks = 0, seen = 0;
+    while (ticks < n) {
+      if (ticks === changeAt) {
+        m.setTactics(0, { mentality: 3 });
+        const team = m.teams[0];
+        const out = team.slots.find(s => s.player.pos !== 'GK').player;
+        const replacement = team.bench.find(p => p.pos !== 'GK');
+        assert.equal(m.substitute(0, out.id, replacement.id).ok, true);
+      }
+      if (policy.rank) {
+        const end = ticks < changeAt ? changeAt : n;
+        const r = V.scanBatch(m, scout, policy, { now: () => 0, maxSteps: Math.min(end - ticks, V.MAX_SCAN_STEPS) });
+        assert.ok(r.ticks > 0);
+        ticks += r.ticks;
+        seen += r.type === 'moment';
+      } else {
+        m.step(V.STEP);
+        ticks++;
+      }
+    }
+    return { seen, state: {
+      score: m.teams.map(team => team.score), stats: m.teams.map(team => team.stats),
+      possession: m.possTime, events: m.events.map(e => [e.type, e.clock, e.text]),
+      shots: m.shotMap, frame: m.snapshotFrame()
+    } };
+  };
+  const continuous = simulate(full), narrow = simulate(key), normal = simulate(extended), broad = simulate(comprehensive);
+  assert.ok(narrow.seen > 0 && normal.seen > narrow.seen && broad.seen > normal.seen);
+  assert.ok(continuous.state.events.some(e => e[0] === 'sub'));
+  for (const playback of [narrow, normal, broad]) assert.deepEqual(playback.state, continuous.state);
 });

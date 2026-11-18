@@ -109,6 +109,9 @@ h1{font:700 clamp(35px,4vw,45px)/.99 'Barlow Condensed','Arial Narrow',sans-seri
 .watch-mode #highlightMode option{background:#17251c;color:#e8efe7}
 .pitch-indicator[data-view=highlight] i{background:var(--accent)}
 .pitch-indicator[data-view=search] i{background:#a9e88b;animation:scan-pulse 1.1s ease-in-out infinite alternate}
+/* Hold the last clear pitch frame during a cut; the clock and indicator stay live. */
+.pitchwrap[data-view=search] #pitch{opacity:.65}
+.pitch-indicator[data-view=search]{border-color:#7b9569;background:#15271deb}
 @keyframes scan-pulse{from{opacity:.36}to{opacity:1}}
 .team-deck{margin-top:13px;min-width:0}
 .team-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
@@ -2476,49 +2479,50 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
 (function (global) {
   'use strict';
 
-  const { L } = typeof window === 'undefined' ? require('./engine.js') : global.TLEngine;
+  const { L, CY } = typeof window === 'undefined' ? require('./engine.js') : global.TLEngine;
   const STEP = 1 / 40;
-  const MAX_SCAN_STEPS = 480;
+  const MAX_SCAN_STEPS = 640;
   const SCAN_BUDGET_MS = 7;
   const EPS = 1e-6;
   const GOALS = new Set(['goal', 'og', 'penscore']);
   const BREAKS = new Set(['ht', 'ft']);
   const DECISIVE = new Set([...GOALS, 'pen', 'penmiss', 'red', 'post']);
-  const DELIVERY = new Set(['cross', 'corner']);
   const OTHER = new Set(['offside', 'yellow', 'catch']);
 
-  // Lower ranks are more selective. All the settings are cumulative.
+  // Full bypasses the filter; the other three tiers include all lower ranks.
+  const DEFAULT_MODE = 'extended';
   const MODES = Object.freeze(Object.fromEntries([
     { id: 'full', label: 'Full Match', rank: 0, lead: 0, tail: 0, opening: 0,
-      detail: 'Watch continuously from kickoff to full time.' },
-    { id: 'comprehensive', label: 'Comprehensive', rank: 4, lead: 23, tail: 17, opening: 22,
-      detail: 'Extended highlights plus promising attacks, more restarts and defensive moments.' },
-    { id: 'extended', label: 'Extended', rank: 3, lead: 20, tail: 14, opening: 15,
-      detail: 'Every shot, dangerous crosses and attacking set pieces, with more buildup.' },
-    { id: 'standard', label: 'Standard', rank: 2, lead: 16.5, tail: 12, opening: 10,
-      detail: 'Key moments, shots on target and other good chances.' },
-    { id: 'key', label: 'Key', rank: 1, lead: 9, tail: 6, opening: 6,
-      detail: 'Goals, penalties, red cards, woodwork and the clearest chances.' }
+      detail: 'Continuous play, including possession and movement between chances.' },
+    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 23, tail: 15, opening: 17,
+      detail: 'More buildup, attacking spells, defensive recoveries and restarts.' },
+    { id: 'extended', label: 'Extended', rank: 2, lead: 18, tail: 12, opening: 10,
+      detail: 'Key moments plus a selection of attacks, chances and attacking set pieces.' },
+    { id: 'key', label: 'Key', rank: 1, lead: 9.5, tail: 6, opening: 4.5,
+      detail: 'Only goals, major chances, penalties, woodwork and dismissals.' }
   ].map(mode => [mode.id, Object.freeze(mode)])));
-  const modeFor = id => Object.hasOwn(MODES, id) ? MODES[id] : MODES.full;
+  const modeFor = id => Object.hasOwn(MODES, id) ? MODES[id] : MODES[DEFAULT_MODE];
   const atBreak = m => m.phase === 'halftime' || m.phase === 'fulltime';
+  const depthFor = (match, team) => match.teams[team].attackDir > 0 ? match.ball.x : L - match.ball.x;
 
   function eventRank(ev, match) {
     if (DECISIVE.has(ev.type)) return 1;
-    if (DELIVERY.has(ev.type) || (ev.type === 'foul' && match.phase === 'freekick' && match.setpiece?.direct)) return 3;
-    if (OTHER.has(ev.type)) return 4;
-    if (ev.type === 'foul' && match.phase === 'freekick' && match.setpiece) {
-      const team = match.teams[match.setpiece.team];
-      const depth = team.attackDir > 0 ? match.ball.x : L - match.ball.x;
-      if (depth > 62) return 4;
+    if (ev.type === 'corner' || (ev.type === 'foul' && match.phase === 'freekick' && match.setpiece?.direct)) return 2;
+    if (ev.type === 'cross') {
+      const f = match.ball.flight, team = match.teams[ev.team];
+      if (f?.kind !== 'cross' || !f.intended || !team) return 3;
+      const distanceToGoal = team.attackDir > 0 ? L - f.targetX : f.targetX;
+      return distanceToGoal <= 15 && Math.abs(f.targetY - CY) <= 12 ? 2 : 3;
     }
+    if (OTHER.has(ev.type)) return 3;
+    if (ev.type === 'foul' && match.phase === 'freekick' && match.setpiece && depthFor(match, match.setpiece.team) > 62) return 3;
     return Infinity;
   }
 
   function shotRank(shot) {
     if (!shot || shot.outcome === 'pending') return Infinity;
-    if (shot.pen || shot.outcome === 'goal' || shot.outcome === 'post' || shot.xg >= .28) return 1;
-    if (shot.outcome === 'save' || shot.xg >= .165) return 2;
+    if (shot.pen || shot.outcome === 'goal' || shot.outcome === 'post' || shot.xg >= .26 || (shot.outcome === 'save' && shot.xg >= .22)) return 1;
+    if (shot.outcome === 'save' || shot.xg >= .12) return 2;
     return 3;
   }
 
@@ -2528,13 +2532,15 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
       this.shot = match.shotMap.at(-1);
       this.outcome = this.shot?.outcome;
       this.half = match.half;
-      this.inThird = [false, false];
-      this.lastEntry = -Infinity;
+      this.spell = null;
+      this.lastAttack = this.lastContext = -Infinity;
     }
 
     check(match) {
       let rank = Infinity;
-      for (; this.events < match.events.length; this.events++) rank = Math.min(rank, eventRank(match.events[this.events], match));
+      for (; this.events < match.events.length; this.events++) {
+        rank = Math.min(rank, eventRank(match.events[this.events], match));
+      }
       const shot = match.shotMap.at(-1);
       if (shot !== this.shot || shot?.outcome !== this.outcome) {
         this.shot = shot;
@@ -2543,23 +2549,39 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
       }
       if (match.half !== this.half) {
         this.half = match.half;
-        this.inThird = [false, false];
-        this.lastEntry = -Infinity;
+        this.spell = null;
+        this.lastAttack = this.lastContext = -Infinity;
       }
       if (match.phase !== 'open') {
-        this.inThird[0] = this.inThird[1] = false;
-      } else if (match.ball.owner && match.ball.owner.role !== 'GK') {
-        // Controlled entries, with a cooldown so the broadest mode still skips ordinary passages.
-        const i = match.ball.owner.team, team = match.teams[i];
-        const depth = team.attackDir > 0 ? match.ball.x : L - match.ball.x;
-        if (depth < 64) this.inThird[i] = false;
-        if (depth > 76 && !this.inThird[i]) {
-          this.inThird[i] = true;
-          if (match.elapsed - this.lastEntry > 78) {
-            this.lastEntry = match.elapsed;
-            rank = Math.min(rank, 4);
-          }
-        }
+        // Set-piece phases interrupt an open-play possession.
+        this.spell = null;
+        return rank;
+      }
+      const owner = match.ball.owner;
+      if (!owner) return rank; // A pass in flight is still part of the same possession.
+      const t = match.elapsed, team = owner.team, depth = depthFor(match, team);
+      let spell = this.spell;
+      if (!spell || spell.team !== team) {
+        // A genuine regain under a previous attack, not a generic pass in one's own half.
+        const recovery = !!spell && spell.high >= 74 && depth <= 31;
+        this.spell = { team, start: t, low: depth, high: depth, recovery, attack: false, context: false };
+        return rank;
+      }
+      spell.low = Math.min(spell.low, depth);
+      spell.high = Math.max(spell.high, depth);
+      if (t - spell.start < 1) return rank;
+      const gain = depth - spell.low;
+      const attack = depth >= 76 && gain >= 16;
+      if (attack && !spell.attack && t - this.lastAttack >= 114) {
+        spell.attack = spell.context = true;
+        this.lastAttack = t;
+        return Math.min(rank, 2);
+      }
+      const buildup = depth >= 62 && gain >= 10;
+      if (!spell.context && t - this.lastContext >= 108 && (buildup || spell.recovery)) {
+        spell.context = true;
+        this.lastContext = t;
+        return Math.min(rank, 3);
       }
       return rank;
     }
@@ -2583,7 +2605,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
 
   // Expose only the search position that can no longer be part of the buildup.
   // At the cut, this is exactly where playback picks up, never a clock rewind.
-  const visibleStart = (from, at, policy) => Math.max(from, at - policy.lead);
+  const visibleStart = (from, at, policy, published = from) => Math.max(from, published, at - policy.lead);
 
   function indexAt(frames, time) {
     let low = 0, high = frames.length - 1;
@@ -2613,10 +2635,10 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
 
   function holdingAction(match, policy) {
     if (match.phase === 'penalty' || match.phase === 'goal' || match.ball.flight?.kind === 'shot') return true;
-    return policy.rank >= 3 && (match.phase === 'corner' || (match.phase === 'freekick' && !!match.setpiece?.direct));
+    return policy.rank >= 2 && (match.phase === 'corner' || (match.phase === 'freekick' && !!match.setpiece?.direct));
   }
 
-  const api = { STEP, SCAN_BUDGET_MS, MAX_SCAN_STEPS, GOALS, BREAKS, DECISIVE, MODES, modeFor, atBreak, eventRank, shotRank, Scout, scanBatch, visibleStart, indexAt, frameAt, clipFrames, holdingAction };
+  const api = { STEP, SCAN_BUDGET_MS, MAX_SCAN_STEPS, GOALS, BREAKS, DECISIVE, DEFAULT_MODE, MODES, modeFor, atBreak, eventRank, shotRank, Scout, scanBatch, visibleStart, indexAt, frameAt, clipFrames, holdingAction };
   global.TLHighlights = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -2632,6 +2654,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   const H = V.STEP, RATES = [0, 1.65, 3.3, 6.6], REPLAY_RATE = 1.5;
   const REPLAY_BUILDUP = 12, REPLAY_AFTERMATH = 1.05;
   const HISTORY = Math.ceil((V.MODES.comprehensive.lead + 6) / (H * 2));
+  const SCAN_YIELD = 6;
   const GOALS = V.GOALS, BREAKS = V.BREAKS;
   const LINEUP_EVENTS = new Set(['sub', 'red', 'yellow']);
   const TACTICS = [
@@ -2651,10 +2674,10 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   };
   const state = {
     match: null, renderer: null, ready: true, paused: true, speed: 1, acc: 0,
-    config: { home: 1, away: 0, auto: true, sound: false, highlights: 'full' }, names: false, sound: false,
+    config: { home: 1, away: 0, auto: true, sound: false, highlights: V.DEFAULT_MODE }, names: false, sound: false,
     selected: null, subMode: null, desk: 'tactics', returnBreak: false,
     buffer: [], replay: null, replayQueue: null, goalFrames: null, events: [], meta: {},
-    scout: null, scan: null, scene: null, visiblePlay: null, nextSearch: null, lineupDirty: false,
+    scout: null, scan: null, scanJob: null, scene: null, visiblePlay: null, nextSearch: null, lineupDirty: false,
     lastFrame: null, lastFeedWall: 0, previousFlight: null, tileT: 0,
     goalTimer: 0, toastTimer: 0, breakQueued: null
   };
@@ -2711,6 +2734,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     state.config = { ...config, highlights: V.modeFor(config.highlights).id };
     state.ready = state.paused = true;
     state.speed = 1; state.acc = 0; state.replay = null;
+    stopScanWork();
     state.scan = state.scene = state.visiblePlay = state.nextSearch = null;
     state.lineupDirty = false;
     state.goalFrames = null; state.replayQueue = null; state.buffer = []; state.events = []; state.previousFlight = null;
@@ -2753,7 +2777,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     if (state.match.phase === 'fulltime') return ['paused', 'Full time'];
     if (state.paused) return ['paused', 'Paused'];
     if (state.scan) return ['live', 'Skipping'];
-    if (state.scene) return ['live', 'Highlight'];
+    if (state.scene?.policy.rank || state.visiblePlay) return ['live', 'Highlight'];
     return ['live', state.match.half === 1 ? '1st half' : '2nd half'];
   }
   function updateHUD() {
@@ -2787,18 +2811,20 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     replayButton.disabled = !state.goalFrames || !!state.replayQueue || state.ready || atBreak || !!state.scene;
     textReplayButton(state.replay ? 'Exit replay' : 'Replay');
     $('btnSkip').disabled = state.ready || atBreak || (!!state.replayQueue && !state.replay);
-    const skipLabel = state.replay ? 'Exit replay' : state.scan ? 'Watch live' : 'Next highlight';
+    const skipLabel = state.replay ? 'Exit replay' : state.scan ? 'Stop here' : 'Next highlight';
     text('skipLabel', skipLabel);
     attr($('btnSkip'), 'aria-label', skipLabel);
-    $('btnSkip').title = state.scan ? 'Stop searching and switch to Full Match (S)' : `${skipLabel} (S)`;
+    $('btnSkip').title = state.scan ? 'Show this passage without changing highlight mode (S)' : `${skipLabel} (S)`;
     const indicator = $('replayIndicator');
     const view = state.replay ? 'replay' : state.scan ? 'search' : state.scene || (state.visiblePlay && !state.paused) ? 'highlight' : '';
     indicator.hidden = !view;
+    if ($('pitchwrap').dataset.view !== view) $('pitchwrap').dataset.view = view;
     if (view) {
       if (indicator.dataset.view !== view) indicator.dataset.view = view;
+      const policy = (state.scene || state.visiblePlay)?.policy;
       text('indicatorText', state.replay ? (state.replay.paused ? 'Replay paused' : 'Goal replay') :
-        state.scan ? (state.paused ? 'Search paused' : 'Skipping to next highlight') :
-        state.paused ? 'Highlight paused' : `${(state.scene || state.visiblePlay).policy.label} highlight`);
+        state.scan ? (state.paused ? 'Search paused' : 'Skipping quiet play') :
+        state.paused ? 'Playback paused' : policy.rank ? `${policy.label} highlights` : 'Returning to live play');
     }
   }
   function textReplayButton(message) {
@@ -2822,7 +2848,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
       state.acc = 0;
       state.paused = !state.paused;
     }
-    updateHUD(); draw();
+    updateHUD(); draw(); queueScan();
   }
   function setSpeed(speed) {
     state.speed = speed; state.acc = 0;
@@ -2837,12 +2863,19 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   }
 
   function setWatchMode(id) {
-    if (state.config.highlights === id) return;
-    closeCut();
-    state.config.highlights = V.modeFor(id).id;
-    state.visiblePlay = state.nextSearch = null;
-    state.acc = 0;
-    syncWatchMode(); updateHUD(); draw();
+    const policy = V.modeFor(id);
+    if (chosenMode() === policy) return;
+    state.config.highlights = policy.id;
+    state.nextSearch = null; state.acc = 0;
+    // The selected policy takes over after the current passage. Never throw away
+    // buffered play or publish its score because the viewer changed a setting.
+    if (state.scan) showBuffered(state.scan, policy, policy.tail);
+    else {
+      if (state.scene) state.scene.policy = policy;
+      if (state.visiblePlay && policy.rank) state.visiblePlay.policy = policy;
+      else state.visiblePlay = null;
+    }
+    syncWatchMode(); updateHUD(); draw(); queueScan();
   }
 
   function startOpening() {
@@ -2854,8 +2887,9 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     if ($('btnSkip').disabled) return;
     if (state.replay) { endReplay(); return; }
     if (state.scan) {
-      if (chosenMode().rank) setWatchMode('full');
-      else { closeCut(); updateHUD(); draw(); }
+      const policy = chosenMode();
+      showBuffered(state.scan, policy, policy.rank ? 12 : 0);
+      updateHUD(); draw();
       return;
     }
     closeCut();
@@ -2895,14 +2929,14 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   }
   function startReplay() {
     if (!state.goalFrames || state.replayQueue || state.scene) return;
-    closeCut();
+    stopScanWork();
     state.nextSearch = null; state.acc = 0;
     const frames = state.goalFrames;
     state.replay = { frames, time: frames[0].elapsed, index: 0, frame: replayFrame(frames[0]), paused: false };
     $('goalBanner').hidden = true;
     updateHUD(); draw();
   }
-  function endReplay() { state.replay = null; state.acc = 0; updateHUD(); draw(); }
+  function endReplay() { state.replay = null; state.acc = 0; updateHUD(); draw(); queueScan(); }
   function tickReplay(dt) {
     const rp = state.replay;
     if (rp.paused) return;
@@ -2992,10 +3026,32 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   function closeCut(quiet = true) {
     const film = filmView();
     if (!film) return;
+    stopScanWork();
     state.scan = state.scene = null;
     state.acc = 0;
     drainEntries(film.entries, Infinity, quiet);
     if (state.lineupDirty) renderLineup();
+  }
+
+  const canScan = () => state.scan && !state.paused && !state.replay && !document.hidden && !activeDialog();
+
+  function stopScanWork() {
+    clearTimeout(state.scanJob);
+    state.scanJob = null;
+  }
+
+  function queueScan() {
+    if (!canScan() || state.scanJob != null) return;
+    // A bounded timer advances the match even when the renderer's frame rate is low.
+    // Pause, dialogs and tab visibility gate both presentation and search.
+    const search = state.scan;
+    state.scanJob = setTimeout(() => {
+      state.scanJob = null;
+      if (search !== state.scan || !canScan()) return;
+      advanceSearch(); updateHUD();
+      if (!state.scan) draw();
+      queueScan();
+    }, SCAN_YIELD);
   }
 
   function beginSearch(policy) {
@@ -3003,23 +3059,30 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     state.visiblePlay = state.nextSearch = null;
     state.scan = { first, view: first, time: first.elapsed, policy, entries: [], still: replayFrame(first) };
     state.acc = 0;
-    updateHUD(); draw();
+    updateHUD(); draw(); queueScan();
+  }
+
+  function updateScanView(scan) {
+    scan.time = V.visibleStart(scan.first.elapsed, state.match.elapsed, scan.policy, scan.time);
+    scan.view = V.frameAt(state.buffer, scan.time, scan.first);
+    drainEntries(scan.entries, scan.time, true);
+  }
+
+  function showBuffered(scan, policy, tail) {
+    const last = withView(), frames = V.clipFrames(state.buffer, scan.first, last, scan.time);
+    stopScanWork();
+    state.scan = null;
+    state.visiblePlay = tail > 0 ? { policy, until: last.elapsed + tail } : null;
+    state.scene = { policy, entries: scan.entries, frames, view: frames[0], time: scan.time, frame: null };
+    advanceScene(0);
   }
 
   function advanceSearch() {
-    const m = state.match, scan = state.scan;
-    const result = V.scanBatch(m, state.scout, scan.policy);
+    const scan = state.scan;
+    const result = V.scanBatch(state.match, state.scout, scan.policy);
     if (result.type === 'break') { closeCut(); return; }
-    scan.time = V.visibleStart(scan.first.elapsed, m.elapsed, scan.policy);
-    scan.view = V.frameAt(state.buffer, scan.time, scan.first);
-    drainEntries(scan.entries, scan.time, true);
-    if (result.type === 'moment') {
-      const last = withView(), frames = V.clipFrames(state.buffer, scan.first, last, scan.time);
-      state.scan = null;
-      state.visiblePlay = { policy: scan.policy, until: last.elapsed + scan.policy.tail };
-      state.scene = { policy: scan.policy, entries: scan.entries, frames, view: frames[0], time: scan.time, frame: null };
-      advanceScene(0);
-    }
+    updateScanView(scan);
+    if (result.type === 'moment') showBuffered(scan, scan.policy, scan.policy.tail);
   }
 
   function advanceScene(dt) {
@@ -3093,9 +3156,22 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     refreshFixturePicks();
   }
 
+  // Desk dialogs freeze the engine at its current tick. An edit ends any active
+  // search, lets the unseen frames play, then keeps the next live passage on screen.
+  function touchlineChange() {
+    const m = state.match, policy = chosenMode();
+    state.nextSearch = null;
+    if (state.scan) showBuffered(state.scan, policy, 0);
+    if (policy.rank && !state.ready && !V.atBreak(m)) {
+      state.visiblePlay = { policy, until: Math.max(m.elapsed + 12, state.visiblePlay?.until ?? 0) };
+    }
+    return !!state.scene;
+  }
+
   function renderTactics() {
     const m = state.match, t = m.teams[0].tactics, away = m.teams[1];
-    $('tab-tactics').innerHTML = `<p class="help-text desk-feedback" role="status">Set how your side plays. Changes apply when play resumes.</p><div class="desk-grid">${TACTICS.map(([key, title, values]) => `<label class="tactic-control">${title}<select data-tactic="${key}">${options(values, key !== 'formation')}</select></label>`).join('')}</div><div class="opposition"><strong>${html(away.club.name)} · Opposition setup</strong>${shapeLabel(away.tactics.formation)} · ${html(D.MENTALITIES[away.tactics.mentality])} · ${html(D.PRESS[away.tactics.press])} press</div>`;
+    const timing = filmView() ? `Changes take effect at ${m.clockStr()}, when the current footage ends.` : 'Set how your side plays. Changes apply when play resumes.';
+    $('tab-tactics').innerHTML = `<p class="help-text desk-feedback" role="status">${timing}</p><div class="desk-grid">${TACTICS.map(([key, title, values]) => `<label class="tactic-control">${title}<select data-tactic="${key}">${options(values, key !== 'formation')}</select></label>`).join('')}</div><div class="opposition"><strong>${html(away.club.name)} · Opposition setup</strong>${shapeLabel(away.tactics.formation)} · ${html(D.MENTALITIES[away.tactics.mentality])} · ${html(D.PRESS[away.tactics.press])} press</div>`;
     for (const select of $('tab-tactics').querySelectorAll('[data-tactic]')) select.value = t[select.dataset.tactic];
   }
   function renderSquad() {
@@ -3103,7 +3179,8 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     const available = !state.ready && state.match.phase !== 'fulltime';
     const inPlayer = t.players.find(p => p.id === state.subMode);
     const row = (p, role, bench) => `<div class="squad-row"><span>${p.num}</span><span>${html(p.name)}</span><span class="row-role">${role}</span><span class="row-cond">${condition(p)}%</span>${bench ? `<button type="button" class="button" data-bench="${html(p.id)}" ${!available || t.subsUsed >= 5 ? 'disabled' : ''}>Bring on</button>` : inPlayer ? `<button type="button" class="button" data-out="${html(p.id)}" ${(p.pos === 'GK') !== (inPlayer.pos === 'GK') ? 'disabled' : ''}>Replace</button>` : '<span></span>'}</div>`;
-    $('tab-squad').innerHTML = `<p class="help-text desk-feedback" role="status">${state.ready ? 'Substitutions are available after kick-off.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining.`}</p>${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${t.bench.map(p => row(p, p.pos, true)).join('')}`;
+    const timing = filmView() ? ` · changes take effect at ${state.match.clockStr()}` : '';
+    $('tab-squad').innerHTML = `<p class="help-text desk-feedback" role="status">${state.ready ? 'Substitutions are available after kick-off.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining${timing}.`}</p>${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${t.bench.map(p => row(p, p.pos, true)).join('')}`;
   }
 
   const statLine = (title, a, b) => `<div class="stat-line"><strong>${a}</strong><span>${title}</span><strong>${b}</strong></div>`;
@@ -3190,7 +3267,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   function advance(dt) {
     const m = state.match, policy = chosenMode();
     if (state.scene) { advanceScene(dt); return; }
-    if (state.scan) { advanceSearch(); return; }
+    if (state.scan) return;
     if (!state.replayQueue) {
       if (state.nextSearch) { beginSearch(state.nextSearch); return; }
       if (state.visiblePlay && m.elapsed >= state.visiblePlay.until && !V.holdingAction(m, state.visiblePlay.policy)) state.visiblePlay = null;
@@ -3228,12 +3305,14 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     if (state.breakQueued && !activeDialog()) showBreak(state.breakQueued);
     let changed = false;
     if (!document.hidden && !activeDialog()) {
-      if (state.replay && !state.replay.paused) { tickReplay(dt); changed = true; }
-      else if (!state.replay && !state.ready && !state.paused) { advance(dt); changed = true; }
+      if (state.replay) {
+        if (!state.replay.paused) { tickReplay(dt); changed = true; }
+      } else if (state.scan) queueScan();
+      else if (!state.ready && !state.paused) { advance(dt); changed = true; }
     }
     if (changed && t - state.tileT > 540) { state.tileT = t; if (!state.replay && !filmView()) updateLineupCondition(); }
     if (changed) updateHUD();
-    if ((changed && !state.scan) || state.renderer.needsPaint) draw();
+    if ((changed && (!state.scan || state.replay)) || state.renderer.needsPaint) draw();
   }
 
   function wire() {
@@ -3243,6 +3322,8 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     $('highlightMode').innerHTML = $('preHighlights').innerHTML = modeOptions;
     $('highlightMode').addEventListener('change', e => setWatchMode(e.target.value));
     $('preHighlights').addEventListener('change', e => text('watchDetail', V.modeFor(e.target.value).detail));
+    document.addEventListener('visibilitychange', queueScan);
+    for (const id of ['setupDialog', 'deskDialog', 'breakDialog']) $(id).addEventListener('close', queueScan);
     for (const b of document.querySelectorAll('[data-speed]')) b.addEventListener('click', () => setSpeed(+b.dataset.speed));
     $('btnNames').addEventListener('click', () => { state.names = !state.names; attr($('btnNames'), 'aria-pressed', state.names); draw(); });
     $('btnSound').addEventListener('click', () => { setSound(!state.sound, true); state.config.sound = state.sound; });
@@ -3282,22 +3363,27 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     $('tab-tactics').addEventListener('change', e => {
       const key = e.target.dataset.tactic;
       if (!key) return;
-      const m = state.match;
+      const m = state.match, buffered = touchlineChange();
       m.setTactics(0, { [key]: key === 'formation' ? e.target.value : +e.target.value });
       if (key === 'formation' || key === 'width') {
         if (state.ready) m.setupKickoff(0);
-        renderLineup();
+        if (buffered) state.lineupDirty = true;
+        else renderLineup();
       }
-      notify('Instruction updated.'); draw();
+      notify(buffered ? `Instruction set for ${m.clockStr()}, after the current footage.` : 'Instruction updated.');
+      updateHUD(); draw();
     });
     $('tab-squad').addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b || b.disabled) return;
       if (b.hasAttribute('data-cancel-sub')) { state.subMode = null; renderSquad(); }
       else if (b.dataset.bench) { state.subMode = b.dataset.bench; renderSquad(); }
       else if (b.dataset.out && state.subMode) {
-        const result = state.match.substitute(0, b.dataset.out, state.subMode);
-        state.subMode = null; renderSquad(); renderLineup();
-        notify(result.ok ? 'Substitution made.' : result.msg);
+        const buffered = touchlineChange(), m = state.match;
+        const result = m.substitute(0, b.dataset.out, state.subMode);
+        state.subMode = null; renderSquad();
+        if (!buffered) renderLineup();
+        notify(result.ok ? (buffered ? `Substitution set for ${m.clockStr()}, after the current footage.` : 'Substitution made.') : result.msg);
+        updateHUD(); draw();
       }
     });
     $('deskDialog').addEventListener('close', () => {

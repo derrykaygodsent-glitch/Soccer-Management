@@ -2,49 +2,50 @@
 (function (global) {
   'use strict';
 
-  const { L } = typeof window === 'undefined' ? require('./engine.js') : global.TLEngine;
+  const { L, CY } = typeof window === 'undefined' ? require('./engine.js') : global.TLEngine;
   const STEP = 1 / 40;
-  const MAX_SCAN_STEPS = 480;
+  const MAX_SCAN_STEPS = 640;
   const SCAN_BUDGET_MS = 7;
   const EPS = 1e-6;
   const GOALS = new Set(['goal', 'og', 'penscore']);
   const BREAKS = new Set(['ht', 'ft']);
   const DECISIVE = new Set([...GOALS, 'pen', 'penmiss', 'red', 'post']);
-  const DELIVERY = new Set(['cross', 'corner']);
   const OTHER = new Set(['offside', 'yellow', 'catch']);
 
-  // Lower ranks are more selective. All the settings are cumulative.
+  // Full bypasses the filter; the other three tiers include all lower ranks.
+  const DEFAULT_MODE = 'extended';
   const MODES = Object.freeze(Object.fromEntries([
     { id: 'full', label: 'Full Match', rank: 0, lead: 0, tail: 0, opening: 0,
-      detail: 'Watch continuously from kickoff to full time.' },
-    { id: 'comprehensive', label: 'Comprehensive', rank: 4, lead: 23, tail: 17, opening: 22,
-      detail: 'Extended highlights plus promising attacks, more restarts and defensive moments.' },
-    { id: 'extended', label: 'Extended', rank: 3, lead: 20, tail: 14, opening: 15,
-      detail: 'Every shot, dangerous crosses and attacking set pieces, with more buildup.' },
-    { id: 'standard', label: 'Standard', rank: 2, lead: 16.5, tail: 12, opening: 10,
-      detail: 'Key moments, shots on target and other good chances.' },
-    { id: 'key', label: 'Key', rank: 1, lead: 9, tail: 6, opening: 6,
-      detail: 'Goals, penalties, red cards, woodwork and the clearest chances.' }
+      detail: 'Continuous play, including possession and movement between chances.' },
+    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 23, tail: 15, opening: 17,
+      detail: 'More buildup, attacking spells, defensive recoveries and restarts.' },
+    { id: 'extended', label: 'Extended', rank: 2, lead: 18, tail: 12, opening: 10,
+      detail: 'Key moments plus a selection of attacks, chances and attacking set pieces.' },
+    { id: 'key', label: 'Key', rank: 1, lead: 9.5, tail: 6, opening: 4.5,
+      detail: 'Only goals, major chances, penalties, woodwork and dismissals.' }
   ].map(mode => [mode.id, Object.freeze(mode)])));
-  const modeFor = id => Object.hasOwn(MODES, id) ? MODES[id] : MODES.full;
+  const modeFor = id => Object.hasOwn(MODES, id) ? MODES[id] : MODES[DEFAULT_MODE];
   const atBreak = m => m.phase === 'halftime' || m.phase === 'fulltime';
+  const depthFor = (match, team) => match.teams[team].attackDir > 0 ? match.ball.x : L - match.ball.x;
 
   function eventRank(ev, match) {
     if (DECISIVE.has(ev.type)) return 1;
-    if (DELIVERY.has(ev.type) || (ev.type === 'foul' && match.phase === 'freekick' && match.setpiece?.direct)) return 3;
-    if (OTHER.has(ev.type)) return 4;
-    if (ev.type === 'foul' && match.phase === 'freekick' && match.setpiece) {
-      const team = match.teams[match.setpiece.team];
-      const depth = team.attackDir > 0 ? match.ball.x : L - match.ball.x;
-      if (depth > 62) return 4;
+    if (ev.type === 'corner' || (ev.type === 'foul' && match.phase === 'freekick' && match.setpiece?.direct)) return 2;
+    if (ev.type === 'cross') {
+      const f = match.ball.flight, team = match.teams[ev.team];
+      if (f?.kind !== 'cross' || !f.intended || !team) return 3;
+      const distanceToGoal = team.attackDir > 0 ? L - f.targetX : f.targetX;
+      return distanceToGoal <= 15 && Math.abs(f.targetY - CY) <= 12 ? 2 : 3;
     }
+    if (OTHER.has(ev.type)) return 3;
+    if (ev.type === 'foul' && match.phase === 'freekick' && match.setpiece && depthFor(match, match.setpiece.team) > 62) return 3;
     return Infinity;
   }
 
   function shotRank(shot) {
     if (!shot || shot.outcome === 'pending') return Infinity;
-    if (shot.pen || shot.outcome === 'goal' || shot.outcome === 'post' || shot.xg >= .28) return 1;
-    if (shot.outcome === 'save' || shot.xg >= .165) return 2;
+    if (shot.pen || shot.outcome === 'goal' || shot.outcome === 'post' || shot.xg >= .26 || (shot.outcome === 'save' && shot.xg >= .22)) return 1;
+    if (shot.outcome === 'save' || shot.xg >= .12) return 2;
     return 3;
   }
 
@@ -54,13 +55,15 @@
       this.shot = match.shotMap.at(-1);
       this.outcome = this.shot?.outcome;
       this.half = match.half;
-      this.inThird = [false, false];
-      this.lastEntry = -Infinity;
+      this.spell = null;
+      this.lastAttack = this.lastContext = -Infinity;
     }
 
     check(match) {
       let rank = Infinity;
-      for (; this.events < match.events.length; this.events++) rank = Math.min(rank, eventRank(match.events[this.events], match));
+      for (; this.events < match.events.length; this.events++) {
+        rank = Math.min(rank, eventRank(match.events[this.events], match));
+      }
       const shot = match.shotMap.at(-1);
       if (shot !== this.shot || shot?.outcome !== this.outcome) {
         this.shot = shot;
@@ -69,23 +72,39 @@
       }
       if (match.half !== this.half) {
         this.half = match.half;
-        this.inThird = [false, false];
-        this.lastEntry = -Infinity;
+        this.spell = null;
+        this.lastAttack = this.lastContext = -Infinity;
       }
       if (match.phase !== 'open') {
-        this.inThird[0] = this.inThird[1] = false;
-      } else if (match.ball.owner && match.ball.owner.role !== 'GK') {
-        // Controlled entries, with a cooldown so the broadest mode still skips ordinary passages.
-        const i = match.ball.owner.team, team = match.teams[i];
-        const depth = team.attackDir > 0 ? match.ball.x : L - match.ball.x;
-        if (depth < 64) this.inThird[i] = false;
-        if (depth > 76 && !this.inThird[i]) {
-          this.inThird[i] = true;
-          if (match.elapsed - this.lastEntry > 78) {
-            this.lastEntry = match.elapsed;
-            rank = Math.min(rank, 4);
-          }
-        }
+        // Set-piece phases interrupt an open-play possession.
+        this.spell = null;
+        return rank;
+      }
+      const owner = match.ball.owner;
+      if (!owner) return rank; // A pass in flight is still part of the same possession.
+      const t = match.elapsed, team = owner.team, depth = depthFor(match, team);
+      let spell = this.spell;
+      if (!spell || spell.team !== team) {
+        // A genuine regain under a previous attack, not a generic pass in one's own half.
+        const recovery = !!spell && spell.high >= 74 && depth <= 31;
+        this.spell = { team, start: t, low: depth, high: depth, recovery, attack: false, context: false };
+        return rank;
+      }
+      spell.low = Math.min(spell.low, depth);
+      spell.high = Math.max(spell.high, depth);
+      if (t - spell.start < 1) return rank;
+      const gain = depth - spell.low;
+      const attack = depth >= 76 && gain >= 16;
+      if (attack && !spell.attack && t - this.lastAttack >= 114) {
+        spell.attack = spell.context = true;
+        this.lastAttack = t;
+        return Math.min(rank, 2);
+      }
+      const buildup = depth >= 62 && gain >= 10;
+      if (!spell.context && t - this.lastContext >= 108 && (buildup || spell.recovery)) {
+        spell.context = true;
+        this.lastContext = t;
+        return Math.min(rank, 3);
       }
       return rank;
     }
@@ -109,7 +128,7 @@
 
   // Expose only the search position that can no longer be part of the buildup.
   // At the cut, this is exactly where playback picks up, never a clock rewind.
-  const visibleStart = (from, at, policy) => Math.max(from, at - policy.lead);
+  const visibleStart = (from, at, policy, published = from) => Math.max(from, published, at - policy.lead);
 
   function indexAt(frames, time) {
     let low = 0, high = frames.length - 1;
@@ -139,10 +158,10 @@
 
   function holdingAction(match, policy) {
     if (match.phase === 'penalty' || match.phase === 'goal' || match.ball.flight?.kind === 'shot') return true;
-    return policy.rank >= 3 && (match.phase === 'corner' || (match.phase === 'freekick' && !!match.setpiece?.direct));
+    return policy.rank >= 2 && (match.phase === 'corner' || (match.phase === 'freekick' && !!match.setpiece?.direct));
   }
 
-  const api = { STEP, SCAN_BUDGET_MS, MAX_SCAN_STEPS, GOALS, BREAKS, DECISIVE, MODES, modeFor, atBreak, eventRank, shotRank, Scout, scanBatch, visibleStart, indexAt, frameAt, clipFrames, holdingAction };
+  const api = { STEP, SCAN_BUDGET_MS, MAX_SCAN_STEPS, GOALS, BREAKS, DECISIVE, DEFAULT_MODE, MODES, modeFor, atBreak, eventRank, shotRank, Scout, scanBatch, visibleStart, indexAt, frameAt, clipFrames, holdingAction };
   global.TLHighlights = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

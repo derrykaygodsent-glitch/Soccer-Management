@@ -4,23 +4,24 @@
 
 ## Watch a match
 
-Pick **Highlights** beneath the pitch or in **Match setup**. You can switch during a match without restarting it.
+Choose **Highlights** beneath the pitch or in **Match setup**, then press **Kick off**. You can change the viewing mode mid-match without restarting. A passage already on screen plays out before the new setting takes over.
 
 | Mode | What you'll see |
 | --- | --- |
-| **Key** | Goals, penalties, red cards, woodwork and the clearest chances. |
-| **Standard** | Key moments plus shots on target and other good chances. |
-| **Extended** | Every shot, dangerous crosses and attacking set pieces, with more buildup. |
-| **Comprehensive** | Extended coverage plus promising attacks, more restarts and defensive moments. |
-| **Full Match** | Continuous play from kickoff to full time. This is the default. |
+| **Full Match** | Continuous play: routine possession, off-ball movement, buildup and defending, as well as chances. |
+| **Comprehensive** | More attacking spells, defensive recoveries and restarts, with longer buildup and aftermath. Still skips quiet play. |
+| **Extended** (default) | Key moments plus selected attacks, chances and attacking set pieces. |
+| **Key** | The fastest view: goals, major chances, penalties, woodwork and dismissals. |
 
-Highlight modes fast-forward the same simulation, show the buildup before a moment, then play through the action and aftermath. Match length and results are not shortened. Play stops at halftime for changes. The **1× / 2× / 4×** controls set how fast visible play runs. **Next highlight** searches to the next moment (a Key moment in Full Match); **Watch live** cancels a search and switches to Full Match. Goal replays are separate and can be turned off in Match setup.
+Highlight modes fast-forward through quiet play, then show real buildup, the action itself and what follows. How much footage you see depends on the fixture. The same engine still plays every tick and records all events and stats. With the same seed and instructions at the same match times, the four modes produce identical results.
+
+The **1× / 2× / 4×** controls set the speed of displayed play. **Next highlight** jumps to the next qualifying passage (a Key moment in Full Match). **Stop here** ends a search and shows the current passage without changing the mode. The game still stops at halftime and full time. In the Touchline desk, changes take effect at the displayed effective time; they do not alter recorded buildup. Goal replays are separate and can be turned off in Match setup.
 
 ## Play and build
 
 Open `index.html` offline, or run `npm run preview` with Node.js 20+. The preview builds from `src/` and serves on port `4173` (`PORT` overrides it). No installs or accounts are required. Edit `src/`, then run `npm run build` to regenerate the HTML.
 
-- `npm test` checks the standalone build, seeded play, ball mechanics, acceleration and replay snapshots. Highlight tests cover mode selection, bounded skipping, exact event/break stopping, the buildup clock and deterministic results.
+- `npm test` checks the standalone build, seeded play, ball mechanics and replay snapshots. Highlight tests cover mode eligibility, bounded search, exact event and whistle stops, the buildup clock, and deterministic play with matching tactics and substitutions.
 - `npm run test:sim -- 3` runs three complete seeded fixtures.
 
 ## Pinned checkpoints

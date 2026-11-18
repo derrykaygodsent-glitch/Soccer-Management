@@ -7,6 +7,7 @@
   const H = V.STEP, RATES = [0, 1.65, 3.3, 6.6], REPLAY_RATE = 1.5;
   const REPLAY_BUILDUP = 12, REPLAY_AFTERMATH = 1.05;
   const HISTORY = Math.ceil((V.MODES.comprehensive.lead + 6) / (H * 2));
+  const SCAN_YIELD = 6;
   const GOALS = V.GOALS, BREAKS = V.BREAKS;
   const LINEUP_EVENTS = new Set(['sub', 'red', 'yellow']);
   const TACTICS = [
@@ -26,10 +27,10 @@
   };
   const state = {
     match: null, renderer: null, ready: true, paused: true, speed: 1, acc: 0,
-    config: { home: 1, away: 0, auto: true, sound: false, highlights: 'full' }, names: false, sound: false,
+    config: { home: 1, away: 0, auto: true, sound: false, highlights: V.DEFAULT_MODE }, names: false, sound: false,
     selected: null, subMode: null, desk: 'tactics', returnBreak: false,
     buffer: [], replay: null, replayQueue: null, goalFrames: null, events: [], meta: {},
-    scout: null, scan: null, scene: null, visiblePlay: null, nextSearch: null, lineupDirty: false,
+    scout: null, scan: null, scanJob: null, scene: null, visiblePlay: null, nextSearch: null, lineupDirty: false,
     lastFrame: null, lastFeedWall: 0, previousFlight: null, tileT: 0,
     goalTimer: 0, toastTimer: 0, breakQueued: null
   };
@@ -86,6 +87,7 @@
     state.config = { ...config, highlights: V.modeFor(config.highlights).id };
     state.ready = state.paused = true;
     state.speed = 1; state.acc = 0; state.replay = null;
+    stopScanWork();
     state.scan = state.scene = state.visiblePlay = state.nextSearch = null;
     state.lineupDirty = false;
     state.goalFrames = null; state.replayQueue = null; state.buffer = []; state.events = []; state.previousFlight = null;
@@ -128,7 +130,7 @@
     if (state.match.phase === 'fulltime') return ['paused', 'Full time'];
     if (state.paused) return ['paused', 'Paused'];
     if (state.scan) return ['live', 'Skipping'];
-    if (state.scene) return ['live', 'Highlight'];
+    if (state.scene?.policy.rank || state.visiblePlay) return ['live', 'Highlight'];
     return ['live', state.match.half === 1 ? '1st half' : '2nd half'];
   }
   function updateHUD() {
@@ -162,18 +164,20 @@
     replayButton.disabled = !state.goalFrames || !!state.replayQueue || state.ready || atBreak || !!state.scene;
     textReplayButton(state.replay ? 'Exit replay' : 'Replay');
     $('btnSkip').disabled = state.ready || atBreak || (!!state.replayQueue && !state.replay);
-    const skipLabel = state.replay ? 'Exit replay' : state.scan ? 'Watch live' : 'Next highlight';
+    const skipLabel = state.replay ? 'Exit replay' : state.scan ? 'Stop here' : 'Next highlight';
     text('skipLabel', skipLabel);
     attr($('btnSkip'), 'aria-label', skipLabel);
-    $('btnSkip').title = state.scan ? 'Stop searching and switch to Full Match (S)' : `${skipLabel} (S)`;
+    $('btnSkip').title = state.scan ? 'Show this passage without changing highlight mode (S)' : `${skipLabel} (S)`;
     const indicator = $('replayIndicator');
     const view = state.replay ? 'replay' : state.scan ? 'search' : state.scene || (state.visiblePlay && !state.paused) ? 'highlight' : '';
     indicator.hidden = !view;
+    if ($('pitchwrap').dataset.view !== view) $('pitchwrap').dataset.view = view;
     if (view) {
       if (indicator.dataset.view !== view) indicator.dataset.view = view;
+      const policy = (state.scene || state.visiblePlay)?.policy;
       text('indicatorText', state.replay ? (state.replay.paused ? 'Replay paused' : 'Goal replay') :
-        state.scan ? (state.paused ? 'Search paused' : 'Skipping to next highlight') :
-        state.paused ? 'Highlight paused' : `${(state.scene || state.visiblePlay).policy.label} highlight`);
+        state.scan ? (state.paused ? 'Search paused' : 'Skipping quiet play') :
+        state.paused ? 'Playback paused' : policy.rank ? `${policy.label} highlights` : 'Returning to live play');
     }
   }
   function textReplayButton(message) {
@@ -197,7 +201,7 @@
       state.acc = 0;
       state.paused = !state.paused;
     }
-    updateHUD(); draw();
+    updateHUD(); draw(); queueScan();
   }
   function setSpeed(speed) {
     state.speed = speed; state.acc = 0;
@@ -212,12 +216,19 @@
   }
 
   function setWatchMode(id) {
-    if (state.config.highlights === id) return;
-    closeCut();
-    state.config.highlights = V.modeFor(id).id;
-    state.visiblePlay = state.nextSearch = null;
-    state.acc = 0;
-    syncWatchMode(); updateHUD(); draw();
+    const policy = V.modeFor(id);
+    if (chosenMode() === policy) return;
+    state.config.highlights = policy.id;
+    state.nextSearch = null; state.acc = 0;
+    // The selected policy takes over after the current passage. Never throw away
+    // buffered play or publish its score because the viewer changed a setting.
+    if (state.scan) showBuffered(state.scan, policy, policy.tail);
+    else {
+      if (state.scene) state.scene.policy = policy;
+      if (state.visiblePlay && policy.rank) state.visiblePlay.policy = policy;
+      else state.visiblePlay = null;
+    }
+    syncWatchMode(); updateHUD(); draw(); queueScan();
   }
 
   function startOpening() {
@@ -229,8 +240,9 @@
     if ($('btnSkip').disabled) return;
     if (state.replay) { endReplay(); return; }
     if (state.scan) {
-      if (chosenMode().rank) setWatchMode('full');
-      else { closeCut(); updateHUD(); draw(); }
+      const policy = chosenMode();
+      showBuffered(state.scan, policy, policy.rank ? 12 : 0);
+      updateHUD(); draw();
       return;
     }
     closeCut();
@@ -270,14 +282,14 @@
   }
   function startReplay() {
     if (!state.goalFrames || state.replayQueue || state.scene) return;
-    closeCut();
+    stopScanWork();
     state.nextSearch = null; state.acc = 0;
     const frames = state.goalFrames;
     state.replay = { frames, time: frames[0].elapsed, index: 0, frame: replayFrame(frames[0]), paused: false };
     $('goalBanner').hidden = true;
     updateHUD(); draw();
   }
-  function endReplay() { state.replay = null; state.acc = 0; updateHUD(); draw(); }
+  function endReplay() { state.replay = null; state.acc = 0; updateHUD(); draw(); queueScan(); }
   function tickReplay(dt) {
     const rp = state.replay;
     if (rp.paused) return;
@@ -367,10 +379,32 @@
   function closeCut(quiet = true) {
     const film = filmView();
     if (!film) return;
+    stopScanWork();
     state.scan = state.scene = null;
     state.acc = 0;
     drainEntries(film.entries, Infinity, quiet);
     if (state.lineupDirty) renderLineup();
+  }
+
+  const canScan = () => state.scan && !state.paused && !state.replay && !document.hidden && !activeDialog();
+
+  function stopScanWork() {
+    clearTimeout(state.scanJob);
+    state.scanJob = null;
+  }
+
+  function queueScan() {
+    if (!canScan() || state.scanJob != null) return;
+    // A bounded timer advances the match even when the renderer's frame rate is low.
+    // Pause, dialogs and tab visibility gate both presentation and search.
+    const search = state.scan;
+    state.scanJob = setTimeout(() => {
+      state.scanJob = null;
+      if (search !== state.scan || !canScan()) return;
+      advanceSearch(); updateHUD();
+      if (!state.scan) draw();
+      queueScan();
+    }, SCAN_YIELD);
   }
 
   function beginSearch(policy) {
@@ -378,23 +412,30 @@
     state.visiblePlay = state.nextSearch = null;
     state.scan = { first, view: first, time: first.elapsed, policy, entries: [], still: replayFrame(first) };
     state.acc = 0;
-    updateHUD(); draw();
+    updateHUD(); draw(); queueScan();
+  }
+
+  function updateScanView(scan) {
+    scan.time = V.visibleStart(scan.first.elapsed, state.match.elapsed, scan.policy, scan.time);
+    scan.view = V.frameAt(state.buffer, scan.time, scan.first);
+    drainEntries(scan.entries, scan.time, true);
+  }
+
+  function showBuffered(scan, policy, tail) {
+    const last = withView(), frames = V.clipFrames(state.buffer, scan.first, last, scan.time);
+    stopScanWork();
+    state.scan = null;
+    state.visiblePlay = tail > 0 ? { policy, until: last.elapsed + tail } : null;
+    state.scene = { policy, entries: scan.entries, frames, view: frames[0], time: scan.time, frame: null };
+    advanceScene(0);
   }
 
   function advanceSearch() {
-    const m = state.match, scan = state.scan;
-    const result = V.scanBatch(m, state.scout, scan.policy);
+    const scan = state.scan;
+    const result = V.scanBatch(state.match, state.scout, scan.policy);
     if (result.type === 'break') { closeCut(); return; }
-    scan.time = V.visibleStart(scan.first.elapsed, m.elapsed, scan.policy);
-    scan.view = V.frameAt(state.buffer, scan.time, scan.first);
-    drainEntries(scan.entries, scan.time, true);
-    if (result.type === 'moment') {
-      const last = withView(), frames = V.clipFrames(state.buffer, scan.first, last, scan.time);
-      state.scan = null;
-      state.visiblePlay = { policy: scan.policy, until: last.elapsed + scan.policy.tail };
-      state.scene = { policy: scan.policy, entries: scan.entries, frames, view: frames[0], time: scan.time, frame: null };
-      advanceScene(0);
-    }
+    updateScanView(scan);
+    if (result.type === 'moment') showBuffered(scan, scan.policy, scan.policy.tail);
   }
 
   function advanceScene(dt) {
@@ -468,9 +509,22 @@
     refreshFixturePicks();
   }
 
+  // Desk dialogs freeze the engine at its current tick. An edit ends any active
+  // search, lets the unseen frames play, then keeps the next live passage on screen.
+  function touchlineChange() {
+    const m = state.match, policy = chosenMode();
+    state.nextSearch = null;
+    if (state.scan) showBuffered(state.scan, policy, 0);
+    if (policy.rank && !state.ready && !V.atBreak(m)) {
+      state.visiblePlay = { policy, until: Math.max(m.elapsed + 12, state.visiblePlay?.until ?? 0) };
+    }
+    return !!state.scene;
+  }
+
   function renderTactics() {
     const m = state.match, t = m.teams[0].tactics, away = m.teams[1];
-    $('tab-tactics').innerHTML = `<p class="help-text desk-feedback" role="status">Set how your side plays. Changes apply when play resumes.</p><div class="desk-grid">${TACTICS.map(([key, title, values]) => `<label class="tactic-control">${title}<select data-tactic="${key}">${options(values, key !== 'formation')}</select></label>`).join('')}</div><div class="opposition"><strong>${html(away.club.name)} · Opposition setup</strong>${shapeLabel(away.tactics.formation)} · ${html(D.MENTALITIES[away.tactics.mentality])} · ${html(D.PRESS[away.tactics.press])} press</div>`;
+    const timing = filmView() ? `Changes take effect at ${m.clockStr()}, when the current footage ends.` : 'Set how your side plays. Changes apply when play resumes.';
+    $('tab-tactics').innerHTML = `<p class="help-text desk-feedback" role="status">${timing}</p><div class="desk-grid">${TACTICS.map(([key, title, values]) => `<label class="tactic-control">${title}<select data-tactic="${key}">${options(values, key !== 'formation')}</select></label>`).join('')}</div><div class="opposition"><strong>${html(away.club.name)} · Opposition setup</strong>${shapeLabel(away.tactics.formation)} · ${html(D.MENTALITIES[away.tactics.mentality])} · ${html(D.PRESS[away.tactics.press])} press</div>`;
     for (const select of $('tab-tactics').querySelectorAll('[data-tactic]')) select.value = t[select.dataset.tactic];
   }
   function renderSquad() {
@@ -478,7 +532,8 @@
     const available = !state.ready && state.match.phase !== 'fulltime';
     const inPlayer = t.players.find(p => p.id === state.subMode);
     const row = (p, role, bench) => `<div class="squad-row"><span>${p.num}</span><span>${html(p.name)}</span><span class="row-role">${role}</span><span class="row-cond">${condition(p)}%</span>${bench ? `<button type="button" class="button" data-bench="${html(p.id)}" ${!available || t.subsUsed >= 5 ? 'disabled' : ''}>Bring on</button>` : inPlayer ? `<button type="button" class="button" data-out="${html(p.id)}" ${(p.pos === 'GK') !== (inPlayer.pos === 'GK') ? 'disabled' : ''}>Replace</button>` : '<span></span>'}</div>`;
-    $('tab-squad').innerHTML = `<p class="help-text desk-feedback" role="status">${state.ready ? 'Substitutions are available after kick-off.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining.`}</p>${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${t.bench.map(p => row(p, p.pos, true)).join('')}`;
+    const timing = filmView() ? ` · changes take effect at ${state.match.clockStr()}` : '';
+    $('tab-squad').innerHTML = `<p class="help-text desk-feedback" role="status">${state.ready ? 'Substitutions are available after kick-off.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining${timing}.`}</p>${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${t.bench.map(p => row(p, p.pos, true)).join('')}`;
   }
 
   const statLine = (title, a, b) => `<div class="stat-line"><strong>${a}</strong><span>${title}</span><strong>${b}</strong></div>`;
@@ -565,7 +620,7 @@
   function advance(dt) {
     const m = state.match, policy = chosenMode();
     if (state.scene) { advanceScene(dt); return; }
-    if (state.scan) { advanceSearch(); return; }
+    if (state.scan) return;
     if (!state.replayQueue) {
       if (state.nextSearch) { beginSearch(state.nextSearch); return; }
       if (state.visiblePlay && m.elapsed >= state.visiblePlay.until && !V.holdingAction(m, state.visiblePlay.policy)) state.visiblePlay = null;
@@ -603,12 +658,14 @@
     if (state.breakQueued && !activeDialog()) showBreak(state.breakQueued);
     let changed = false;
     if (!document.hidden && !activeDialog()) {
-      if (state.replay && !state.replay.paused) { tickReplay(dt); changed = true; }
-      else if (!state.replay && !state.ready && !state.paused) { advance(dt); changed = true; }
+      if (state.replay) {
+        if (!state.replay.paused) { tickReplay(dt); changed = true; }
+      } else if (state.scan) queueScan();
+      else if (!state.ready && !state.paused) { advance(dt); changed = true; }
     }
     if (changed && t - state.tileT > 540) { state.tileT = t; if (!state.replay && !filmView()) updateLineupCondition(); }
     if (changed) updateHUD();
-    if ((changed && !state.scan) || state.renderer.needsPaint) draw();
+    if ((changed && (!state.scan || state.replay)) || state.renderer.needsPaint) draw();
   }
 
   function wire() {
@@ -618,6 +675,8 @@
     $('highlightMode').innerHTML = $('preHighlights').innerHTML = modeOptions;
     $('highlightMode').addEventListener('change', e => setWatchMode(e.target.value));
     $('preHighlights').addEventListener('change', e => text('watchDetail', V.modeFor(e.target.value).detail));
+    document.addEventListener('visibilitychange', queueScan);
+    for (const id of ['setupDialog', 'deskDialog', 'breakDialog']) $(id).addEventListener('close', queueScan);
     for (const b of document.querySelectorAll('[data-speed]')) b.addEventListener('click', () => setSpeed(+b.dataset.speed));
     $('btnNames').addEventListener('click', () => { state.names = !state.names; attr($('btnNames'), 'aria-pressed', state.names); draw(); });
     $('btnSound').addEventListener('click', () => { setSound(!state.sound, true); state.config.sound = state.sound; });
@@ -657,22 +716,27 @@
     $('tab-tactics').addEventListener('change', e => {
       const key = e.target.dataset.tactic;
       if (!key) return;
-      const m = state.match;
+      const m = state.match, buffered = touchlineChange();
       m.setTactics(0, { [key]: key === 'formation' ? e.target.value : +e.target.value });
       if (key === 'formation' || key === 'width') {
         if (state.ready) m.setupKickoff(0);
-        renderLineup();
+        if (buffered) state.lineupDirty = true;
+        else renderLineup();
       }
-      notify('Instruction updated.'); draw();
+      notify(buffered ? `Instruction set for ${m.clockStr()}, after the current footage.` : 'Instruction updated.');
+      updateHUD(); draw();
     });
     $('tab-squad').addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b || b.disabled) return;
       if (b.hasAttribute('data-cancel-sub')) { state.subMode = null; renderSquad(); }
       else if (b.dataset.bench) { state.subMode = b.dataset.bench; renderSquad(); }
       else if (b.dataset.out && state.subMode) {
-        const result = state.match.substitute(0, b.dataset.out, state.subMode);
-        state.subMode = null; renderSquad(); renderLineup();
-        notify(result.ok ? 'Substitution made.' : result.msg);
+        const buffered = touchlineChange(), m = state.match;
+        const result = m.substitute(0, b.dataset.out, state.subMode);
+        state.subMode = null; renderSquad();
+        if (!buffered) renderLineup();
+        notify(result.ok ? (buffered ? `Substitution set for ${m.clockStr()}, after the current footage.` : 'Substitution made.') : result.msg);
+        updateHUD(); draw();
       }
     });
     $('deskDialog').addEventListener('close', () => {

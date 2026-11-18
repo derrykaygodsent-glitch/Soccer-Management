@@ -55,7 +55,8 @@ test('the browser bundle loads its modules without external script or style file
   assert.ok(Number.isFinite(fixture.ball.x));
   assert.equal(typeof context.TLRender.Renderer, 'function');
   assert.equal(typeof context.TLAudio.init, 'function');
-  assert.equal(Object.keys(context.TLHighlights.MODES).length, 5);
+  assert.equal(Object.keys(context.TLHighlights.MODES).length, 4);
+  assert.equal(context.TLHighlights.DEFAULT_MODE, 'extended');
   assert.equal(typeof context.TLHighlights.scanBatch, 'function');
   assert.equal(typeof initialize, 'function');
 });

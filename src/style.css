@@ -102,6 +102,9 @@ h1{font:700 clamp(35px,4vw,45px)/.99 'Barlow Condensed','Arial Narrow',sans-seri
 .watch-mode #highlightMode option{background:#17251c;color:#e8efe7}
 .pitch-indicator[data-view=highlight] i{background:var(--accent)}
 .pitch-indicator[data-view=search] i{background:#a9e88b;animation:scan-pulse 1.1s ease-in-out infinite alternate}
+/* Hold the last clear pitch frame during a cut; the clock and indicator stay live. */
+.pitchwrap[data-view=search] #pitch{opacity:.65}
+.pitch-indicator[data-view=search]{border-color:#7b9569;background:#15271deb}
 @keyframes scan-pulse{from{opacity:.36}to{opacity:1}}
 .team-deck{margin-top:13px;min-width:0}
 .team-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
