@@ -12,22 +12,22 @@
   const DECISIVE = new Set([...GOALS, 'pen', 'penmiss', 'red', 'post']);
   const OTHER = new Set(['offside', 'yellow', 'catch']);
 
-  // Full bypasses the filter; the other three tiers include all lower ranks.
-  // Pace is simulated seconds per real second of visible play, not a physics input.
+  // Playback speed is global. A mode selects footage, never its playback rate.
+  const RATES = [0, 1.65, 3.3, 6.6];
+  const playbackRate = speed => RATES[speed] ?? RATES[1];
   const DEFAULT_MODE = 'extended';
-  const SPEED_MULTIPLIERS = [0, 1, 2, 4];
+  const ATTACK_GAP = 365, CONTEXT_GAP = 445;
   const MODES = Object.freeze(Object.fromEntries([
-    { id: 'full', label: 'Full Match', rank: 0, lead: 0, tail: 0, opening: 0, pace: 4.65,
-      estimate: '15–25', bestFor: 'Tactical analysis', detail: 'Continuous play, including possession and movement between chances.' },
-    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 23, tail: 15, opening: 17, pace: 4.45,
-      estimate: '10–18', bestFor: 'Important matches', detail: 'More buildup, attacking spells, defensive recoveries and restarts.' },
-    { id: 'extended', label: 'Extended', rank: 2, lead: 18, tail: 12, opening: 10, pace: 4,
-      estimate: '7–12', bestFor: 'Normal league matches', detail: 'Key moments plus a selection of attacks, chances and attacking set pieces.' },
-    { id: 'key', label: 'Key', rank: 1, lead: 16, tail: 11, opening: 7, pace: 1.12,
-      estimate: '3–7', bestFor: 'Quick season progression', detail: 'Goals, major chances, penalties, woodwork and dismissals shown at a more readable pace.' }
+    { id: 'full', label: 'Full Match', rank: 0, lead: 0, tail: 0, opening: 0,
+      estimate: '55–60', bestFor: 'Tactical analysis', detail: 'Continuous play, including possession and movement between chances.' },
+    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 21, tail: 14, opening: 16,
+      estimate: '14–21', bestFor: 'Important matches', detail: 'More buildup, attacking spells, defensive recoveries and restarts.' },
+    { id: 'extended', label: 'Extended', rank: 2, lead: 18, tail: 12, opening: 10,
+      estimate: '7–13', bestFor: 'Normal league matches', detail: 'Key moments plus a selection of attacks, chances and attacking set pieces.' },
+    { id: 'key', label: 'Key', rank: 1, lead: 16, tail: 11, opening: 7,
+      estimate: '2–6', bestFor: 'Quick season progression', detail: 'Only goals, major chances, penalties, woodwork and dismissals.' }
   ].map(mode => [mode.id, Object.freeze(mode)])));
   const modeFor = id => Object.hasOwn(MODES, id) ? MODES[id] : MODES[DEFAULT_MODE];
-  const playbackRate = (mode, speed) => mode.pace * SPEED_MULTIPLIERS[speed];
   const atBreak = m => m.phase === 'halftime' || m.phase === 'fulltime';
   const depthFor = (match, team) => match.teams[team].attackDir > 0 ? match.ball.x : L - match.ball.x;
 
@@ -41,14 +41,14 @@
       return distanceToGoal <= 15 && Math.abs(f.targetY - CY) <= 12 ? 2 : 3;
     }
     if (OTHER.has(ev.type)) return 3;
-    if (ev.type === 'foul' && match.phase === 'freekick' && match.setpiece && depthFor(match, match.setpiece.team) > 62) return 3;
+    if (ev.type === 'foul' && match.phase === 'freekick' && match.setpiece && depthFor(match, match.setpiece.team) > 76) return 3;
     return Infinity;
   }
 
   function shotRank(shot) {
     if (!shot || shot.outcome === 'pending') return Infinity;
     if (shot.pen || shot.outcome === 'goal' || shot.outcome === 'post' || shot.xg >= .26 || (shot.outcome === 'save' && shot.xg >= .22)) return 1;
-    if (shot.outcome === 'save' || shot.xg >= .12) return 2;
+    if (shot.outcome === 'save' || shot.xg >= .14) return 2;
     return 3;
   }
 
@@ -63,9 +63,16 @@
     }
 
     check(match) {
-      let rank = Infinity;
+      if (match.half !== this.half) {
+        this.half = match.half;
+        this.spell = null;
+        this.lastAttack = this.lastContext = -Infinity;
+      }
+      let rank = Infinity, cross = Infinity;
       for (; this.events < match.events.length; this.events++) {
-        rank = Math.min(rank, eventRank(match.events[this.events], match));
+        const ev = match.events[this.events], quality = eventRank(ev, match);
+        if (ev.type === 'cross') cross = Math.min(cross, quality);
+        else rank = Math.min(rank, quality);
       }
       const shot = match.shotMap.at(-1);
       if (shot !== this.shot || shot?.outcome !== this.outcome) {
@@ -73,23 +80,29 @@
         this.outcome = shot?.outcome;
         rank = Math.min(rank, shotRank(shot));
       }
-      if (match.half !== this.half) {
-        this.half = match.half;
-        this.spell = null;
-        this.lastAttack = this.lastContext = -Infinity;
+      const t = match.elapsed;
+      // Crosses and runs compete for an extra passage; actual shots and decisive
+      // events are never suppressed by these repeat-action cooldowns.
+      if (cross === 2 && rank > 2 && !this.spell?.attack && t - this.lastAttack >= ATTACK_GAP) {
+        this.lastAttack = t;
+        if (this.spell) this.spell.attack = this.spell.context = true;
+        rank = 2;
+      } else if (cross <= 3 && rank > 3 && !this.spell?.context && t - this.lastContext >= CONTEXT_GAP) {
+        this.lastContext = t;
+        if (this.spell) this.spell.context = true;
+        rank = 3;
       }
       if (match.phase !== 'open') {
-        // Set-piece phases interrupt an open-play possession.
+        // Set pieces interrupt an open-play possession.
         this.spell = null;
         return rank;
       }
       const owner = match.ball.owner;
       if (!owner) return rank; // A pass in flight is still part of the same possession.
-      const t = match.elapsed, team = owner.team, depth = depthFor(match, team);
-      let spell = this.spell;
+      const team = owner.team, depth = depthFor(match, team);
+      const spell = this.spell;
       if (!spell || spell.team !== team) {
-        // A genuine regain under a previous attack, not a generic pass in one's own half.
-        const recovery = !!spell && spell.high >= 74 && depth <= 31;
+        const recovery = !!spell && spell.high >= 77 && depth <= 28;
         this.spell = { team, start: t, low: depth, high: depth, recovery, attack: false, context: false };
         return rank;
       }
@@ -97,17 +110,16 @@
       spell.high = Math.max(spell.high, depth);
       if (t - spell.start < 1) return rank;
       const gain = depth - spell.low;
-      const attack = depth >= 76 && gain >= 16;
-      if (attack && !spell.attack && t - this.lastAttack >= 114) {
+      if (rank > 2 && depth >= 80 && gain >= 19 && !spell.attack && t - this.lastAttack >= ATTACK_GAP) {
         spell.attack = spell.context = true;
         this.lastAttack = t;
-        return Math.min(rank, 2);
+        return 2;
       }
-      const buildup = depth >= 62 && gain >= 10;
-      if (!spell.context && t - this.lastContext >= 108 && (buildup || spell.recovery)) {
+      const buildup = depth >= 69 && gain >= 15;
+      if (rank > 3 && !spell.context && t - this.lastContext >= CONTEXT_GAP && (buildup || spell.recovery)) {
         spell.context = true;
         this.lastContext = t;
-        return Math.min(rank, 3);
+        return 3;
       }
       return rank;
     }

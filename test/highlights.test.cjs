@@ -43,18 +43,12 @@ test('four cumulative viewing settings, with Extended as the default', () => {
   assert.equal(V.shotRank({ outcome: 'goal', xg: .04 }), key.rank, 'even an unlikely goal must make Key');
 });
 
-test('normal playback uses the viewing mode’s pace and the speed buttons multiply it', () => {
-  assert.deepEqual([full, comprehensive, extended, key].map(p => p.estimate), ['15–25', '10–18', '7–12', '3–7']);
-  assert.equal(extended.bestFor, 'Normal league matches');
-  for (const mode of [full, comprehensive, extended, key]) {
-    assert.equal(V.playbackRate(mode, 1), mode.pace);
-    assert.equal(V.playbackRate(mode, 2), 2 * mode.pace);
-    assert.equal(V.playbackRate(mode, 3), 4 * mode.pace);
-    assert.ok(V.playbackRate(mode, 3) * .05 / V.STEP < 48, '4× fits the live tick budget');
+test('the speed buttons use the approved pace independently of footage selection', () => {
+  assert.deepEqual([1, 2, 3].map(V.playbackRate), [1.65, 3.3, 6.6]);
+  for (const policy of [full, comprehensive, extended, key]) {
+    assert.ok(!Object.hasOwn(policy, 'pace'), `${policy.label} does not control playback speed`);
   }
-  const fullMinutes = 90 / V.playbackRate(full, 1);
-  assert.ok(fullMinutes >= 15 && fullMinutes <= 25);
-  assert.ok(key.pace < extended.pace, 'selectivity, not rushed playback, makes Key quicker');
+  assert.equal(extended.bestFor, 'Normal league matches');
 });
 
 test('scouting preserves possession across passes and distinguishes progression from recovery', () => {
@@ -67,13 +61,30 @@ test('scouting preserves possession across passes and distinguishes progression 
   m.phase = 'open';
   assert.equal(control(home, 48, 0), Infinity, 'ordinary possession is not a highlight');
   assert.equal(control(null, 56, 2), Infinity, 'an airborne pass keeps the spell alive');
-  assert.equal(control(home, 79, 3), extended.rank, 'a progressive attack can qualify without a shot');
+  assert.equal(control(home, 83, 3), extended.rank, 'a progressive attack can qualify without a shot');
   assert.equal(control(home, 84, 4), Infinity, 'do not repeat the same attack');
   assert.equal(control(away, 83, 5), Infinity, 'the regain must be controlled');
   assert.equal(control(away, 81, 6.1), comprehensive.rank, 'a defensive recovery provides extra context');
   assert.equal(control(away, 79, 7), Infinity, 'do not repeat the same recovery');
   m.events.push({ type: 'goal' });
   assert.equal(scout.check(m), key.rank, 'progression cannot mask a decisive incident');
+});
+
+test('repeat crosses do not crowd out other highlights or suppress an actual chance', () => {
+  const m = game(), scout = new V.Scout(m);
+  const attacker = m.teams[0].slots.find(s => s.role !== 'GK').player;
+  m.phase = 'open'; m.ball.x = 69; m.ball.owner = attacker;
+  scout.check(m);
+  m.elapsed = 5; m.ball.owner = null;
+  m.ball.flight = { kind: 'cross', intended: attacker, targetX: L - 9, targetY: CY };
+  m.events.push({ type: 'cross', team: 0 });
+  assert.equal(scout.check(m), extended.rank);
+  m.elapsed = 9; m.events.push({ type: 'cross', team: 0 });
+  assert.equal(scout.check(m), Infinity);
+  m.shotMap.push({ outcome: 'save', xg: .18 });
+  assert.equal(scout.check(m), extended.rank, 'a resolved shot is not gated by the cross cooldown');
+  m.events.push({ type: 'goal', team: 0 });
+  assert.equal(scout.check(m), key.rank);
 });
 
 function stub(makeEvent) {

@@ -188,6 +188,30 @@
       return { x: gx + rise * .10, y: gy - vertical, shadowX, shadowY, z };
     }
 
+    drawReferee(referee, showName) {
+      const ctx = this.ctx, s = this.scale;
+      const x = this.ox + referee.x * s, y = this.oy + referee.y * s;
+      const r = Math.max(4.9, this.radius * .92), d = r * 2;
+      round(ctx, x - r + .8, y - r + 1.4, d, d, r * .34);
+      ctx.fillStyle = '#09180db8'; ctx.fill();
+      round(ctx, x - r, y - r, d, d, r * .34);
+      ctx.fillStyle = '#142722'; ctx.fill();
+      ctx.strokeStyle = '#bae9e3'; ctx.lineWidth = 1.15; ctx.stroke();
+      ctx.fillStyle = '#effffa';
+      ctx.font = `850 ${Math.max(7.7, r * 1.27)}px Inter,system-ui,sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('R', x, y + .35);
+      const badge = { x: x - r - 1, y: y - r - 1, w: d + 2, h: d + 2 };
+      if (!showName) return [badge];
+      const label = this.compact ? 'REF' : 'REFEREE', size = this.compact ? 8 : 9;
+      ctx.font = `780 ${size}px Inter,system-ui,sans-serif`;
+      const w = ctx.measureText(label).width + 8, h = size + 5;
+      const tag = { x: clamp(x - w / 2, 2, this.width - w - 2), y: Math.min(y + r + 3, this.height - h - 2), w, h };
+      round(ctx, tag.x, tag.y, w, h, 4);
+      ctx.fillStyle = '#142722ed'; ctx.fill();
+      ctx.fillStyle = '#d1f8ee'; ctx.fillText(label, tag.x + w / 2, tag.y + h / 2 + .4);
+      return [badge, tag];
+    }
+
     draw(match, options = {}) {
       if (!match) return;
       this.needsPaint = false;
@@ -240,6 +264,9 @@
         this.drawn.push({ p, x, y });
       }
 
+      const referee = frame ? frame.referee : options.referee;
+      const officialLabels = referee ? this.drawReferee(referee, options.ready || options.names) : [];
+
       // x/y is where the ball is over the grass; z raises its sprite independently.
       const interpolate = !frame && alpha < 1 && Number.isFinite(ball.prevX) && Math.abs(ball.x - ball.prevX) + Math.abs(ball.y - ball.prevY) < 2.55;
       const projection = this.ballProjection(
@@ -279,7 +306,7 @@
       if (radius > 3.2) paint(ctx, bx + radius * .26, by + radius * .23, radius * .31, '#849087');
 
       if (options.names || options.selected || active) {
-        const used = [];
+        const used = officialLabels;
         const priority = p => p.id === options.selected ? 3 : active && p.id === ownerId ? 2 : receiver && p.id === receiver.id ? 1 : 0;
         const labeled = this.drawn.filter(({ p }) => options.names || priority(p)).sort((a, b) => priority(b.p) - priority(a.p));
         for (const { p, x, y } of labeled) {
