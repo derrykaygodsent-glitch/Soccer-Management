@@ -2,82 +2,39 @@
 
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
-const { L, CX, CY } = require('../src/engine.js');
-const { Clock, targetPace } = require('../src/broadcast.js');
-const { STEP, indexAt } = require('../src/highlights.js');
+const { matchSeconds, restartAt } = require('../src/broadcast.js');
+const { STEP } = require('../src/highlights.js');
 
-function match() {
-  return { elapsed: 0, phase: 'open', controlTeam: 0, teams: [{ attackDir: 1 }, { attackDir: -1 }], ball: { x: CX, y: CY, z: 0 } };
-}
-
-test('the shared broadcast moves routine play along and keeps attacks readable in either direction', () => {
-  const m = match();
-  const routine = targetPace(m);
-  assert.ok(routine >= 4 && routine <= 4.70, 'routine play is slower than the previous 5.35 pace');
-  m.ball.x = L - 17;
-  const attack = targetPace(m);
-  assert.ok(attack < routine);
-  m.controlTeam = 1; m.ball.x = 17;
-  assert.equal(targetPace(m), attack);
-  m.ball.flight = { kind: 'shot' };
-  assert.ok(targetPace(m) < 1.9 && targetPace(m) < attack, 'shots are slower than v0.4.5');
-  m.ball.x = CX; m.ball.flight = { kind: 'pass' }; m.ball.z = 8;
-  assert.ok(targetPace(m) < routine, 'an aerial delivery gets time on screen');
-  m.phase = 'penalty';
-  assert.ok(targetPace(m) < attack);
-});
-
-test('the broadcast clock integrates fixed ticks and preserves the timestamp of a buffered event', () => {
-  const m = match(), clock = new Clock(m);
-  const quietRate = clock.pace;
-  assert.equal(clock.time, 0);
-  m.phase = 'penalty';
-  m.elapsed += STEP;
-  const stamp = clock.stamp(m.elapsed);
-  clock.observe(m);
-  assert.equal(clock.time, stamp);
-  assert.ok(clock.pace < quietRate && clock.pace > targetPace(m), 'a change of tempo eases in');
-  const frames = [{ elapsed: 0, screen: 0 }, { elapsed: m.elapsed, screen: stamp }];
-  for (let i = 0; i < 40; i++) {
-    m.elapsed += STEP;
-    const time = clock.stamp(m.elapsed);
-    clock.observe(m);
-    assert.equal(clock.time, time);
-    assert.ok(time > frames.at(-1).screen);
-    frames.push({ elapsed: m.elapsed, screen: time });
+test('1× is real time, and 2× and 4× scale the same visible footage', () => {
+  for (const wall of [0, .016, STEP, .1, 1, 10]) {
+    assert.equal(matchSeconds(wall, 1), wall);
+    assert.equal(matchSeconds(wall, 2), wall * 2);
+    assert.equal(matchSeconds(wall, 3), wall * 4);
   }
-  const goal = frames.at(-1);
-  assert.ok(indexAt(frames, goal.screen - .001, 'screen') < frames.length - 1);
-  assert.equal(indexAt(frames, goal.screen, 'screen'), frames.length - 1);
-  assert.ok(clock.time > m.elapsed / quietRate, 'slower moments take longer to display without changing match time');
+  assert.equal(matchSeconds(5), 5, 'an absent or invalid setting defaults to real time');
+  assert.equal(matchSeconds(5, 4), 5);
 });
 
-test('a placed free kick and its delivery get time at the shared pace without slowing unrelated play', () => {
-  const m = match(), routine = targetPace(m);
-  assert.equal(m.elapsed, 0);
-  assert.equal(m.phase, 'open');
-  m.phase = 'freekick'; m.setpiece = { type: 'freekick', team: 0 };
-  assert.ok(targetPace(m) < routine);
-  m.setpiece.indirect = true;
-  assert.ok(targetPace(m) <= 2.42);
-  m.phase = 'open'; m.lastRestart = { ...m.setpiece, takenAt: 20 }; m.setpiece = null;
-  m.elapsed = 20.5;
-  assert.ok(targetPace(m) <= 2.42);
-  m.elapsed = 26;
-  assert.equal(targetPace(m), routine);
+test('the active set piece is shown during setup, cards and the taker’s windup', () => {
+  for (const type of ['freekick', 'corner', 'throwin', 'goalkick', 'penalty']) {
+    const sp = { type, stage: 'setup' };
+    const match = { phase: type, setpiece: sp, elapsed: 10, ball: {} };
+    assert.equal(restartAt(match), sp);
+    sp.stage = 'windup';
+    assert.equal(restartAt(match), sp);
+    match.phase = 'review';
+    assert.equal(restartAt(match), null, 'a VAR review is not a visible restart');
+  }
 });
 
-test('the shared clock recognises the held throw and a delivery still in flight', () => {
-  const m = match();
-  const placed = { id: 5, type: 'throwin', team: 0, stage: 'setup' };
-  Object.assign(m, { phase: 'throwin', setpiece: placed });
-  const prep = targetPace(m);
-  assert.equal(prep, 3.30);
-  placed.stage = 'windup';
-  assert.ok(targetPace(m) < 1.7, 'enough screen time for the hand release');
-  Object.assign(m, { phase: 'open', setpiece: null, elapsed: 7, lastRestart: { ...placed, stage: null, takenAt: 1 } });
-  m.ball.flight = { kind: 'throw', restartId: 5 };
-  assert.equal(targetPace(m), prep, 'the shown passage is still on the first delivery');
-  m.ball.flight = null;
-  assert.ok(targetPace(m) > prep, 'routine pace after control');
+test('a restart caption follows the delivery, not unrelated play', () => {
+  const restart = { id: 5, type: 'throwin', takenAt: 20 };
+  const match = { phase: 'open', lastRestart: restart, ball: {}, elapsed: 21 };
+  assert.equal(restartAt(match, 5.5), restart);
+  match.elapsed = 27;
+  assert.equal(restartAt(match, 5.5), null);
+  match.ball.flight = { kind: 'throw', restartId: 5 };
+  assert.equal(restartAt(match, 5.5), restart);
+  match.ball.flight = { kind: 'cross', restartId: 7 };
+  assert.equal(restartAt(match, 5.5), null);
 });

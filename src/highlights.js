@@ -12,7 +12,7 @@
   const BREAKS = new Set(['ht', 'ft']);
   const DECISIVE = new Set([...GOALS, 'pen', 'penmiss', 'yellow', 'red', 'post', 'varcheck', 'varresult']);
 
-  // This module selects footage. The shared broadcast clock sets its pace.
+  // This module selects footage. Playback rate is independent of that choice.
   const DEFAULT_MODE = 'extended';
   const ATTACK_GAP = 295, CONTEXT_GAP = 270;
   // All edits reserve at least the same pre-roll before advancing the public
@@ -21,13 +21,13 @@
   const CORE_LEAD = 28;
   const MODES = Object.freeze(Object.fromEntries([
     { id: 'full', label: 'Full Match', rank: 0, lead: 0, tail: 0, opening: 0,
-      estimate: '15–25', bestFor: 'Tactical analysis', detail: 'Continuous play, including possession and movement between chances.' },
+      estimate: '90+', bestFor: 'Tactical analysis', detail: 'Continuous play, including possession and movement between chances.' },
     { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 32, tail: 17, opening: 17,
-      estimate: '10–18', bestFor: 'Important matches', detail: 'The same key and extended passages, plus goal kicks, lower-probability chances and more defensive play.' },
+      estimate: '40–65', bestFor: 'Important matches', detail: 'The same key and extended passages, plus goal kicks, lower-probability chances and more defensive play.' },
     { id: 'extended', label: 'Extended', rank: 2, lead: 30, tail: 15, opening: 12,
-      estimate: '7–12', bestFor: 'Normal league matches', detail: 'The same key passages, plus other free kicks, offsides, throw-ins and more chances.' },
+      estimate: '30–50', bestFor: 'Normal league matches', detail: 'The same key passages, plus other free kicks, offsides, throw-ins and more chances.' },
     { id: 'key', label: 'Key', rank: 1, lead: CORE_LEAD, tail: 13, opening: 7,
-      estimate: '3–7', bestFor: 'Quick season progression', detail: 'Buildup and outcome of goals, major chances, dangerous free kicks, corners, penalties, cards and VAR.' }
+      estimate: '10–25', bestFor: 'Quick season progression', detail: 'Buildup and outcome of goals, major chances, dangerous free kicks, corners, penalties, cards and VAR.' }
   ].map(mode => [mode.id, Object.freeze(mode)])));
   const modeFor = id => Object.hasOwn(MODES, id) ? MODES[id] : MODES[DEFAULT_MODE];
   const leadFor = (policy, rank) => rank === 1 && policy.rank ? CORE_LEAD : policy.lead;
@@ -148,12 +148,10 @@
     const now = options.now || (() => performance.now());
     const limit = now() + (options.budget ?? SCAN_BUDGET_MS);
     const max = options.maxSteps ?? MAX_SCAN_STEPS;
-    const afterStep = options.afterStep;
     let ticks = 0;
     if (atBreak(match)) return { type: 'break', ticks };
     while (ticks < max && (ticks < 1 || ticks % 8 !== 0 || now() < limit)) {
       match.step(STEP);
-      if (afterStep) afterStep(match);
       ticks++;
       const rank = scout.check(match);
       if (atBreak(match)) return { type: 'break', ticks };
@@ -169,11 +167,11 @@
   // publish a shorter lead before we know which category ended the search.
   const searchStart = (from, at, policy, published = from) => visibleStart(from, at, policy, published, policy.rank);
 
-  function indexAt(frames, time, key = 'elapsed') {
+  function indexAt(frames, time) {
     let low = 0, high = frames.length - 1;
     while (low < high) {
       const middle = (low + high + 1) >> 1;
-      if (frames[middle][key] <= time + EPS) low = middle;
+      if (frames[middle].elapsed <= time + EPS) low = middle;
       else high = middle - 1;
     }
     return low;

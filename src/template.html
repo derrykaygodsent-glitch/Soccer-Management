@@ -81,10 +81,10 @@
       <div class="controls" aria-label="Match controls">
         <div class="playback">
           <button class="button primary play-button" id="btnPlay" type="button" title="Kick off (Space)"><svg class="icon" aria-hidden="true"><use id="playIcon" href="#i-play"/></svg><span id="playLabel">Kick off</span></button>
-          <div class="speeds" aria-label="Match speed">
-            <button type="button" data-speed="1" aria-pressed="true" title="Normal speed (1)">1×</button>
-            <button type="button" data-speed="2" aria-pressed="false" title="Double speed (2)">2×</button>
-            <button type="button" data-speed="3" aria-pressed="false" title="Quadruple speed (3)">4×</button>
+          <div class="speeds" role="group" aria-label="Playback speed">
+            <button type="button" data-speed="1" aria-pressed="true" aria-label="1×, normal speed" title="Real time · 100% (1)">1×</button>
+            <button type="button" data-speed="2" aria-pressed="false" aria-label="2×, double speed" title="Twice real time · 200% (2)">2×</button>
+            <button type="button" data-speed="3" aria-pressed="false" aria-label="4×, quadruple speed" title="Four times real time · 400% (3)">4×</button>
           </div>
           <button class="button skip-button" id="btnSkip" type="button" disabled title="Next highlight (S)"><svg class="icon" aria-hidden="true"><use href="#i-skip"/></svg><span id="skipLabel">Next highlight</span></button>
         </div>
@@ -130,7 +130,7 @@
         <div class="watch-timing" id="watchTiming" aria-live="polite"><strong id="watchEstimate"></strong><span id="watchUse"></span></div>
       </div>
       <p class="help-text watch-detail" id="watchDetail"></p>
-      <p class="help-text watch-note" id="watchNote">Viewing times are estimates. Incident-heavy matches can run longer. The match still plays all 90 minutes plus stoppage time.</p>
+      <p class="help-text watch-note" id="watchNote">1× is real time. Highlights skip quiet play; footage keeps your chosen speed. Estimates exclude pauses and replays.</p>
       <div class="setup-checks"><label><input type="checkbox" id="preReplay" checked> Auto goal replays</label><label><input type="checkbox" id="preSound"> Stadium sound</label></div>
       <p class="help-text" id="setupNote">Set your fixture and starting instructions.</p>
       <div class="dialog-actions"><button class="button" data-close="setupDialog" type="button">Cancel</button><button class="button primary" type="submit">Load fixture <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>

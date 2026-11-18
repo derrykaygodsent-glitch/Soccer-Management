@@ -8,16 +8,16 @@ Choose **Highlights** beneath the pitch or in **Match setup**, then press **Kick
 
 | Mode | Best for | Approx. viewing time at 1× | What you'll see |
 | --- | --- | ---: | --- |
-| **Full Match** | Tactical analysis | 15–25 min | Continuous play: routine possession, off-ball movement, buildup and defending, as well as chances. |
-| **Comprehensive** | Important matches | 10–18 min | Everything in Extended, plus goal kicks, routine chances and more defensive recoveries. |
-| **Extended** (default) | Normal league matches | 7–12 min | Everything in Key, plus other free kicks, offsides, throw-ins and selected attacks. |
-| **Key** | Quick season progression | 3–7 min | Goals, major chances, dangerous free kicks, corners, penalties, cards, woodwork and VAR. |
+| **Full Match** | Tactical analysis | 90+ min | Continuous play: routine possession, off-ball movement, buildup and defending, as well as chances. |
+| **Comprehensive** | Important matches | 40–65 min | Everything in Extended, plus goal kicks, routine chances and more defensive recoveries. |
+| **Extended** (default) | Normal league matches | 30–50 min | Everything in Key, plus other free kicks, offsides, throw-ins and selected attacks. |
+| **Key** | Quick season progression | 10–25 min | Goals, major chances, dangerous free kicks, corners, penalties, cards, woodwork and VAR. |
 
-These are real-world estimates, not timers or quotas. Actual viewing time depends on the fixture, device, replay settings and pauses. All modes still play 90 in-game minutes plus stoppage time.
+**1× is real time:** one second of visible play takes one real second. **2×** and **4×** show two and four match seconds per real second. The same setting applies to continuous play, highlight clips and goal replays. There is no automatic speed-up in midfield or slowdown near goal. For a shorter watch at normal speed, use **Key at 1×**. Automatic goal replays can be turned off in Match setup.
 
-Highlight modes fast-forward through quiet play, then show real buildup, the action itself and what follows. How much footage you see depends on the fixture. The same engine still plays every tick and records all events and stats. With the same seed and instructions at the same match times, the four modes produce identical results.
+Highlight modes save time by cutting between passages. The times above are rough guides from seeded fixtures, not limits; they exclude pauses and replays. All modes still simulate 90 in-game minutes plus stoppage time. The engine plays every tick and records all events and stats. With the same seed and instructions at the same match times, the four modes produce identical results.
 
-At **1×**, routine movement is about 13% slower than v0.4.5, with a slightly larger reduction for shots and penalties. **2× / 4×** are multiples of that shared pace. The speed of a passage does not depend on the chosen mode. Full Match runs continuously with no automatic cuts; **Next highlight** jumps to the next qualifying passage when no important action is in progress, and **Stop here** ends a search without changing the mode. The game stops at halftime and full time. In the Touchline desk, changes take effect at the displayed effective time; they do not alter recorded buildup. Goal replays are separate and can be turned off in Match setup.
+Full Match has no automatic cuts. **Next highlight** jumps to the next qualifying passage when no important action is in progress, and **Stop here** ends a search without changing the mode. The game stops at halftime and full time. In the Touchline desk, changes take effect at the displayed effective time; they do not alter recorded buildup.
 
 ## Set pieces, offside and VAR
 
@@ -43,7 +43,7 @@ Role, attributes, individual tendencies, fatigue, tactics and the score affect t
 
 Open `index.html` offline, or run `npm run preview` with Node.js 20+. The preview builds from `src/` and serves on port `4173` (`PORT` overrides it). No installs or accounts are required. Edit `src/`, then run `npm run build` to regenerate the HTML.
 
-- `npm test` checks the standalone build, seeded play, referee tracking, throw-in physics and choosing an outlet, wall and penalty positions at actual release, the discipline sequence, second touches, offside involvement and VAR confirmations and reversals. Highlight tests cover bounded search, exact event and whistle stops, the shared clock and deterministic play with matching tactics and substitutions.
+- `npm test` checks the standalone build, seeded play, referee tracking, throw-in physics and choosing an outlet, wall and penalty positions at actual release, the discipline sequence, second touches, offside involvement and VAR confirmations and reversals. Highlight tests cover bounded search, exact event and whistle stops, playback-rate mapping and deterministic play with matching tactics and substitutions.
 - `npm run test:sim -- 3` runs three complete seeded fixtures.
 
 ## Pinned checkpoints

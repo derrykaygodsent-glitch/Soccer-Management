@@ -5,7 +5,6 @@ const { test } = require('node:test');
 const { Match, L, CX, CY } = require('../src/engine.js');
 const { CLUBS } = require('../src/data.js');
 const V = require('../src/highlights.js');
-const B = require('../src/broadcast.js');
 const { full, comprehensive, extended, key } = V.MODES;
 
 function game(seed = 342) {
@@ -49,8 +48,7 @@ test('four cumulative viewing settings, with Extended as the default', () => {
   assert.equal(V.shotRank({ outcome: 'goal', xg: .04 }), key.rank, 'even an unlikely goal must make Key');
 });
 
-test('the speed buttons use one shared broadcast pace, independently of footage selection', () => {
-  assert.deepEqual([1, 2, 3].map(B.multiplier), [1, 2, 4]);
+test('viewing settings change coverage but do not specify a playback speed', () => {
   for (const policy of [full, comprehensive, extended, key]) {
     assert.ok(!Object.hasOwn(policy, 'pace'), `${policy.label} does not control playback speed`);
   }
@@ -144,7 +142,7 @@ test('a cut starts at the published clock and cannot include frames from the pre
 test('the same seed and changes on the same tick give identical play under all four policies', () => {
   const n = 40 * 795, changeAt = 40 * 748;
   const simulate = policy => {
-    const m = game(342), scout = new V.Scout(m), clock = new B.Clock(m);
+    const m = game(342), scout = new V.Scout(m);
     let ticks = 0, seen = 0;
     while (ticks < n) {
       if (ticks === changeAt) {
@@ -156,20 +154,19 @@ test('the same seed and changes on the same tick give identical play under all f
       }
       if (policy.rank) {
         const end = ticks < changeAt ? changeAt : n;
-        const r = V.scanBatch(m, scout, policy, { now: () => 0, maxSteps: Math.min(end - ticks, V.MAX_SCAN_STEPS), afterStep: m => clock.observe(m) });
+        const r = V.scanBatch(m, scout, policy, { now: () => 0, maxSteps: Math.min(end - ticks, V.MAX_SCAN_STEPS) });
         assert.ok(r.ticks > 0);
         ticks += r.ticks;
         seen += r.type === 'moment';
       } else {
         m.step(V.STEP);
-        clock.observe(m);
         ticks++;
       }
     }
     return { seen, state: {
       score: m.teams.map(team => team.score), stats: m.teams.map(team => team.stats),
       possession: m.possTime, events: m.events.map(e => [e.type, e.clock, e.text]),
-      shots: m.shotMap, frame: m.snapshotFrame(), broadcast: [clock.time, clock.pace]
+      shots: m.shotMap, frame: m.snapshotFrame()
     } };
   };
   const continuous = simulate(full), narrow = simulate(key), normal = simulate(extended), broad = simulate(comprehensive);

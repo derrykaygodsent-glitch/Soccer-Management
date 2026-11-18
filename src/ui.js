@@ -4,10 +4,10 @@
   const D = global.TLData, E = global.TLEngine, A = global.TLAudio, V = global.TLHighlights, O = global.TLReferee, B = global.TLBroadcast;
   const $ = id => document.getElementById(id);
   // Physics uses a fixed step; display speed never changes the simulation outcome.
-  const H = V.STEP, REPLAY_RATE = 1.5;
+  const H = V.STEP;
   const REPLAY_BUILDUP = 12, REPLAY_AFTERMATH = 1.05;
   const HISTORY = Math.ceil((V.MODES.comprehensive.lead + 6) / (H * 2));
-  const SCAN_YIELD = 6, MAX_FRAME_DT = .12, MAX_LIVE_STEPS = 112;
+  const SCAN_YIELD = 6, MAX_FRAME_DT = .12;
   const GOALS = V.GOALS, BREAKS = V.BREAKS;
   const LINEUP_EVENTS = new Set(['sub', 'dismissed', 'yellow']);
   const TACTICS = [
@@ -26,7 +26,7 @@
     crl: '<path d="M12.3 7.5c.7 3.8-4.8 4.1-3.7 7.6.8 2.6 6.3 2.4 7-.8.5-2.4-.8-4.7-3.3-6.8Zm-.2 6c.9.7 1.2 1.4.4 2-.6.6-1.9-.1-1.3-1 .2-.4.6-.6.9-1Z" fill="currentColor" stroke="none"/>'
   };
   const state = {
-    match: null, renderer: null, broadcast: null, ready: true, paused: true, speed: 1, acc: 0,
+    match: null, renderer: null, ready: true, paused: true, speed: 1, acc: 0,
     config: { home: 1, away: 0, auto: true, sound: false, highlights: V.DEFAULT_MODE }, names: false, sound: false,
     selected: null, subMode: null, desk: 'tactics', returnBreak: false,
     buffer: [], replay: null, replayQueue: null, goalFrames: null, events: [], meta: {},
@@ -106,13 +106,11 @@
       homeTactics,
       onEvent,
       onSnapshot: snapshot => {
-        snapshot.screen = state.broadcast.stamp(snapshot.elapsed);
         state.buffer.push(state.scan ? withView(snapshot) : snapshot);
         if (state.buffer.length > HISTORY) state.buffer.splice(0, 44);
       }
     });
     state.scout = new V.Scout(state.match);
-    state.broadcast = new B.Clock(state.match);
     syncWatchMode();
     state.meta = Object.fromEntries(state.match.teams.flatMap(t => t.players.map(p => [p.id, p])));
     document.documentElement.style.setProperty('--home', home.primary);
@@ -224,8 +222,7 @@
     updateHUD(); draw(); queueScan();
   }
   function setSpeed(speed) {
-    state.speed = speed; state.acc = 0;
-    if (state.replay) endReplay();
+    state.speed = speed;
     updateHUD();
   }
 
@@ -234,11 +231,11 @@
   function syncWatchMode() {
     const policy = chosenMode(), select = $('highlightMode');
     select.value = policy.id;
-    select.title = `${policy.label} · About ${timingLabel(policy)} · ${policy.bestFor}. ${policy.detail}`;
+    select.title = `${policy.label} · ${policy.rank ? 'About ' : ''}${timingLabel(policy)} · ${policy.bestFor}. ${policy.detail}`;
   }
 
   function updateWatchGuide(policy) {
-    text('watchEstimate', `≈ ${timingLabel(policy)}`);
+    text('watchEstimate', `${policy.rank ? '≈ ' : ''}${timingLabel(policy)}`);
     text('watchUse', policy.bestFor);
     text('watchDetail', policy.detail);
   }
@@ -295,7 +292,7 @@
     const m = state.match, elapsed = m.elapsed;
     const frames = state.buffer.filter(f => f.half === event.half && f.elapsed < elapsed - .001 && f.elapsed >= elapsed - REPLAY_BUILDUP);
     if (frames.length < 12) return null;
-    frames.push(captureFrame());
+    frames.push(m.snapshotFrame());
     return frames;
   }
   function replayFrame(snap, next = snap, amount = 0) {
@@ -331,10 +328,10 @@
     updateHUD(); draw();
   }
   function endReplay() { state.replay = null; state.acc = 0; updateHUD(); draw(); queueScan(); }
-  function tickReplay(dt) {
+  function tickReplay(seconds) {
     const rp = state.replay;
     if (rp.paused) return;
-    rp.time += dt * REPLAY_RATE;
+    rp.time += seconds;
     const frames = rp.frames, end = frames.length - 1;
     if (rp.time > frames[end].elapsed + .72) { endReplay(); return; }
     while (rp.index < end && frames[rp.index + 1].elapsed <= rp.time) rp.index++;
@@ -401,11 +398,6 @@
     if (LINEUP_EVENTS.has(ev.type)) state.lineupDirty = true;
   }
 
-  function captureFrame() {
-    const { match, broadcast } = state;
-    return { ...match.snapshotFrame(), screen: broadcast.stamp(match.elapsed) };
-  }
-
   const RESTART_TITLES = { corner: 'Corner', penalty: 'Penalty', throwin: 'Throw-in', goalkick: 'Goal kick', freekick: 'Free kick' };
   function restartTitle(sp) {
     return sp.reason === 'offside' && !sp.taken ? 'Offside' : sp.indirect ? 'Indirect free kick' : RESTART_TITLES[sp.type];
@@ -441,7 +433,7 @@
     return { title: `${title} · ${club}`, detail: `${sp.taker} ${action}`, kind };
   }
 
-  function withView(snap = captureFrame()) {
+  function withView(snap = state.match.snapshotFrame()) {
     const m = state.match;
     snap.phase = m.phase;
     snap.restart = restartFrame();
@@ -515,32 +507,32 @@
     stopScanWork();
     state.scan = null;
     state.visiblePlay = tail > 0 ? { policy, rank, until: last.elapsed + tail } : null;
-    const a = frames[0], b = frames[1] ?? a;
-    const screen = a.screen + (b.screen - a.screen) * fraction(scan.time, a.elapsed, b.elapsed);
-    state.scene = { policy, entries: scan.entries, frames, view: a, time: scan.time, screen, frame: null };
+    state.scene = { policy, entries: scan.entries, frames, view: frames[0], time: scan.time, frame: null };
     advanceScene(0);
   }
 
   function advanceSearch() {
     const scan = state.scan;
-    const result = V.scanBatch(state.match, state.scout, scan.policy, { afterStep: match => state.broadcast.observe(match) });
+    const result = V.scanBatch(state.match, state.scout, scan.policy);
     if (result.type === 'break') { closeCut(); return; }
     updateScanView(scan, result.rank);
     if (result.type === 'moment') showBuffered(scan, scan.policy, V.tailFor(scan.policy, result.rank), result.rank);
   }
 
-  function advanceScene(dt) {
+  function advanceScene(seconds) {
     const scene = state.scene, frames = scene.frames, last = frames.at(-1);
-    // A highlight uses the same clock samples as live play. Its pace cannot
-    // depend on the highlight menu, even when switched during this passage.
-    scene.screen = Math.min(last.screen, scene.screen + dt * B.multiplier(state.speed));
-    const i = V.indexAt(frames, scene.screen, 'screen'), a = frames[i], b = frames[Math.min(i + 1, frames.length - 1)];
-    const f = fraction(scene.screen, a.screen, b.screen);
-    scene.time = a.elapsed + (b.elapsed - a.elapsed) * f;
+    // The playhead uses match seconds directly; clips have no separate pace.
+    const next = scene.time + seconds;
+    scene.time = Math.min(last.elapsed, next);
+    const i = V.indexAt(frames, scene.time), a = frames[i], b = frames[Math.min(i + 1, frames.length - 1)];
     scene.view = a;
-    scene.frame = replayFrame(a, b, f);
+    scene.frame = replayFrame(a, b, fraction(scene.time, a.elapsed, b.elapsed));
     drainEntries(scene.entries, scene.time, false);
-    if (scene.screen >= last.screen) closeCut(false);
+    if (scene.time >= last.elapsed) {
+      closeCut(false);
+      // Keep the unused fraction of this frame for the live handoff.
+      if (!state.paused) state.acc = next - last.elapsed;
+    }
   }
 
   function renderLineup() {
@@ -713,22 +705,19 @@
     if (words) setFeed(words, { team: ball.lastTouch.team, minute: m.minute() });
   }
 
-  function advance(dt) {
+  function advance(seconds) {
     const m = state.match, policy = chosenMode();
-    if (state.scene) { advanceScene(dt); return; }
+    if (state.scene) { advanceScene(seconds); return; }
     if (state.scan) return;
     if (!state.replayQueue) {
       if (state.nextSearch) { beginSearch(state.nextSearch); return; }
       if (state.visiblePlay && m.elapsed >= state.visiblePlay.until && !V.holdingAction(m)) state.visiblePlay = null;
       if (policy.rank && !state.visiblePlay && !V.holdingAction(m)) { beginSearch(policy); return; }
     }
-    const clock = state.broadcast;
-    state.acc += dt * B.multiplier(state.speed);
-    let n = 0, cost;
-    while (n++ < MAX_LIVE_STEPS && !state.replay && !state.paused && state.acc >= (cost = clock.cost(H))) {
-      state.acc -= cost;
+    state.acc += seconds;
+    while (!state.replay && !state.paused && state.acc >= H) {
+      state.acc -= H;
       m.step(H);
-      clock.observe(m);
       const rank = state.scout.check(m);
       if (state.visiblePlay && rank <= state.visiblePlay.policy.rank) {
         state.visiblePlay.rank = Math.min(state.visiblePlay.rank ?? Infinity, rank);
@@ -737,14 +726,13 @@
         state.visiblePlay = { policy, rank, until: m.elapsed + V.tailFor(policy, rank) };
       }
     }
-    if (state.acc > .6) state.acc = 0;
     if (state.lineupDirty) renderLineup();
     observePlay(); completeReplayCapture();
   }
 
   function draw() {
     const frame = state.replay?.frame || state.scene?.frame || state.scan?.still;
-    const alpha = !frame && !state.paused ? fraction(state.acc, 0, state.broadcast.cost(H)) : 1;
+    const alpha = !frame && !state.paused ? fraction(state.acc, 0, H) : 1;
     state.renderer.draw(state.match, {
       ready: state.ready, names: state.names, selected: state.selected,
       live: !state.ready && !state.scan, frame, alpha, restart: viewingRestart(),
@@ -758,10 +746,11 @@
     if (state.breakQueued && !activeDialog()) showBreak(state.breakQueued);
     let changed = false;
     if (!document.hidden && !activeDialog()) {
+      const seconds = B.matchSeconds(dt, state.speed);
       if (state.replay) {
-        if (!state.replay.paused) { tickReplay(dt); changed = true; }
+        if (!state.replay.paused) { tickReplay(seconds); changed = true; }
       } else if (state.scan) queueScan();
-      else if (!state.ready && !state.paused) { advance(dt); changed = true; }
+      else if (!state.ready && !state.paused) { advance(seconds); changed = true; }
     }
     if (changed && t - state.tileT > 540) { state.tileT = t; if (!state.replay && !filmView()) updateLineupCondition(); }
     if (changed) updateHUD();
