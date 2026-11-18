@@ -29,6 +29,16 @@
     return t;
   }
 
+  // Both hands release above the head. Solve towards a playable height,
+  // then cap launch speed in 3D: an ambitious throw can come up short.
+  function overarm(ball, tx, ty, seconds, arrivalZ, speedLimit) {
+    const t = aerial(ball, tx, ty, seconds, arrivalZ);
+    const limit = Math.min(1, speedLimit / Math.max(EPS, Math.hypot(ball.vx, ball.vy, ball.vz)));
+    ball.vx *= limit; ball.vy *= limit; ball.vz *= limit;
+    const duration = Math.min(t, landingTime(ball.z, ball.vz)), reach = airRange(duration);
+    return { duration, x: ball.x + ball.vx * reach, y: ball.y + ball.vy * reach };
+  }
+
   function roll(ball, t) {
     const v = Math.hypot(ball.vx, ball.vy);
     ball.z = ball.vz = 0;
@@ -87,7 +97,7 @@
     return hit;
   }
 
-  const api = { G, DRAG, ROLL, RADIUS, airRange, airTime, landingTime, ground, aerial, advance, forecast, firstExit };
+  const api = { G, DRAG, ROLL, RADIUS, airRange, airTime, landingTime, ground, aerial, overarm, advance, forecast, firstExit };
   global.TLPhysics = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

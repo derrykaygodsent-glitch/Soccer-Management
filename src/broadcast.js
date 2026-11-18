@@ -11,9 +11,11 @@
   // Read-only view of a placed ball or its just-taken kick. No highlight
   // policy or look-ahead is needed to identify the action at this tick.
   function restartAt(match, follow = 7.5) {
-    const { phase, setpiece, lastRestart, elapsed } = match;
-    if (phase === 'corner' || phase === 'freekick') return setpiece ?? null;
-    return phase === 'open' && lastRestart && elapsed - lastRestart.takenAt < follow ? lastRestart : null;
+    const { phase, setpiece, lastRestart, elapsed, ball } = match;
+    if (setpiece && phase === setpiece.type) return setpiece;
+    if (phase !== 'open' || !lastRestart) return null;
+    const delivery = lastRestart.id != null && ball.flight?.restartId === lastRestart.id;
+    return elapsed - lastRestart.takenAt < follow || delivery ? lastRestart : null;
   }
 
   function targetPace(match) {
@@ -21,13 +23,14 @@
     // Every mode sees the same movement at a given timestamp: the current
     // action, not the eventual result or the clip's rank, sets the tempo.
     if (phase === 'review') return 1.85;
+    if (match.setpiece?.card) return 1.60;
     if (phase === 'goal' || phase === 'penalty' || flight?.kind === 'shot') return 1.78;
     const restart = restartAt(match, 5.5);
-    const setPace = (restart?.type === 'corner' || restart?.direct || restart?.wide || restart?.indirect) ? 2.42 : 2.98;
-    if (phase === 'corner') return 2.42;
-    if (phase === 'freekick') return setPace;
+    const setPace = restart?.stage === 'windup' ? 1.36 : restart?.type === 'throwin' ? 3.30
+      : restart?.type === 'corner' || restart?.managed || restart?.wide || restart?.indirect ? 2.42
+      : restart?.type === 'goalkick' ? 4.14 : 3.23;
     if (phase === 'kickoff') return 3.1;
-    if (phase !== 'open') return ROUTINE;
+    if (phase !== 'open') return restart ? setPace : ROUTINE;
     const attack = match.teams[b.owner?.team ?? flight?.team ?? match.controlTeam].attackDir;
     const toGoal = attack > 0 ? L - b.x : b.x;
     const box = smooth((30 - toGoal) / 22) * (.64 + .36 * smooth((25 - Math.abs(b.y - CY)) / 16));

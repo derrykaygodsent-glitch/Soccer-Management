@@ -10,51 +10,49 @@
   const EPS = 1e-6;
   const GOALS = new Set(['goal', 'og', 'penscore']);
   const BREAKS = new Set(['ht', 'ft']);
-  const DECISIVE = new Set([...GOALS, 'pen', 'penmiss', 'red', 'post', 'varcheck', 'varresult']);
-  const OTHER = new Set(['yellow', 'catch']);
+  const DECISIVE = new Set([...GOALS, 'pen', 'penmiss', 'yellow', 'red', 'post', 'varcheck', 'varresult']);
 
   // This module selects footage. The shared broadcast clock sets its pace.
   const DEFAULT_MODE = 'extended';
-  const ATTACK_GAP = 295, CONTEXT_GAP = 270, ROUTINE_RESTART_GAP = 1150;
-  // A dead ball is a natural cut point. Use a short incident-specific lead
-  // here rather than replaying a minute of unrelated buildup for every foul.
-  const RESTART_CLIPS = { corner: [16, 17], offside: [17, 15], freekick: [10, 14] };
-  // The largest window protects the buildup to a decisive incident. Shorter
-  // passages for ordinary chances and tactical context keep the cuts distinct.
-  // These are simulation seconds: with the slower shared pace they still give
-  // the viewer time to see the buildup, without speeding up individual modes.
+  const ATTACK_GAP = 295, CONTEXT_GAP = 270;
+  // All edits reserve at least the same pre-roll before advancing the public
+  // cursor. A more inclusive mode can add a clip but cannot cut into the
+  // protected approach to a future key incident to get there sooner.
+  const CORE_LEAD = 28;
   const MODES = Object.freeze(Object.fromEntries([
     { id: 'full', label: 'Full Match', rank: 0, lead: 0, tail: 0, opening: 0,
       estimate: '15–25', bestFor: 'Tactical analysis', detail: 'Continuous play, including possession and movement between chances.' },
-    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 65, tail: 44, opening: 17,
-      extraLead: 37, extraTail: 25,
-      estimate: '10–18', bestFor: 'Important matches', detail: 'More buildup and defensive recoveries, plus ordinary free kicks and other restarts.' },
-    { id: 'extended', label: 'Extended', rank: 2, lead: 59, tail: 40, opening: 12,
-      extraLead: 28, extraTail: 19,
-      estimate: '7–12', bestFor: 'Normal league matches', detail: 'Key moments plus selected attacks, corners, offsides and a selection of free kicks.' },
-    { id: 'key', label: 'Key', rank: 1, lead: 55, tail: 34, opening: 7,
-      estimate: '3–7', bestFor: 'Quick season progression', detail: 'Goals, major chances, penalties, woodwork, dismissals and VAR checks.' }
+    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 32, tail: 17, opening: 17,
+      estimate: '10–18', bestFor: 'Important matches', detail: 'The same key and extended passages, plus goal kicks, lower-probability chances and more defensive play.' },
+    { id: 'extended', label: 'Extended', rank: 2, lead: 30, tail: 15, opening: 12,
+      estimate: '7–12', bestFor: 'Normal league matches', detail: 'The same key passages, plus other free kicks, offsides, throw-ins and more chances.' },
+    { id: 'key', label: 'Key', rank: 1, lead: CORE_LEAD, tail: 13, opening: 7,
+      estimate: '3–7', bestFor: 'Quick season progression', detail: 'Buildup and outcome of goals, major chances, dangerous free kicks, corners, penalties, cards and VAR.' }
   ].map(mode => [mode.id, Object.freeze(mode)])));
   const modeFor = id => Object.hasOwn(MODES, id) ? MODES[id] : MODES[DEFAULT_MODE];
-  const leadFor = (policy, rank, cue) => rank > 1 ? (cue ? RESTART_CLIPS[cue][0] + (policy.rank === 3 ? 6 : 0) : policy.extraLead ?? policy.lead) : policy.lead;
-  const tailFor = (policy, rank, cue) => rank > 1 ? (cue ? RESTART_CLIPS[cue][1] + (policy.rank === 3 ? 4 : 0) : policy.extraTail ?? policy.tail) : policy.tail;
+  const leadFor = (policy, rank) => rank === 1 && policy.rank ? CORE_LEAD : policy.lead;
+  // Keep the longer aftermath for key action. Ordinary passages cut sooner
+  // once the live restart/shot guard has actually seen the action through.
+  const tailFor = (policy, rank = 1) => rank === 1 ? policy.tail : 7 + (policy.rank === 3 ? 2 : 0);
   const atBreak = m => m.phase === 'halftime' || m.phase === 'fulltime';
   const depthFor = (match, team) => match.teams[team].attackDir > 0 ? match.ball.x : L - match.ball.x;
 
   function eventRank(ev, match) {
     if (DECISIVE.has(ev.type)) return 1;
-    if (ev.type === 'corner' || ev.type === 'offside') return 2;
+    if (ev.type === 'corner') return 1;
+    if (ev.type === 'offside') return 2;
     if (ev.type === 'foul' && match.phase === 'freekick' && match.setpiece) {
       const sp = match.setpiece;
-      return !sp.indirect && (sp.direct || sp.wide || depthFor(match, sp.team) > 73) ? 2 : 3;
+      return ev.discipline || sp.dangerous ? 1 : 2;
     }
+    if (ev.type === 'throwin') return 2;
+    if (ev.type === 'goalkick' || ev.type === 'catch') return 3;
     if (ev.type === 'cross') {
       const f = match.ball.flight, team = match.teams[ev.team];
       if (f?.kind !== 'cross' || !f.intended || !team) return 3;
       const distanceToGoal = team.attackDir > 0 ? L - f.targetX : f.targetX;
       return distanceToGoal <= 15 && Math.abs(f.targetY - CY) <= 12 ? 2 : 3;
     }
-    if (OTHER.has(ev.type)) return 3;
     return Infinity;
   }
 
@@ -74,7 +72,7 @@
       this.outcome = this.shot?.outcome;
       this.half = match.half;
       this.spell = null;
-      this.lastAttack = this.lastContext = this.lastRoutineRestart = -Infinity;
+      this.lastAttack = this.lastContext = -Infinity;
       this.cue = null;
     }
 
@@ -82,22 +80,17 @@
       if (match.half !== this.half) {
         this.half = match.half;
         this.spell = null;
-        this.lastAttack = this.lastContext = this.lastRoutineRestart = -Infinity;
+        this.lastAttack = this.lastContext = -Infinity;
       }
       this.cue = null;
       const t = match.elapsed;
       let rank = Infinity, cross = Infinity;
       for (; this.events < match.events.length; this.events++) {
         const ev = match.events[this.events];
-        let quality = eventRank(ev, match);
-        const cue = ev.type === 'corner' || ev.type === 'offside' ? ev.type : ev.type === 'foul' && quality <= 3 ? 'freekick' : null;
+        const quality = eventRank(ev, match);
+        const cue = ['corner', 'offside', 'pen', 'throwin', 'goalkick'].includes(ev.type) ? ev.type
+          : ev.type === 'foul' && quality <= 3 ? 'freekick' : null;
         if (ev.type === 'cross') { cross = Math.min(cross, quality); continue; }
-        // Extended includes a few ordinary restarts as well as attacking ones.
-        // Comprehensive can see the rest. This only edits existing footage.
-        if (cue === 'freekick' && quality === 3 && !match.setpiece?.indirect && t - this.lastRoutineRestart >= ROUTINE_RESTART_GAP) {
-          this.lastRoutineRestart = t;
-          quality = 2;
-        }
         if (quality < rank || (quality === rank && !cue)) { rank = quality; this.cue = cue; }
       }
       const shot = match.shotMap.at(-1);
@@ -171,7 +164,10 @@
 
   // Expose only the search position that can no longer be part of the buildup.
   // At the cut, this is exactly where playback picks up, never a clock rewind.
-  const visibleStart = (from, at, policy, published = from, rank = 1, cue = null) => Math.max(from, published, at - leadFor(policy, rank, cue));
+  const visibleStart = (from, at, policy, published = from, rank = 1) => Math.max(from, published, at - leadFor(policy, rank));
+  // While searching a broad mode, reserve its own extra buildup too. Don't
+  // publish a shorter lead before we know which category ended the search.
+  const searchStart = (from, at, policy, published = from) => visibleStart(from, at, policy, published, policy.rank);
 
   function indexAt(frames, time, key = 'elapsed') {
     let low = 0, high = frames.length - 1;
@@ -206,7 +202,7 @@
     return phase === 'review' || phase === 'penalty' || phase === 'goal' || match.ball.flight?.kind === 'shot' || !!restartAt(match);
   }
 
-  const api = { STEP, SCAN_BUDGET_MS, MAX_SCAN_STEPS, GOALS, BREAKS, DECISIVE, DEFAULT_MODE, MODES, modeFor, leadFor, tailFor, atBreak, eventRank, shotRank, Scout, scanBatch, visibleStart, indexAt, frameAt, clipFrames, holdingAction };
+  const api = { STEP, SCAN_BUDGET_MS, MAX_SCAN_STEPS, GOALS, BREAKS, DECISIVE, DEFAULT_MODE, CORE_LEAD, MODES, modeFor, leadFor, tailFor, atBreak, eventRank, shotRank, Scout, scanBatch, visibleStart, searchStart, indexAt, frameAt, clipFrames, holdingAction };
   global.TLHighlights = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

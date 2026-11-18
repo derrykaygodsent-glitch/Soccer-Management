@@ -77,7 +77,7 @@ test('a player accelerates, then brakes into a support position without snapping
 
 test('seeded live play produces a cross, a high clearance and ordered replay heights', { timeout: 5000 }, () => {
   const frames = [], releases = new Set();
-  const m = new Match(CLUBS[1], CLUBS[0], { seed: 342, onSnapshot: snap => frames.push(snap) });
+  const m = new Match(CLUBS[1], CLUBS[0], { seed: 710, onSnapshot: snap => frames.push(snap) });
   for (let i = 0; i < 40 * 130; i++) {
     m.step(H);
     if (m.ball.flight) releases.add(m.ball.flight.technique);

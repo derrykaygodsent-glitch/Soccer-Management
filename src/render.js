@@ -201,6 +201,7 @@
       ctx.font = `850 ${Math.max(7.7, r * 1.27)}px Inter,system-ui,sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('R', x, y + .35);
       const badge = { x: x - r - 1, y: y - r - 1, w: d + 2, h: d + 2 };
+      if (referee.signal) this.drawSignal(x, y, r, referee.signal);
       if (!showName) return [badge];
       const label = this.compact ? 'REF' : 'REFEREE', size = this.compact ? 8 : 9;
       ctx.font = `780 ${size}px Inter,system-ui,sans-serif`;
@@ -212,12 +213,62 @@
       return [badge, tag];
     }
 
+    drawSignal(x, y, radius, signal) {
+      const ctx = this.ctx, { kind } = signal, r = radius;
+      const colour = kind === 'red' ? '#ff535b' : kind === 'yellow' ? '#ffdf58' : kind === 'check' ? '#90daf2' : '#e5f7ee';
+      let dx = signal.dir ?? .55, dy = signal.dir ? -.14 : -.84;
+      if (Number.isFinite(signal.x)) {
+        dx = this.ox + signal.x * this.scale - x; dy = this.oy + signal.y * this.scale - y;
+      }
+      if (kind === 'indirect' || kind === 'yellow' || kind === 'red') { dx = kind === 'indirect' ? .11 : .53; dy = -1; }
+      const norm = Math.hypot(dx, dy) || 1, u = dx / norm, v = dy / norm;
+      const arm = r * (kind === 'whistle' || kind === 'check' ? 1.60 : 2.45);
+      const ax = clamp(x + u * arm, 7, this.width - 7), ay = clamp(y + v * arm, 9, this.height - 7);
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(x + u * r * .82, y + v * r * .82); ctx.lineTo(ax, ay);
+      ctx.strokeStyle = '#15251cf0'; ctx.lineWidth = 4.8; ctx.stroke();
+      ctx.strokeStyle = colour; ctx.lineWidth = 2.15; ctx.stroke();
+      if (kind === 'yellow' || kind === 'red') {
+        const w = Math.max(7.5, r * 1.32), h = Math.max(10, r * 1.72);
+        round(ctx, ax - w / 2, clamp(ay - h * .75, 2, this.height - h - 1), w, h, 1.25);
+        ctx.fillStyle = colour; ctx.fill(); ctx.strokeStyle = '#18231d'; ctx.lineWidth = 1.45; ctx.stroke();
+      } else if (kind === 'wait') {
+        paint(ctx, ax, ay, 3.55, '#15251c'); paint(ctx, ax, ay, 2.4, colour);
+      } else if (kind === 'whistle' || kind === 'check') {
+        ctx.strokeStyle = colour; ctx.lineWidth = 1.35;
+        ctx.beginPath(); ctx.arc(x, y, r + 4.2, -.86, 1.02); ctx.stroke();
+      } else if (kind !== 'indirect') {
+        ctx.beginPath(); ctx.moveTo(ax - u * 4 - v * 2.55, ay - v * 4 + u * 2.55); ctx.lineTo(ax, ay);
+        ctx.lineTo(ax - u * 4 + v * 2.55, ay - v * 4 - u * 2.55); ctx.stroke();
+      }
+      ctx.lineCap = 'butt'; ctx.lineJoin = 'miter';
+    }
+
+    drawThrowHands(x, y, pose, ball, kit) {
+      const ctx = this.ctx, r = this.radius, sideX = -Math.sin(pose.dir), sideY = Math.cos(pose.dir);
+      const { x: bx, y: by } = this.ballProjection(ball.x, ball.y, ball.z);
+      const bend = r * (1.28 + Math.sin(pose.load * Math.PI) * .48);
+      // Keep the paired hands legible beside the ball marker on a small pitch.
+      const grip = Math.max(3.75, r * .73);
+      for (const sign of [-1, 1]) {
+        const hx = bx + sideX * grip * sign, hy = by + sideY * grip * sign;
+        ctx.beginPath(); ctx.moveTo(x + sideX * r * .66 * sign, y + sideY * r * .66 * sign);
+        ctx.quadraticCurveTo((x + bx) * .5 + sideX * bend * sign, (y + by) * .5 + sideY * bend * sign, hx, hy);
+        ctx.lineCap = 'round'; ctx.strokeStyle = '#17271b'; ctx.lineWidth = 3.9; ctx.stroke();
+        ctx.strokeStyle = kit; ctx.lineWidth = 2.1; ctx.stroke();
+        paint(ctx, hx, hy, 1.54, '#f1d9ae');
+      }
+      ctx.lineCap = 'butt';
+    }
+
     draw(match, options = {}) {
       if (!match) return;
       this.needsPaint = false;
       const ctx = this.ctx, frame = options.frame;
       const players = frame ? frame.players : match.onPitchPlayers();
       const ball = frame ? frame.ball : match.ball;
+      const pose = frame ? frame.restartPose : match.restartPose();
+      const referee = frame ? frame.referee : options.referee;
       const ownerId = frame ? frame.ownerId : ball.owner && ball.owner.id;
       const receiver = !frame && !options.ready && ball.flight && ball.flight.kind === 'pass' && ball.flight.intended;
       const active = !options.ready && options.live !== false;
@@ -243,34 +294,42 @@
         return { p, xy: toScreen(x, y) };
       }).sort((a, b) => a.xy[1] - b.xy[1]);
       const restart = options.restart;
-      if (restart && !restart.taken) {
+      if (restart && !restart.taken && restart.stage !== 'windup') {
         const [x, y] = toScreen(restart.x, restart.y);
         ctx.beginPath(); ctx.arc(x, y, clamp(s * 1.62, 6.8, 14), 0, TAU);
         ctx.strokeStyle = restart.indirect ? '#ffe3a2d9' : '#ebf3c2db'; ctx.lineWidth = 1.25; ctx.stroke();
       }
       this.drawn = [];
       for (const { p, xy: [x, y] } of positions) {
+        // Full-size 2D markers would overlap in a real shoulder-to-shoulder wall.
+        const wall = pose?.wall?.includes(p.id);
+        const r = wall ? clamp(s * .52, 1.8, this.radius * .69) : this.radius;
         const club = match.teams[p.team].club, keeper = (p.role || p.pos) === 'GK';
         const kit = keeper ? club.gk : club.primary;
         const selected = p.id === options.selected;
-        paint(ctx, x + 1, y + 1.65, r + .95, 'rgba(8,18,12,.51)');
+        const carded = p.id === referee?.signal?.player;
+        paint(ctx, x + (wall ? .35 : 1), y + (wall ? .9 : 1.65), r + (wall ? .55 : .95), 'rgba(8,18,12,.51)');
         if (selected || (active && p.id === ownerId)) {
           ctx.beginPath(); ctx.arc(x, y, r + (selected ? 3.3 : 2.65), 0, TAU);
           ctx.strokeStyle = selected ? '#defaaf' : '#d9e8c9b0'; ctx.lineWidth = 1.1; ctx.stroke();
         }
         paint(ctx, x, y, r, kit);
-        ctx.strokeStyle = '#f1f3e7eb'; ctx.lineWidth = Math.max(.75, Math.min(1.25, r * .145)); ctx.stroke();
+        ctx.strokeStyle = '#f1f3e7eb'; ctx.lineWidth = wall ? .68 : Math.max(.75, Math.min(1.25, r * .145)); ctx.stroke();
+        if (carded) {
+          ctx.beginPath(); ctx.arc(x, y, r + 2.5, 0, TAU);
+          ctx.strokeStyle = referee.signal.kind === 'red' ? '#ff7378' : '#ffe18a'; ctx.lineWidth = 1.25; ctx.stroke();
+        }
         ctx.fillStyle = lightKit(kit) ? '#101913' : '#fff';
         ctx.font = `750 ${clamp(r * 1.24, 5.65, 11.2)}px Inter,system-ui,sans-serif`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(String(p.num), x, y + .25);
-        if (p.yellow > 0) {
+        if (!wall) ctx.fillText(String(p.num), x, y + .25);
+        if (p.yellow > 0 && !wall) {
           ctx.fillStyle = '#f9da72'; ctx.fillRect(x + r * .6, y - r * 1.12, Math.max(2, r * .4), Math.max(3, r * .67));
         }
+        if (pose?.thrower === p.id) this.drawThrowHands(x, y, pose, ball, kit);
         this.drawn.push({ p, x, y });
       }
 
-      const referee = frame ? frame.referee : options.referee;
       const officialLabels = referee ? this.drawReferee(referee, options.ready || options.names) : [];
 
       // x/y is where the ball is over the grass; z raises its sprite independently.

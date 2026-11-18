@@ -83,7 +83,12 @@ h1{font:700 clamp(35px,4vw,45px)/.99 'Barlow Condensed','Arial Narrow',sans-seri
 .pitch-indicator[data-restart] i{margin-top:3px;width:7px;height:7px;border-radius:2px;background:#d7eaa9}
 .pitch-indicator[data-restart=offside] i{width:12px;height:10px;margin-top:0;border-radius:0;background:linear-gradient(135deg,#ffe3a2 0 49%,#e8a74d 51%);clip-path:polygon(0 0,100% 0,72% 42%,100% 78%,13% 78%,13% 100%,0 100%)}
 .pitch-indicator[data-restart=offside],.pitch-indicator[data-restart=indirect]{border-color:#b39d68}
-.pitch-indicator[data-restart=indirect] i{background:#efc580}
+.pitch-indicator[data-restart=indirect] i,.pitch-indicator[data-restart=penalty] i{background:#efc580}
+.pitch-indicator[data-restart=yellow] i{background:#ffdf58}
+.pitch-indicator[data-restart=red] i{background:#ff636b}
+.pitch-indicator[data-restart=red]{border-color:#cb6c6c}
+.pitch-indicator[data-restart=yellow],.pitch-indicator[data-restart=penalty]{border-color:#b39d68}
+.pitch-indicator[data-restart=throwin] i{background:#a9dfd0}
 .pitch-indicator[data-restart] #indicatorDetail{display:block;margin-top:3px;color:#d7e0d3;text-transform:none;letter-spacing:0;font-size:10px;font-weight:620}
 .goal-card{top:14px;right:15px;max-width:64%;padding:10px 13px;border-left:3px solid var(--accent);pointer-events:none}
 .goal-kicker{display:flex;align-items:center;gap:8px;font-size:9px;font-weight:760;color:#d5e9c8;letter-spacing:.1em;text-transform:uppercase}

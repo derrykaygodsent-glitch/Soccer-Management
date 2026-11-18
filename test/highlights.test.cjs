@@ -22,10 +22,10 @@ test('four cumulative viewing settings, with Extended as the default', () => {
   for (const period of ['lead', 'tail', 'opening']) {
     assert.ok(key[period] > 0 && extended[period] > key[period] && comprehensive[period] > extended[period]);
   }
-  for (const ev of ['goal', 'og', 'penscore', 'penmiss', 'pen', 'red', 'post', 'varcheck', 'varresult']) assert.equal(V.eventRank({ type: ev }, m), key.rank);
-  for (const ev of ['corner', 'offside']) assert.equal(V.eventRank({ type: ev }, m), extended.rank);
-  for (const ev of ['yellow', 'catch']) assert.equal(V.eventRank({ type: ev }, m), comprehensive.rank);
-  for (const ev of ['throwin', 'goalkick', 'preview']) assert.equal(V.eventRank({ type: ev }, m), Infinity);
+  for (const ev of ['goal', 'og', 'penscore', 'penmiss', 'pen', 'red', 'yellow', 'post', 'varcheck', 'varresult', 'corner']) assert.equal(V.eventRank({ type: ev }, m), key.rank);
+  for (const ev of ['throwin', 'offside']) assert.equal(V.eventRank({ type: ev }, m), extended.rank);
+  for (const ev of ['goalkick', 'catch']) assert.equal(V.eventRank({ type: ev }, m), comprehensive.rank);
+  assert.equal(V.eventRank({ type: 'preview' }, m), Infinity);
   const cross = { type: 'cross', team: 0 };
   m.ball.flight = { kind: 'cross', intended: {}, targetX: L - 11, targetY: CY + 4 };
   assert.equal(V.eventRank(cross, m), extended.rank);
@@ -35,6 +35,8 @@ test('four cumulative viewing settings, with Extended as the default', () => {
   assert.equal(V.eventRank(cross, m), extended.rank);
   m.phase = 'freekick'; m.setpiece = { direct: true, team: 0 };
   assert.equal(V.eventRank({ type: 'foul' }, m), extended.rank);
+  m.setpiece.dangerous = true;
+  assert.equal(V.eventRank({ type: 'foul' }, m), key.rank);
   assert.equal(V.shotRank({ outcome: 'miss', xg: .35 }), key.rank);
   assert.equal(V.shotRank({ outcome: 'save', xg: .29 }), key.rank);
   assert.equal(V.shotRank({ outcome: 'save', xg: .23 }), extended.rank);
@@ -129,8 +131,8 @@ test('a cut starts at the published clock and cannot include frames from the pre
   assert.equal(hidden, 207 - key.lead);
   assert.equal(V.visibleStart(first.elapsed, last.elapsed, comprehensive, hidden), hidden);
   assert.ok(hidden >= V.visibleStart(first.elapsed, 206, key));
-  assert.ok(V.visibleStart(first.elapsed, last.elapsed, extended, 0, 2) > V.visibleStart(first.elapsed, last.elapsed, extended, 0, 1));
-  assert.ok(V.tailFor(extended, 2) < V.tailFor(extended, 1));
+  assert.ok(V.visibleStart(first.elapsed, last.elapsed, extended, 0, 2) < V.visibleStart(first.elapsed, last.elapsed, extended, 0, 1));
+  assert.equal(V.visibleStart(first.elapsed, last.elapsed, extended, 0, 1), hidden);
   const film = V.clipFrames(history, first, last, hidden);
   assert.deepEqual(film.map(x => x.elapsed), [hidden - .02, hidden + .03, 195, 207]);
   assert.deepEqual(film[V.indexAt(film, hidden)].score, [0, 0]);
@@ -173,33 +175,42 @@ test('the same seed and changes on the same tick give identical play under all f
   const continuous = simulate(full), narrow = simulate(key), normal = simulate(extended), broad = simulate(comprehensive);
   assert.ok(narrow.seen > 0 && normal.seen > narrow.seen && broad.seen > normal.seen);
   assert.ok(continuous.state.events.some(e => e[0] === 'sub'));
-  for (const event of ['corner', 'offside', 'restartkick', 'goal']) assert.ok(continuous.state.events.some(e => e[0] === event), event);
+  for (const event of ['throwin', 'restartkick', 'goal']) assert.ok(continuous.state.events.some(e => e[0] === event), event);
   for (const playback of [narrow, normal, broad]) assert.deepEqual(playback.state, continuous.state);
 });
 
-test('Extended selects representative routine free kicks, attacking kicks, corners and offsides; Key still skips their ordinary cuts', () => {
+test('a dangerous kick, corner or booked foul is queued at the award, not at a later shot', () => {
   const m = game(), scout = new V.Scout(m);
-  const cue = (type, phase, depth, at, extra = {}) => {
-    m.phase = phase; m.elapsed = at; m.ball.x = depth;
-    m.setpiece = { type: phase, x: depth, team: 0, ...extra }; m.events.push({ type, team: 0 });
+  const cue = (type, phase, at, extra = {}, meta = {}) => {
+    m.phase = phase; m.elapsed = at;
+    m.setpiece = { type: phase, team: 0, ...extra }; m.events.push({ type, team: 0, ...meta });
     return scout.check(m);
   };
-  assert.equal(cue('foul', 'freekick', 36, 50), extended.rank);
+  assert.equal(cue('foul', 'freekick', 50), extended.rank);
   assert.equal(scout.cue, 'freekick');
-  assert.equal(cue('foul', 'freekick', 30, 90), comprehensive.rank, 'no flood of ordinary free kicks in Extended');
-  assert.equal(cue('foul', 'freekick', 77, 120, { wide: true }), extended.rank);
-  assert.equal(cue('offside', 'freekick', 88, 150, { indirect: true }), extended.rank);
+  assert.equal(cue('foul', 'freekick', 51), extended.rank, 'no ordinary free-kick quota in Extended');
+  assert.equal(cue('foul', 'freekick', 120, { wide: true, dangerous: true }), key.rank);
+  assert.equal(cue('foul', 'freekick', 140, {}, { discipline: true }), key.rank);
+  assert.equal(cue('offside', 'freekick', 150, { indirect: true }), extended.rank);
   assert.equal(scout.cue, 'offside');
-  assert.equal(cue('corner', 'corner', L - .42, 180), extended.rank);
-  assert.equal(scout.cue, 'corner');
-  assert.ok(V.leadFor(extended, 2, 'corner') < V.leadFor(extended, 2));
-  assert.ok(V.leadFor(comprehensive, 2, 'corner') > V.leadFor(extended, 2, 'corner'));
-  assert.equal(V.leadFor(extended, 1, 'corner'), extended.lead, 'decisive footage does not get the shorter cue window');
-  assert.equal(V.visibleStart(0, 90, extended, 74, 2, 'offside'), 74, 'restart cues never rewind the public playhead');
+  assert.equal(cue('corner', 'corner', 180), key.rank);
+  assert.equal(cue('throwin', 'throwin', 198), extended.rank);
+  assert.equal(cue('goalkick', 'goalkick', 280), comprehensive.rank);
+});
 
-  m.events.push({ type: 'varresult' });
-  assert.equal(scout.check(m), key.rank);
-  assert.equal(scout.cue, null);
+test('earlier minor moments cannot jump into the protected buildup to a future incident', () => {
+  const goal = 202, initial = 30;
+  for (const policy of [key, extended, comprehensive]) {
+    for (const early of [174, 180, 191, 199, 201]) {
+      const target = goal - V.CORE_LEAD;
+      const searching = V.searchStart(initial, early, policy);
+      for (let rank = 1; rank <= policy.rank; rank++) {
+        const extra = V.visibleStart(initial, early, policy, searching, rank);
+        assert.ok(extra <= target, `${policy.id} published footage has not skipped the next buildup`);
+      }
+      assert.equal(V.visibleStart(initial, goal, policy, searching, 1), target);
+    }
+  }
 });
 
 test('a selected restart stops the search at the award and keeps showing through the actual kick and the follow-up', () => {

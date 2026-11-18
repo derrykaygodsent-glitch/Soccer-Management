@@ -72,6 +72,14 @@
         if ((pos === 'W' || pos === 'FB') && k === 'pace') v += 1.6;
         attrs[k] = Math.max(3, Math.min(20, Math.round(v)));
       });
+      // Specialty ratings have an independent identity stream; assigning one
+      // doesn't change the player's ordinary attributes or anyone's lineup.
+      const deadBall = mulberry32(seedFor(club.id + ':dead-ball:' + i));
+      const rate = n => Math.max(3, Math.min(20, Math.round(n)));
+      attrs.throwing = rate(5 + deadBall() * 10 + (pos === 'FB' ? 3 : 0) + (attrs.passing - 12) * .30);
+      attrs.throwPower = rate(5 + deadBall() * 11 + (pos === 'FB' ? 2.7 : pos === 'DC' ? 1 : 0));
+      attrs.freeKicks = rate(attrs.shooting * .51 + attrs.passing * .25 + 1 + deadBall() * 7);
+      attrs.penalties = rate(attrs.shooting * .55 + attrs.composure * .28 + deadBall() * 6);
       const pool = ARCH[pos].num;
       let num = pool[(numCount[pos] || 0) % pool.length];
       numCount[pos] = (numCount[pos] || 0) + 1;

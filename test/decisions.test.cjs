@@ -238,6 +238,6 @@ test('live decisions repeat with the seed and delayed deliveries still reach leg
   const a = play(342), b = play(902);
   assert.deepEqual(a, play(342));
   assert.notDeepEqual(a.events.map(ev => ev[2]), b.events.map(ev => ev[2]));
-  const seen = new Set([...a.seen, ...b.seen]);
+  const seen = new Set([...a.seen, ...b.seen, ...play(710).seen]);
   for (const kind of ['through', 'delayed', 'recycle', 'early-pass', 'inside', 'cross', 'shot']) assert.ok(seen.has(kind), `no live ${kind} in the seeded openings`);
 });

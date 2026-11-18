@@ -85,8 +85,9 @@ test('a deeper foul restarts with a pass; replacing the taker during a stoppage 
   m.foul(foul, victim);
   const old = m.setpiece.taker, sub = m.teams[0].bench.find(p => p.pos !== 'GK');
   assert.equal(m.phase, 'freekick');
-  assert.equal(m.setpiece.direct, false);
-  assert.equal(m.setpiece.indirect, undefined);
+  assert.equal(m.setpiece.direct, true, "the foul is a direct kick even when played short");
+  assert.equal(m.setpiece.shotLane, false);
+  assert.ok(!m.setpiece.indirect);
   assert.ok(m.substitute(0, old.id, sub.id).ok);
   assert.equal(m.setpiece.taker, sub);
   assert.equal(sub.spRole, 'taker');
@@ -277,18 +278,33 @@ test('a throw or indirect free kick cannot score directly without a second playe
   }
 });
 
-test('a second caution sends the offender off before the free kick, not after it', () => {
+test('a second caution is shown to the offender, then the red, then the restart', () => {
   const m = match(), { foul, victim } = contact(m, 28);
   foul.yellow = 1; m.teams[1].stats.yellow = 1;
   m.rnd = () => .18;
   m.foul(foul, victim);
+  assert.equal(m.teams[1].stats.yellow, 1);
+  assert.equal(m.teams[1].stats.fouls, 1);
+  assert.equal(m.playersCache.includes(foul), true);
+  assert.equal(m.phase, 'freekick');
+  assert.ok(!m.setpiece.quick);
+  const displayed = new Set();
+  for (let i = 0; i < 29 / STEP && m.phase !== 'open'; i++) {
+    m.step(STEP);
+    const pose = m.referee.pose(m), sig = pose.signal;
+    if (sig?.player !== foul.id) continue;
+    assert.ok(Math.hypot(foul.x - pose.x, foul.y - pose.y) <= 4.25);
+    assert.ok(m.playersCache.includes(foul), 'the referee and offender are both on screen');
+    displayed.add(sig.kind);
+  }
+  assert.deepEqual([...displayed], ['yellow', 'red']);
+  assert.equal(m.phase, 'open');
   assert.equal(m.teams[1].stats.yellow, 2);
   assert.equal(m.teams[1].stats.red, 1);
-  assert.equal(m.teams[1].stats.fouls, 1);
-  assert.equal(events(m, 'red').at(-1).reason, 'second yellow');
   assert.ok(!m.playersCache.includes(foul));
-  assert.equal(m.phase, 'freekick');
-  assert.equal(m.setpiece.team, 0);
+  const orders = m.events.map(e => e.type);
+  assert.deepEqual(orders.slice(orders.indexOf('foul')).filter(e => e !== 'longshot'), ['foul', 'yellow', 'red', 'dismissed', 'restartwhistle', 'restartkick']);
+  assert.equal(events(m, 'red').at(-1).reason, 'second yellow');
 });
 
 test('a VAR stop in added time is resolved before the half ends', () => {

@@ -66,3 +66,18 @@ test('a placed free kick and its delivery get time at the shared pace without sl
   m.elapsed = 26;
   assert.equal(targetPace(m), routine);
 });
+
+test('the shared clock recognises the held throw and a delivery still in flight', () => {
+  const m = match();
+  const placed = { id: 5, type: 'throwin', team: 0, stage: 'setup' };
+  Object.assign(m, { phase: 'throwin', setpiece: placed });
+  const prep = targetPace(m);
+  assert.equal(prep, 3.30);
+  placed.stage = 'windup';
+  assert.ok(targetPace(m) < 1.7, 'enough screen time for the hand release');
+  Object.assign(m, { phase: 'open', setpiece: null, elapsed: 7, lastRestart: { ...placed, stage: null, takenAt: 1 } });
+  m.ball.flight = { kind: 'throw', restartId: 5 };
+  assert.equal(targetPace(m), prep, 'the shown passage is still on the first delivery');
+  m.ball.flight = null;
+  assert.ok(targetPace(m) > prep, 'routine pace after control');
+});
