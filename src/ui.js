@@ -1,543 +1,561 @@
-/* TOUCHLINE 26 — UI application layer (original code) */
+/* Touchline 26 — Classic 2D match controls and replay playback. */
 (function (global) {
   'use strict';
-  const D = global.TLData, E = global.TLEngine, R = global.TLRender, A = global.TLAudio;
+  const D = global.TLData, E = global.TLEngine, A = global.TLAudio;
   const $ = id => document.getElementById(id);
-  const SPEEDS = [0, 6, 12, 24];
-  const H = 1 / 40;
-
+  // Physics uses a fixed step; display speed never changes the simulation outcome.
+  const H = 1 / 40, RATES = [0, 1.65, 3.3, 6.6], REPLAY_RATE = 1.5;
+  const REPLAY_BUILDUP = 12, REPLAY_AFTERMATH = 1.05;
+  const GOALS = new Set(['goal', 'og', 'penscore']);
+  const HIGHLIGHTS = new Set(['goal', 'og', 'penscore', 'pen', 'penmiss', 'red', 'post', 'ht', 'ft']);
+  const CHANCES = new Set(['save', 'catch', 'block', 'miss', 'chance']);
+  const TACTICS = [
+    ['formation', 'Formation', Object.keys(D.FORMATIONS)], ['mentality', 'Mentality', D.MENTALITIES],
+    ['passing', 'Passing', D.PASSING], ['tempo', 'Tempo', D.TEMPO], ['press', 'Pressing', D.PRESS],
+    ['width', 'Width', D.WIDTH], ['line', 'Defensive line', D.LINE]
+  ];
+  const marks = {
+    nbu: '<path d="M7 15v-5l3 1.5V8l3 2V7l4 3v5Z" fill="currentColor"/><path d="M8 16h8"/>',
+    rvr: '<path d="M6.8 10.8c2.3-2.5 3.5.8 5.7-1.1 1.9-1.7 3.2-.8 4.8-.9M7.2 14c2-2.1 3.6.6 5.4-1.1 1.7-1.6 2.9-.8 4.3-1.1M8.5 16.5c1.7-.9 2.9.3 4.5-.9 1-.8 1.7-.7 2.7-.8"/>',
+    kgd: '<path d="m6.8 9.5 3 2 2.3-3.6 2.3 3.6 2.8-2-1 5.7H8Z" fill="currentColor"/><path d="M8 16.5h8"/>',
+    efc: '<path d="M7.6 15.8v-4.3h2.3v4.3m1-7.6h2.2v7.6m1-5h2.3v5M7 16.6h10"/>',
+    hpt: '<circle cx="12" cy="8.7" r="1.4"/><path d="M12 10.1v6.6m-2.5-4.5h5m-7.2 1.3c1.1 4.4 8.1 4.5 9.4 0"/>',
+    swl: '<path d="m6.5 14.1 3.4-5 2 2.8 1.9-2.3 3.7 4.5M8 16.1h8"/>',
+    oak: '<path d="M12 16.4v-4.3m0 .9c-4.1.5-5.6-2.2-3.1-3 0-2.6 5.9-2.6 6.1 0 2.8 1-.4 3.7-3 3Z" fill="currentColor"/>',
+    crl: '<path d="M12.3 7.5c.7 3.8-4.8 4.1-3.7 7.6.8 2.6 6.3 2.4 7-.8.5-2.4-.8-4.7-3.3-6.8Zm-.2 6c.9.7 1.2 1.4.4 2-.6.6-1.9-.1-1.3-1 .2-.4.6-.6.9-1Z" fill="currentColor" stroke="none"/>'
+  };
   const state = {
-    mode: 'prematch', home: 0, away: 1, preForm: '4-3-3', preMent: 2,
-    match: null, renderer: null,
-    speed: 1, paused: false, acc: 0,
-    replay: null, lastGoalFrames: null, autoReplay: true,
-    buffer: [], playerMeta: {},
-    subMode: null, ff: false, ffBudget: 0,
-    keyOnly: false, statsT: 0, selected: null
+    match: null, renderer: null, ready: true, paused: true, speed: 1, acc: 0,
+    config: { home: 1, away: 0, auto: true, sound: false }, names: false, sound: false,
+    selected: null, subMode: null, desk: 'tactics', returnBreak: false,
+    buffer: [], replay: null, replayQueue: null, goalFrames: null, events: [], meta: {}, skip: null,
+    lastFrame: null, lastFeedWall: 0, previousFlight: null, tileT: 0,
+    goalTimer: 0, toastTimer: 0, breakQueued: null
   };
 
-  const ICONS = {
-    goal: '⚽', og: '⚽', penscore: '⚽', save: '🧤', catch: '🧤', miss: '↗', block: '🛡️', post: '⚡',
-    foul: '📣', yellow: '🟨', red: '🟥', pen: '🎯', penmiss: '🧤', offside: '🚫', corner: '🚩',
-    throwin: '↪', goalkick: '⬡', freekick: '📣', sub: '🔁', kickoff: '▶', ht: '⏸', ft: '⏹',
-    stoppage: '⏱', header: '👤', cross: '↪', longshot: '🚀', tackle: '💥', clear: '⬆', chance: '❗', preview: '📋'
-  };
-  const ALWAYS_KEY = new Set(['goal', 'og', 'penscore', 'pen', 'penmiss', 'red', 'yellow', 'sub', 'ht', 'ft', 'post', 'kickoff']);
+  const html = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const icon = name => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+  const clockMinute = n => String(Math.max(0, n)).padStart(2, '0') + '′';
+  const condition = p => Math.round(p.cond * 100);
+  const colorCond = p => p.cond >= .75 ? '#b3da90' : p.cond >= .55 ? '#eed08a' : '#e69482';
+  const shapeLabel = s => s.replace(/-/g, '–');
+  const portraitKit = color => color === '#334155' ? '#647690' : color === '#15803d' ? '#35a75c' : color;
+  const activeDialog = () => ['setupDialog', 'deskDialog', 'breakDialog'].some(id => $(id).open);
 
-  /* ---------- prematch ---------- */
-  function clubCard(club, idx, side) {
-    const el = document.createElement('div');
-    el.className = 'club-card';
-    el.innerHTML = `<span class="cc-badge" style="background:${club.primary};color:${club.secondary}">${club.short}</span>
-      <span class="cc-name">${club.name}</span>
-      <span class="cc-meta">${'★'.repeat(Math.round(club.rep / 20))} · ${club.style.toUpperCase()}</span>`;
-    el.onclick = () => {
-      if (side === 'home') state.home = idx; else state.away = idx;
-      if (state.home === state.away) { if (side === 'home') state.away = (idx + 1) % D.CLUBS.length; else state.home = (idx + 1) % D.CLUBS.length; }
-      refreshPrematch();
-    };
-    el.dataset.idx = idx; el.dataset.side = side;
-    return el;
-  }
-  function refreshPrematch() {
-    document.querySelectorAll('.club-card').forEach(el => {
-      const i = +el.dataset.idx;
-      el.classList.toggle('sel', (el.dataset.side === 'home' && i === state.home) || (el.dataset.side === 'away' && i === state.away));
-    });
-    const squad = D.genSquad(D.CLUBS[state.home], D.seedFor(D.CLUBS[state.home].id));
-    const { xi } = D.bestXI(squad, state.preForm);
-    $('preXI').innerHTML = xi.map(s => `<span><b>${s.player.num}</b> ${s.player.name.split(' ').pop()} <i>${s.role}</i></span>`).join('');
-  }
-  function buildPrematch() {
-    const hg = $('homeGrid'), ag = $('awayGrid');
-    D.CLUBS.forEach((c, i) => { hg.appendChild(clubCard(c, i, 'home')); ag.appendChild(clubCard(c, i, 'away')); });
-    const fs = $('preForm');
-    Object.keys(D.FORMATIONS).forEach(f => { const o = document.createElement('option'); o.value = f; o.textContent = f; fs.appendChild(o); });
-    fs.value = state.preForm;
-    fs.onchange = () => { state.preForm = fs.value; refreshPrematch(); };
-    const ms = $('preMent');
-    D.MENTALITIES.forEach((m, i) => { const o = document.createElement('option'); o.value = i; o.textContent = m; ms.appendChild(o); });
-    ms.value = state.preMent;
-    ms.onchange = () => { state.preMent = +ms.value; };
-    $('preReplay').onchange = e => { state.autoReplay = e.target.checked; $('optReplay').checked = e.target.checked; };
-    $('preSound').onchange = e => { A.setMuted(!e.target.checked); $('optSound').checked = e.target.checked; };
-    $('btnKick').onclick = startMatch;
-    refreshPrematch();
+  function crest(club) {
+    const fore = club.id === 'swl' ? '#243947' : '#f5f4e9';
+    return `<svg viewBox="0 0 24 27" aria-hidden="true" style="color:${fore}" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M2.1 3.9 12 1l9.9 2.9v9.6c0 5.1-4 9.5-9.9 12.4-5.9-2.9-9.9-7.3-9.9-12.4Z" fill="${club.primary}" stroke="#f6f5e5" stroke-width="1.05"/><path d="M3.8 13.25 20.2 5.5v7.65c0 4.15-2.6 8.12-8.2 10.95-4.7-2.4-7.7-5.9-8.2-10.85Z" fill="#111f18" fill-opacity=".16"/><g stroke="currentColor" stroke-width="1.12">${marks[club.id] || ''}</g></svg>`;
   }
 
-  /* ---------- match lifecycle ---------- */
-  function startMatch() {
-    A.init(); A.resume();
-    const homeClub = D.CLUBS[state.home], awayClub = D.CLUBS[state.away];
-    const homeTactics = { ...D.defaultTactics(homeClub.style), formation: state.preForm, mentality: state.preMent };
-    state.buffer = []; state.lastGoalFrames = null; state.replay = null; state.subMode = null; state.ff = false;
-    state.match = new E.Match(homeClub, awayClub, {
-      seed: (Date.now() % 1000000007) | 0,
+  function text(id, next) {
+    const el = $(id), value = String(next);
+    if (el.textContent !== value) el.textContent = value;
+  }
+  function attr(el, key, next) { const value = String(next); if (el.getAttribute(key) !== value) el.setAttribute(key, value); }
+  function notify(message) {
+    const outlet = $('deskDialog').open && document.querySelector('.desk-tab:not([hidden]) .desk-feedback');
+    if (outlet) { outlet.textContent = message; return; }
+    text('toast', message); $('toast').hidden = false;
+    clearTimeout(state.toastTimer);
+    state.toastTimer = setTimeout(() => { $('toast').hidden = true; }, 2600);
+  }
+
+  function setSound(enabled, gesture) {
+    state.sound = !!enabled;
+    if (enabled && gesture) { A.init(); A.resume(); }
+    A.setMuted(!enabled);
+    attr($('btnSound'), 'aria-pressed', enabled);
+    attr($('soundIcon'), 'href', enabled ? '#i-sound' : '#i-mute');
+    $('btnSound').title = enabled ? 'Mute stadium sound' : 'Enable stadium sound';
+  }
+
+  function setFeed(message, event, label) {
+    const team = event && event.team != null ? state.match.teams[event.team] : null;
+    $('commentary').style.setProperty('--feed-accent', team ? portraitKit(team.club.primary) : '#c7ea91');
+    text('feedLabel', label || (team ? team.club.short + ' feed' : 'Match feed'));
+    text('feedText', message);
+    text('feedTime', clockMinute(event && event.minute != null ? event.minute : 0));
+    state.lastFeedWall = performance.now();
+  }
+
+  function prepare(config) {
+    state.config = { ...config };
+    state.ready = state.paused = true;
+    state.speed = 1; state.acc = 0; state.skip = null; state.replay = null;
+    state.goalFrames = null; state.replayQueue = null; state.buffer = []; state.events = []; state.previousFlight = null;
+    state.selected = null; state.subMode = null; state.returnBreak = false; state.breakQueued = null;
+    $('goalBanner').hidden = $('playerFocus').hidden = $('toast').hidden = true;
+    clearTimeout(state.goalTimer); clearTimeout(state.toastTimer);
+    const home = D.CLUBS[config.home], away = D.CLUBS[config.away];
+    const homeTactics = { ...D.defaultTactics(home.style) };
+    if (config.formation) homeTactics.formation = config.formation;
+    if (config.mentality != null) homeTactics.mentality = config.mentality;
+    state.match = new E.Match(home, away, {
+      seed: Date.now() % 1000000007,
       homeTactics,
-      onEvent: onEvent,
-      onSnapshot: snap => { state.buffer.push(snap); if (state.buffer.length > 700) state.buffer.shift(); }
+      onEvent,
+      onSnapshot: snapshot => {
+        state.buffer.push(snapshot);
+        if (state.buffer.length > 350) state.buffer.splice(0, 35);
+      }
     });
-    state.playerMeta = {};
-    for (const t of state.match.teams) for (const p of t.players) state.playerMeta[p.id] = { team: p.team, num: p.num, name: p.name, pos: p.pos, id: p.id, yellow: 0, dir: 0 };
-    state.mode = 'match'; state.paused = false; state.speed = 1; state.acc = 0;
-    $('prematch').classList.add('hidden'); $('app').classList.remove('hidden'); $('overlay').classList.add('hidden');
-    $('comlist').innerHTML = '';
-    // scoreboard
-    $('nameH').textContent = homeClub.short; $('nameA').textContent = awayClub.short;
-    $('badgeH').style.background = homeClub.primary; $('badgeH').style.color = homeClub.secondary; $('badgeH').textContent = homeClub.short;
-    $('badgeA').style.background = awayClub.primary; $('badgeA').style.color = awayClub.secondary; $('badgeA').textContent = awayClub.short;
-    document.documentElement.style.setProperty('--home-col', homeClub.primary);
-    document.documentElement.style.setProperty('--away-col', awayClub.primary);
-    buildTacticsTab(); refreshSquad(); updateHUD(); updateStats(true);
-    state.renderer.resize();
-    A.whistle(false);
+    state.meta = Object.fromEntries(state.match.teams.flatMap(t => t.players.map(p => [p.id, p])));
+    document.documentElement.style.setProperty('--home', home.primary);
+    document.documentElement.style.setProperty('--away', away.primary);
+    text('fixtureTitle', home.stadium);
+    text('stadiumStamp', home.stadium);
+    $('fixtureTeams').innerHTML = `${html(home.name)} <span>vs</span> ${html(away.name)}`;
+    text('nameH', home.short); text('nameA', away.short); text('teamTitle', home.name);
+    $('badgeH').innerHTML = $('lineupCrest').innerHTML = crest(home);
+    $('badgeA').innerHTML = crest(away);
+    setSound(config.sound, false);
+    setFeed('The players are in position. Kick off when you’re ready.');
+    renderLineup(); updateHUD(); draw();
+  }
+
+  function currentStatus() {
+    if (state.ready) return ['ready', 'Ready'];
+    if (state.replay) return ['replay', 'Replay'];
+    if (state.match.phase === 'halftime') return ['paused', 'Half time'];
+    if (state.match.phase === 'fulltime') return ['paused', 'Full time'];
+    if (state.skip) return ['live', 'Skipping'];
+    if (state.paused) return ['paused', 'Paused'];
+    return ['live', state.match.half === 1 ? '1st half' : '2nd half'];
+  }
+  function updateHUD() {
+    const m = state.match;
+    if (!m) return;
+    text('clock', m.clockStr());
+    const added = m.added[m.half - 1];
+    $('added').hidden = !(m.t >= 2700 && added);
+    if (!$('added').hidden) text('added', '+' + Math.ceil(added / 60));
+    const score = `${m.teams[0].score}:${m.teams[1].score}`;
+    if ($('score').dataset.score !== score) {
+      $('score').dataset.score = score;
+      $('score').innerHTML = `${m.teams[0].score}<span class="score-dash">–</span>${m.teams[1].score}`;
+      attr($('score'), 'aria-label', `${m.teams[0].club.name} ${m.teams[0].score}, ${m.teams[1].club.name} ${m.teams[1].score}`);
+    }
+    const [status, phase] = currentStatus();
+    if ($('matchStatus').dataset.status !== status) $('matchStatus').dataset.status = status;
+    text('phaseBadge', phase);
+    const atBreak = ['halftime', 'fulltime'].includes(m.phase);
+    const stopped = state.ready || (state.replay ? state.replay.paused : state.paused);
+    const label = state.ready ? 'Kick off' : atBreak ? phase : stopped ? 'Resume' : 'Pause';
+    text('playLabel', label); attr($('playIcon'), 'href', stopped || atBreak ? '#i-play' : '#i-pause');
+    $('btnPlay').title = atBreak ? label : `${label} (Space)`;
+    $('btnPlay').disabled = atBreak;
+    for (const b of document.querySelectorAll('[data-speed]')) attr(b, 'aria-pressed', Number(b.dataset.speed) === state.speed);
+    const replayButton = $('btnReplay');
+    replayButton.disabled = !state.goalFrames || !!state.replayQueue || state.ready || atBreak;
+    textReplayButton(state.replay ? 'Exit replay' : 'Replay');
+    $('btnSkip').disabled = state.ready || atBreak;
+    const skipLabel = state.replay ? 'Exit replay' : state.skip ? 'Cancel skip' : 'Next highlight';
+    text('skipLabel', skipLabel);
+    $('btnSkip').title = `${skipLabel} (S)`;
+    $('replayIndicator').hidden = !state.replay && !state.skip;
+    if (!$('replayIndicator').hidden) text('indicatorText', state.replay ? state.replay.paused ? 'Replay paused' : 'Goal replay' : 'Scanning for a highlight');
+  }
+  function textReplayButton(message) {
+    const el = $('btnReplay').querySelector('span');
+    if (el.textContent !== message) el.textContent = message;
+    $('btnReplay').title = message === 'Replay' ? 'Replay last goal (R)' : 'Exit replay (R)';
+  }
+
+  function togglePlay() {
+    const m = state.match;
+    if (!m || ['halftime', 'fulltime'].includes(m.phase)) return;
+    if (state.replay) { state.replay.paused = !state.replay.paused; updateHUD(); return; }
+    if (state.ready) {
+      state.ready = false; state.paused = false; state.acc = 0;
+      setSound(state.sound, true); A.whistle(false);
+      const event = { type: 'kickoff', minute: 1, team: 0, text: `We’re underway at ${m.teams[0].club.stadium}.`, key: true };
+      state.events.push(event); setFeed(event.text, event, 'Kick-off');
+    } else {
+      state.skip = null; state.acc = 0;
+      state.paused = !state.paused;
+    }
+    updateHUD();
+  }
+  function setSpeed(speed) {
+    state.speed = speed; state.skip = null; state.acc = 0;
+    if (state.replay) endReplay();
+    updateHUD();
+  }
+  function toggleSkip() {
+    if ($('btnSkip').disabled) return;
+    if (state.replay) { endReplay(); return; }
+    if (state.skip) state.skip = null;
+    else { state.skip = { remaining: 150 }; state.paused = false; state.acc = 0; }
+    updateHUD();
+  }
+
+  function recordReplay(event) {
+    const m = state.match, elapsed = m.elapsed;
+    const frames = state.buffer.filter(f => f.half === event.half && f.elapsed < elapsed - .001 && f.elapsed >= elapsed - REPLAY_BUILDUP);
+    if (frames.length < 12) return null;
+    frames.push(m.snapshotFrame());
+    return frames;
+  }
+  function replayFrame(snap, next = snap, amount = 0) {
+    const mix = (a, b, w) => a + (b - a) * w;
+    const players = [];
+    for (let i = 0; i < snap.n; i++) {
+      const id = snap.ids[i], meta = state.meta[id];
+      if (!meta) continue;
+      const j = next.ids[i] === id ? i : next.ids.indexOf(id);
+      let x = snap.arr[i * 2], y = snap.arr[i * 2 + 1];
+      if (j >= 0 && Math.abs(next.arr[j * 2] - x) + Math.abs(next.arr[j * 2 + 1] - y) < 2.8) {
+        x = mix(x, next.arr[j * 2], amount); y = mix(y, next.arr[j * 2 + 1], amount);
+      }
+      players.push({ id, team: meta.team, name: meta.name, num: meta.num, role: meta.role, pos: meta.pos, yellow: meta.yellow, x, y });
+    }
+    const i = snap.n * 2, j = next.n * 2;
+    const w = Math.abs(snap.arr[i] - next.arr[j]) + Math.abs(snap.arr[i + 1] - next.arr[j + 1]) < 3 ? amount : 0;
+    const ball = { x: mix(snap.arr[i], next.arr[j], w), y: mix(snap.arr[i + 1], next.arr[j + 1], w), z: mix(snap.arr[i + 2], next.arr[j + 2], w) };
+    return { players, ball, ownerId: snap.ids[snap.arr[i + 3]] };
+  }
+  function startReplay() {
+    if (!state.goalFrames || state.replayQueue) return;
+    state.skip = null; state.acc = 0;
+    const frames = state.goalFrames;
+    state.replay = { frames, time: frames[0].elapsed, index: 0, frame: replayFrame(frames[0]), paused: false };
+    $('goalBanner').hidden = true;
+    updateHUD(); draw();
+  }
+  function endReplay() { state.replay = null; state.acc = 0; updateHUD(); draw(); }
+  function tickReplay(dt) {
+    const rp = state.replay;
+    if (rp.paused) return;
+    rp.time += dt * REPLAY_RATE;
+    const frames = rp.frames, end = frames.length - 1;
+    if (rp.time > frames[end].elapsed + .72) { endReplay(); return; }
+    while (rp.index < end && frames[rp.index + 1].elapsed <= rp.time) rp.index++;
+    const a = frames[rp.index], b = frames[Math.min(end, rp.index + 1)];
+    const alpha = a === b ? 0 : Math.max(0, Math.min(1, (rp.time - a.elapsed) / (b.elapsed - a.elapsed)));
+    rp.frame = replayFrame(a, b, alpha);
+  }
+  function completeReplayCapture() {
+    const queue = state.replayQueue;
+    if (!queue || state.match.elapsed < queue.end) return;
+    const net = state.buffer.filter(s => s.half === queue.half && s.elapsed > queue.goal + .001 && s.elapsed <= queue.end + H);
+    if (state.goalFrames) state.goalFrames.push(...net);
+    state.replayQueue = null;
+    if (queue.auto) startReplay();
   }
 
   function onEvent(ev) {
+    if (state.ready || !state.match) return; // Constructor/setup events belong to the parked fixture.
     const m = state.match;
-    // commentary
-    if (ev.text && ev.type !== 'preview') addCommentary(ev);
-    const isKey = ALWAYS_KEY.has(ev.type) || ev.key;
-    if (state.ff && isKey && !['kickoff', 'stoppage'].includes(ev.type)) { state.ff = false; $('ffBadge').classList.add('hidden'); }
-    switch (ev.type) {
-      case 'goal': case 'og': case 'penscore': {
-        updateHUD();
-        const team = m.teams[ev.team];
-        const lineX = team.attackDir > 0 ? E.L : 0;
-        state.renderer.spawnGoalParticles(m, lineX);
-        A.goal();
-        showGoalBanner(ev, team);
-        const goalT = (ev.half === 2 ? 2700 : 0) + ev.t;
-        const frames = state.buffer.filter(f => f.t >= goalT - 8 && f.t <= goalT + 0.06);
-        if (frames.length > 10) {
-          state.lastGoalFrames = frames;
-          if (state.autoReplay) startReplay(frames);
-        }
-        flashScore(ev.team);
-        break;
-      }
-      case 'save': case 'catch': case 'block': A.kick(0.8); if (ev.key) A.bigChance(); break;
-      case 'post': A.kick(1); A.bigChance(); toast('OFF THE POST!'); break;
-      case 'miss': A.kick(0.7); break;
-      case 'pen': A.whistle(false); A.bigChance(); toast('PENALTY!'); break;
-      case 'penmiss': A.bigChance(); break;
-      case 'foul': A.foul(); break;
-      case 'offside': A.whistle(false); break;
-      case 'yellow': toast('🟨 Yellow — ' + (ev.player ? ev.player.name : '')); refreshSquad(); A.foul(); break;
-      case 'red': toast('🟥 RED CARD — ' + (ev.player ? ev.player.name : '')); refreshSquad(); A.whistle(true); break;
-      case 'sub': refreshSquad(); break;
-      case 'stoppage': updateHUD(); break;
-      case 'ht': A.whistle(true); state.paused = true; showOverlay('ht'); break;
-      case 'ft': A.whistle(false, true); state.paused = true; showOverlay('ft'); break;
-      case 'kickoff': if (ev.minute > 1) A.whistle(false); updateHUD(); break;
+    const goal = GOALS.has(ev.type);
+    const key = goal || HIGHLIGHTS.has(ev.type) || !!ev.key;
+    const message = ev.type === 'kickoff' && ev.half === 2 && ev.t < .1 ? 'The second half is underway.' : ev.text;
+    if (message && ev.type !== 'preview') {
+      state.events.push({ ...ev, text: message, key });
+      if (state.events.length > 245) state.events.shift();
+      setFeed(message, ev, goal ? 'Goal' : ev.type === 'pen' ? 'Penalty' : null);
     }
-    if (['goal', 'og', 'penscore', 'sub', 'yellow', 'red'].includes(ev.type)) updateStats(true);
+    if (state.skip && (HIGHLIGHTS.has(ev.type) || (ev.key && CHANCES.has(ev.type)))) { state.skip = null; state.acc = 0; }
+    if (goal) {
+      const g = m.lastGoal, club = m.teams[ev.team].club;
+      text('goalSide', `Goal · ${club.short}`); text('goalTime', clockMinute(ev.minute));
+      text('goalScorer', g && g.scorer ? g.scorer + (g.og ? ' (OG)' : '') : club.name);
+      $('goalBanner').style.setProperty('--accent', portraitKit(club.primary));
+      $('goalBanner').hidden = false;
+      clearTimeout(state.goalTimer);
+      state.goalTimer = setTimeout(() => { $('goalBanner').hidden = true; }, 3900);
+      A.goal();
+      state.goalFrames = recordReplay(ev);
+      if (state.goalFrames) {
+        state.replayQueue = { goal: m.elapsed, end: m.elapsed + REPLAY_AFTERMATH, half: m.half, auto: state.config.auto };
+      }
+    } else if (ev.type === 'ht' || ev.type === 'ft') {
+      state.paused = true; state.skip = null; state.acc = 0; state.breakQueued = ev.type;
+      A.whistle(ev.type === 'ht', ev.type === 'ft');
+    } else if (ev.type === 'pen' || ev.type === 'offside') { A.whistle(false); }
+    else if (ev.type === 'post' || ev.type === 'save') { A.kick(.7); if (ev.key) A.bigChance(); }
+    else if (ev.type === 'foul' || ev.type === 'red' || ev.type === 'yellow') { A.foul(); }
+    if (['sub', 'red', 'yellow'].includes(ev.type)) renderLineup();
+    updateHUD();
   }
 
-  function addCommentary(ev) {
-    const list = $('comlist');
-    const el = document.createElement('div');
-    const isKey = ALWAYS_KEY.has(ev.type) || ev.key;
-    el.className = 'com-item' + (isKey ? ' key' : '');
-    el.innerHTML = `<span class="com-min">${ev.minute}'</span><span class="com-ico">${ICONS[ev.type] || '•'}</span><span class="com-txt">${ev.text}</span>`;
-    list.prepend(el);
-    while (list.children.length > 90) list.removeChild(list.lastChild);
+  function renderLineup() {
+    const home = state.match.teams[0];
+    const lineup = $('lineup'), from = lineup.scrollLeft;
+    text('formationLabel', shapeLabel(home.tactics.formation));
+    lineup.innerHTML = home.slots.map(({ player: p, role }) => `<button type="button" class="player-tile" data-player="${html(p.id)}" aria-label="${html(p.name)}, number ${p.num}, ${role}" aria-pressed="${state.selected === p.id}" title="${html(p.name)}" style="--kit:${portraitKit(role === 'GK' ? home.club.gk : home.club.primary)};--condition:${condition(p)}%;--condition-color:${colorCond(p)}"><span class="tile-head"><span>${role}${p.yellow ? ' · YC' : ''}</span><span class="tile-no">${p.num}</span></span><span class="tile-main">${icon('shirt')}<span class="tile-name">${html(p.name.split(' ').pop())}</span></span><span class="tile-cond" aria-hidden="true"><i></i></span></button>`).join('');
+    lineup.scrollLeft = from;
+    if (state.selected && !state.match.onPitchPlayers().some(p => p.id === state.selected)) selectPlayer(null);
+  }
+  function updateLineupCondition() {
+    for (const button of $('lineup').querySelectorAll('[data-player]')) {
+      const p = state.meta[button.dataset.player];
+      if (!p) continue;
+      button.style.setProperty('--condition', condition(p) + '%');
+      button.style.setProperty('--condition-color', colorCond(p));
+    }
+    if (state.selected) updateFocus(state.meta[state.selected]);
+  }
+  function updateFocus(p) {
+    if (!p) return;
+    text('focusMeta', `#${p.num} · ${p.role || p.pos} · ${state.match.teams[p.team].club.short}`);
+    text('focusName', p.name);
+    text('focusStats', `${condition(p)}% condition${state.ready ? '' : ` · ${p.rating.toFixed(1)} rating`}`);
+  }
+  function selectPlayer(p) {
+    state.selected = p ? p.id : null;
+    $('playerFocus').hidden = !p;
+    if (p) updateFocus(state.meta[p.id] || p);
+    for (const b of $('lineup').querySelectorAll('[data-player]')) attr(b, 'aria-pressed', b.dataset.player === state.selected);
+    draw();
   }
 
-  /* ---------- overlays / banners ---------- */
-  let gbTimer = null;
-  function showGoalBanner(ev, team) {
-    const gb = $('goalBanner');
-    const lg = state.match.lastGoal;
-    gb.style.borderColor = team.club.primary;
-    gb.style.setProperty('--gb-col', team.club.primary);
-    $('gbTeam').textContent = team.club.name.toUpperCase();
-    $('gbScorer').textContent = lg.og ? 'OWN GOAL — ' + lg.scorer : '⚽ ' + lg.scorer;
-    $('gbMeta').textContent = `${lg.minute}' · ${lg.assist ? 'Assist: ' + lg.assist + ' · ' : ''}${lg.pen ? 'Penalty · ' : ''}xG ${lg.xg.toFixed(2)}`;
-    gb.classList.remove('hidden');
-    clearTimeout(gbTimer);
-    gbTimer = setTimeout(() => gb.classList.add('hidden'), 5200);
+  const options = (items, isIndex = true) => items.map((entry, i) => `<option value="${html(isIndex ? i : entry)}">${html(entry)}</option>`).join('');
+  function refreshFixturePicks() {
+    const h = Number($('preHome').value), a = Number($('preAway').value);
+    $('setupHomeCrest').innerHTML = crest(D.CLUBS[h]); $('setupAwayCrest').innerHTML = crest(D.CLUBS[a]);
   }
-  function flashScore(team) {
-    const el = $('score');
-    el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+  function openSetup() {
+    state.skip = null;
+    $('preHome').value = state.config.home; $('preAway').value = state.config.away;
+    $('preForm').value = state.match.teams[0].tactics.formation; $('preMent').value = state.match.teams[0].tactics.mentality;
+    $('preReplay').checked = state.config.auto; $('preSound').checked = state.sound;
+    refreshFixturePicks();
+    text('setupNote', state.ready ? 'Set your fixture and starting instructions.' : 'Loading a fixture ends the current match.');
+    $('setupDialog').showModal(); updateHUD();
   }
-  let toastTimer = null;
-  function toast(msg) {
-    const t = $('toast');
-    t.textContent = msg; t.classList.remove('hidden');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.add('hidden'), 2600);
+  function fixtureSelection(changed) {
+    if ($('preHome').value === $('preAway').value) {
+      const other = changed === 'preHome' ? 'preAway' : 'preHome';
+      $(other).value = (+$(changed).value + 1) % D.CLUBS.length;
+      changed = 'preHome';
+    }
+    if (changed === 'preHome') {
+      const tactics = D.defaultTactics(D.CLUBS[+$('preHome').value].style);
+      $('preForm').value = tactics.formation; $('preMent').value = tactics.mentality;
+    }
+    refreshFixturePicks();
   }
 
-  function scorersList() {
+  function renderTactics() {
+    const m = state.match, t = m.teams[0].tactics, away = m.teams[1];
+    $('tab-tactics').innerHTML = `<p class="help-text desk-feedback" role="status">Set how your side plays. Changes apply when play resumes.</p><div class="desk-grid">${TACTICS.map(([key, title, values]) => `<label class="tactic-control">${title}<select data-tactic="${key}">${options(values, key !== 'formation')}</select></label>`).join('')}</div><div class="opposition"><strong>${html(away.club.name)} · Opposition setup</strong>${shapeLabel(away.tactics.formation)} · ${html(D.MENTALITIES[away.tactics.mentality])} · ${html(D.PRESS[away.tactics.press])} press</div>`;
+    for (const select of $('tab-tactics').querySelectorAll('[data-tactic]')) select.value = t[select.dataset.tactic];
+  }
+  function renderSquad() {
+    const t = state.match.teams[0];
+    const available = !state.ready && state.match.phase !== 'fulltime';
+    const inPlayer = t.players.find(p => p.id === state.subMode);
+    const row = (p, role, bench) => `<div class="squad-row"><span>${p.num}</span><span>${html(p.name)}</span><span class="row-role">${role}</span><span class="row-cond">${condition(p)}%</span>${bench ? `<button type="button" class="button" data-bench="${html(p.id)}" ${!available || t.subsUsed >= 5 ? 'disabled' : ''}>Bring on</button>` : inPlayer ? `<button type="button" class="button" data-out="${html(p.id)}" ${(p.pos === 'GK') !== (inPlayer.pos === 'GK') ? 'disabled' : ''}>Replace</button>` : '<span></span>'}</div>`;
+    $('tab-squad').innerHTML = `<p class="help-text desk-feedback" role="status">${state.ready ? 'Substitutions are available after kick-off.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining.`}</p>${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${t.bench.map(p => row(p, p.pos, true)).join('')}`;
+  }
+
+  const statLine = (title, a, b) => `<div class="stat-line"><strong>${a}</strong><span>${title}</span><strong>${b}</strong></div>`;
+  function statsMarkup(short) {
+    const m = state.match, [a, b] = m.teams.map(t => t.stats);
+    const total = m.possTime[0] + m.possTime[1];
+    const possession = total ? Math.round(m.possTime[0] / total * 100) : 50;
+    const passPct = s => s.passes ? Math.round(s.passWon / s.passes * 100) + '%' : '–';
+    return statLine('Possession', possession + '%', (100 - possession) + '%') +
+      statLine('Shots', a.shots, b.shots) + statLine('On target', a.onTarget, b.onTarget) +
+      statLine('Expected goals', a.xG.toFixed(2), b.xG.toFixed(2)) + statLine('Passes completed', a.passWon, b.passWon) +
+      (short ? '' : statLine('Pass accuracy', passPct(a), passPct(b)) + statLine('Corners', a.corners, b.corners) + statLine('Fouls', a.fouls, b.fouls) + statLine('Saves', a.saves, b.saves));
+  }
+  function renderStats() {
     const m = state.match;
-    return m.events.filter(e => ['goal', 'og', 'penscore'].includes(e.type))
-      .map(e => {
-        const t = m.teams[e.team];
-        return `<div class="ov-scorer"><span class="dot" style="background:${t.club.primary}"></span>${e.minute}' ${e.player ? e.player.name : ''} ${e.type === 'og' ? '(OG)' : e.type === 'penscore' ? '(P)' : ''} <i>${t.club.short}</i></div>`;
-      }).join('') || '<div class="ov-scorer">No goals</div>';
+    $('tab-stats').innerHTML = `<div class="stats-title"><span>${m.teams[0].club.short}</span><span>${m.teams[1].club.short}</span></div>${statsMarkup(false)}<h3 class="section-heading">Shot locations</h3><canvas class="mini-pitch" width="840" height="420" id="miniPitch" role="img" aria-label="Shot locations on the pitch"></canvas>`;
+    const cv = $('miniPitch'), ctx = cv.getContext('2d'), w = cv.width, h = cv.height, pad = 13;
+    const x = n => pad + (w - pad * 2) * n / E.L, y = n => pad + (h - pad * 2) * n / E.W;
+    ctx.fillStyle = '#385332'; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = '#d5e5cc9a'; ctx.lineWidth = 2;
+    ctx.strokeRect(pad, pad, w - pad * 2, h - pad * 2);
+    ctx.strokeRect(pad, y(E.CY - E.BOX_HALF), x(E.BOX_L) - pad, y(E.CY + E.BOX_HALF) - y(E.CY - E.BOX_HALF));
+    ctx.strokeRect(x(E.L - E.BOX_L), y(E.CY - E.BOX_HALF), x(E.BOX_L) - pad, y(E.CY + E.BOX_HALF) - y(E.CY - E.BOX_HALF));
+    ctx.beginPath(); ctx.moveTo(w / 2, pad); ctx.lineTo(w / 2, h - pad); ctx.stroke();
+    for (const shot of m.shotMap) {
+      ctx.beginPath(); ctx.arc(x(shot.x), y(shot.y), 4 + shot.xg * 14, 0, Math.PI * 2);
+      ctx.fillStyle = shot.outcome === 'goal' ? '#e6f6c5' : portraitKit(m.teams[shot.team].club.primary);
+      ctx.fill(); ctx.strokeStyle = '#f0f9e5bc'; ctx.stroke();
+    }
   }
-  function showOverlay(kind) {
+  function renderEvents() {
+    $('tab-events').innerHTML = state.events.length ? `<ul class="events">${state.events.slice(-90).reverse().map(ev => `<li${ev.key ? ' class="key"' : ''}><time>${clockMinute(ev.minute)}</time><span>${html(ev.text)}</span></li>`).join('')}</ul>` : '<p class="help-text">Match events will appear here after kick-off.</p>';
+  }
+  function setDesk(tab) {
+    state.desk = tab;
+    for (const button of $('deskTabs').querySelectorAll('[data-tab]')) {
+      const active = button.dataset.tab === tab;
+      attr(button, 'aria-selected', active); button.tabIndex = active ? 0 : -1;
+      $('tab-' + button.dataset.tab).hidden = !active;
+    }
+    ({ tactics: renderTactics, squad: renderSquad, stats: renderStats, events: renderEvents })[tab]();
+    $('deskDialog').scrollTop = 0;
+  }
+  function openDesk(tab) {
+    state.skip = null;
+    setDesk(tab);
+    if (!$('deskDialog').open) $('deskDialog').showModal();
+    updateHUD();
+  }
+  function showBreak(type) {
+    state.breakQueued = null;
+    const [h, a] = state.match.teams;
+    text('breakTitle', type === 'ht' ? 'Half time' : 'Full time');
+    $('breakScore').innerHTML = `<span>${h.club.short}</span><strong>${h.score} – ${a.score}</strong><span>${a.club.short}</span>`;
+    $('breakStats').innerHTML = statsMarkup(true);
+    text('btnBreakContinue', type === 'ht' ? 'Second half' : 'Rematch');
+    if (!$('breakDialog').open) $('breakDialog').showModal();
+    updateHUD();
+  }
+
+  function observePlay() {
+    const m = state.match, ball = m.ball, f = ball.flight;
+    if (f === state.previousFlight) return;
+    state.previousFlight = f;
+    if (!f || state.skip || state.replay || !ball.lastTouch) return;
+    const from = ball.lastTouch.name, to = f.intended && f.intended.name;
+    const loft = ['chip', 'switch', 'long', 'clearance'].includes(f.technique);
+    if (performance.now() - state.lastFeedWall < (loft ? 930 : 2150)) return;
+    let words;
+    if (loft) {
+      if (f.technique === 'chip') words = `${from} clips it ${to ? `towards ${to}` : 'into space'}.`;
+      else if (f.technique === 'switch') words = `${from} switches play with a high diagonal.`;
+      else if (f.technique === 'clearance') words = `${from} lifts the clearance away.`;
+      else words = `${from} sends a long ball${to ? ` towards ${to}` : ' upfield'}.`;
+    } else if (f.kind === 'pass' && to && f.intended !== ball.lastTouch && f.totalDist >= 12) {
+      words = f.technique === 'through' ? `${from} looks to slip ${to} in behind.` : f.technique === 'cutback' ? `${from} cuts it back towards ${to}.` : `${from} looks for ${to}.`;
+    }
+    if (words) setFeed(words, { team: ball.lastTouch.team, minute: m.minute() });
+  }
+
+  function advance(dt) {
     const m = state.match;
-    const ov = $('overlay');
-    ov.classList.remove('hidden');
-    $('ovTitle').textContent = kind === 'ht' ? 'HALF TIME' : 'FULL TIME';
-    $('ovScore').innerHTML = `<span>${m.teams[0].club.short}</span> <b>${m.teams[0].score} – ${m.teams[1].score}</b> <span>${m.teams[1].club.short}</span>`;
-    $('ovScorers').innerHTML = scorersList();
-    const s0 = m.teams[0].stats, s1 = m.teams[1].stats;
-    const pt = m.possTime[0] + m.possTime[1] || 1;
-    const rows = [
-      ['Possession', Math.round(m.possTime[0] / pt * 100) + '%', Math.round(m.possTime[1] / pt * 100) + '%'],
-      ['Shots', s0.shots, s1.shots], ['On target', s0.onTarget, s1.onTarget],
-      ['xG', s0.xG.toFixed(2), s1.xG.toFixed(2)],
-      ['Passes', s0.passes, s1.passes], ['Corners', s0.corners, s1.corners]
-    ];
-    $('ovStats').innerHTML = rows.map(r => `<div class="ov-row"><span>${r[1]}</span><em>${r[0]}</em><span>${r[2]}</span></div>`).join('');
-    if (kind === 'ft') {
-      let motm = null;
-      for (const t of m.teams) for (const s of t.slots) if (!motm || s.player.rating > motm.rating) motm = s.player;
-      $('ovMotm').innerHTML = motm ? `🏅 Player of the Match: <b>${motm.name}</b> (${m.teams[motm.team].club.short}) — ${motm.rating.toFixed(1)}` : '';
-      $('ovContinue').textContent = 'NEW MATCH ▸';
-      $('ovContinue').onclick = () => { ov.classList.add('hidden'); $('app').classList.add('hidden'); $('prematch').classList.remove('hidden'); state.mode = 'prematch'; };
+    if (state.skip) {
+      const limit = performance.now() + 7;
+      for (let i = 0; state.skip && i < 160 && (i < 2 || performance.now() < limit); i++) {
+        m.step(H);
+        if (state.skip && (state.skip.remaining -= H) <= 0) { state.skip = null; notify('No highlight in the next 2½ match minutes.'); }
+      }
     } else {
-      $('ovMotm').innerHTML = '';
-      $('ovContinue').textContent = 'SECOND HALF ▸';
-      $('ovContinue').onclick = () => {
-        ov.classList.add('hidden');
-        m.continueSecondHalf();
-        state.paused = false;
-        refreshSquad(); updateHUD();
-      };
+      state.acc += dt * RATES[state.speed];
+      let n = 0;
+      while (state.acc >= H && n++ < 48 && !state.replay && !state.paused) { state.acc -= H; m.step(H); }
+      if (state.acc > .6) state.acc = 0;
     }
+    observePlay(); completeReplayCapture();
   }
-
-  /* ---------- replay ---------- */
-  function startReplay(frames) {
-    state.replay = { frames, i: 0, acc: 0, frame: null };
-    $('replayBadge').classList.remove('hidden');
-    $('replayBars').classList.remove('hidden');
-  }
-  function endReplay() {
-    state.replay = null;
-    $('replayBadge').classList.add('hidden');
-    $('replayBars').classList.add('hidden');
-  }
-  function buildReplayFrame() {
-    const rp = state.replay;
-    const snap = rp.frames[rp.i];
-    const prev = rp.frames[Math.max(0, rp.i - 1)];
-    const players = [];
-    for (let j = 0; j < snap.n; j++) {
-      const meta = state.playerMeta[snap.ids[j]];
-      const x = snap.arr[j * 2], y = snap.arr[j * 2 + 1];
-      const px = prev.arr[j * 2], py = prev.arr[j * 2 + 1];
-      const dir = (Math.abs(x - px) + Math.abs(y - py)) > 0.005 ? Math.atan2(y - py, x - px) : meta.dir;
-      meta.dir = dir;
-      players.push({ ...meta, x, y, dir, yellow: 0 });
-    }
-    rp.frame = { players, bx: snap.arr[snap.n * 2], by: snap.arr[snap.n * 2 + 1], bz: snap.arr[snap.n * 2 + 2], ownerIdx: snap.arr[snap.n * 2 + 3] };
-  }
-
-  /* ---------- tabs ---------- */
-  function buildTacticsTab() {
-    const m = state.match;
-    const t = m.teams[0].tactics;
-    const mk = (id, label, opts, val, key, numeric) => {
-      const row = document.createElement('div'); row.className = 'tac-row';
-      row.innerHTML = `<label>${label}</label>`;
-      const sel = document.createElement('select');
-      opts.forEach((o, i) => { const op = document.createElement('option'); op.value = numeric ? i : o; op.textContent = o; sel.appendChild(op); });
-      sel.value = val;
-      sel.onchange = () => { m.setTactics(0, { [key]: numeric ? +sel.value : sel.value }); if (key === 'formation') refreshSquad(); toast('Tactics updated'); };
-      row.appendChild(sel);
-      $(id).appendChild(row);
-    };
-    $('tab-tactics').innerHTML = '<div class="tac-note">Instructions apply live — players adapt instantly.</div>';
-    mk('tab-tactics', 'Formation', Object.keys(D.FORMATIONS), t.formation, 'formation', false);
-    mk('tab-tactics', 'Mentality', D.MENTALITIES, t.mentality, 'mentality', true);
-    mk('tab-tactics', 'Passing', D.PASSING, t.passing, 'passing', true);
-    mk('tab-tactics', 'Tempo', D.TEMPO, t.tempo, 'tempo', true);
-    mk('tab-tactics', 'Pressing', D.PRESS, t.press, 'press', true);
-    mk('tab-tactics', 'Width', D.WIDTH, t.width, 'width', true);
-    mk('tab-tactics', 'Defensive Line', D.LINE, t.line, 'line', true);
-    const away = document.createElement('div'); away.className = 'tac-away';
-    const at = m.teams[1].tactics;
-    away.innerHTML = `<b>Opposition setup</b><br>${m.teams[1].club.name}: ${at.formation} · ${D.MENTALITIES[at.mentality]} · ${D.PASSING[at.passing]} passing · ${D.PRESS[at.press]} press`;
-    $('tab-tactics').appendChild(away);
-  }
-
-  function condColor(c) { return c > 0.75 ? '#3ddc84' : c > 0.55 ? '#ffd166' : '#ff6b6b'; }
-  function ratingColor(r) { return r >= 7.5 ? '#3ddc84' : r >= 6.8 ? '#a3e635' : r >= 6.2 ? '#ffd166' : '#ff6b6b'; }
-
-  function refreshSquad() {
-    const m = state.match; if (!m) return;
-    const team = m.teams[0];
-    $('subsLeft').textContent = (5 - team.subsUsed) + ' subs remaining';
-    const xi = $('xiList'); xi.innerHTML = '';
-    for (const s of team.slots) {
-      const p = s.player;
-      const row = document.createElement('div');
-      row.className = 'pl-row' + (state.subMode ? ' replaceable' : '');
-      row.innerHTML = `<span class="pl-num">${p.num}</span><span class="pl-name">${p.name}</span>
-        <span class="pl-role">${s.role}</span>
-        <span class="pl-cond"><i style="width:${Math.round(p.cond * 100)}%;background:${condColor(p.cond)}"></i></span>
-        <span class="pl-rating" style="color:${ratingColor(p.rating)}">${p.rating.toFixed(1)}</span>
-        <span class="pl-cards">${p.yellow ? '🟨'.repeat(Math.min(p.yellow, 1)) : ''}</span>`;
-      row.onclick = () => {
-        if (state.subMode) doSub(p.id);
-        else showPlayerCard(p);
-      };
-      xi.appendChild(row);
-    }
-    const bench = $('benchList'); bench.innerHTML = '';
-    for (const p of team.bench) {
-      const row = document.createElement('div'); row.className = 'pl-row bench';
-      row.innerHTML = `<span class="pl-num">${p.num}</span><span class="pl-name">${p.name}</span><span class="pl-role">${p.pos}</span>`;
-      const btn = document.createElement('button'); btn.className = 'sub-btn'; btn.textContent = 'ON';
-      btn.onclick = e => {
-        e.stopPropagation();
-        if (team.subsUsed >= 5) { toast('No substitutions remaining'); return; }
-        state.subMode = { benchId: p.id };
-        $('subBanner').classList.remove('hidden');
-        $('subBanner').innerHTML = `🔁 Bringing on <b>${p.name}</b> — click a starting player to replace (Esc to cancel)`;
-        refreshSquad();
-      };
-      row.appendChild(btn);
-      bench.appendChild(row);
-    }
-  }
-  function doSub(outId) {
-    const res = state.match.substitute(0, outId, state.subMode.benchId);
-    state.subMode = null;
-    $('subBanner').classList.add('hidden');
-    if (!res.ok) toast(res.msg);
-    refreshSquad();
-  }
-
-  function showPlayerCard(p) {
-    state.selected = p.id;
-    state.renderer.selected = p.id;
-    const card = $('playerCard');
-    const team = state.match.teams[p.team];
-    const a = p.attrs;
-    const top = Object.entries(a).filter(([k]) => !['handling', 'reflexes'].includes(k) || p.pos === 'GK')
-      .sort((x, y) => y[1] - x[1]).slice(0, 4);
-    card.innerHTML = `<div class="pc-head" style="border-color:${team.club.primary}">
-        <b>#${p.num} ${p.name}</b><span>${p.role || p.pos} · ${p.age}y · ${team.club.short}</span></div>
-      <div class="pc-grid">
-        <span>Rating <b style="color:${ratingColor(p.rating)}">${p.rating.toFixed(1)}</b></span>
-        <span>Condition <b style="color:${condColor(p.cond)}">${Math.round(p.cond * 100)}%</b></span>
-        ${p.stats.goals ? `<span>Goals <b>${p.stats.goals}</b></span>` : ''}
-        ${p.stats.assists ? `<span>Assists <b>${p.stats.assists}</b></span>` : ''}
-        <span>Shots <b>${p.stats.shots}</b></span>
-        <span>Passes <b>${p.stats.passWon}/${p.stats.passes}</b></span>
-        ${p.pos === 'GK' ? `<span>Saves <b>${p.stats.saves}</b></span>` : `<span>Tackles <b>${p.stats.tackles}</b></span>`}
-      </div>
-      <div class="pc-attrs">${top.map(([k, v]) => `<span>${k.slice(0, 3).toUpperCase()} <b>${v}</b></span>`).join('')}</div>`;
-    card.classList.remove('hidden');
-  }
-
-  /* ---------- stats ---------- */
-  function statRow(label, a, b, fmtA, fmtB) {
-    const va = fmtA != null ? fmtA : a, vb = fmtB != null ? fmtB : b;
-    const total = (typeof a === 'number' && typeof b === 'number') ? (a + b || 1) : 0;
-    const pa = total ? a / total * 100 : 50;
-    return `<div class="st-row"><span class="st-a">${va}</span><span class="st-l">${label}</span><span class="st-b">${vb}</span></div>
-      ${total ? `<div class="st-bar"><i style="width:${pa}%"></i></div>` : ''}`;
-  }
-  function updateStats(force) {
-    const m = state.match; if (!m) return;
-    const s0 = m.teams[0].stats, s1 = m.teams[1].stats;
-    const pt = m.possTime[0] + m.possTime[1] || 1;
-    const p0 = Math.round(m.possTime[0] / pt * 100), p1 = 100 - p0;
-    $('statsBody').innerHTML =
-      statRow('Possession', p0, p1, p0 + '%', p1 + '%') +
-      statRow('Shots', s0.shots, s1.shots) +
-      statRow('On target', s0.onTarget, s1.onTarget) +
-      statRow('xG', s0.xG, s1.xG, s0.xG.toFixed(2), s1.xG.toFixed(2)) +
-      statRow('Pass accuracy', s0.passes ? s0.passWon / s0.passes : 0, s1.passes ? s1.passWon / s1.passes : 0,
-        Math.round((s0.passes ? s0.passWon / s0.passes : 0) * 100) + '%', Math.round((s1.passes ? s1.passWon / s1.passes : 0) * 100) + '%') +
-      statRow('Tackles', s0.tackles, s1.tackles) +
-      statRow('Fouls', s0.fouls, s1.fouls) +
-      statRow('Corners', s0.corners, s1.corners) +
-      statRow('Offsides', s0.offsides, s1.offsides) +
-      statRow('Saves', s0.saves, s1.saves) +
-      statRow('Cards', s0.yellow + s0.red, s1.yellow + s1.red);
-    drawMomentum(); drawShotMap();
-  }
-  function drawMomentum() {
-    const cv = $('momCv'); if (!cv) return;
-    const m = state.match;
-    const w = cv.width = cv.parentElement.clientWidth - 2;
-    const h = cv.height = 64;
-    const ctx = cv.getContext('2d');
-    ctx.fillStyle = '#0d1319'; ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
-    const maxT = 5700;
-    for (const s of m.momentum) {
-      const x = s.t / maxT * w;
-      const bh = Math.abs(s.v) * (h / 2 - 3);
-      ctx.fillStyle = s.v >= 0 ? m.teams[0].club.primary : m.teams[1].club.primary;
-      ctx.globalAlpha = 0.85;
-      if (s.v >= 0) ctx.fillRect(x, h / 2 - bh, Math.max(1.5, w / 300), bh);
-      else ctx.fillRect(x, h / 2, Math.max(1.5, w / 300), bh);
-    }
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '8px system-ui';
-    ctx.fillText('HT', w / 2 - 5, 9);
-  }
-  function drawShotMap() {
-    const cv = $('shotCv'); if (!cv) return;
-    const m = state.match;
-    const w = cv.width = cv.parentElement.clientWidth - 2;
-    const h = cv.height = Math.round(w * 0.62);
-    const ctx = cv.getContext('2d');
-    ctx.fillStyle = '#12331c'; ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1;
-    ctx.strokeRect(2, 2, w - 4, h - 4);
-    ctx.beginPath(); ctx.moveTo(w / 2, 2); ctx.lineTo(w / 2, h - 2); ctx.stroke();
-    ctx.strokeRect(2, h / 2 - h * 0.28, w * 0.15, h * 0.56);
-    ctx.strokeRect(w - 2 - w * 0.15, h / 2 - h * 0.28, w * 0.15, h * 0.56);
-    const homeDir = m.teams[0].attackDir;
-    const cols = { goal: '#ffd700', save: '#38e1ff', miss: '#8b98a5', block: '#f97316', post: '#c084fc' };
-    for (const s of m.shotMap) {
-      const nx = homeDir > 0 ? s.x / E.L : 1 - s.x / E.L;
-      const x = 2 + nx * (w - 4), y = 2 + (s.y / E.W) * (h - 4);
-      ctx.fillStyle = cols[s.outcome] || '#fff';
-      ctx.globalAlpha = s.team === 0 ? 0.95 : 0.55;
-      ctx.beginPath(); ctx.arc(x, y, 2 + s.xg * 9, 0, Math.PI * 2); ctx.fill();
-      if (s.team === 1) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 0.8; ctx.stroke(); }
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  /* ---------- HUD ---------- */
-  function updateHUD() {
-    const m = state.match; if (!m) return;
-    $('score').textContent = m.teams[0].score + ' – ' + m.teams[1].score;
-    $('clock').textContent = m.clockStr();
-    const added = m.added[m.half - 1];
-    $('added').textContent = m.t > 2700 && added ? '+' + Math.ceil(added / 60) : '';
-    let phase = m.half === 1 ? '1ST HALF' : '2ND HALF';
-    if (m.phase === 'halftime') phase = 'HALF TIME';
-    if (m.phase === 'fulltime') phase = 'FULL TIME';
-    if (state.replay) phase = 'REPLAY';
-    else if (state.paused && m.phase !== 'halftime' && m.phase !== 'fulltime') phase = 'PAUSED';
-    $('phaseBadge').textContent = phase;
-    $('btnPause').textContent = state.paused ? '▶' : '⏸';
-    document.querySelectorAll('.spd').forEach(b => b.classList.toggle('active', +b.dataset.s === state.speed && !state.paused));
-  }
-
-  /* ---------- controls ---------- */
-  function wireControls() {
-    $('btnPause').onclick = () => { if (state.match && !['halftime', 'fulltime'].includes(state.match.phase)) { state.paused = !state.paused; updateHUD(); } };
-    document.querySelectorAll('.spd').forEach(b => b.onclick = () => { state.speed = +b.dataset.s; state.paused = false; updateHUD(); });
-    $('btnSkip').onclick = () => {
-      if (state.replay) { endReplay(); return; }
-      if (!state.match || ['halftime', 'fulltime'].includes(state.match.phase)) return;
-      state.ff = true; state.ffBudget = 150; state.paused = false;
-      $('ffBadge').classList.remove('hidden');
-      updateHUD();
-    };
-    $('optCamera').onclick = () => {
-      const r = state.renderer;
-      r.camera = r.camera === 'full' ? 'follow' : 'full';
-      $('optCamera').textContent = r.camera === 'full' ? '📷 Full pitch' : '📷 Follow ball';
-      $('optCamera').classList.toggle('active', r.camera === 'follow');
-    };
-    $('optNames').onclick = () => { state.renderer.showNames = !state.renderer.showNames; $('optNames').classList.toggle('active', state.renderer.showNames); };
-    $('optDebug').onclick = () => { state.renderer.debug = !state.renderer.debug; $('optDebug').classList.toggle('active', state.renderer.debug); };
-    $('optReplayGoal').onclick = () => { if (state.lastGoalFrames) startReplay(state.lastGoalFrames); else toast('No goal to replay yet'); };
-    $('optReplay').onchange = e => { state.autoReplay = e.target.checked; };
-    $('optSound').onchange = e => { A.init(); A.setMuted(!e.target.checked); };
-    $('comFilter').onclick = () => { state.keyOnly = !state.keyOnly; $('comlist').classList.toggle('key-only', state.keyOnly); $('comFilter').textContent = state.keyOnly ? 'ALL EVENTS' : 'KEY ONLY'; $('comFilter').classList.toggle('active', state.keyOnly); };
-    document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
-      document.querySelectorAll('#tabs button').forEach(x => x.classList.remove('active'));
-      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      $('tab-' + b.dataset.tab).classList.add('active');
-      if (b.dataset.tab === 'stats') updateStats(true);
-      if (b.dataset.tab === 'squad') refreshSquad();
+  function draw() {
+    state.renderer.draw(state.match, {
+      ready: state.ready, names: state.names, selected: state.selected,
+      live: !state.ready && !(state.skip && !state.replay), frame: state.replay && state.replay.frame,
+      alpha: !state.replay && !state.paused && !state.skip ? Math.max(0, Math.min(1, state.acc / H)) : 1
     });
-    $('pitch').addEventListener('click', e => {
-      if (!state.match) return;
-      const rect = e.target.getBoundingClientRect();
-      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-      const p = state.renderer.pickPlayer(mx, my, state.match);
-      if (state.subMode) { if (p && p.team === 0) doSub(p.id); return; }
-      if (p) showPlayerCard(p);
-      else { $('playerCard').classList.add('hidden'); state.selected = null; state.renderer.selected = null; }
-    });
-    document.addEventListener('keydown', e => {
-      if (state.mode !== 'match') return;
-      if (e.code === 'Space') { e.preventDefault(); $('btnPause').click(); }
-      if (e.key === '1') { state.speed = 1; state.paused = false; updateHUD(); }
-      if (e.key === '2') { state.speed = 2; state.paused = false; updateHUD(); }
-      if (e.key === '3') { state.speed = 3; state.paused = false; updateHUD(); }
-      if (e.key === 'c' || e.key === 'C') $('optCamera').click();
-      if (e.key === 'n' || e.key === 'N') $('optNames').click();
-      if (e.key === 'd' || e.key === 'D') $('optDebug').click();
-      if (e.key === 'r' || e.key === 'R') $('optReplayGoal').click();
-      if (e.key === 's' || e.key === 'S') $('btnSkip').click();
-      if (e.key === 'Escape') {
-        if (state.subMode) { state.subMode = null; $('subBanner').classList.add('hidden'); refreshSquad(); }
-        $('playerCard').classList.add('hidden'); state.selected = null; state.renderer.selected = null;
-      }
-    });
-    global.addEventListener('resize', () => { if (state.renderer) state.renderer.resize(); });
   }
-
-  /* ---------- main loop ---------- */
-  let lastT = 0;
   function loop(t) {
     requestAnimationFrame(loop);
-    const dt = Math.min(0.05, (t - lastT) / 1000 || 0.016);
-    lastT = t;
-    if (state.mode !== 'match' || !state.match) return;
-    const m = state.match;
-    if (state.replay) {
-      const rp = state.replay;
-      rp.acc += dt;
-      let advanced = false;
-      while (rp.acc >= 1 / 24) { rp.acc -= 1 / 24; rp.i++; advanced = true; }
-      if (rp.i >= rp.frames.length) { endReplay(); }
-      else {
-        if (advanced || !rp.frame) buildReplayFrame();
-        state.renderer.draw(m, rp.frame, dt);
-      }
-      updateHUD();
-      return;
+    const dt = state.lastFrame == null ? 0 : Math.max(0, Math.min(.05, (t - state.lastFrame) / 1000));
+    state.lastFrame = t;
+    if (state.breakQueued && !activeDialog()) showBreak(state.breakQueued);
+    let changed = false;
+    if (!document.hidden && !activeDialog()) {
+      if (state.replay && !state.replay.paused) { tickReplay(dt); changed = true; }
+      else if (!state.replay && !state.ready && !state.paused) { advance(dt); changed = true; }
     }
-    if (!state.paused && !['halftime', 'fulltime'].includes(m.phase)) {
-      state.acc += dt * SPEEDS[state.speed];
-      let n = 0;
-      const cap = state.ff ? 1600 : 40;
-      while (state.acc >= H && n < cap) {
-        m.step(H);
-        state.acc -= H; n++;
-        if (state.ff) {
-          state.ffBudget -= H;
-          if (state.ffBudget <= 0) { state.ff = false; $('ffBadge').classList.add('hidden'); toast('No highlight in the next 2½ minutes'); break; }
-          if (['halftime', 'fulltime'].includes(m.phase)) { state.ff = false; $('ffBadge').classList.add('hidden'); break; }
-        }
-        if (['halftime', 'fulltime'].includes(m.phase)) break;
-      }
-      if (state.acc > H * 40) state.acc = 0;
-    }
-    state.renderer.draw(m, null, dt);
-    updateHUD();
-    state.statsT += dt;
-    if (state.statsT > 0.4) { state.statsT = 0; updateStats(); if (document.querySelector('#tab-squad.active')) refreshSquad(); }
+    if (changed && t - state.tileT > 540) { state.tileT = t; if (!state.replay) updateLineupCondition(); }
+    if (changed) updateHUD();
+    if (changed || state.renderer.needsPaint) draw();
   }
 
+  function wire() {
+    $('btnPlay').addEventListener('click', togglePlay);
+    $('btnSkip').addEventListener('click', toggleSkip);
+    for (const b of document.querySelectorAll('[data-speed]')) b.addEventListener('click', () => setSpeed(+b.dataset.speed));
+    $('btnNames').addEventListener('click', () => { state.names = !state.names; attr($('btnNames'), 'aria-pressed', state.names); draw(); });
+    $('btnSound').addEventListener('click', () => { setSound(!state.sound, true); state.config.sound = state.sound; });
+    $('btnReplay').addEventListener('click', () => state.replay ? endReplay() : startReplay());
+    $('btnClearPlayer').addEventListener('click', () => selectPlayer(null));
+    $('pitch').addEventListener('click', e => {
+      const b = $('pitch').getBoundingClientRect();
+      selectPlayer(state.renderer.pickPlayer(e.clientX - b.left, e.clientY - b.top));
+    });
+    $('lineup').addEventListener('click', e => {
+      const b = e.target.closest('[data-player]');
+      if (b) selectPlayer(state.selected === b.dataset.player ? null : state.meta[b.dataset.player]);
+    });
+    $('btnSetup').addEventListener('click', openSetup);
+    for (const id of ['preHome', 'preAway']) {
+      $(id).innerHTML = options(D.CLUBS.map(c => c.name));
+      $(id).addEventListener('change', () => fixtureSelection(id));
+    }
+    $('preForm').innerHTML = options(Object.keys(D.FORMATIONS), false);
+    $('preMent').innerHTML = options(D.MENTALITIES);
+    $('setupForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const config = { home: +$('preHome').value, away: +$('preAway').value, formation: $('preForm').value, mentality: +$('preMent').value, auto: $('preReplay').checked, sound: $('preSound').checked };
+      $('setupDialog').close(); prepare(config);
+    });
+    for (const b of document.querySelectorAll('[data-close]')) b.addEventListener('click', () => $(b.dataset.close).close());
+    for (const [button, panel] of [['btnTactics', 'tactics'], ['btnStats', 'stats'], ['btnEvents', 'events']]) $(button).addEventListener('click', () => openDesk(panel));
+    $('deskTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) setDesk(b.dataset.tab); });
+    $('deskTabs').addEventListener('keydown', e => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+      const tabs = [...$('deskTabs').querySelectorAll('[data-tab]')], i = tabs.indexOf(e.target);
+      if (i < 0) return;
+      e.preventDefault();
+      const next = e.key === 'Home' ? tabs[0] : e.key === 'End' ? tabs[tabs.length - 1] : tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+      setDesk(next.dataset.tab); next.focus();
+    });
+    $('tab-tactics').addEventListener('change', e => {
+      const key = e.target.dataset.tactic;
+      if (!key) return;
+      const m = state.match;
+      m.setTactics(0, { [key]: key === 'formation' ? e.target.value : +e.target.value });
+      if (key === 'formation' || key === 'width') {
+        if (state.ready) m.setupKickoff(0);
+        renderLineup();
+      }
+      notify('Instruction updated.'); draw();
+    });
+    $('tab-squad').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b || b.disabled) return;
+      if (b.hasAttribute('data-cancel-sub')) { state.subMode = null; renderSquad(); }
+      else if (b.dataset.bench) { state.subMode = b.dataset.bench; renderSquad(); }
+      else if (b.dataset.out && state.subMode) {
+        const result = state.match.substitute(0, b.dataset.out, state.subMode);
+        state.subMode = null; renderSquad(); renderLineup();
+        notify(result.ok ? 'Substitution made.' : result.msg);
+      }
+    });
+    $('deskDialog').addEventListener('close', () => {
+      state.subMode = null;
+      if (state.returnBreak) { state.returnBreak = false; showBreak(state.match.phase === 'halftime' ? 'ht' : 'ft'); }
+    });
+    $('breakDialog').addEventListener('cancel', e => e.preventDefault());
+    $('btnBreakDesk').addEventListener('click', () => {
+      state.returnBreak = true; $('breakDialog').close(); openDesk(state.match.phase === 'halftime' ? 'tactics' : 'stats');
+    });
+    $('btnBreakContinue').addEventListener('click', () => {
+      $('breakDialog').close();
+      if (state.match.phase === 'halftime') {
+        state.paused = false; state.acc = 0; state.match.continueSecondHalf(); renderLineup(); updateHUD();
+      } else prepare({ ...state.config, formation: state.match.teams[0].tactics.formation, mentality: state.match.teams[0].tactics.mentality });
+    });
+    document.addEventListener('keydown', e => {
+      if (activeDialog() || e.altKey || e.ctrlKey || e.metaKey || e.repeat || e.target.matches('input, select, textarea, [contenteditable]')) return;
+      const key = e.key.toLowerCase();
+      if (e.code === 'Space' && !e.target.closest('button')) { e.preventDefault(); togglePlay(); }
+      else if (['1', '2', '3'].includes(key)) setSpeed(+key);
+      else if (key === 'n') $('btnNames').click();
+      else if (key === 's') toggleSkip();
+      else if (key === 'r' && !$('btnReplay').disabled) $('btnReplay').click();
+      else if (key === 'escape') { if (state.replay) endReplay(); else selectPlayer(null); }
+    });
+  }
   function init() {
-    state.renderer = new R.Renderer($('pitch'));
-    buildPrematch();
-    wireControls();
+    state.renderer = new global.TLRender.Renderer($('pitch'));
+    wire(); prepare(state.config);
+    if (document.fonts) document.fonts.ready.then(draw);
     requestAnimationFrame(loop);
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
 })(typeof window !== 'undefined' ? window : globalThis);

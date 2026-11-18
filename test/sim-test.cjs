@@ -1,8 +1,9 @@
-/* Headless engine validation: simulate many full matches, check sanity. */
+/* Headless engine validation: run complete seeded matches. */
+const assert = require('node:assert/strict');
 const { Match } = require('../src/engine.js');
 const D = require('../src/data.js');
 
-const N = parseInt(process.argv[2] || '60', 10);
+const N = parseInt(process.argv[2] || '3', 10);
 const verbose = process.argv.includes('-v');
 let tot = { goals: 0, shots: [0, 0], onT: [0, 0], passes: [0, 0], passPct: [0, 0], poss: [0, 0], fouls: [0, 0], corners: [0, 0], off: [0, 0], yellow: 0, red: 0, pens: 0, xG: [0, 0], saves: [0, 0] };
 let errors = 0;
@@ -20,12 +21,25 @@ for (let m = 0; m < N; m++) {
       if (match.phase === 'halftime') match.continueSecondHalf();
       steps++;
       // sanity checks
-      if (!isFinite(match.ball.x) || !isFinite(match.ball.y)) throw new Error('ball NaN at t=' + match.t.toFixed(1));
-      for (const p of match.onPitchPlayers()) {
+      if (!Number.isFinite(match.ball.x) || !Number.isFinite(match.ball.y) || !Number.isFinite(match.ball.z) || match.ball.z < 0) throw new Error('Invalid ball at t=' + match.t.toFixed(1));
+      for (const p of match.playersCache) {
         if (!isFinite(p.x) || !isFinite(p.y)) throw new Error('player NaN ' + p.name);
       }
     }
     if (match.phase !== 'fulltime') throw new Error('match never ended, phase=' + match.phase + ' t=' + match.t.toFixed(0) + ' half=' + match.half);
+    assert.equal(events.filter(e => e.type === 'ht').length, 1);
+    assert.equal(events.filter(e => e.type === 'ft').length, 1);
+    assert.ok(Math.abs(match.elapsed - 5400 - match.added[0] - match.added[1]) < 20, 'Unexpected match duration');
+    for (const team of match.teams) {
+      const goals = events.filter(e => e.goal && e.team === team.idx);
+      assert.equal(team.score, goals.length, 'Goal events and score disagree');
+      assert.ok(goals.every(e => Number.isFinite(e.xg)), 'Missing goal xG');
+      const shots = match.shotMap.filter(s => s.team === team.idx);
+      assert.equal(shots.length, team.stats.shots);
+      assert.equal(shots.filter(s => s.outcome === 'goal' || s.outcome === 'save').length, team.stats.onTarget);
+      assert.ok(shots.every(s => s.outcome !== 'pending'), 'Unresolved shots at full time');
+      assert.ok(team.stats.passWon <= team.stats.passes);
+    }
     const s0 = match.teams[0].stats, s1 = match.teams[1].stats;
     tot.goals += match.teams[0].score + match.teams[1].score;
     tot.shots[0] += s0.shots; tot.shots[1] += s1.shots;

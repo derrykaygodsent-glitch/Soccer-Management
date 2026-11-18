@@ -1,139 +1,158 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TOUCHLINE 26 — 2D Match Engine</title>
-<style>
-{{CSS}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101713">
+  <title>Touchline 26 — Classic 2D</title>
+  <style>{{CSS}}</style>
 </head>
 <body>
+  <svg class="symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-pitch" viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="1.6"/><path d="M12 4.5v15M2.5 8.5h4v7h-4m19-7h-4v7h4"/><circle cx="12" cy="12" r="2.6"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h7m4 0h5M4 17h4m4 0h8"/><circle cx="13" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M8 5.3a.8.8 0 0 0-1.2.7v12a.8.8 0 0 0 1.2.7l10-6a.8.8 0 0 0 0-1.4z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="3.1" d="M9 6v12m6-12v12"/></symbol>
+    <symbol id="i-skip" viewBox="0 0 24 24"><path d="m5 6 7 6-7 6V6Zm7 0 7 6-7 6V6Z"/></symbol>
+    <symbol id="i-replay" viewBox="0 0 24 24"><path d="M3.5 11.5a8.5 8.5 0 1 1 1.9 5.4M3.5 5v6.5h6.4"/><path d="m11 9 4 3-4 3Z"/></symbol>
+    <symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9h3l4.5-4v14L7 15H4V9Zm11 0a4 4 0 0 1 0 6m2.7-8.7a7.8 7.8 0 0 1 0 11.4"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9h3l4.5-4v14L7 15H4V9Zm11 1 5 5m0-5-5 5"/></symbol>
+    <symbol id="i-names" viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12" rx="2.3"/><path d="M7 10h3m-3 4h10m-4-4h4"/></symbol>
+    <symbol id="i-bars" viewBox="0 0 24 24"><path d="M4 19.5h16M7 16V9m5 7V5m5 11V8"/></symbol>
+    <symbol id="i-events" viewBox="0 0 24 24"><path d="M8.5 6.5h11m-11 5.5h11m-11 5.5h11M4.5 6.5h.2m-.2 5.5h.2m-.2 5.5h.2"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M19 10c0 5-7 10-7 10s-7-5-7-10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.2"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-swap" viewBox="0 0 24 24"><path d="M4 8h15m-4-4 4 4-4 4m5 4H5m4-4-4 4 4 4"/></symbol>
+    <symbol id="i-shirt" viewBox="0 0 24 24"><path d="m8 3-6 3.5 2.3 5L7 10.2V21h10V10.2l2.7 1.3L22 6.5 16 3h-1a3 3 0 0 1-6 0Z" fill="currentColor" stroke="none"/><path d="M8 3h1a3 3 0 0 0 6 0h1m1 7.2V21H7V10.2" fill="none" stroke="rgba(255,255,255,.34)" stroke-width=".8"/></symbol>
+  </svg>
 
-<!-- ============ PREMATCH ============ -->
-<div id="prematch">
-  <div class="pre-inner">
-    <div class="pre-logo">TOUCHLINE<span>26</span></div>
-    <div class="pre-tag">THE 2D MATCH ENGINE · ORIGINAL CLUBS · REAL-TIME SIMULATION</div>
-    <div class="pre-cols">
-      <div class="pre-sec">
-        <h3>YOUR CLUB</h3>
-        <div class="club-grid" id="homeGrid"></div>
-      </div>
-      <div class="pre-sec">
-        <h3>OPPOSITION</h3>
-        <div class="club-grid" id="awayGrid"></div>
-      </div>
-    </div>
-    <div class="pre-row">
-      <label>FORMATION<select id="preForm"></select></label>
-      <label>MENTALITY<select id="preMent"></select></label>
-    </div>
-    <div class="pre-xi" id="preXI"></div>
-    <div class="pre-checks">
-      <label><input type="checkbox" id="preReplay" checked> Auto goal replays</label>
-      <label><input type="checkbox" id="preSound" checked> Stadium sound</label>
-    </div>
-    <button id="btnKick">KICK OFF ▸</button>
-    <div class="pre-hint">Space pause · 1/2/3 speed · C camera · N names · D debug · R replay · S skip to highlight</div>
-  </div>
-</div>
-
-<!-- ============ APP ============ -->
-<div id="app" class="hidden">
-  <header id="topbar">
-    <div class="brand">TOUCHLINE<span>26</span><small>2D MATCH ENGINE</small></div>
-    <div id="scoreboard">
-      <div class="sb-team"><span class="badge" id="badgeH"></span><span id="nameH"></span></div>
-      <div id="score">0 – 0</div>
-      <div class="sb-team"><span id="nameA"></span><span class="badge" id="badgeA"></span></div>
-      <div id="clockwrap"><span id="clock">00:00</span><span id="added"></span><span id="phaseBadge">1ST HALF</span></div>
-    </div>
-    <div id="speedctl">
-      <button id="btnPause" title="Pause (Space)">⏸</button>
-      <button class="spd active" data-s="1" title="Normal speed">1×</button>
-      <button class="spd" data-s="2" title="Fast">2×</button>
-      <button class="spd" data-s="3" title="Very fast">4×</button>
-      <button id="btnSkip" title="Skip to next highlight (S)">⏭</button>
+  <header class="sitebar">
+    <div class="sitebar-inner shell">
+      <div class="identity" aria-label="Touchline 26"><span class="brandmark"><svg class="icon" aria-hidden="true"><use href="#i-pitch"/></svg></span><span class="wordmark">TOUCHLINE<span>26</span></span></div>
+      <span class="site-path">Match centre</span>
+      <div class="view-label"><svg class="icon" aria-hidden="true"><use href="#i-pitch"/></svg><span>Classic 2D</span></div>
     </div>
   </header>
 
-  <div id="main">
-    <aside id="sidebar">
-      <nav id="tabs">
-        <button data-tab="tactics" class="active">TACTICS</button>
-        <button data-tab="squad">SQUAD</button>
-        <button data-tab="stats">STATS</button>
-      </nav>
-      <section id="tab-tactics" class="tab active"></section>
-      <section id="tab-squad" class="tab">
-        <div id="subsLeft"></div>
-        <div id="xiList"></div>
-        <div class="bench-head">BENCH</div>
-        <div id="benchList"></div>
-      </section>
-      <section id="tab-stats" class="tab">
-        <div id="statsBody"></div>
-        <div class="mom-wrap"><h4>MATCH MOMENTUM</h4><canvas id="momCv"></canvas></div>
-        <div class="shot-wrap"><h4>SHOT MAP · YOU ATTACK →</h4><canvas id="shotCv"></canvas>
-          <div class="shot-legend">
-            <span><i style="background:#ffd700"></i>Goal</span>
-            <span><i style="background:#38e1ff"></i>Saved</span>
-            <span><i style="background:#f97316"></i>Blocked</span>
-            <span><i style="background:#8b98a5"></i>Off target</span>
-            <span><i style="background:#c084fc"></i>Post</span>
+  <main class="shell main">
+    <section class="fixture-head" aria-label="Fixture">
+      <div class="fixture-title">
+        <div class="eyebrow"><i></i> Friendly <span></span> Match centre</div>
+        <h1 id="fixtureTitle">Quayside Park</h1>
+        <p id="fixtureTeams">Riverside FC <span>vs</span> Northbridge United</p>
+      </div>
+      <button class="button fixture-button" id="btnSetup" type="button"><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg><span>Match setup</span></button>
+    </section>
+
+    <section class="broadcast" aria-label="Match broadcast">
+      <div class="broadcast-head">
+        <div class="score-strip" aria-label="Score and match time">
+          <div class="score-clock"><time id="clock">00:00</time><span id="added" hidden></span></div>
+          <div class="score-club score-home"><span class="score-crest" id="badgeH"></span><span id="nameH">RVR</span></div>
+          <strong id="score">0<span class="score-dash">–</span>0</strong>
+          <div class="score-club score-away"><span id="nameA">NBU</span><span class="score-crest" id="badgeA"></span></div>
+        </div>
+        <div class="match-status" data-status="ready" id="matchStatus"><i></i><span id="phaseBadge">Ready</span></div>
+        <span class="board-meta"><span class="meta-field">105 × 68 M</span><span class="meta-divider"></span><span>FULL PITCH</span></span>
+      </div>
+
+      <div id="pitchwrap" class="pitchwrap">
+        <canvas id="pitch" role="img" aria-label="Fixed overhead view of the full football pitch. Select a player from the lineup below for details."></canvas>
+        <div class="field-stamp" aria-hidden="true"><i></i><span id="stadiumStamp">Quayside Park</span></div>
+        <div class="pitch-indicator" id="replayIndicator" hidden><i></i><span id="indicatorText">Replay</span></div>
+        <div class="goal-card" id="goalBanner" hidden>
+          <div class="goal-kicker"><span id="goalSide"></span><span id="goalTime"></span></div>
+          <strong id="goalScorer"></strong>
+        </div>
+        <div class="player-focus" id="playerFocus" hidden>
+          <div><div class="focus-meta" id="focusMeta"></div><strong id="focusName"></strong><span class="focus-stats" id="focusStats"></span></div>
+          <button class="icon-button mini" id="btnClearPlayer" type="button" aria-label="Clear selected player"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+        </div>
+      </div>
+
+      <div class="commentary" id="commentary">
+        <span class="feed-label"><span class="feed-pip"></span><span id="feedLabel">Match feed</span></span>
+        <p id="feedText" aria-live="polite">The players are in position. Kick off when you’re ready.</p>
+        <time id="feedTime" aria-hidden="true">00′</time>
+        <button class="icon-button feed-button" id="btnEvents" type="button" aria-label="Open match events" title="Match events"><svg class="icon" aria-hidden="true"><use href="#i-events"/></svg></button>
+      </div>
+
+      <div class="controls" aria-label="Match controls">
+        <div class="playback">
+          <button class="button primary play-button" id="btnPlay" type="button" title="Kick off (Space)"><svg class="icon" aria-hidden="true"><use id="playIcon" href="#i-play"/></svg><span id="playLabel">Kick off</span></button>
+          <div class="speeds" aria-label="Match speed">
+            <button type="button" data-speed="1" aria-pressed="true" title="Normal speed (1)">1×</button>
+            <button type="button" data-speed="2" aria-pressed="false" title="Double speed (2)">2×</button>
+            <button type="button" data-speed="3" aria-pressed="false" title="Quadruple speed (3)">4×</button>
           </div>
+          <button class="button skip-button" id="btnSkip" type="button" disabled title="Next highlight (S)"><svg class="icon" aria-hidden="true"><use href="#i-skip"/></svg><span id="skipLabel">Next highlight</span></button>
         </div>
-      </section>
-    </aside>
-
-    <div id="center">
-      <div id="pitchwrap">
-        <canvas id="pitch"></canvas>
-        <div id="replayBars" class="hidden"></div>
-        <div id="replayBadge" class="hidden">● REPLAY</div>
-        <div id="ffBadge" class="hidden">⏩ FAST-FORWARD</div>
-        <div id="goalBanner" class="hidden">
-          <div id="gbTeam"></div>
-          <div id="gbScorer"></div>
-          <div id="gbMeta"></div>
+        <div class="view-controls">
+          <button class="button view-button" id="btnNames" type="button" aria-pressed="false" title="Toggle all names (N)"><svg class="icon" aria-hidden="true"><use href="#i-names"/></svg><span>Names</span></button>
+          <button class="button view-button" id="btnReplay" type="button" disabled title="Replay last goal (R)"><svg class="icon" aria-hidden="true"><use href="#i-replay"/></svg><span>Replay</span></button>
+          <button class="button view-button sound-button" id="btnSound" type="button" aria-pressed="false" aria-label="Stadium sound" title="Stadium sound"><svg class="icon" aria-hidden="true"><use id="soundIcon" href="#i-mute"/></svg><span>Sound</span></button>
         </div>
-        <div id="subBanner" class="hidden"></div>
-        <div id="playerCard" class="hidden"></div>
-        <div id="toast" class="hidden"></div>
       </div>
-      <div id="pitchbar">
-        <button id="optCamera">📷 Full pitch</button>
-        <button id="optNames">🏷 Names</button>
-        <button id="optDebug">🧠 AI debug</button>
-        <button id="optReplayGoal">▶ Replay last goal</button>
-        <span class="spacer"></span>
-        <label><input type="checkbox" id="optReplay" checked> Auto replay</label>
-        <label><input type="checkbox" id="optSound" checked> 🔊 Sound</label>
-        <span class="keys">Space · 1/2/3 · C · N · D · R · S</span>
-      </div>
-      <div id="commentary">
-        <div id="comhead"><span>MATCH COMMENTARY</span><button id="comFilter">KEY ONLY</button></div>
-        <div id="comlist"></div>
-      </div>
-    </div>
-  </div>
+    </section>
 
-  <div id="overlay" class="hidden">
-    <div class="ov-card">
-      <div id="ovTitle"></div>
-      <div id="ovScore"></div>
-      <div id="ovScorers"></div>
-      <div id="ovStats"></div>
-      <div id="ovMotm"></div>
-      <button id="ovContinue"></button>
-    </div>
-  </div>
-</div>
+    <section class="team-deck" aria-labelledby="teamTitle">
+      <div class="team-head">
+        <div class="team-title">
+          <span class="lineup-crest" id="lineupCrest"></span>
+          <div><div class="team-kicker"><span>Starting XI</span><span class="team-shape" id="formationLabel">4–3–3</span></div><h2 id="teamTitle">Riverside FC</h2></div>
+        </div>
+        <div class="team-actions">
+          <button class="button team-button" id="btnTactics" type="button"><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg><span>Tactics <span class="and-subs">&amp; subs</span></span></button>
+          <button class="button team-button" id="btnStats" type="button"><svg class="icon" aria-hidden="true"><use href="#i-bars"/></svg><span>Stats</span></button>
+        </div>
+      </div>
+      <div id="lineup" class="lineup" aria-label="Your club’s players"></div>
+    </section>
 
-<script>
-{{JS}}
-</script>
+    <footer class="footer"><div><span>TOUCHLINE 26</span><span class="footer-sep"></span><span>CLASSIC MATCH VIEW</span></div><div class="shortcut"><kbd>Space</kbd> Play / pause <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> Speed</div></footer>
+  </main>
+
+  <dialog id="setupDialog" class="dialog" aria-labelledby="setupTitle">
+    <div class="dialog-head">
+      <div><div class="eyebrow"><i></i> Exhibition fixture</div><h2 id="setupTitle">Match setup</h2></div>
+      <button class="icon-button" data-close="setupDialog" type="button" aria-label="Close match setup"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+    </div>
+    <form id="setupForm" class="dialog-body">
+      <div id="fixturePick" class="fixture-pick">
+        <label class="pick-club"><span class="pick-crest" id="setupHomeCrest"></span><span>Your club</span><select id="preHome" required></select></label>
+        <label class="pick-club"><span class="pick-crest" id="setupAwayCrest"></span><span>Opposition</span><select id="preAway" required></select></label>
+      </div>
+      <div class="settings-row"><label>Formation<select id="preForm"></select></label><label>Mentality<select id="preMent"></select></label></div>
+      <div class="setup-checks"><label><input type="checkbox" id="preReplay" checked> Auto goal replays</label><label><input type="checkbox" id="preSound"> Stadium sound</label></div>
+      <p class="help-text" id="setupNote">Set your fixture and starting instructions.</p>
+      <div class="dialog-actions"><button class="button" data-close="setupDialog" type="button">Cancel</button><button class="button primary" type="submit">Load fixture <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
+    </form>
+  </dialog>
+
+  <dialog id="deskDialog" class="dialog desk" aria-labelledby="deskTitle">
+    <div class="dialog-head">
+      <div><div class="eyebrow"><i></i> Match centre</div><h2 id="deskTitle">Touchline desk</h2></div>
+      <button class="icon-button" data-close="deskDialog" type="button" aria-label="Close touchline desk"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="desk-tabs" id="deskTabs" role="tablist" aria-label="Match information">
+      <button type="button" id="navTactics" data-tab="tactics" role="tab" aria-controls="tab-tactics" aria-selected="true">Tactics</button>
+      <button type="button" id="navSquad" data-tab="squad" role="tab" aria-controls="tab-squad" aria-selected="false" tabindex="-1">Squad</button>
+      <button type="button" id="navStats" data-tab="stats" role="tab" aria-controls="tab-stats" aria-selected="false" tabindex="-1">Stats</button>
+      <button type="button" id="navEvents" data-tab="events" role="tab" aria-controls="tab-events" aria-selected="false" tabindex="-1">Events</button>
+    </div>
+    <section class="dialog-body desk-tab" id="tab-tactics" role="tabpanel" aria-labelledby="navTactics"></section>
+    <section class="dialog-body desk-tab" id="tab-squad" role="tabpanel" aria-labelledby="navSquad" hidden></section>
+    <section class="dialog-body desk-tab" id="tab-stats" role="tabpanel" aria-labelledby="navStats" hidden></section>
+    <section class="dialog-body desk-tab" id="tab-events" role="tabpanel" aria-labelledby="navEvents" hidden></section>
+  </dialog>
+
+  <dialog id="breakDialog" class="dialog break-dialog" aria-labelledby="breakTitle">
+    <div class="dialog-head"><div><div class="eyebrow"><i></i> Match summary</div><h2 id="breakTitle">Half time</h2></div></div>
+    <div class="dialog-body"><div id="breakScore" class="break-score"></div><div id="breakStats"></div><div class="dialog-actions"><button class="button" id="btnBreakDesk" type="button"><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg> Touchline desk</button><button class="button primary" id="btnBreakContinue" type="button">Second half</button></div></div>
+  </dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <noscript><p class="noscript">Enable JavaScript to view the pitch and play Touchline 26.</p></noscript>
+  <script>{{JS}}</script>
 </body>
 </html>

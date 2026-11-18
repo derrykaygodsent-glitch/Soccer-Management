@@ -47,7 +47,12 @@ test('the browser bundle loads its modules without external script or style file
     runInNewContext(script, context, { filename: 'index.html' });
   }
   assert.ok(context.TLData.CLUBS.length >= 2);
+  assert.equal(typeof context.TLPhysics.aerial, 'function');
   assert.equal(typeof context.TLEngine.Match, 'function');
+  const fixture = new context.TLEngine.Match(context.TLData.CLUBS[0], context.TLData.CLUBS[1], { seed: 71 });
+  for (let i = 0; i < 160; i++) fixture.step(.025);
+  assert.equal(fixture.phase, 'open');
+  assert.ok(Number.isFinite(fixture.ball.x));
   assert.equal(typeof context.TLRender.Renderer, 'function');
   assert.equal(typeof context.TLAudio.init, 'function');
   assert.equal(typeof initialize, 'function');

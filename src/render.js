@@ -1,315 +1,310 @@
-/* TOUCHLINE 26 — canvas renderer (original code) */
+/* Touchline 26 — original, fixed-overhead presentation for the Classic 2D view. */
 (function (global) {
   'use strict';
-  const E = global.TLEngine;
-  const { L, W, CX, CY, GOAL_HALF, GOAL_H, BOX_L, BOX_HALF, SIX_L, SIX_HALF, PEN } = E;
+  const { L, W, CX, CY, GOAL_HALF, BOX_L, BOX_HALF, SIX_L, SIX_HALF, PEN } = global.TLEngine;
+  const TAU = Math.PI * 2;
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const mix = (a, b, t) => a + (b - a) * t;
+  const surname = p => p.name.split(' ').pop();
+  const paint = (ctx, x, y, r, fill) => { ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fillStyle = fill; ctx.fill(); };
+
+  function round(ctx, x, y, w, h, radius) {
+    const r = Math.min(radius, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+  }
+
+  // One small fixed-seed texture. It never draws from the match RNG.
+  function lawnGrain() {
+    const bitmap = document.createElement('canvas');
+    bitmap.width = bitmap.height = 96;
+    const ctx = bitmap.getContext('2d');
+    const image = ctx.createImageData(96, 96);
+    let seed = 441537;
+    for (let i = 0; i < image.data.length; i += 4) {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      const light = (seed >>> 24) & 1 ? 247 : 9;
+      image.data[i] = light; image.data[i + 1] = light; image.data[i + 2] = light;
+      image.data[i + 3] = 2 + ((seed >>> 16) & 13);
+    }
+    ctx.putImageData(image, 0, 0);
+    return bitmap;
+  }
+
+  function lightKit(hex) {
+    const h = hex.replace('#', '');
+    return (.21 * parseInt(h.slice(0, 2), 16) + .72 * parseInt(h.slice(2, 4), 16) + .07 * parseInt(h.slice(4, 6), 16)) > 163;
+  }
 
   class Renderer {
     constructor(canvas) {
-      this.cv = canvas;
-      this.ctx = canvas.getContext('2d');
-      this.camera = 'full';
-      this.showNames = false;
-      this.debug = false;
-      this.camX = CX; this.camY = CY; this.camS = 1;
-      this.trail = [];
-      this.particles = [];
-      this.selected = null;
-      this.time = 0;
+      this.canvas = canvas;
+      this.ctx = canvas.getContext('2d', { alpha: false });
+      this.back = document.createElement('canvas');
+      this.grain = lawnGrain();
+      this.dpr = 1;
+      this.drawn = [];
+      this.reduced = global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)');
       this.resize();
+      if (typeof global.ResizeObserver === 'function') {
+        this.observer = new global.ResizeObserver(() => this.resize());
+        this.observer.observe(canvas.parentElement);
+      }
+      global.addEventListener('resize', () => this.resize(), { passive: true });
     }
 
     resize() {
-      const r = this.cv.parentElement.getBoundingClientRect();
+      const rect = this.canvas.parentElement.getBoundingClientRect();
+      const width = Math.max(1, Math.round(rect.width)), height = Math.max(1, Math.round(rect.height));
       const dpr = Math.min(2, global.devicePixelRatio || 1);
-      this.cw = Math.max(320, r.width); this.ch = Math.max(240, r.height);
-      this.cv.width = this.cw * dpr; this.cv.height = this.ch * dpr;
-      this.cv.style.width = this.cw + 'px'; this.cv.style.height = this.ch + 'px';
-      this.dpr = dpr;
-      this.baseScale = Math.min((this.cw - 40) / (L + 12), (this.ch - 40) / (W + 12));
+      if (width === this.width && height === this.height && dpr === this.dpr) return;
+      this.width = width; this.height = height; this.dpr = dpr; this.needsPaint = true;
+      this.canvas.width = this.back.width = Math.round(width * dpr);
+      this.canvas.height = this.back.height = Math.round(height * dpr);
+      this.compact = width < 650;
+      const margin = this.compact ? 6 : 12;
+      this.scale = Math.min((width - margin) / (L + 16), (height - margin) / (W + 11.9));
+      this.scale = Math.max(.05, this.scale);
+      this.ox = (width - L * this.scale) / 2;
+      this.oy = (height - W * this.scale) / 2 + this.scale * .2;
+      this.radius = clamp(this.scale * 1.03 + .35, 4.1, 9.6);
+      this.buildStadium();
     }
 
-    worldToScreen(x, y, scale, ox, oy) { return [ox + x * scale, oy + y * scale]; }
-
-    draw(match, frame, dt) {
-      this.time += dt;
-      const ctx = this.ctx;
+    buildStadium() {
+      const ctx = this.back.getContext('2d');
+      const s = this.scale, x = n => this.ox + n * s, y = n => this.oy + n * s;
       ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-      // background / stands
-      ctx.fillStyle = '#0c1210';
-      ctx.fillRect(0, 0, this.cw, this.ch);
+      const bg = ctx.createRadialGradient(this.width / 2, this.height * .51, s * 19, this.width / 2, this.height * .51, this.width * .59);
+      bg.addColorStop(0, '#2b3f31'); bg.addColorStop(.54, '#1b2a21'); bg.addColorStop(1, '#111a14');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, this.width, this.height);
 
-      const ball = frame ? { x: frame.bx, y: frame.by, z: frame.bz } : match.ball;
-      // camera
-      let scale, ox, oy;
-      if (this.camera === 'follow') {
-        const target = this.baseScale * 2.25;
-        this.camS += (target - this.camS) * Math.min(1, dt * 4);
-        this.camX += (ball.x - this.camX) * Math.min(1, dt * 3.2);
-        this.camY += (ball.y - this.camY) * Math.min(1, dt * 3.2);
-        scale = this.camS;
-        const halfW = this.cw / 2 / scale, halfH = this.ch / 2 / scale;
-        const cx = Math.max(halfW - 6, Math.min(L - halfW + 6, this.camX));
-        const cy = Math.max(halfH - 6, Math.min(W - halfH + 6, this.camY));
-        ox = this.cw / 2 - cx * scale; oy = this.ch / 2 - cy * scale;
-      } else {
-        this.camS = this.baseScale; this.camX = CX; this.camY = CY;
-        scale = this.baseScale;
-        ox = (this.cw - L * scale) / 2; oy = (this.ch - W * scale) / 2;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(170,192,171,.027)'; ctx.lineWidth = 1;
+      for (let k = -this.height; k < this.width; k += 14) {
+        ctx.beginPath(); ctx.moveTo(k, this.height); ctx.lineTo(k + this.height, 0); ctx.stroke();
       }
-      this.scale = scale; this.ox = ox; this.oy = oy;
-      const S = (x, y) => this.worldToScreen(x, y, scale, ox, oy);
+      ctx.restore();
 
-      this.drawPitch(ctx, S, scale, match);
-      // entities
+      const shell = (padX, padY, r, fill, stroke) => {
+        round(ctx, x(-padX), y(-padY), (L + 2 * padX) * s, (W + 2 * padY) * s, r * s);
+        if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+        if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = Math.max(.5, .1 * s); ctx.stroke(); }
+      };
+      shell(7.7, 6.25, 4.1, '#202e26', '#40544a');
+      shell(6.75, 5.6, 3.35, '#25392d', '#304a38');
+      ctx.save();
+      round(ctx, x(-6.3), y(-5.15), (L + 12.6) * s, (W + 10.3) * s, 2.9 * s); ctx.clip();
+      // Repeating rows around the boundary read as a stand, not a second field.
+      ctx.fillStyle = '#18291e'; ctx.fillRect(x(-6.3), y(-5.15), (L + 12.6) * s, (W + 10.3) * s);
+      const strip = (x0, y0, ww, hh, color) => { ctx.fillStyle = color; ctx.fillRect(x(x0), y(y0), ww * s, hh * s); };
+      for (let a = -6.2; a < L + 6; a += 2.32) {
+        const alternate = Math.round(a * 3) % 4 === 0;
+        strip(a, -5.1, 1.7, 1.6, alternate ? '#3d5245' : '#2c4234');
+        strip(a + .35, W + 3.35, 1.7, 1.7, alternate ? '#3e5345' : '#2d4437');
+      }
+      for (let a = -3.9; a < W + 3.9; a += 2.08) {
+        strip(-6.25, a, 1.85, 1.6, '#304838');
+        strip(L + 4.4, a, 1.85, 1.6, '#304838');
+      }
+      ctx.restore();
+
+      const grass = ctx.createLinearGradient(x(-2), y(0), x(L), y(W));
+      grass.addColorStop(0, '#4e6b3d'); grass.addColorStop(.47, '#526f43'); grass.addColorStop(1, '#405e39');
+      shell(4.35, 3.23, .8, '#334f36', '#82a57b');
+      const lx = x(0), ly = y(0), lw = L * s, lh = W * s;
+      ctx.fillStyle = grass; ctx.fillRect(lx, ly, lw, lh);
+      for (let i = 0; i < 12; i++) {
+        ctx.fillStyle = i % 2 ? 'rgba(212,227,170,.055)' : 'rgba(12,27,19,.054)';
+        ctx.fillRect(lx + i * lw / 12, ly, lw / 12 + .2, lh);
+      }
+      ctx.save();
+      ctx.beginPath(); ctx.rect(lx, ly, lw, lh); ctx.clip();
+      ctx.fillStyle = ctx.createPattern(this.grain, 'repeat') || 'transparent';
+      ctx.fillRect(lx, ly, lw, lh);
+      ctx.restore();
+
+      // Perimeter boards and the two technical areas, painted once per resize.
+      const line = (x1, y1, x2, y2) => { ctx.beginPath(); ctx.moveTo(x(x1), y(y1)); ctx.lineTo(x(x2), y(y2)); ctx.stroke(); };
+      const rect = (x0, y0, ww, hh) => ctx.strokeRect(x(x0), y(y0), ww * s, hh * s);
+      ctx.fillStyle = '#779169';
+      for (const a of [4.5, 16, 27.5, 69, 80.5, 92]) ctx.fillRect(x(a), y(-3.85), 9.2 * s, .42 * s);
+      ctx.strokeStyle = '#a9bd9fba'; ctx.lineWidth = Math.max(.55, s * .105);
+      for (const a of [CX - 17.2, CX + 4]) {
+        rect(a, -2.65, 13.2, 1.82);
+        ctx.fillStyle = '#869d84';
+        for (let i = 0; i < 6; i++) ctx.fillRect(x(a + .75 + i * 2), y(-2.35), 1.28 * s, .6 * s);
+      }
+
+      // Line widths are physical where possible, with a floor for small phones.
+      const circle = (x0, y0, r, lo = 0, hi = TAU) => {
+        ctx.beginPath(); ctx.arc(x(x0), y(y0), r * s, lo, hi); ctx.stroke();
+      };
+      ctx.strokeStyle = '#e4ecd9de'; ctx.lineWidth = Math.max(.87, s * .133);
+      rect(0, 0, L, W); line(CX, 0, CX, W);
+      circle(CX, CY, 9.15);
+      for (const gx of [0, L]) {
+        const a = gx === 0 ? 1 : -1;
+        rect(a > 0 ? 0 : L - BOX_L, CY - BOX_HALF, BOX_L, 2 * BOX_HALF);
+        rect(a > 0 ? 0 : L - SIX_L, CY - SIX_HALF, SIX_L, 2 * SIX_HALF);
+        const th = Math.acos((BOX_L - PEN) / 9.15), mid = a > 0 ? 0 : Math.PI;
+        circle(gx + PEN * a, CY, 9.15, mid - th, mid + th);
+        paint(ctx, x(gx + PEN * a), y(CY), Math.max(1.05, s * .16), '#e3edda');
+      }
+      paint(ctx, x(CX), y(CY), Math.max(1.2, s * .18), '#e3edda');
+      circle(0, 0, 1, 0, Math.PI / 2); circle(L, 0, 1, Math.PI / 2, Math.PI);
+      circle(L, W, 1, Math.PI, Math.PI * 1.5); circle(0, W, 1, Math.PI * 1.5, TAU);
+      for (const gx of [0, L]) {
+        const side = gx === 0 ? -1 : 1, depth = 2.55;
+        const gx0 = gx === 0 ? -depth : L;
+        ctx.fillStyle = '#182a226b'; ctx.fillRect(x(gx0), y(CY - GOAL_HALF + .35), depth * s, (GOAL_HALF * 2 + .33) * s);
+        ctx.fillStyle = '#d6e6d824'; ctx.fillRect(x(gx0), y(CY - GOAL_HALF), depth * s, GOAL_HALF * 2 * s);
+        ctx.strokeStyle = '#dfe8dc64'; ctx.lineWidth = Math.max(.32, s * .059);
+        for (let i = 1; i < 5; i++) line(gx + side * depth * i / 5, CY - GOAL_HALF, gx + side * depth * i / 5, CY + GOAL_HALF);
+        for (let i = 1; i < 10; i++) {
+          const z = CY - GOAL_HALF + GOAL_HALF * 2 * i / 10;
+          line(gx, z, gx + side * depth, z);
+        }
+        ctx.strokeStyle = '#e4ecd7de'; ctx.lineWidth = Math.max(.9, s * .148);
+        rect(gx0, CY - GOAL_HALF, depth, GOAL_HALF * 2);
+        for (const yy of [CY - GOAL_HALF, CY + GOAL_HALF]) paint(ctx, x(gx), y(yy), Math.max(.8, .17 * s), '#f6f8ed');
+      }
+      for (const xx of [0, L]) for (const yy of [0, W]) {
+        paint(ctx, x(xx), y(yy), Math.max(.9, .16 * s), '#f0d372');
+      }
+    }
+
+    ballProjection(x, y, height) {
+      const s = this.scale, z = Math.max(0, height || 0), rise = z * s;
+      const gx = this.ox + x * s, gy = this.oy + y * s;
+      // Compress lift only at the very top edge: keep the ball in view without moving the pitch.
+      const room = Math.max(0, gy - 6), lift = rise * .82, softLimit = room * .80;
+      const vertical = lift <= softLimit ? lift : softLimit + (room - softLimit) * (1 - Math.exp(-(lift - softLimit) / Math.max(.01, room - softLimit)));
+      const shadowX = clamp(gx - rise * .12, this.ox + Math.min(0, x) * s, this.ox + Math.max(L, x) * s);
+      const shadowY = clamp(gy + rise * .24, this.oy + Math.min(0, y) * s, this.oy + Math.max(W, y) * s);
+      return { x: gx + rise * .10, y: gy - vertical, shadowX, shadowY, z };
+    }
+
+    draw(match, options = {}) {
+      if (!match) return;
+      this.needsPaint = false;
+      const ctx = this.ctx, frame = options.frame;
       const players = frame ? frame.players : match.onPitchPlayers();
-      const owner = frame ? (frame.ownerIdx >= 0 ? players[frame.ownerIdx] : null) : match.ball.owner;
-      // shadows + players sorted by y
-      const sorted = players.slice().sort((a, b) => a.y - b.y);
-      for (const p of sorted) this.drawPlayer(ctx, S, scale, p, match, owner, frame);
-      this.drawBall(ctx, S, scale, ball, match, frame, dt);
-      this.drawParticles(ctx, S, scale, dt);
-      if (this.debug && !frame) this.drawDebug(ctx, S, scale, match);
-      // vignette
-      const g = ctx.createRadialGradient(this.cw / 2, this.ch / 2, Math.min(this.cw, this.ch) * 0.45, this.cw / 2, this.ch / 2, Math.max(this.cw, this.ch) * 0.75);
-      g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.35)');
-      ctx.fillStyle = g; ctx.fillRect(0, 0, this.cw, this.ch);
-    }
-
-    drawPitch(ctx, S, scale, match) {
-      const m = 5; // margin grass
-      const [px, py] = S(-m, -m);
-      const pw = (L + m * 2) * scale, ph = (W + m * 2) * scale;
-      // surround
-      ctx.fillStyle = '#1d5c30';
-      ctx.fillRect(px - 14, py - 14, pw + 28, ph + 28);
-      // ad boards
-      ctx.fillStyle = '#101820';
-      ctx.fillRect(px - 12, py - 12, pw + 24, 8);
-      ctx.fillRect(px - 12, py + ph + 4, pw + 24, 8);
-      ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      ctx.font = `${Math.max(5, 6 * scale / 8)}px system-ui`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      const boards = ['TOUCHLINE 26', 'NORTHBRIDGE', 'RIVERSIDE', 'KINGSDOWN', 'EASTVALE', 'HARBOURPORT', 'SILVERLAKE', 'OAKFIELD', 'CINDERLANE'];
-      for (let i = 0; i < 9; i++) {
-        const bx = px + (i + 0.5) * pw / 9;
-        ctx.fillText(boards[i], bx, py - 8);
-        ctx.fillText(boards[(i + 4) % 9], bx, py + ph + 8);
-      }
-      // stripes
-      const stripes = 12;
-      for (let i = 0; i < stripes; i++) {
-        ctx.fillStyle = i % 2 ? '#3a9448' : '#339041';
-        const [sx, sy] = S(i * L / stripes, 0);
-        ctx.fillRect(sx, sy, L / stripes * scale + 0.5, W * scale);
-      }
-      // subtle side shading
-      const sg = ctx.createLinearGradient(px, py, px, py + ph);
-      sg.addColorStop(0, 'rgba(255,255,255,0.05)'); sg.addColorStop(0.5, 'rgba(0,0,0,0)'); sg.addColorStop(1, 'rgba(0,0,0,0.10)');
-      ctx.fillStyle = sg; ctx.fillRect(px, py, pw, ph);
-
-      ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-      ctx.lineWidth = Math.max(1, 0.12 * scale);
-      const line = (x1, y1, x2, y2) => { const [a, b] = S(x1, y1); const [c, d] = S(x2, y2); ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.stroke(); };
-      const rect = (x, y, w, h) => { const [a, b] = S(x, y); ctx.strokeRect(a, b, w * scale, h * scale); };
-      const circ = (x, y, r, a0 = 0, a1 = Math.PI * 2) => { const [a, b] = S(x, y); ctx.beginPath(); ctx.arc(a, b, r * scale, a0, a1); ctx.stroke(); };
-      const dot = (x, y) => { const [a, b] = S(x, y); ctx.beginPath(); ctx.arc(a, b, Math.max(1.5, 0.25 * scale), 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fill(); };
-      rect(0, 0, L, W);
-      line(CX, 0, CX, W);
-      circ(CX, CY, 9.15);
-      dot(CX, CY);
-      // boxes both ends
-      rect(0, CY - BOX_HALF, BOX_L, BOX_HALF * 2);
-      rect(L - BOX_L, CY - BOX_HALF, BOX_L, BOX_HALF * 2);
-      rect(0, CY - SIX_HALF, SIX_L, SIX_HALF * 2);
-      rect(L - SIX_L, CY - SIX_HALF, SIX_L, SIX_HALF * 2);
-      dot(PEN, CY); dot(L - PEN, CY);
-      // D arcs
-      const th = Math.acos((BOX_L - PEN) / 9.15);
-      circ(PEN, CY, 9.15, -th, th);
-      circ(L - PEN, CY, 9.15, Math.PI - th, Math.PI + th);
-      // corner arcs
-      circ(0, 0, 1, 0, Math.PI / 2); circ(L, 0, 1, Math.PI / 2, Math.PI);
-      circ(L, W, 1, Math.PI, Math.PI * 1.5); circ(0, W, 1, Math.PI * 1.5, Math.PI * 2);
-      // goals + nets
-      for (const side of [0, 1]) {
-        const gx = side === 0 ? 0 : L;
-        const dir = side === 0 ? -1 : 1;
-        const [a, b] = S(gx, CY - GOAL_HALF);
-        const gw = 2.2 * scale * dir, gh = GOAL_HALF * 2 * scale;
-        ctx.fillStyle = 'rgba(255,255,255,0.10)';
-        ctx.fillRect(side === 0 ? a + gw : a, b, Math.abs(gw), gh);
-        ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-        ctx.lineWidth = Math.max(0.5, 0.04 * scale);
-        const nx = 6, ny = 8;
-        for (let i = 1; i < nx; i++) {
-          const x = a + gw * i / nx;
-          ctx.beginPath(); ctx.moveTo(x, b); ctx.lineTo(x, b + gh); ctx.stroke();
+      const ball = frame ? frame.ball : match.ball;
+      const ownerId = frame ? frame.ownerId : ball.owner && ball.owner.id;
+      const receiver = !frame && !options.ready && ball.flight && ball.flight.kind === 'pass' && ball.flight.intended;
+      const active = !options.ready && options.live !== false;
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(this.back, 0, 0);
+      ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+      const s = this.scale, r = this.radius, alpha = options.alpha == null ? 1 : options.alpha;
+      const toScreen = (x, y) => [this.ox + x * s, this.oy + y * s];
+      const positions = players.map(p => {
+        let x = p.x, y = p.y;
+        if (!frame && alpha < 1 && Number.isFinite(p.prevX) && Math.abs(x - p.prevX) + Math.abs(y - p.prevY) < 2.2) {
+          x = mix(p.prevX, x, alpha); y = mix(p.prevY, y, alpha);
         }
-        for (let i = 1; i < ny; i++) {
-          const y = b + gh * i / ny;
-          ctx.beginPath(); ctx.moveTo(a, y); ctx.lineTo(a + gw, y); ctx.stroke();
+        if (options.ready && !frame) {
+          const team = match.teams[p.team], d = team.attackDir;
+          const home = match.homePos(p, team);
+          const depth = d > 0 ? home.x : L - home.x;
+          // Compress only the forward line into its own half for the parked view;
+          // unlike the engine’s clamped restart targets, this keeps markers apart.
+          const lined = depth < 38 ? depth : Math.min(CX - 2.45, 38 + (depth - 38) * .296);
+          x = d > 0 ? lined : L - lined; y = home.y;
+          if (p === match.kickoffTaker) { x = p.tx; y = p.ty; }
         }
-        ctx.strokeStyle = 'rgba(255,255,255,0.95)';
-        ctx.lineWidth = Math.max(1.5, 0.22 * scale);
-        ctx.strokeRect(side === 0 ? a + gw : a, b, Math.abs(gw), gh);
-        ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-        ctx.lineWidth = Math.max(1, 0.12 * scale);
+        return { p, xy: toScreen(x, y) };
+      }).sort((a, b) => a.xy[1] - b.xy[1]);
+      this.drawn = [];
+      for (const { p, xy: [x, y] } of positions) {
+        const club = match.teams[p.team].club, keeper = (p.role || p.pos) === 'GK';
+        const kit = keeper ? club.gk : club.primary;
+        const selected = p.id === options.selected;
+        paint(ctx, x + 1, y + 1.65, r + .95, 'rgba(8,18,12,.51)');
+        if (selected || (active && p.id === ownerId)) {
+          ctx.beginPath(); ctx.arc(x, y, r + (selected ? 3.3 : 2.65), 0, TAU);
+          ctx.strokeStyle = selected ? '#defaaf' : '#d9e8c9b0'; ctx.lineWidth = 1.1; ctx.stroke();
+        }
+        paint(ctx, x, y, r, kit);
+        ctx.strokeStyle = '#f1f3e7eb'; ctx.lineWidth = Math.max(.75, Math.min(1.25, r * .145)); ctx.stroke();
+        ctx.fillStyle = lightKit(kit) ? '#101913' : '#fff';
+        ctx.font = `750 ${clamp(r * 1.24, 5.65, 11.2)}px Inter,system-ui,sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(String(p.num), x, y + .25);
+        if (p.yellow > 0) {
+          ctx.fillStyle = '#f9da72'; ctx.fillRect(x + r * .6, y - r * 1.12, Math.max(2, r * .4), Math.max(3, r * .67));
+        }
+        this.drawn.push({ p, x, y });
+      }
+
+      // x/y is where the ball is over the grass; z raises its sprite independently.
+      const interpolate = !frame && alpha < 1 && Number.isFinite(ball.prevX) && Math.abs(ball.x - ball.prevX) + Math.abs(ball.y - ball.prevY) < 2.55;
+      const projection = this.ballProjection(
+        interpolate ? mix(ball.prevX, ball.x, alpha) : ball.x,
+        interpolate ? mix(ball.prevY, ball.y, alpha) : ball.y,
+        interpolate ? mix(ball.prevZ, ball.z, alpha) : ball.z
+      );
+      const { x: bx, y: by, shadowX, shadowY, z } = projection;
+      const base = clamp(s * .37 + 1.3, 2.6, 4.25);
+      const radius = base * (1 + Math.min(z, 10) * .012);
+      if (z < .05) paint(ctx, bx + 1, by + 1.7, radius + 1.15, '#0c170d77');
+      else {
+        const spread = base + 1.25 + Math.min(2.85, z * .19);
+        ctx.save();
+        ctx.translate(shadowX + .64, shadowY + 1.12);
+        ctx.scale(1.20, .66);
+        const shadow = ctx.createRadialGradient(0, 0, spread * .23, 0, 0, spread);
+        const darkness = clamp(.71 - z * .018, .46, .68);
+        shadow.addColorStop(0, `rgba(9,18,11,${darkness})`);
+        shadow.addColorStop(.56, `rgba(9,18,11,${darkness * .77})`);
+        shadow.addColorStop(1, 'rgba(9,18,11,0)');
+        paint(ctx, 0, 0, spread, shadow);
+        ctx.restore();
+      }
+      if (!frame && options.live && !(this.reduced && this.reduced.matches) && !ball.owner && !this.compact && z < .75) {
+        const speed = Math.hypot(ball.vx, ball.vy);
+        if (speed > 16.5) {
+          const trail = Math.min(s * 1.78, (speed - 15.5) * .64);
+          const tx = bx - ball.vx / speed * trail, ty = by - ball.vy / speed * trail;
+          const streak = ctx.createLinearGradient(tx, ty, bx, by);
+          streak.addColorStop(0, '#e5eddd00'); streak.addColorStop(1, '#e5eddd69');
+          ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(bx, by); ctx.strokeStyle = streak; ctx.lineWidth = 1.05; ctx.stroke();
+        }
+      }
+      paint(ctx, bx, by, radius + 1.05, '#182019');
+      paint(ctx, bx, by, radius, '#fffdf1');
+      if (radius > 3.2) paint(ctx, bx + radius * .26, by + radius * .23, radius * .31, '#849087');
+
+      if (options.names || options.selected || active) {
+        const used = [];
+        const priority = p => p.id === options.selected ? 3 : active && p.id === ownerId ? 2 : receiver && p.id === receiver.id ? 1 : 0;
+        const labeled = this.drawn.filter(({ p }) => options.names || priority(p)).sort((a, b) => priority(b.p) - priority(a.p));
+        for (const { p, x, y } of labeled) {
+          const name = surname(p), size = this.compact ? 8.6 : clamp(s * 1.35, 9.5, 12);
+          ctx.font = `650 ${size}px Inter,system-ui,sans-serif`;
+          const w = ctx.measureText(name).width + 7, h = size + 5;
+          const lx = clamp(x - w / 2, 2, this.width - w - 2);
+          let ly = y + r + 3;
+          if (ly + h > this.height - 2) ly = y - r - h - 3;
+          if (used.some(a => lx < a.x + a.w && lx + w > a.x && ly < a.y + a.h && ly + h > a.y)) continue;
+          if (Math.abs(lx + w / 2 - bx) < w / 2 + 2 && by >= ly - 2 && by <= ly + h + 2) ly = y - r - h - 3;
+          used.push({ x: lx, y: ly, w, h });
+          round(ctx, lx, ly, w, h, 4);
+          ctx.fillStyle = p.id === options.selected ? '#2b4127ed' : '#142018e2'; ctx.fill();
+          ctx.fillStyle = '#f0f4e8'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(name, lx + w / 2, ly + h / 2 + .25);
+        }
       }
     }
 
-    drawPlayer(ctx, S, scale, p, match, owner, frame) {
-      const team = match.teams[p.team];
-      const [x, y] = S(p.x, p.y);
-      const r = Math.max(4.5, 1.0 * scale);
-      const isGK = p.pos === 'GK';
-      const col = isGK ? team.club.gk : team.club.primary;
-      const sec = team.club.secondary;
-      // shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.30)';
-      ctx.beginPath(); ctx.ellipse(x + r * 0.18, y + r * 0.32, r * 0.95, r * 0.55, 0, 0, Math.PI * 2); ctx.fill();
-      // owner pulse
-      if (owner === p) {
-        const pulse = 1 + Math.sin(this.time * 6) * 0.12;
-        ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-        ctx.lineWidth = Math.max(1, 0.14 * scale);
-        ctx.beginPath(); ctx.arc(x, y, r * 1.45 * pulse, 0, Math.PI * 2); ctx.stroke();
-      }
-      // selected
-      if (this.selected === p.id) {
-        ctx.strokeStyle = '#38e1ff';
-        ctx.lineWidth = Math.max(1.5, 0.18 * scale);
-        ctx.beginPath(); ctx.arc(x, y, r * 1.7, 0, Math.PI * 2); ctx.stroke();
-      }
-      // body
-      ctx.fillStyle = col;
-      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = sec;
-      ctx.lineWidth = Math.max(1, 0.16 * scale);
-      ctx.stroke();
-      // direction tick
-      const dir = p.dir != null ? p.dir : 0;
-      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-      ctx.lineWidth = Math.max(1, 0.12 * scale);
-      ctx.beginPath();
-      ctx.moveTo(x + Math.cos(dir) * r * 0.55, y + Math.sin(dir) * r * 0.55);
-      ctx.lineTo(x + Math.cos(dir) * r * 1.05, y + Math.sin(dir) * r * 1.05);
-      ctx.stroke();
-      // number
-      const lum = this.luminance(col);
-      ctx.fillStyle = lum > 0.55 ? '#101418' : '#ffffff';
-      ctx.font = `700 ${Math.max(6, r * 1.05)}px system-ui`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(String(p.num), x, y + 0.5);
-      // card badge
-      if (p.yellow > 0 && !frame) {
-        ctx.fillStyle = p.yellow >= 2 ? '#e11d48' : '#facc15';
-        ctx.fillRect(x + r * 0.7, y - r * 1.5, r * 0.55, r * 0.8);
-      }
-      // name
-      if (this.showNames || this.selected === p.id) {
-        const label = p.name.split(' ').slice(-1)[0];
-        ctx.font = `600 ${Math.max(7, 0.85 * scale)}px system-ui`;
-        const tw = ctx.measureText(label).width;
-        ctx.fillStyle = 'rgba(8,12,16,0.72)';
-        ctx.fillRect(x - tw / 2 - 3, y + r * 1.35, tw + 6, Math.max(9, scale * 1.05));
-        ctx.fillStyle = '#e8f0f4';
-        ctx.fillText(label, x, y + r * 1.35 + Math.max(4.5, scale * 0.52));
-      }
-    }
-
-    luminance(hex) {
-      const h = hex.replace('#', '');
-      const r = parseInt(h.substr(0, 2), 16) / 255, g = parseInt(h.substr(2, 2), 16) / 255, b = parseInt(h.substr(4, 2), 16) / 255;
-      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    }
-
-    drawBall(ctx, S, scale, ball, match, frame, dt) {
-      const sp = frame ? 0 : Math.hypot(match.ball.vx, match.ball.vy);
-      if (!frame && sp > 11) {
-        this.trail.push({ x: ball.x, y: ball.y, z: ball.z, a: 0.5 });
-        if (this.trail.length > 16) this.trail.shift();
-      }
-      for (const t of this.trail) t.a -= dt * 1.6;
-      this.trail = this.trail.filter(t => t.a > 0);
-      if (this.trail.length > 1) {
-        ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-        ctx.lineWidth = Math.max(1, 0.14 * scale);
-        ctx.beginPath();
-        this.trail.forEach((t, i) => {
-          const [x, y] = S(t.x, t.y);
-          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-      }
-      const z = ball.z || 0;
-      const [sx, sy] = S(ball.x + z * 0.3, ball.y + z * 0.45);
-      ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      ctx.beginPath(); ctx.ellipse(sx, sy, Math.max(2, 0.4 * scale), Math.max(1.2, 0.24 * scale), 0, 0, Math.PI * 2); ctx.fill();
-      const [bx, by] = S(ball.x, ball.y);
-      const br = Math.max(2.6, 0.42 * scale) * (1 + z * 0.06);
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath(); ctx.arc(bx, by - z * scale * 0.5, br, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-      ctx.lineWidth = Math.max(0.5, 0.05 * scale);
-      ctx.stroke();
-      ctx.fillStyle = 'rgba(0,0,0,0.25)';
-      ctx.beginPath(); ctx.arc(bx + br * 0.25, by - z * scale * 0.5 - br * 0.15, br * 0.3, 0, Math.PI * 2); ctx.fill();
-    }
-
-    spawnGoalParticles(match, lineX) {
-      const team = match.teams.find(t => (t.attackDir > 0 ? L : 0) === lineX);
-      const cols = [team.club.primary, team.club.secondary, '#ffffff', '#ffd700'];
-      for (let i = 0; i < 70; i++) {
-        this.particles.push({
-          x: lineX, y: CY + (Math.random() - 0.5) * 7,
-          vx: (lineX === 0 ? 1 : -1) * (2 + Math.random() * 9), vy: (Math.random() - 0.5) * 14,
-          z: Math.random() * 3, vz: 3 + Math.random() * 6,
-          col: cols[(Math.random() * cols.length) | 0], life: 1.6 + Math.random()
-        });
-      }
-    }
-
-    drawParticles(ctx, S, scale, dt) {
-      for (const p of this.particles) {
-        p.life -= dt;
-        p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= 12 * dt;
-        if (p.z < 0) { p.z = 0; p.vz *= -0.4; }
-        const [x, y] = S(p.x, p.y);
-        ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
-        ctx.fillStyle = p.col;
-        ctx.fillRect(x, y - p.z * scale * 0.5, Math.max(2, 0.3 * scale), Math.max(2, 0.3 * scale));
-      }
-      ctx.globalAlpha = 1;
-      this.particles = this.particles.filter(p => p.life > 0);
-    }
-
-    drawDebug(ctx, S, scale, match) {
-      // offside lines
-      for (const team of match.teams) {
-        const lx = team.offsideLine;
-        if (lx == null) continue;
-        const [a, b] = S(lx, 0); const [c, d] = S(lx, W);
-        ctx.strokeStyle = team.idx === 0 ? 'rgba(56,225,255,0.5)' : 'rgba(255,120,120,0.5)';
-        ctx.setLineDash([6, 6]); ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.stroke();
-        ctx.setLineDash([]);
-      }
-      for (const p of match.onPitchPlayers()) {
-        const [x, y] = S(p.x, p.y); const [tx, ty] = S(p.tx, p.ty);
-        ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(tx, ty); ctx.stroke();
-        ctx.fillStyle = p.offsideFlag ? 'rgba(255,80,80,0.9)' : 'rgba(255,255,255,0.4)';
-        ctx.fillRect(tx - 2, ty - 2, 4, 4);
-      }
-    }
-
-    pickPlayer(mx, my, match) {
-      let best = null, bd = 1e9;
-      for (const p of match.onPitchPlayers()) {
-        const [x, y] = this.worldToScreen(p.x, p.y, this.scale, this.ox, this.oy);
-        const d = Math.hypot(mx - x, my - y);
-        if (d < Math.max(10, this.scale * 1.4) && d < bd) { bd = d; best = p; }
+    pickPlayer(x, y) {
+      let best = null, distance = Math.max(10, this.radius * 1.7);
+      for (const item of this.drawn) {
+        const d = Math.hypot(item.x - x, item.y - y);
+        if (d < distance) { best = item.p; distance = d; }
       }
       return best;
     }

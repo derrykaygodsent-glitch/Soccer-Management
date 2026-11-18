@@ -1,31 +1,18 @@
 # Touchline 26
 
-**Review build 01 — playable baseline.** The existing match engine, clubs, artwork and controls are unchanged. This workspace copy restores the original project structure. The uploads are not modified.
+**Classic 2D is the main game.** This is the approved fixed overhead view and motion engine, promoted from the separate review build without changing gameplay or appearance. Make future changes in `touchline-26/`; `touchline-classic/` remains an unchanged copy of the review.
 
-## Run
+## Play and build
 
-Open `index.html` in a browser for the offline build, or use Node.js 20+:
+Open `index.html` offline, or run `npm run preview` with Node.js 20+. The preview rebuilds from `src/` and serves on port `4173` (`PORT` overrides it). No installs or accounts are required. Edit `src/`, then run `npm run build` to regenerate the standalone HTML.
 
-```sh
-npm run preview
-```
+- At **1×**, follow off-ball runs and defensive shifts. Try **Tactics → Passing → Direct** for more lofted deliveries. Ball flight and its ground shadow are visible in live play and goal replays.
+- **Next highlight** scans up to 2½ match minutes. **2×** and **4×** speed up continuous play; Quick Match is a later milestone.
+- `npm test` checks the standalone build, deterministic play, ball mechanics, acceleration and replay snapshots. `npm run test:sim -- 3` runs three complete fixtures.
 
-The preview builds from `src/` and serves on port `4173` (`PORT` overrides it). There are no packages to install. Edit source files, not the bundled `index.html`; run `npm run build` to refresh it.
+## Pinned checkpoints
 
-## Checks
+- `classic-2d-approved` — local Git tag for the approved foundation. Its standalone HTML SHA-256 is `d19da99cb41ae886a1bef224ec712e67388556c39615f240b45909e3c3aa1aed`.
+- `pre-classic-baseline` — local Git tag for the playable version this replaces, kept for rollback or comparison.
 
-| Command | What it checks |
-| --- | --- |
-| `npm test` | Rebuild parity, self-contained browser bundle, and reproducible opening play with replay snapshots. |
-| `npm run test:sim -- 1` | One complete seeded fixture with position sanity checks. Increase the last number for a longer sample. |
-| `npm run test:smoke` | Original full-match DOM shim. It can hit the known goal-banner error; this is separate from the baseline gate. |
-
-Reproduce the existing goal-banner error on a fixed seed: `node -e 'Date.now = () => 7; require("./test/dom-smoke.cjs")'`.
-
-## Review this build
-
-1. Pick your club and opposition, change formation, then kick off.
-2. On desktop, pause/resume and switch between Tactics, Squad and Stats.
-3. Open the same preview on a phone and note any controls or pitch details you can't reach or read.
-
-This is the comparison point, not a fix for the assessed issues. Goal metadata and added time are next (step 2), followed by highlight pacing, replay and stats consistency, responsive match layout, tactics, coaching feedback, adaptive opponents and balance. Each step gets its own review. Standalone broadcast polish, progression and saves are deferred.
+The original uploads are unchanged. Future roadmap steps start from `classic-2d-approved` and are reviewed one at a time.
