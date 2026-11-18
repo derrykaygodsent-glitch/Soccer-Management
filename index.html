@@ -2588,22 +2588,25 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   const DECISIVE = new Set([...GOALS, 'pen', 'penmiss', 'red', 'post']);
   const OTHER = new Set(['offside', 'yellow', 'catch']);
 
-  // Playback speed is global. A mode selects footage, never its playback rate.
-  const RATES = [0, 1.65, 3.3, 6.6];
-  const playbackRate = speed => RATES[speed] ?? RATES[1];
+  // This module selects footage. The shared broadcast clock sets its pace.
   const DEFAULT_MODE = 'extended';
-  const ATTACK_GAP = 365, CONTEXT_GAP = 445;
+  const ATTACK_GAP = 295, CONTEXT_GAP = 270;
+  // The largest window protects the buildup to a decisive incident. Shorter
+  // passages for ordinary chances and tactical context keep the cuts distinct.
   const MODES = Object.freeze(Object.fromEntries([
     { id: 'full', label: 'Full Match', rank: 0, lead: 0, tail: 0, opening: 0,
-      estimate: '55–60', bestFor: 'Tactical analysis', detail: 'Continuous play, including possession and movement between chances.' },
-    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 21, tail: 14, opening: 16,
-      estimate: '14–21', bestFor: 'Important matches', detail: 'More buildup, attacking spells, defensive recoveries and restarts.' },
-    { id: 'extended', label: 'Extended', rank: 2, lead: 18, tail: 12, opening: 10,
-      estimate: '7–13', bestFor: 'Normal league matches', detail: 'Key moments plus a selection of attacks, chances and attacking set pieces.' },
-    { id: 'key', label: 'Key', rank: 1, lead: 16, tail: 11, opening: 7,
-      estimate: '2–6', bestFor: 'Quick season progression', detail: 'Only goals, major chances, penalties, woodwork and dismissals.' }
+      estimate: '15–25', bestFor: 'Tactical analysis', detail: 'Continuous play, including possession and movement between chances.' },
+    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 74, tail: 50, opening: 19,
+      extraLead: 43, extraTail: 31,
+      estimate: '10–18', bestFor: 'Important matches', detail: 'More buildup, attacking spells, defensive recoveries and restarts.' },
+    { id: 'extended', label: 'Extended', rank: 2, lead: 68, tail: 47, opening: 13,
+      extraLead: 35, extraTail: 26,
+      estimate: '7–12', bestFor: 'Normal league matches', detail: 'Key moments plus a selection of attacks, chances and attacking set pieces.' },
+    { id: 'key', label: 'Key', rank: 1, lead: 63, tail: 44, opening: 8,
+      estimate: '3–7', bestFor: 'Quick season progression', detail: 'Only goals, major chances, penalties, woodwork and dismissals.' }
   ].map(mode => [mode.id, Object.freeze(mode)])));
   const modeFor = id => Object.hasOwn(MODES, id) ? MODES[id] : MODES[DEFAULT_MODE];
+  const tailFor = (policy, rank) => rank > 1 ? policy.extraTail ?? policy.tail : policy.tail;
   const atBreak = m => m.phase === 'halftime' || m.phase === 'fulltime';
   const depthFor = (match, team) => match.teams[team].attackDir > 0 ? match.ball.x : L - match.ball.x;
 
@@ -2705,10 +2708,12 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     const now = options.now || (() => performance.now());
     const limit = now() + (options.budget ?? SCAN_BUDGET_MS);
     const max = options.maxSteps ?? MAX_SCAN_STEPS;
+    const afterStep = options.afterStep;
     let ticks = 0;
     if (atBreak(match)) return { type: 'break', ticks };
     while (ticks < max && (ticks < 1 || ticks % 8 !== 0 || now() < limit)) {
       match.step(STEP);
+      if (afterStep) afterStep(match);
       ticks++;
       const rank = scout.check(match);
       if (atBreak(match)) return { type: 'break', ticks };
@@ -2719,13 +2724,16 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
 
   // Expose only the search position that can no longer be part of the buildup.
   // At the cut, this is exactly where playback picks up, never a clock rewind.
-  const visibleStart = (from, at, policy, published = from) => Math.max(from, published, at - policy.lead);
+  const visibleStart = (from, at, policy, published = from, rank = 1) => {
+    const lead = rank > 1 ? policy.extraLead ?? policy.lead : policy.lead;
+    return Math.max(from, published, at - lead);
+  };
 
-  function indexAt(frames, time) {
+  function indexAt(frames, time, key = 'elapsed') {
     let low = 0, high = frames.length - 1;
     while (low < high) {
       const middle = (low + high + 1) >> 1;
-      if (frames[middle].elapsed <= time + EPS) low = middle;
+      if (frames[middle][key] <= time + EPS) low = middle;
       else high = middle - 1;
     }
     return low;
@@ -2752,8 +2760,64 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     return policy.rank >= 2 && (match.phase === 'corner' || (match.phase === 'freekick' && !!match.setpiece?.direct));
   }
 
-  const api = { STEP, SCAN_BUDGET_MS, MAX_SCAN_STEPS, GOALS, BREAKS, DECISIVE, DEFAULT_MODE, MODES, modeFor, playbackRate, atBreak, eventRank, shotRank, Scout, scanBatch, visibleStart, indexAt, frameAt, clipFrames, holdingAction };
+  const api = { STEP, SCAN_BUDGET_MS, MAX_SCAN_STEPS, GOALS, BREAKS, DECISIVE, DEFAULT_MODE, MODES, modeFor, tailFor, atBreak, eventRank, shotRank, Scout, scanBatch, visibleStart, indexAt, frameAt, clipFrames, holdingAction };
   global.TLHighlights = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+;
+/* ===== broadcast.js ===== */
+/* Touchline 26 — shared presentation clock, independent of highlight selection. */
+(function (global) {
+  'use strict';
+  const { L, CY } = typeof window === 'undefined' ? require('./engine.js') : global.TLEngine;
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const smooth = n => { const t = clamp(n, 0, 1); return t * t * (3 - 2 * t); };
+  const SPEEDS = [1, 2, 4];
+  const multiplier = speed => SPEEDS[speed - 1] ?? SPEEDS[0];
+  const ROUTINE = 5.35;
+
+  function targetPace(match) {
+    const b = match.ball, flight = b.flight, phase = match.phase;
+    // Every mode sees the same movement at a given timestamp: the current
+    // action, not the eventual result or the clip's rank, sets the tempo.
+    if (phase === 'goal' || phase === 'penalty' || flight?.kind === 'shot') return 2.15;
+    if (phase === 'corner' || (phase === 'freekick' && match.setpiece?.direct)) return 2.85;
+    if (phase === 'kickoff') return 3.7;
+    if (phase !== 'open') return ROUTINE;
+    const attack = match.teams[b.owner?.team ?? flight?.team ?? match.controlTeam].attackDir;
+    const toGoal = attack > 0 ? L - b.x : b.x;
+    const box = smooth((30 - toGoal) / 22) * (.64 + .36 * smooth((25 - Math.abs(b.y - CY)) / 16));
+    const delivery = flight?.kind === 'cross' ? .77 : .62 * smooth((b.z - .35) / 4.2);
+    return ROUTINE - (ROUTINE - 2.5) * Math.max(box, delivery);
+  }
+
+  class Clock {
+    constructor(match) {
+      this.elapsed = match.elapsed;
+      this.time = 0;
+      this.pace = targetPace(match);
+    }
+
+    cost(step) { return step / this.pace; }
+
+    // Events and regular snapshots arrive inside Match.step, just before observe.
+    stamp(elapsed) { return this.time + this.cost(elapsed - this.elapsed); }
+
+    observe(match) {
+      const time = this.stamp(match.elapsed), dt = time - this.time;
+      this.elapsed = match.elapsed;
+      this.time = time;
+      const target = targetPace(match);
+      // Ease both into a chance and back to the broader play, avoiding abrupt
+      // speed changes when a pass, shot or set piece begins or ends.
+      const settle = target < this.pace ? .15 : .36;
+      this.pace += (target - this.pace) * Math.min(1, dt / settle);
+    }
+  }
+
+  const api = { Clock, multiplier, targetPace };
+  global.TLBroadcast = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -2762,13 +2826,13 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
 /* Touchline 26 — Classic 2D match controls and replay playback. */
 (function (global) {
   'use strict';
-  const D = global.TLData, E = global.TLEngine, A = global.TLAudio, V = global.TLHighlights, O = global.TLReferee;
+  const D = global.TLData, E = global.TLEngine, A = global.TLAudio, V = global.TLHighlights, O = global.TLReferee, B = global.TLBroadcast;
   const $ = id => document.getElementById(id);
   // Physics uses a fixed step; display speed never changes the simulation outcome.
   const H = V.STEP, REPLAY_RATE = 1.5;
   const REPLAY_BUILDUP = 12, REPLAY_AFTERMATH = 1.05;
   const HISTORY = Math.ceil((V.MODES.comprehensive.lead + 6) / (H * 2));
-  const SCAN_YIELD = 6;
+  const SCAN_YIELD = 6, MAX_FRAME_DT = .12, MAX_LIVE_STEPS = 112;
   const GOALS = V.GOALS, BREAKS = V.BREAKS;
   const LINEUP_EVENTS = new Set(['sub', 'red', 'yellow']);
   const TACTICS = [
@@ -2787,7 +2851,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     crl: '<path d="M12.3 7.5c.7 3.8-4.8 4.1-3.7 7.6.8 2.6 6.3 2.4 7-.8.5-2.4-.8-4.7-3.3-6.8Zm-.2 6c.9.7 1.2 1.4.4 2-.6.6-1.9-.1-1.3-1 .2-.4.6-.6.9-1Z" fill="currentColor" stroke="none"/>'
   };
   const state = {
-    match: null, referee: null, renderer: null, ready: true, paused: true, speed: 1, acc: 0,
+    match: null, referee: null, renderer: null, broadcast: null, ready: true, paused: true, speed: 1, acc: 0,
     config: { home: 1, away: 0, auto: true, sound: false, highlights: V.DEFAULT_MODE }, names: false, sound: false,
     selected: null, subMode: null, desk: 'tactics', returnBreak: false,
     buffer: [], replay: null, replayQueue: null, goalFrames: null, events: [], meta: {},
@@ -2806,6 +2870,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   const activeDialog = () => ['setupDialog', 'deskDialog', 'breakDialog'].some(id => $(id).open);
   const chosenMode = () => V.modeFor(state.config.highlights);
   const filmView = () => state.scene || state.scan;
+  const fraction = (t, a, b) => b > a ? Math.max(0, Math.min(1, (t - a) / (b - a))) : 0;
   const clockAt = t => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 
   function crest(club) {
@@ -2866,11 +2931,13 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
       onEvent,
       onSnapshot: snapshot => {
         snapshot.referee = state.referee.track(state.match);
+        snapshot.screen = state.broadcast.stamp(snapshot.elapsed);
         state.buffer.push(state.scan ? withView(snapshot) : snapshot);
         if (state.buffer.length > HISTORY) state.buffer.splice(0, 44);
       }
     });
     state.scout = new V.Scout(state.match);
+    state.broadcast = new B.Clock(state.match);
     syncWatchMode();
     state.meta = Object.fromEntries(state.match.teams.flatMap(t => t.players.map(p => [p.id, p])));
     document.documentElement.style.setProperty('--home', home.primary);
@@ -3128,7 +3195,8 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   }
 
   function captureFrame() {
-    return { ...state.match.snapshotFrame(), referee: state.referee.current };
+    const { match, broadcast, referee } = state;
+    return { ...match.snapshotFrame(), referee: referee.current, screen: broadcast.stamp(match.elapsed) };
   }
 
   function withView(snap = captureFrame()) {
@@ -3191,8 +3259,8 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     updateHUD(); draw(); queueScan();
   }
 
-  function updateScanView(scan) {
-    scan.time = V.visibleStart(scan.first.elapsed, state.match.elapsed, scan.policy, scan.time);
+  function updateScanView(scan, rank) {
+    scan.time = V.visibleStart(scan.first.elapsed, state.match.elapsed, scan.policy, scan.time, rank);
     scan.view = V.frameAt(state.buffer, scan.time, scan.first);
     drainEntries(scan.entries, scan.time, true);
   }
@@ -3202,27 +3270,32 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     stopScanWork();
     state.scan = null;
     state.visiblePlay = tail > 0 ? { policy, until: last.elapsed + tail } : null;
-    state.scene = { policy, entries: scan.entries, frames, view: frames[0], time: scan.time, frame: null };
+    const a = frames[0], b = frames[1] ?? a;
+    const screen = a.screen + (b.screen - a.screen) * fraction(scan.time, a.elapsed, b.elapsed);
+    state.scene = { policy, entries: scan.entries, frames, view: a, time: scan.time, screen, frame: null };
     advanceScene(0);
   }
 
   function advanceSearch() {
     const scan = state.scan;
-    const result = V.scanBatch(state.match, state.scout, scan.policy);
+    const result = V.scanBatch(state.match, state.scout, scan.policy, { afterStep: match => state.broadcast.observe(match) });
     if (result.type === 'break') { closeCut(); return; }
-    updateScanView(scan);
-    if (result.type === 'moment') showBuffered(scan, scan.policy, scan.policy.tail);
+    updateScanView(scan, result.rank);
+    if (result.type === 'moment') showBuffered(scan, scan.policy, V.tailFor(scan.policy, result.rank));
   }
 
   function advanceScene(dt) {
     const scene = state.scene, frames = scene.frames, last = frames.at(-1);
-    scene.time = Math.min(last.elapsed, scene.time + dt * V.playbackRate(state.speed));
-    const i = V.indexAt(frames, scene.time), a = frames[i], b = frames[Math.min(i + 1, frames.length - 1)];
-    const f = a === b ? 0 : Math.max(0, Math.min(1, (scene.time - a.elapsed) / (b.elapsed - a.elapsed)));
+    // A highlight uses the same clock samples as live play. Its pace cannot
+    // depend on the highlight menu, even when switched during this passage.
+    scene.screen = Math.min(last.screen, scene.screen + dt * B.multiplier(state.speed));
+    const i = V.indexAt(frames, scene.screen, 'screen'), a = frames[i], b = frames[Math.min(i + 1, frames.length - 1)];
+    const f = fraction(scene.screen, a.screen, b.screen);
+    scene.time = a.elapsed + (b.elapsed - a.elapsed) * f;
     scene.view = a;
     scene.frame = replayFrame(a, b, f);
     drainEntries(scene.entries, scene.time, false);
-    if (scene.time >= last.elapsed) closeCut(false);
+    if (scene.screen >= last.screen) closeCut(false);
   }
 
   function renderLineup() {
@@ -3402,16 +3475,18 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
       if (state.visiblePlay && m.elapsed >= state.visiblePlay.until && !V.holdingAction(m, state.visiblePlay.policy)) state.visiblePlay = null;
       if (policy.rank && !state.visiblePlay && !V.holdingAction(m, policy)) { beginSearch(policy); return; }
     }
-    state.acc += dt * V.playbackRate(state.speed);
-    let n = 0;
-    while (state.acc >= H && n++ < 48 && !state.replay && !state.paused) {
-      state.acc -= H;
+    const clock = state.broadcast;
+    state.acc += dt * B.multiplier(state.speed);
+    let n = 0, cost;
+    while (n++ < MAX_LIVE_STEPS && !state.replay && !state.paused && state.acc >= (cost = clock.cost(H))) {
+      state.acc -= cost;
       m.step(H);
+      clock.observe(m);
       const rank = state.scout.check(m);
       if (state.visiblePlay && rank <= state.visiblePlay.policy.rank) {
-        state.visiblePlay.until = Math.max(state.visiblePlay.until, m.elapsed + state.visiblePlay.policy.tail);
+        state.visiblePlay.until = Math.max(state.visiblePlay.until, m.elapsed + V.tailFor(state.visiblePlay.policy, rank));
       } else if (policy.rank && rank <= policy.rank && !state.paused) {
-        state.visiblePlay = { policy, until: m.elapsed + policy.tail };
+        state.visiblePlay = { policy, until: m.elapsed + V.tailFor(policy, rank) };
       }
     }
     if (state.acc > .6) state.acc = 0;
@@ -3421,16 +3496,16 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
 
   function draw() {
     const frame = state.replay?.frame || state.scene?.frame || state.scan?.still;
+    const alpha = !frame && !state.paused ? fraction(state.acc, 0, state.broadcast.cost(H)) : 1;
     state.renderer.draw(state.match, {
       ready: state.ready, names: state.names, selected: state.selected,
-      live: !state.ready && !state.scan, frame,
-      referee: frame ? null : state.referee.view(state.match.elapsed + (state.paused ? 0 : state.acc)),
-      alpha: !frame && !state.paused ? Math.max(0, Math.min(1, state.acc / H)) : 1
+      live: !state.ready && !state.scan, frame, alpha,
+      referee: frame ? null : state.referee.view(state.match.elapsed + (state.paused ? 0 : H * alpha))
     });
   }
   function loop(t) {
     requestAnimationFrame(loop);
-    const dt = state.lastFrame == null ? 0 : Math.max(0, Math.min(.05, (t - state.lastFrame) / 1000));
+    const dt = state.lastFrame == null ? 0 : Math.max(0, Math.min(MAX_FRAME_DT, (t - state.lastFrame) / 1000));
     state.lastFrame = t;
     if (state.breakQueued && !activeDialog()) showBreak(state.breakQueued);
     let changed = false;

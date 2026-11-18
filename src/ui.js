@@ -1,13 +1,13 @@
 /* Touchline 26 — Classic 2D match controls and replay playback. */
 (function (global) {
   'use strict';
-  const D = global.TLData, E = global.TLEngine, A = global.TLAudio, V = global.TLHighlights, O = global.TLReferee;
+  const D = global.TLData, E = global.TLEngine, A = global.TLAudio, V = global.TLHighlights, O = global.TLReferee, B = global.TLBroadcast;
   const $ = id => document.getElementById(id);
   // Physics uses a fixed step; display speed never changes the simulation outcome.
   const H = V.STEP, REPLAY_RATE = 1.5;
   const REPLAY_BUILDUP = 12, REPLAY_AFTERMATH = 1.05;
   const HISTORY = Math.ceil((V.MODES.comprehensive.lead + 6) / (H * 2));
-  const SCAN_YIELD = 6;
+  const SCAN_YIELD = 6, MAX_FRAME_DT = .12, MAX_LIVE_STEPS = 112;
   const GOALS = V.GOALS, BREAKS = V.BREAKS;
   const LINEUP_EVENTS = new Set(['sub', 'red', 'yellow']);
   const TACTICS = [
@@ -26,7 +26,7 @@
     crl: '<path d="M12.3 7.5c.7 3.8-4.8 4.1-3.7 7.6.8 2.6 6.3 2.4 7-.8.5-2.4-.8-4.7-3.3-6.8Zm-.2 6c.9.7 1.2 1.4.4 2-.6.6-1.9-.1-1.3-1 .2-.4.6-.6.9-1Z" fill="currentColor" stroke="none"/>'
   };
   const state = {
-    match: null, referee: null, renderer: null, ready: true, paused: true, speed: 1, acc: 0,
+    match: null, referee: null, renderer: null, broadcast: null, ready: true, paused: true, speed: 1, acc: 0,
     config: { home: 1, away: 0, auto: true, sound: false, highlights: V.DEFAULT_MODE }, names: false, sound: false,
     selected: null, subMode: null, desk: 'tactics', returnBreak: false,
     buffer: [], replay: null, replayQueue: null, goalFrames: null, events: [], meta: {},
@@ -45,6 +45,7 @@
   const activeDialog = () => ['setupDialog', 'deskDialog', 'breakDialog'].some(id => $(id).open);
   const chosenMode = () => V.modeFor(state.config.highlights);
   const filmView = () => state.scene || state.scan;
+  const fraction = (t, a, b) => b > a ? Math.max(0, Math.min(1, (t - a) / (b - a))) : 0;
   const clockAt = t => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 
   function crest(club) {
@@ -105,11 +106,13 @@
       onEvent,
       onSnapshot: snapshot => {
         snapshot.referee = state.referee.track(state.match);
+        snapshot.screen = state.broadcast.stamp(snapshot.elapsed);
         state.buffer.push(state.scan ? withView(snapshot) : snapshot);
         if (state.buffer.length > HISTORY) state.buffer.splice(0, 44);
       }
     });
     state.scout = new V.Scout(state.match);
+    state.broadcast = new B.Clock(state.match);
     syncWatchMode();
     state.meta = Object.fromEntries(state.match.teams.flatMap(t => t.players.map(p => [p.id, p])));
     document.documentElement.style.setProperty('--home', home.primary);
@@ -367,7 +370,8 @@
   }
 
   function captureFrame() {
-    return { ...state.match.snapshotFrame(), referee: state.referee.current };
+    const { match, broadcast, referee } = state;
+    return { ...match.snapshotFrame(), referee: referee.current, screen: broadcast.stamp(match.elapsed) };
   }
 
   function withView(snap = captureFrame()) {
@@ -430,8 +434,8 @@
     updateHUD(); draw(); queueScan();
   }
 
-  function updateScanView(scan) {
-    scan.time = V.visibleStart(scan.first.elapsed, state.match.elapsed, scan.policy, scan.time);
+  function updateScanView(scan, rank) {
+    scan.time = V.visibleStart(scan.first.elapsed, state.match.elapsed, scan.policy, scan.time, rank);
     scan.view = V.frameAt(state.buffer, scan.time, scan.first);
     drainEntries(scan.entries, scan.time, true);
   }
@@ -441,27 +445,32 @@
     stopScanWork();
     state.scan = null;
     state.visiblePlay = tail > 0 ? { policy, until: last.elapsed + tail } : null;
-    state.scene = { policy, entries: scan.entries, frames, view: frames[0], time: scan.time, frame: null };
+    const a = frames[0], b = frames[1] ?? a;
+    const screen = a.screen + (b.screen - a.screen) * fraction(scan.time, a.elapsed, b.elapsed);
+    state.scene = { policy, entries: scan.entries, frames, view: a, time: scan.time, screen, frame: null };
     advanceScene(0);
   }
 
   function advanceSearch() {
     const scan = state.scan;
-    const result = V.scanBatch(state.match, state.scout, scan.policy);
+    const result = V.scanBatch(state.match, state.scout, scan.policy, { afterStep: match => state.broadcast.observe(match) });
     if (result.type === 'break') { closeCut(); return; }
-    updateScanView(scan);
-    if (result.type === 'moment') showBuffered(scan, scan.policy, scan.policy.tail);
+    updateScanView(scan, result.rank);
+    if (result.type === 'moment') showBuffered(scan, scan.policy, V.tailFor(scan.policy, result.rank));
   }
 
   function advanceScene(dt) {
     const scene = state.scene, frames = scene.frames, last = frames.at(-1);
-    scene.time = Math.min(last.elapsed, scene.time + dt * V.playbackRate(state.speed));
-    const i = V.indexAt(frames, scene.time), a = frames[i], b = frames[Math.min(i + 1, frames.length - 1)];
-    const f = a === b ? 0 : Math.max(0, Math.min(1, (scene.time - a.elapsed) / (b.elapsed - a.elapsed)));
+    // A highlight uses the same clock samples as live play. Its pace cannot
+    // depend on the highlight menu, even when switched during this passage.
+    scene.screen = Math.min(last.screen, scene.screen + dt * B.multiplier(state.speed));
+    const i = V.indexAt(frames, scene.screen, 'screen'), a = frames[i], b = frames[Math.min(i + 1, frames.length - 1)];
+    const f = fraction(scene.screen, a.screen, b.screen);
+    scene.time = a.elapsed + (b.elapsed - a.elapsed) * f;
     scene.view = a;
     scene.frame = replayFrame(a, b, f);
     drainEntries(scene.entries, scene.time, false);
-    if (scene.time >= last.elapsed) closeCut(false);
+    if (scene.screen >= last.screen) closeCut(false);
   }
 
   function renderLineup() {
@@ -641,16 +650,18 @@
       if (state.visiblePlay && m.elapsed >= state.visiblePlay.until && !V.holdingAction(m, state.visiblePlay.policy)) state.visiblePlay = null;
       if (policy.rank && !state.visiblePlay && !V.holdingAction(m, policy)) { beginSearch(policy); return; }
     }
-    state.acc += dt * V.playbackRate(state.speed);
-    let n = 0;
-    while (state.acc >= H && n++ < 48 && !state.replay && !state.paused) {
-      state.acc -= H;
+    const clock = state.broadcast;
+    state.acc += dt * B.multiplier(state.speed);
+    let n = 0, cost;
+    while (n++ < MAX_LIVE_STEPS && !state.replay && !state.paused && state.acc >= (cost = clock.cost(H))) {
+      state.acc -= cost;
       m.step(H);
+      clock.observe(m);
       const rank = state.scout.check(m);
       if (state.visiblePlay && rank <= state.visiblePlay.policy.rank) {
-        state.visiblePlay.until = Math.max(state.visiblePlay.until, m.elapsed + state.visiblePlay.policy.tail);
+        state.visiblePlay.until = Math.max(state.visiblePlay.until, m.elapsed + V.tailFor(state.visiblePlay.policy, rank));
       } else if (policy.rank && rank <= policy.rank && !state.paused) {
-        state.visiblePlay = { policy, until: m.elapsed + policy.tail };
+        state.visiblePlay = { policy, until: m.elapsed + V.tailFor(policy, rank) };
       }
     }
     if (state.acc > .6) state.acc = 0;
@@ -660,16 +671,16 @@
 
   function draw() {
     const frame = state.replay?.frame || state.scene?.frame || state.scan?.still;
+    const alpha = !frame && !state.paused ? fraction(state.acc, 0, state.broadcast.cost(H)) : 1;
     state.renderer.draw(state.match, {
       ready: state.ready, names: state.names, selected: state.selected,
-      live: !state.ready && !state.scan, frame,
-      referee: frame ? null : state.referee.view(state.match.elapsed + (state.paused ? 0 : state.acc)),
-      alpha: !frame && !state.paused ? Math.max(0, Math.min(1, state.acc / H)) : 1
+      live: !state.ready && !state.scan, frame, alpha,
+      referee: frame ? null : state.referee.view(state.match.elapsed + (state.paused ? 0 : H * alpha))
     });
   }
   function loop(t) {
     requestAnimationFrame(loop);
-    const dt = state.lastFrame == null ? 0 : Math.max(0, Math.min(.05, (t - state.lastFrame) / 1000));
+    const dt = state.lastFrame == null ? 0 : Math.max(0, Math.min(MAX_FRAME_DT, (t - state.lastFrame) / 1000));
     state.lastFrame = t;
     if (state.breakQueued && !activeDialog()) showBreak(state.breakQueued);
     let changed = false;

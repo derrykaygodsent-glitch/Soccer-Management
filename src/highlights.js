@@ -12,22 +12,25 @@
   const DECISIVE = new Set([...GOALS, 'pen', 'penmiss', 'red', 'post']);
   const OTHER = new Set(['offside', 'yellow', 'catch']);
 
-  // Playback speed is global. A mode selects footage, never its playback rate.
-  const RATES = [0, 1.65, 3.3, 6.6];
-  const playbackRate = speed => RATES[speed] ?? RATES[1];
+  // This module selects footage. The shared broadcast clock sets its pace.
   const DEFAULT_MODE = 'extended';
-  const ATTACK_GAP = 365, CONTEXT_GAP = 445;
+  const ATTACK_GAP = 295, CONTEXT_GAP = 270;
+  // The largest window protects the buildup to a decisive incident. Shorter
+  // passages for ordinary chances and tactical context keep the cuts distinct.
   const MODES = Object.freeze(Object.fromEntries([
     { id: 'full', label: 'Full Match', rank: 0, lead: 0, tail: 0, opening: 0,
-      estimate: '55–60', bestFor: 'Tactical analysis', detail: 'Continuous play, including possession and movement between chances.' },
-    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 21, tail: 14, opening: 16,
-      estimate: '14–21', bestFor: 'Important matches', detail: 'More buildup, attacking spells, defensive recoveries and restarts.' },
-    { id: 'extended', label: 'Extended', rank: 2, lead: 18, tail: 12, opening: 10,
-      estimate: '7–13', bestFor: 'Normal league matches', detail: 'Key moments plus a selection of attacks, chances and attacking set pieces.' },
-    { id: 'key', label: 'Key', rank: 1, lead: 16, tail: 11, opening: 7,
-      estimate: '2–6', bestFor: 'Quick season progression', detail: 'Only goals, major chances, penalties, woodwork and dismissals.' }
+      estimate: '15–25', bestFor: 'Tactical analysis', detail: 'Continuous play, including possession and movement between chances.' },
+    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 74, tail: 50, opening: 19,
+      extraLead: 43, extraTail: 31,
+      estimate: '10–18', bestFor: 'Important matches', detail: 'More buildup, attacking spells, defensive recoveries and restarts.' },
+    { id: 'extended', label: 'Extended', rank: 2, lead: 68, tail: 47, opening: 13,
+      extraLead: 35, extraTail: 26,
+      estimate: '7–12', bestFor: 'Normal league matches', detail: 'Key moments plus a selection of attacks, chances and attacking set pieces.' },
+    { id: 'key', label: 'Key', rank: 1, lead: 63, tail: 44, opening: 8,
+      estimate: '3–7', bestFor: 'Quick season progression', detail: 'Only goals, major chances, penalties, woodwork and dismissals.' }
   ].map(mode => [mode.id, Object.freeze(mode)])));
   const modeFor = id => Object.hasOwn(MODES, id) ? MODES[id] : MODES[DEFAULT_MODE];
+  const tailFor = (policy, rank) => rank > 1 ? policy.extraTail ?? policy.tail : policy.tail;
   const atBreak = m => m.phase === 'halftime' || m.phase === 'fulltime';
   const depthFor = (match, team) => match.teams[team].attackDir > 0 ? match.ball.x : L - match.ball.x;
 
@@ -129,10 +132,12 @@
     const now = options.now || (() => performance.now());
     const limit = now() + (options.budget ?? SCAN_BUDGET_MS);
     const max = options.maxSteps ?? MAX_SCAN_STEPS;
+    const afterStep = options.afterStep;
     let ticks = 0;
     if (atBreak(match)) return { type: 'break', ticks };
     while (ticks < max && (ticks < 1 || ticks % 8 !== 0 || now() < limit)) {
       match.step(STEP);
+      if (afterStep) afterStep(match);
       ticks++;
       const rank = scout.check(match);
       if (atBreak(match)) return { type: 'break', ticks };
@@ -143,13 +148,16 @@
 
   // Expose only the search position that can no longer be part of the buildup.
   // At the cut, this is exactly where playback picks up, never a clock rewind.
-  const visibleStart = (from, at, policy, published = from) => Math.max(from, published, at - policy.lead);
+  const visibleStart = (from, at, policy, published = from, rank = 1) => {
+    const lead = rank > 1 ? policy.extraLead ?? policy.lead : policy.lead;
+    return Math.max(from, published, at - lead);
+  };
 
-  function indexAt(frames, time) {
+  function indexAt(frames, time, key = 'elapsed') {
     let low = 0, high = frames.length - 1;
     while (low < high) {
       const middle = (low + high + 1) >> 1;
-      if (frames[middle].elapsed <= time + EPS) low = middle;
+      if (frames[middle][key] <= time + EPS) low = middle;
       else high = middle - 1;
     }
     return low;
@@ -176,7 +184,7 @@
     return policy.rank >= 2 && (match.phase === 'corner' || (match.phase === 'freekick' && !!match.setpiece?.direct));
   }
 
-  const api = { STEP, SCAN_BUDGET_MS, MAX_SCAN_STEPS, GOALS, BREAKS, DECISIVE, DEFAULT_MODE, MODES, modeFor, playbackRate, atBreak, eventRank, shotRank, Scout, scanBatch, visibleStart, indexAt, frameAt, clipFrames, holdingAction };
+  const api = { STEP, SCAN_BUDGET_MS, MAX_SCAN_STEPS, GOALS, BREAKS, DECISIVE, DEFAULT_MODE, MODES, modeFor, tailFor, atBreak, eventRank, shotRank, Scout, scanBatch, visibleStart, indexAt, frameAt, clipFrames, holdingAction };
   global.TLHighlights = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
