@@ -45,6 +45,7 @@
   const activeDialog = () => ['setupDialog', 'deskDialog', 'breakDialog'].some(id => $(id).open);
   const chosenMode = () => V.modeFor(state.config.highlights);
   const filmView = () => state.scene || state.scan;
+  const viewingReview = () => !state.scan && (state.scene?.view.phase ?? state.match.phase) === 'review';
   const fraction = (t, a, b) => b > a ? Math.max(0, Math.min(1, (t - a) / (b - a))) : 0;
   const clockAt = t => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 
@@ -135,6 +136,7 @@
     if (state.match.phase === 'fulltime') return ['paused', 'Full time'];
     if (state.paused) return ['paused', 'Paused'];
     if (state.scan) return ['live', 'Skipping'];
+    if (viewingReview()) return ['review', 'VAR check'];
     if (state.scene?.policy.rank || state.visiblePlay) return ['live', 'Highlight'];
     return ['live', state.match.half === 1 ? '1st half' : '2nd half'];
   }
@@ -147,7 +149,7 @@
     const half = film ? film.view.half : m.half;
     const added = m.added[half - 1];
     $('added').hidden = !(time >= half * 2700 && added);
-    if (!$('added').hidden) text('added', '+' + Math.ceil(added / 60));
+    if (!$('added').hidden) text('added', '+' + Math.floor(added / 60));
     const [homeScore, awayScore] = film ? film.view.score : [m.teams[0].score, m.teams[1].score];
     const score = `${homeScore}:${awayScore}`;
     if ($('score').dataset.score !== score) {
@@ -166,9 +168,10 @@
     $('btnPlay').disabled = atBreak;
     for (const b of document.querySelectorAll('[data-speed]')) attr(b, 'aria-pressed', Number(b.dataset.speed) === state.speed);
     const replayButton = $('btnReplay');
-    replayButton.disabled = !state.goalFrames || !!state.replayQueue || state.ready || atBreak || !!state.scene;
+    const reviewing = viewingReview();
+    replayButton.disabled = !state.goalFrames || !!state.replayQueue || state.ready || atBreak || reviewing || !!state.scene;
     textReplayButton(state.replay ? 'Exit replay' : 'Replay');
-    $('btnSkip').disabled = state.ready || atBreak || (!!state.replayQueue && !state.replay);
+    $('btnSkip').disabled = state.ready || atBreak || reviewing || (!!state.replayQueue && !state.replay);
     const skipLabel = state.replay ? 'Exit replay' : state.scan ? 'Stop here' : 'Next highlight';
     text('skipLabel', skipLabel);
     attr($('btnSkip'), 'aria-label', skipLabel);
@@ -260,6 +263,13 @@
     }
     closeCut();
     state.paused = false;
+    // A manual cut can reach the start of a buffered review; still wait for
+    // its verdict rather than jumping over a decision in progress.
+    if (viewingReview()) {
+      const ev = state.events.findLast(e => e.type === 'varcheck');
+      if (ev) setFeed(ev.text, ev, 'VAR check');
+      updateHUD(); draw(); return;
+    }
     const policy = chosenMode().rank ? chosenMode() : V.MODES.key;
     if (state.replayQueue) {
       state.replayQueue.auto = false;
@@ -341,7 +351,8 @@
     if (message && ev.type !== 'preview') {
       state.events.push({ ...ev, text: message, key });
       if (state.events.length > 245) state.events.shift();
-      if (!quiet || goal || end) setFeed(message, ev, goal ? 'Goal' : ev.type === 'pen' ? 'Penalty' : null);
+      const label = goal ? 'Goal' : ev.type === 'pen' ? 'Penalty' : ev.type === 'varcheck' ? 'VAR check' : ev.type === 'varresult' ? 'VAR decision' : null;
+      if (!quiet || goal || end) setFeed(message, ev, label);
     }
     if (goal) {
       if (!quiet) {
@@ -362,7 +373,7 @@
       state.paused = true; state.visiblePlay = state.nextSearch = null; state.acc = 0; state.breakQueued = ev.type;
       A.whistle(ev.type === 'ht', ev.type === 'ft');
     } else if (!quiet) {
-      if (ev.type === 'pen' || ev.type === 'offside') A.whistle(false);
+      if (ev.type === 'pen' || ev.type === 'offside' || ev.type === 'varcheck') A.whistle(false);
       else if (ev.type === 'post' || ev.type === 'save') { A.kick(.7); if (ev.key) A.bigChance(); }
       else if (ev.type === 'foul' || ev.type === 'red' || ev.type === 'yellow') A.foul();
     }
@@ -376,6 +387,7 @@
 
   function withView(snap = captureFrame()) {
     const m = state.match;
+    snap.phase = m.phase;
     snap.score = m.teams.map(team => team.score);
     snap.stats = m.teams.map(team => ({ ...team.stats }));
     snap.poss = m.possTime.slice();
@@ -553,11 +565,12 @@
   }
   function renderSquad() {
     const t = state.match.teams[0];
-    const available = !state.ready && state.match.phase !== 'fulltime';
+    const pendingReview = state.match.phase === 'review';
+    const available = !state.ready && state.match.phase !== 'fulltime' && !pendingReview;
     const inPlayer = t.players.find(p => p.id === state.subMode);
-    const row = (p, role, bench) => `<div class="squad-row"><span>${p.num}</span><span>${html(p.name)}</span><span class="row-role">${role}</span><span class="row-cond">${condition(p)}%</span>${bench ? `<button type="button" class="button" data-bench="${html(p.id)}" ${!available || t.subsUsed >= 5 ? 'disabled' : ''}>Bring on</button>` : inPlayer ? `<button type="button" class="button" data-out="${html(p.id)}" ${(p.pos === 'GK') !== (inPlayer.pos === 'GK') ? 'disabled' : ''}>Replace</button>` : '<span></span>'}</div>`;
+    const row = (p, role, bench) => `<div class="squad-row"><span>${p.num}</span><span>${html(p.name)}</span><span class="row-role">${role}</span><span class="row-cond">${condition(p)}%</span>${bench ? `<button type="button" class="button" data-bench="${html(p.id)}" ${!available || t.subsUsed >= 5 ? 'disabled' : ''}>Bring on</button>` : inPlayer ? `<button type="button" class="button" data-out="${html(p.id)}" ${!available || (role === 'GK') !== (inPlayer.pos === 'GK') ? 'disabled' : ''}>Replace</button>` : '<span></span>'}</div>`;
     const timing = filmView() ? ` · changes take effect at ${state.match.clockStr()}` : '';
-    $('tab-squad').innerHTML = `<p class="help-text desk-feedback" role="status">${state.ready ? 'Substitutions are available after kick-off.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining${timing}.`}</p>${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${t.bench.map(p => row(p, p.pos, true)).join('')}`;
+    $('tab-squad').innerHTML = `<p class="help-text desk-feedback" role="status">${state.ready ? 'Substitutions are available after kick-off.' : pendingReview ? 'Wait for the VAR decision before substituting.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining${timing}.`}</p>${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${t.bench.map(p => row(p, p.pos, true)).join('')}`;
   }
 
   const statLine = (title, a, b) => `<div class="stat-line"><strong>${a}</strong><span>${title}</span><strong>${b}</strong></div>`;
@@ -587,6 +600,7 @@
     const view = filmView()?.view, count = view ? view.shotCount : m.shotMap.length;
     for (let i = 0; i < count; i++) {
       const shot = m.shotMap[i], outcome = view && i === count - 1 ? view.lastOutcome : shot.outcome;
+      if (outcome === 'disallowed') continue;
       ctx.beginPath(); ctx.arc(x(shot.x), y(shot.y), 4 + shot.xg * 14, 0, Math.PI * 2);
       ctx.fillStyle = outcome === 'goal' ? '#e6f6c5' : portraitKit(m.teams[shot.team].club.primary);
       ctx.fill(); ctx.strokeStyle = '#f0f9e5bc'; ctx.stroke();

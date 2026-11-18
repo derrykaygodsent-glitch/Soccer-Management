@@ -13,14 +13,14 @@ function match() {
 test('the shared broadcast moves routine play along and keeps attacks readable in either direction', () => {
   const m = match();
   const routine = targetPace(m);
-  assert.ok(routine > 4 && routine < 6);
+  assert.ok(routine >= 4 && routine <= 4.70, 'routine play is slower than the previous 5.35 pace');
   m.ball.x = L - 17;
   const attack = targetPace(m);
   assert.ok(attack < routine);
   m.controlTeam = 1; m.ball.x = 17;
   assert.equal(targetPace(m), attack);
   m.ball.flight = { kind: 'shot' };
-  assert.ok(targetPace(m) < attack);
+  assert.ok(targetPace(m) < 1.9 && targetPace(m) < attack, 'shots are slower than v0.4.5');
   m.ball.x = CX; m.ball.flight = { kind: 'pass' }; m.ball.z = 8;
   assert.ok(targetPace(m) < routine, 'an aerial delivery gets time on screen');
   m.phase = 'penalty';

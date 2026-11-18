@@ -152,9 +152,10 @@
     const avail = players.filter(p => !p.red);
     const picked = [];
     const used = new Set();
-    // GK first
-    const gk = avail.filter(p => p.pos === 'GK').sort((a, b) => ROLE_WEIGHTS.GK(b.attrs) - ROLE_WEIGHTS.GK(a.attrs))[0];
-    picked.push({ player: gk, role: 'GK', x: 0.035, y: 0.5 }); used.add(gk.id);
+    // Use an on-field outfielder if the only available keeper was sent off.
+    const keepers = avail.filter(p => p.pos === 'GK');
+    const gk = (keepers.length ? keepers : avail.slice()).sort((a, b) => ROLE_WEIGHTS.GK(b.attrs) - ROLE_WEIGHTS.GK(a.attrs))[0];
+    if (gk) { picked.push({ player: gk, role: 'GK', x: 0.035, y: 0.5 }); used.add(gk.id); }
     const order = slots.map((s, i) => ({ s, i })).sort((a, b) => {
       const w = { DC: 0, FB: 1, WB: 2, DM: 3, CM: 4, AM: 5, W: 6, ST: 7 };
       return w[a.s.role] - w[b.s.role];
@@ -169,7 +170,7 @@
       if (best) { picked.push({ player: best, role: s.role, x: s.x, y: s.y }); used.add(best.id); }
     }
     // restore formation order (GK first then slots order)
-    const xi = [picked[0]];
+    const xi = gk ? [picked[0]] : [];
     slots.forEach(s => {
       const f = picked.find(p => p.role === s.role && p.x === s.x && p.y === s.y && !xi.includes(p));
       if (f) xi.push(f);

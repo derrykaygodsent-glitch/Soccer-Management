@@ -66,7 +66,7 @@ h1{font:700 clamp(35px,4vw,45px)/.99 'Barlow Condensed','Arial Narrow',sans-seri
 .match-status{display:flex;align-items:center;gap:6px;padding:3px 0 3px 12px;border-left:1px solid #36493a;font-weight:750;color:#c3cfc2;font-size:10px;line-height:1.2;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
 .match-status i{width:6px;height:6px;border-radius:50%;background:#9da59b;flex:none}
 .match-status[data-status=live] i{background:#a9e88b;box-shadow:0 0 7px #a9e88b4f}
-.match-status[data-status=paused] i,.match-status[data-status=replay] i{background:#efc580}
+.match-status[data-status=paused] i,.match-status[data-status=replay] i,.match-status[data-status=review] i{background:#efc580}
 .match-status[data-status=ready] i{background:#c6e8a8}
 .board-meta{display:flex;align-items:center;gap:10px;margin-left:auto;font-size:10px;font-weight:750;letter-spacing:.12em;white-space:nowrap;color:#a2b1a1}
 .meta-divider{height:10px;width:1px;background:#46574a}

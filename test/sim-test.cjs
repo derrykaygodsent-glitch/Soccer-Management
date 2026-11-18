@@ -30,14 +30,15 @@ for (let m = 0; m < N; m++) {
     assert.equal(events.filter(e => e.type === 'ht').length, 1);
     assert.equal(events.filter(e => e.type === 'ft').length, 1);
     assert.ok(Math.abs(match.elapsed - 5400 - match.added[0] - match.added[1]) < 20, 'Unexpected match duration');
+    assert.equal(events.filter(e => e.type === 'varcheck').length, events.filter(e => e.type === 'varresult').length, 'Each VAR check is resolved');
+    assert.ok(match.shotMap.every(s => s.outcome !== 'pending'), 'Unresolved shots at full time');
     for (const team of match.teams) {
       const goals = events.filter(e => e.goal && e.team === team.idx);
       assert.equal(team.score, goals.length, 'Goal events and score disagree');
       assert.ok(goals.every(e => Number.isFinite(e.xg)), 'Missing goal xG');
-      const shots = match.shotMap.filter(s => s.team === team.idx);
+      const shots = match.shotMap.filter(s => s.team === team.idx && s.outcome !== 'disallowed');
       assert.equal(shots.length, team.stats.shots);
       assert.equal(shots.filter(s => s.outcome === 'goal' || s.outcome === 'save').length, team.stats.onTarget);
-      assert.ok(shots.every(s => s.outcome !== 'pending'), 'Unresolved shots at full time');
       assert.ok(team.stats.passWon <= team.stats.passes);
     }
     const s0 = match.teams[0].stats, s1 = match.teams[1].stats;

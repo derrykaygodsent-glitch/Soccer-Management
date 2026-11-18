@@ -8,8 +8,8 @@ const V = require('../src/highlights.js');
 const B = require('../src/broadcast.js');
 const { full, comprehensive, extended, key } = V.MODES;
 
-function game() {
-  return new Match(CLUBS[1], CLUBS[0], { seed: 342 });
+function game(seed = 342) {
+  return new Match(CLUBS[1], CLUBS[0], { seed });
 }
 
 test('four cumulative viewing settings, with Extended as the default', () => {
@@ -22,7 +22,7 @@ test('four cumulative viewing settings, with Extended as the default', () => {
   for (const period of ['lead', 'tail', 'opening']) {
     assert.ok(key[period] > 0 && extended[period] > key[period] && comprehensive[period] > extended[period]);
   }
-  for (const ev of ['goal', 'og', 'penscore', 'penmiss', 'pen', 'red', 'post']) assert.equal(V.eventRank({ type: ev }, m), key.rank);
+  for (const ev of ['goal', 'og', 'penscore', 'penmiss', 'pen', 'red', 'post', 'varcheck', 'varresult']) assert.equal(V.eventRank({ type: ev }, m), key.rank);
   assert.equal(V.eventRank({ type: 'corner' }, m), extended.rank);
   for (const ev of ['offside', 'yellow', 'catch']) assert.equal(V.eventRank({ type: ev }, m), comprehensive.rank);
   for (const ev of ['throwin', 'goalkick', 'preview']) assert.equal(V.eventRank({ type: ev }, m), Infinity);
@@ -35,12 +35,15 @@ test('four cumulative viewing settings, with Extended as the default', () => {
   assert.equal(V.eventRank(cross, m), extended.rank);
   m.phase = 'freekick'; m.setpiece = { direct: true, team: 0 };
   assert.equal(V.eventRank({ type: 'foul' }, m), extended.rank);
-  assert.equal(V.shotRank({ outcome: 'miss', xg: .30 }), key.rank);
-  assert.equal(V.shotRank({ outcome: 'save', xg: .23 }), key.rank);
-  assert.equal(V.shotRank({ outcome: 'save', xg: .04 }), extended.rank);
+  assert.equal(V.shotRank({ outcome: 'miss', xg: .35 }), key.rank);
+  assert.equal(V.shotRank({ outcome: 'save', xg: .29 }), key.rank);
+  assert.equal(V.shotRank({ outcome: 'save', xg: .23 }), extended.rank);
+  assert.equal(V.shotRank({ outcome: 'save', xg: .10 }), extended.rank);
+  assert.equal(V.shotRank({ outcome: 'save', xg: .04 }), comprehensive.rank);
   assert.equal(V.shotRank({ outcome: 'block', xg: .14 }), extended.rank);
   assert.equal(V.shotRank({ outcome: 'miss', xg: .09 }), comprehensive.rank);
   assert.equal(V.shotRank({ outcome: 'pending', xg: .60 }), Infinity);
+  assert.equal(V.shotRank({ outcome: 'disallowed', xg: .60 }), Infinity, 'only the review, not a disallowed shot, makes the cut');
   assert.equal(V.shotRank({ outcome: 'goal', xg: .04 }), key.rank, 'even an unlikely goal must make Key');
 });
 
@@ -122,14 +125,14 @@ test('a cut starts at the published clock and cannot include frames from the pre
   const f = (elapsed, half) => ({ elapsed, half, t: elapsed, score: elapsed === 207 ? [1, 0] : [0, 0] });
   const first = f(120, 2), last = f(207, 2);
   const hidden = V.visibleStart(first.elapsed, last.elapsed, key);
-  const history = [f(118, 1), f(121, 2), f(138, 2), f(143.98, 2), f(144.03, 2), f(195, 2), last];
-  assert.equal(hidden, 144);
+  const history = [f(118, 1), f(121, 2), f(138, 2), f(hidden - .02, 2), f(hidden + .03, 2), f(195, 2), last];
+  assert.equal(hidden, 207 - key.lead);
   assert.equal(V.visibleStart(first.elapsed, last.elapsed, comprehensive, hidden), hidden);
   assert.ok(hidden >= V.visibleStart(first.elapsed, 206, key));
   assert.ok(V.visibleStart(first.elapsed, last.elapsed, extended, 0, 2) > V.visibleStart(first.elapsed, last.elapsed, extended, 0, 1));
   assert.ok(V.tailFor(extended, 2) < V.tailFor(extended, 1));
   const film = V.clipFrames(history, first, last, hidden);
-  assert.deepEqual(film.map(x => x.elapsed), [143.98, 144.03, 195, 207]);
+  assert.deepEqual(film.map(x => x.elapsed), [hidden - .02, hidden + .03, 195, 207]);
   assert.deepEqual(film[V.indexAt(film, hidden)].score, [0, 0]);
   assert.deepEqual(film[V.indexAt(film, 206.99)].score, [0, 0]);
   assert.deepEqual(film[V.indexAt(film, 207)].score, [1, 0]);
@@ -139,7 +142,7 @@ test('a cut starts at the published clock and cannot include frames from the pre
 test('the same seed and changes on the same tick give identical play under all four policies', () => {
   const n = 40 * 445, changeAt = 40 * 305;
   const simulate = policy => {
-    const m = game(), scout = new V.Scout(m), clock = new B.Clock(m);
+    const m = game(7), scout = new V.Scout(m), clock = new B.Clock(m);
     let ticks = 0, seen = 0;
     while (ticks < n) {
       if (ticks === changeAt) {
@@ -170,5 +173,6 @@ test('the same seed and changes on the same tick give identical play under all f
   const continuous = simulate(full), narrow = simulate(key), normal = simulate(extended), broad = simulate(comprehensive);
   assert.ok(narrow.seen > 0 && normal.seen > narrow.seen && broad.seen > normal.seen);
   assert.ok(continuous.state.events.some(e => e[0] === 'sub'));
+  assert.ok(continuous.state.events.some(e => e[0] === 'varresult' && e[2].startsWith('Decision changed: penalty')));
   for (const playback of [narrow, normal, broad]) assert.deepEqual(playback.state, continuous.state);
 });

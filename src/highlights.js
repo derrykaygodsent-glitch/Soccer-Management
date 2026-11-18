@@ -9,7 +9,7 @@
   const EPS = 1e-6;
   const GOALS = new Set(['goal', 'og', 'penscore']);
   const BREAKS = new Set(['ht', 'ft']);
-  const DECISIVE = new Set([...GOALS, 'pen', 'penmiss', 'red', 'post']);
+  const DECISIVE = new Set([...GOALS, 'pen', 'penmiss', 'red', 'post', 'varcheck', 'varresult']);
   const OTHER = new Set(['offside', 'yellow', 'catch']);
 
   // This module selects footage. The shared broadcast clock sets its pace.
@@ -17,17 +17,19 @@
   const ATTACK_GAP = 295, CONTEXT_GAP = 270;
   // The largest window protects the buildup to a decisive incident. Shorter
   // passages for ordinary chances and tactical context keep the cuts distinct.
+  // These are simulation seconds: with the slower shared pace they still give
+  // the viewer time to see the buildup, without speeding up individual modes.
   const MODES = Object.freeze(Object.fromEntries([
     { id: 'full', label: 'Full Match', rank: 0, lead: 0, tail: 0, opening: 0,
       estimate: '15–25', bestFor: 'Tactical analysis', detail: 'Continuous play, including possession and movement between chances.' },
-    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 74, tail: 50, opening: 19,
-      extraLead: 43, extraTail: 31,
+    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 65, tail: 44, opening: 17,
+      extraLead: 37, extraTail: 25,
       estimate: '10–18', bestFor: 'Important matches', detail: 'More buildup, attacking spells, defensive recoveries and restarts.' },
-    { id: 'extended', label: 'Extended', rank: 2, lead: 68, tail: 47, opening: 13,
-      extraLead: 35, extraTail: 26,
+    { id: 'extended', label: 'Extended', rank: 2, lead: 59, tail: 40, opening: 12,
+      extraLead: 28, extraTail: 19,
       estimate: '7–12', bestFor: 'Normal league matches', detail: 'Key moments plus a selection of attacks, chances and attacking set pieces.' },
-    { id: 'key', label: 'Key', rank: 1, lead: 63, tail: 44, opening: 8,
-      estimate: '3–7', bestFor: 'Quick season progression', detail: 'Only goals, major chances, penalties, woodwork and dismissals.' }
+    { id: 'key', label: 'Key', rank: 1, lead: 55, tail: 34, opening: 7,
+      estimate: '3–7', bestFor: 'Quick season progression', detail: 'Goals, major chances, penalties, woodwork, dismissals and VAR checks.' }
   ].map(mode => [mode.id, Object.freeze(mode)])));
   const modeFor = id => Object.hasOwn(MODES, id) ? MODES[id] : MODES[DEFAULT_MODE];
   const tailFor = (policy, rank) => rank > 1 ? policy.extraTail ?? policy.tail : policy.tail;
@@ -49,9 +51,11 @@
   }
 
   function shotRank(shot) {
-    if (!shot || shot.outcome === 'pending') return Infinity;
-    if (shot.pen || shot.outcome === 'goal' || shot.outcome === 'post' || shot.xg >= .26 || (shot.outcome === 'save' && shot.xg >= .22)) return 1;
-    if (shot.outcome === 'save' || shot.xg >= .14) return 2;
+    if (!shot || shot.outcome === 'pending' || shot.outcome === 'disallowed') return Infinity;
+    // Key keeps decisive incidents and the clearest chances. Routine saves
+    // still count in the match, but belong in the broader edits.
+    if (shot.pen || shot.outcome === 'goal' || shot.outcome === 'post' || shot.xg >= .33 || (shot.outcome === 'save' && shot.xg >= .285)) return 1;
+    if (shot.xg >= .14 || (shot.outcome === 'save' && shot.xg >= .095)) return 2;
     return 3;
   }
 
@@ -180,7 +184,8 @@
   }
 
   function holdingAction(match, policy) {
-    if (match.phase === 'penalty' || match.phase === 'goal' || match.ball.flight?.kind === 'shot') return true;
+    const phase = match.phase;
+    if (phase === 'review' || phase === 'penalty' || phase === 'goal' || match.ball.flight?.kind === 'shot') return true;
     return policy.rank >= 2 && (match.phase === 'corner' || (match.phase === 'freekick' && !!match.setpiece?.direct));
   }
 

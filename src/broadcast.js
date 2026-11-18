@@ -6,21 +6,22 @@
   const smooth = n => { const t = clamp(n, 0, 1); return t * t * (3 - 2 * t); };
   const SPEEDS = [1, 2, 4];
   const multiplier = speed => SPEEDS[speed - 1] ?? SPEEDS[0];
-  const ROUTINE = 5.35;
+  const ROUTINE = 4.65, ATTACK = 2.12;
 
   function targetPace(match) {
     const b = match.ball, flight = b.flight, phase = match.phase;
     // Every mode sees the same movement at a given timestamp: the current
     // action, not the eventual result or the clip's rank, sets the tempo.
-    if (phase === 'goal' || phase === 'penalty' || flight?.kind === 'shot') return 2.15;
-    if (phase === 'corner' || (phase === 'freekick' && match.setpiece?.direct)) return 2.85;
-    if (phase === 'kickoff') return 3.7;
+    if (phase === 'review') return 1.85;
+    if (phase === 'goal' || phase === 'penalty' || flight?.kind === 'shot') return 1.78;
+    if (phase === 'corner' || (phase === 'freekick' && match.setpiece?.direct)) return 2.42;
+    if (phase === 'kickoff') return 3.1;
     if (phase !== 'open') return ROUTINE;
     const attack = match.teams[b.owner?.team ?? flight?.team ?? match.controlTeam].attackDir;
     const toGoal = attack > 0 ? L - b.x : b.x;
     const box = smooth((30 - toGoal) / 22) * (.64 + .36 * smooth((25 - Math.abs(b.y - CY)) / 16));
     const delivery = flight?.kind === 'cross' ? .77 : .62 * smooth((b.z - .35) / 4.2);
-    return ROUTINE - (ROUTINE - 2.5) * Math.max(box, delivery);
+    return ROUTINE - (ROUTINE - ATTACK) * Math.max(box, delivery);
   }
 
   class Clock {
