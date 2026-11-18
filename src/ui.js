@@ -4,7 +4,7 @@
   const D = global.TLData, E = global.TLEngine, A = global.TLAudio, V = global.TLHighlights;
   const $ = id => document.getElementById(id);
   // Physics uses a fixed step; display speed never changes the simulation outcome.
-  const H = V.STEP, RATES = [0, 1.65, 3.3, 6.6], REPLAY_RATE = 1.5;
+  const H = V.STEP, REPLAY_RATE = 1.5;
   const REPLAY_BUILDUP = 12, REPLAY_AFTERMATH = 1.05;
   const HISTORY = Math.ceil((V.MODES.comprehensive.lead + 6) / (H * 2));
   const SCAN_YIELD = 6;
@@ -209,10 +209,18 @@
     updateHUD();
   }
 
+  const timingLabel = policy => `${policy.estimate} min at 1×`;
+
   function syncWatchMode() {
-    const policy = chosenMode();
-    $('highlightMode').value = policy.id;
-    $('highlightMode').title = `${policy.label} — ${policy.detail}`;
+    const policy = chosenMode(), select = $('highlightMode');
+    select.value = policy.id;
+    select.title = `${policy.label} · About ${timingLabel(policy)} · ${policy.bestFor}. ${policy.detail}`;
+  }
+
+  function updateWatchGuide(policy) {
+    text('watchEstimate', `≈ ${timingLabel(policy)}`);
+    text('watchUse', policy.bestFor);
+    text('watchDetail', policy.detail);
   }
 
   function setWatchMode(id) {
@@ -440,7 +448,7 @@
 
   function advanceScene(dt) {
     const scene = state.scene, frames = scene.frames, last = frames.at(-1);
-    scene.time = Math.min(last.elapsed, scene.time + dt * RATES[state.speed]);
+    scene.time = Math.min(last.elapsed, scene.time + dt * V.playbackRate(chosenMode(), state.speed));
     const i = V.indexAt(frames, scene.time), a = frames[i], b = frames[Math.min(i + 1, frames.length - 1)];
     const f = a === b ? 0 : Math.max(0, Math.min(1, (scene.time - a.elapsed) / (b.elapsed - a.elapsed)));
     scene.view = a;
@@ -488,7 +496,7 @@
   }
   function openSetup() {
     $('preHighlights').value = chosenMode().id;
-    text('watchDetail', chosenMode().detail);
+    updateWatchGuide(chosenMode());
     $('preHome').value = state.config.home; $('preAway').value = state.config.away;
     $('preForm').value = state.match.teams[0].tactics.formation; $('preMent').value = state.match.teams[0].tactics.mentality;
     $('preReplay').checked = state.config.auto; $('preSound').checked = state.sound;
@@ -626,7 +634,7 @@
       if (state.visiblePlay && m.elapsed >= state.visiblePlay.until && !V.holdingAction(m, state.visiblePlay.policy)) state.visiblePlay = null;
       if (policy.rank && !state.visiblePlay && !V.holdingAction(m, policy)) { beginSearch(policy); return; }
     }
-    state.acc += dt * RATES[state.speed];
+    state.acc += dt * V.playbackRate(policy, state.speed);
     let n = 0;
     while (state.acc >= H && n++ < 48 && !state.replay && !state.paused) {
       state.acc -= H;
@@ -674,7 +682,7 @@
     const modeOptions = Object.values(V.MODES).map(mode => `<option value="${mode.id}">${mode.label}</option>`).join('');
     $('highlightMode').innerHTML = $('preHighlights').innerHTML = modeOptions;
     $('highlightMode').addEventListener('change', e => setWatchMode(e.target.value));
-    $('preHighlights').addEventListener('change', e => text('watchDetail', V.modeFor(e.target.value).detail));
+    $('preHighlights').addEventListener('change', e => updateWatchGuide(V.modeFor(e.target.value)));
     document.addEventListener('visibilitychange', queueScan);
     for (const id of ['setupDialog', 'deskDialog', 'breakDialog']) $(id).addEventListener('close', queueScan);
     for (const b of document.querySelectorAll('[data-speed]')) b.addEventListener('click', () => setSpeed(+b.dataset.speed));

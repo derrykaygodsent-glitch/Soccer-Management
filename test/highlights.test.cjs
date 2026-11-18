@@ -43,6 +43,20 @@ test('four cumulative viewing settings, with Extended as the default', () => {
   assert.equal(V.shotRank({ outcome: 'goal', xg: .04 }), key.rank, 'even an unlikely goal must make Key');
 });
 
+test('normal playback uses the viewing mode’s pace and the speed buttons multiply it', () => {
+  assert.deepEqual([full, comprehensive, extended, key].map(p => p.estimate), ['15–25', '10–18', '7–12', '3–7']);
+  assert.equal(extended.bestFor, 'Normal league matches');
+  for (const mode of [full, comprehensive, extended, key]) {
+    assert.equal(V.playbackRate(mode, 1), mode.pace);
+    assert.equal(V.playbackRate(mode, 2), 2 * mode.pace);
+    assert.equal(V.playbackRate(mode, 3), 4 * mode.pace);
+    assert.ok(V.playbackRate(mode, 3) * .05 / V.STEP < 48, '4× fits the live tick budget');
+  }
+  const fullMinutes = 90 / V.playbackRate(full, 1);
+  assert.ok(fullMinutes >= 15 && fullMinutes <= 25);
+  assert.ok(key.pace < extended.pace, 'selectivity, not rushed playback, makes Key quicker');
+});
+
 test('scouting preserves possession across passes and distinguishes progression from recovery', () => {
   const m = game(), scout = new V.Scout(m);
   const [home, away] = m.teams.map(t => t.slots.find(s => s.role !== 'GK').player);
@@ -96,12 +110,12 @@ test('a cut starts at the published clock and cannot include frames from the pre
   const s = (elapsed, half) => ({ elapsed, half, t: elapsed, score: elapsed === 107 ? [1, 0] : [0, 0] });
   const first = s(78, 2), last = s(107, 2);
   const hidden = V.visibleStart(first.elapsed, last.elapsed, key);
-  const history = [s(74, 1), s(79, 2), s(91, 2), s(97.48, 2), s(97.53, 2), s(102, 2), last];
-  assert.equal(hidden, 97.5);
+  const history = [s(74, 1), s(79, 2), s(86, 2), s(90.98, 2), s(91.03, 2), s(102, 2), last];
+  assert.equal(hidden, 91);
   assert.equal(V.visibleStart(first.elapsed, last.elapsed, comprehensive, hidden), hidden);
   assert.ok(hidden >= V.visibleStart(first.elapsed, 106, key));
   const film = V.clipFrames(history, first, last, hidden);
-  assert.deepEqual(film.map(x => x.elapsed), [97.48, 97.53, 102, 107]);
+  assert.deepEqual(film.map(x => x.elapsed), [90.98, 91.03, 102, 107]);
   assert.deepEqual(film[V.indexAt(film, hidden)].score, [0, 0]);
   assert.deepEqual(film[V.indexAt(film, 106.99)].score, [0, 0]);
   assert.deepEqual(film[V.indexAt(film, 107)].score, [1, 0]);

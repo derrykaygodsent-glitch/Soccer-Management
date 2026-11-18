@@ -13,18 +13,21 @@
   const OTHER = new Set(['offside', 'yellow', 'catch']);
 
   // Full bypasses the filter; the other three tiers include all lower ranks.
+  // Pace is simulated seconds per real second of visible play, not a physics input.
   const DEFAULT_MODE = 'extended';
+  const SPEED_MULTIPLIERS = [0, 1, 2, 4];
   const MODES = Object.freeze(Object.fromEntries([
-    { id: 'full', label: 'Full Match', rank: 0, lead: 0, tail: 0, opening: 0,
-      detail: 'Continuous play, including possession and movement between chances.' },
-    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 23, tail: 15, opening: 17,
-      detail: 'More buildup, attacking spells, defensive recoveries and restarts.' },
-    { id: 'extended', label: 'Extended', rank: 2, lead: 18, tail: 12, opening: 10,
-      detail: 'Key moments plus a selection of attacks, chances and attacking set pieces.' },
-    { id: 'key', label: 'Key', rank: 1, lead: 9.5, tail: 6, opening: 4.5,
-      detail: 'Only goals, major chances, penalties, woodwork and dismissals.' }
+    { id: 'full', label: 'Full Match', rank: 0, lead: 0, tail: 0, opening: 0, pace: 4.65,
+      estimate: '15–25', bestFor: 'Tactical analysis', detail: 'Continuous play, including possession and movement between chances.' },
+    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 23, tail: 15, opening: 17, pace: 4.45,
+      estimate: '10–18', bestFor: 'Important matches', detail: 'More buildup, attacking spells, defensive recoveries and restarts.' },
+    { id: 'extended', label: 'Extended', rank: 2, lead: 18, tail: 12, opening: 10, pace: 4,
+      estimate: '7–12', bestFor: 'Normal league matches', detail: 'Key moments plus a selection of attacks, chances and attacking set pieces.' },
+    { id: 'key', label: 'Key', rank: 1, lead: 16, tail: 11, opening: 7, pace: 1.12,
+      estimate: '3–7', bestFor: 'Quick season progression', detail: 'Goals, major chances, penalties, woodwork and dismissals shown at a more readable pace.' }
   ].map(mode => [mode.id, Object.freeze(mode)])));
   const modeFor = id => Object.hasOwn(MODES, id) ? MODES[id] : MODES[DEFAULT_MODE];
+  const playbackRate = (mode, speed) => mode.pace * SPEED_MULTIPLIERS[speed];
   const atBreak = m => m.phase === 'halftime' || m.phase === 'fulltime';
   const depthFor = (match, team) => match.teams[team].attackDir > 0 ? match.ball.x : L - match.ball.x;
 
@@ -161,7 +164,7 @@
     return policy.rank >= 2 && (match.phase === 'corner' || (match.phase === 'freekick' && !!match.setpiece?.direct));
   }
 
-  const api = { STEP, SCAN_BUDGET_MS, MAX_SCAN_STEPS, GOALS, BREAKS, DECISIVE, DEFAULT_MODE, MODES, modeFor, atBreak, eventRank, shotRank, Scout, scanBatch, visibleStart, indexAt, frameAt, clipFrames, holdingAction };
+  const api = { STEP, SCAN_BUDGET_MS, MAX_SCAN_STEPS, GOALS, BREAKS, DECISIVE, DEFAULT_MODE, MODES, modeFor, playbackRate, atBreak, eventRank, shotRank, Scout, scanBatch, visibleStart, indexAt, frameAt, clipFrames, holdingAction };
   global.TLHighlights = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

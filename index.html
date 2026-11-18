@@ -138,7 +138,11 @@ kbd{background:#1b281f;border:1px solid #3b4b3e;border-radius:4px;padding:1px 4p
 .fixture-pick{display:grid;grid-template-columns:1fr 1fr;gap:9px}.pick-club{display:grid;grid-template-columns:26px 1fr;align-items:center;column-gap:7px;row-gap:6px;padding:9px;border:1px solid #3b5141;border-radius:8px;background:#1b2a20;color:var(--muted);font-size:11px;font-weight:670}.pick-crest{height:25px;width:22px;display:block;justify-self:center}.pick-club select{grid-column:span 2}
 select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:#e8efe7;border-radius:6px;padding:7px 8px;min-height:36px;font-size:12px}
 .settings-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}.settings-row label{display:grid;gap:5px;color:var(--muted);font-size:11px;font-weight:650}
-.watch-settings{align-items:end}.watch-settings .help-text{padding:2px 0 3px}
+.watch-settings{align-items:end}
+.watch-timing{display:grid;gap:3px;min-width:0;padding:6px 9px;border:1px solid #405942;border-radius:7px;background:#192b20;font-size:11px;line-height:1.25}
+.watch-timing strong{font-size:13px;color:#d9f3b7;font-variant-numeric:tabular-nums}
+.watch-timing span{color:#c3d3c3}
+.watch-detail{margin-top:7px}.watch-note{margin-top:3px;color:#9eafa0}
 .setup-checks{display:flex;flex-wrap:wrap;align-items:center;gap:9px 15px;margin:13px 0 8px}.setup-checks label{display:flex;align-items:center;gap:5px;color:#d7e3d8;font-size:12px;cursor:pointer}.setup-checks input{height:16px;width:16px;margin:0;accent-color:var(--accent)}
 .help-text{font-size:11px;line-height:1.4;color:#a6b9a8}
 .desk-tabs{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #435447;background:#141e17;position:sticky;top:0;z-index:1}
@@ -344,7 +348,12 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
         <label class="pick-club"><span class="pick-crest" id="setupAwayCrest"></span><span>Opposition</span><select id="preAway" required></select></label>
       </div>
       <div class="settings-row"><label>Formation<select id="preForm"></select></label><label>Mentality<select id="preMent"></select></label></div>
-      <div class="settings-row watch-settings"><label>Highlights<select id="preHighlights" aria-describedby="watchDetail"></select></label><p class="help-text" id="watchDetail"></p></div>
+      <div class="settings-row watch-settings">
+        <label>Highlights<select id="preHighlights" aria-describedby="watchTiming watchDetail watchNote"></select></label>
+        <div class="watch-timing" id="watchTiming" aria-live="polite"><strong id="watchEstimate"></strong><span id="watchUse"></span></div>
+      </div>
+      <p class="help-text watch-detail" id="watchDetail"></p>
+      <p class="help-text watch-note" id="watchNote">Estimates are real-world viewing time. The match still plays all 90 minutes plus stoppage time.</p>
       <div class="setup-checks"><label><input type="checkbox" id="preReplay" checked> Auto goal replays</label><label><input type="checkbox" id="preSound"> Stadium sound</label></div>
       <p class="help-text" id="setupNote">Set your fixture and starting instructions.</p>
       <div class="dialog-actions"><button class="button" data-close="setupDialog" type="button">Cancel</button><button class="button primary" type="submit">Load fixture <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
@@ -2490,18 +2499,21 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   const OTHER = new Set(['offside', 'yellow', 'catch']);
 
   // Full bypasses the filter; the other three tiers include all lower ranks.
+  // Pace is simulated seconds per real second of visible play, not a physics input.
   const DEFAULT_MODE = 'extended';
+  const SPEED_MULTIPLIERS = [0, 1, 2, 4];
   const MODES = Object.freeze(Object.fromEntries([
-    { id: 'full', label: 'Full Match', rank: 0, lead: 0, tail: 0, opening: 0,
-      detail: 'Continuous play, including possession and movement between chances.' },
-    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 23, tail: 15, opening: 17,
-      detail: 'More buildup, attacking spells, defensive recoveries and restarts.' },
-    { id: 'extended', label: 'Extended', rank: 2, lead: 18, tail: 12, opening: 10,
-      detail: 'Key moments plus a selection of attacks, chances and attacking set pieces.' },
-    { id: 'key', label: 'Key', rank: 1, lead: 9.5, tail: 6, opening: 4.5,
-      detail: 'Only goals, major chances, penalties, woodwork and dismissals.' }
+    { id: 'full', label: 'Full Match', rank: 0, lead: 0, tail: 0, opening: 0, pace: 4.65,
+      estimate: '15–25', bestFor: 'Tactical analysis', detail: 'Continuous play, including possession and movement between chances.' },
+    { id: 'comprehensive', label: 'Comprehensive', rank: 3, lead: 23, tail: 15, opening: 17, pace: 4.45,
+      estimate: '10–18', bestFor: 'Important matches', detail: 'More buildup, attacking spells, defensive recoveries and restarts.' },
+    { id: 'extended', label: 'Extended', rank: 2, lead: 18, tail: 12, opening: 10, pace: 4,
+      estimate: '7–12', bestFor: 'Normal league matches', detail: 'Key moments plus a selection of attacks, chances and attacking set pieces.' },
+    { id: 'key', label: 'Key', rank: 1, lead: 16, tail: 11, opening: 7, pace: 1.12,
+      estimate: '3–7', bestFor: 'Quick season progression', detail: 'Goals, major chances, penalties, woodwork and dismissals shown at a more readable pace.' }
   ].map(mode => [mode.id, Object.freeze(mode)])));
   const modeFor = id => Object.hasOwn(MODES, id) ? MODES[id] : MODES[DEFAULT_MODE];
+  const playbackRate = (mode, speed) => mode.pace * SPEED_MULTIPLIERS[speed];
   const atBreak = m => m.phase === 'halftime' || m.phase === 'fulltime';
   const depthFor = (match, team) => match.teams[team].attackDir > 0 ? match.ball.x : L - match.ball.x;
 
@@ -2638,7 +2650,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     return policy.rank >= 2 && (match.phase === 'corner' || (match.phase === 'freekick' && !!match.setpiece?.direct));
   }
 
-  const api = { STEP, SCAN_BUDGET_MS, MAX_SCAN_STEPS, GOALS, BREAKS, DECISIVE, DEFAULT_MODE, MODES, modeFor, atBreak, eventRank, shotRank, Scout, scanBatch, visibleStart, indexAt, frameAt, clipFrames, holdingAction };
+  const api = { STEP, SCAN_BUDGET_MS, MAX_SCAN_STEPS, GOALS, BREAKS, DECISIVE, DEFAULT_MODE, MODES, modeFor, playbackRate, atBreak, eventRank, shotRank, Scout, scanBatch, visibleStart, indexAt, frameAt, clipFrames, holdingAction };
   global.TLHighlights = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -2651,7 +2663,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   const D = global.TLData, E = global.TLEngine, A = global.TLAudio, V = global.TLHighlights;
   const $ = id => document.getElementById(id);
   // Physics uses a fixed step; display speed never changes the simulation outcome.
-  const H = V.STEP, RATES = [0, 1.65, 3.3, 6.6], REPLAY_RATE = 1.5;
+  const H = V.STEP, REPLAY_RATE = 1.5;
   const REPLAY_BUILDUP = 12, REPLAY_AFTERMATH = 1.05;
   const HISTORY = Math.ceil((V.MODES.comprehensive.lead + 6) / (H * 2));
   const SCAN_YIELD = 6;
@@ -2856,10 +2868,18 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     updateHUD();
   }
 
+  const timingLabel = policy => `${policy.estimate} min at 1×`;
+
   function syncWatchMode() {
-    const policy = chosenMode();
-    $('highlightMode').value = policy.id;
-    $('highlightMode').title = `${policy.label} — ${policy.detail}`;
+    const policy = chosenMode(), select = $('highlightMode');
+    select.value = policy.id;
+    select.title = `${policy.label} · About ${timingLabel(policy)} · ${policy.bestFor}. ${policy.detail}`;
+  }
+
+  function updateWatchGuide(policy) {
+    text('watchEstimate', `≈ ${timingLabel(policy)}`);
+    text('watchUse', policy.bestFor);
+    text('watchDetail', policy.detail);
   }
 
   function setWatchMode(id) {
@@ -3087,7 +3107,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
 
   function advanceScene(dt) {
     const scene = state.scene, frames = scene.frames, last = frames.at(-1);
-    scene.time = Math.min(last.elapsed, scene.time + dt * RATES[state.speed]);
+    scene.time = Math.min(last.elapsed, scene.time + dt * V.playbackRate(chosenMode(), state.speed));
     const i = V.indexAt(frames, scene.time), a = frames[i], b = frames[Math.min(i + 1, frames.length - 1)];
     const f = a === b ? 0 : Math.max(0, Math.min(1, (scene.time - a.elapsed) / (b.elapsed - a.elapsed)));
     scene.view = a;
@@ -3135,7 +3155,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   }
   function openSetup() {
     $('preHighlights').value = chosenMode().id;
-    text('watchDetail', chosenMode().detail);
+    updateWatchGuide(chosenMode());
     $('preHome').value = state.config.home; $('preAway').value = state.config.away;
     $('preForm').value = state.match.teams[0].tactics.formation; $('preMent').value = state.match.teams[0].tactics.mentality;
     $('preReplay').checked = state.config.auto; $('preSound').checked = state.sound;
@@ -3273,7 +3293,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
       if (state.visiblePlay && m.elapsed >= state.visiblePlay.until && !V.holdingAction(m, state.visiblePlay.policy)) state.visiblePlay = null;
       if (policy.rank && !state.visiblePlay && !V.holdingAction(m, policy)) { beginSearch(policy); return; }
     }
-    state.acc += dt * RATES[state.speed];
+    state.acc += dt * V.playbackRate(policy, state.speed);
     let n = 0;
     while (state.acc >= H && n++ < 48 && !state.replay && !state.paused) {
       state.acc -= H;
@@ -3321,7 +3341,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
     const modeOptions = Object.values(V.MODES).map(mode => `<option value="${mode.id}">${mode.label}</option>`).join('');
     $('highlightMode').innerHTML = $('preHighlights').innerHTML = modeOptions;
     $('highlightMode').addEventListener('change', e => setWatchMode(e.target.value));
-    $('preHighlights').addEventListener('change', e => text('watchDetail', V.modeFor(e.target.value).detail));
+    $('preHighlights').addEventListener('change', e => updateWatchGuide(V.modeFor(e.target.value)));
     document.addEventListener('visibilitychange', queueScan);
     for (const id of ['setupDialog', 'deskDialog', 'breakDialog']) $(id).addEventListener('close', queueScan);
     for (const b of document.querySelectorAll('[data-speed]')) b.addEventListener('click', () => setSpeed(+b.dataset.speed));

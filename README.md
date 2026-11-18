@@ -6,16 +6,18 @@
 
 Choose **Highlights** beneath the pitch or in **Match setup**, then press **Kick off**. You can change the viewing mode mid-match without restarting. A passage already on screen plays out before the new setting takes over.
 
-| Mode | What you'll see |
-| --- | --- |
-| **Full Match** | Continuous play: routine possession, off-ball movement, buildup and defending, as well as chances. |
-| **Comprehensive** | More attacking spells, defensive recoveries and restarts, with longer buildup and aftermath. Still skips quiet play. |
-| **Extended** (default) | Key moments plus selected attacks, chances and attacking set pieces. |
-| **Key** | The fastest view: goals, major chances, penalties, woodwork and dismissals. |
+| Mode | Best for | Approx. viewing time at 1× | What you'll see |
+| --- | --- | ---: | --- |
+| **Full Match** | Tactical analysis | 15–25 min | Continuous play: routine possession, off-ball movement, buildup and defending, as well as chances. |
+| **Comprehensive** | Important matches | 10–18 min | More attacking spells, defensive recoveries and restarts, with longer buildup and aftermath. Still skips quiet play. |
+| **Extended** (default) | Normal league matches | 7–12 min | Key moments plus selected attacks, chances and attacking set pieces. |
+| **Key** | Quick season progression | 3–7 min | Goals, major chances, penalties, woodwork and dismissals, played at a more readable pace. |
+
+These are real-world estimates, not timers or quotas. Actual viewing time depends on the fixture, device, replay settings and pauses. All modes still play 90 in-game minutes plus stoppage time.
 
 Highlight modes fast-forward through quiet play, then show real buildup, the action itself and what follows. How much footage you see depends on the fixture. The same engine still plays every tick and records all events and stats. With the same seed and instructions at the same match times, the four modes produce identical results.
 
-The **1× / 2× / 4×** controls set the speed of displayed play. **Next highlight** jumps to the next qualifying passage (a Key moment in Full Match). **Stop here** ends a search and shows the current passage without changing the mode. The game still stops at halftime and full time. In the Touchline desk, changes take effect at the displayed effective time; they do not alter recorded buildup. Goal replays are separate and can be turned off in Match setup.
+The **1× / 2× / 4×** controls multiply the selected mode’s playback pace. Skipping, paused time and goal replays are separate. **Next highlight** jumps to the next qualifying passage (a Key moment in Full Match). **Stop here** ends a search and shows the current passage without changing the mode. The game still stops at halftime and full time. In the Touchline desk, changes take effect at the displayed effective time; they do not alter recorded buildup. Goal replays are separate and can be turned off in Match setup.
 
 ## Play and build
 
