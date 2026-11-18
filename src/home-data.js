@@ -16,19 +16,44 @@
     ['lyd', 'Lydden County', '#a43d37', '#f3e4ce'], ['mer', 'Mereford', '#3b567f', '#d3e7f9']
   ].map(([id, name, primary, secondary]) => ({ id, name, primary, secondary, short: id.toUpperCase() }));
   const clubs = Object.fromEntries([...D.CLUBS, ...local].map(c => [c.id, c]));
-  const f = (date, venue, opponent, comp, score = null) => ({ date, venue, opponent, comp, score });
+  const f = (date, venue, opponent, comp, score = null, stage = '') => ({
+    id: `${new Date(date).toISOString().slice(0, 10)}-${opponent}`, date, venue, opponent, comp, score, stage
+  });
+  // Riverside scores are always first here. Views put the host on the left when
+  // presenting a match report. Historical fixtures do not open the live engine.
   const fixtures = [
+    f(at(7, 13), 'A', 'mer', 'FR', [2, 2]),
+    f(at(7, 20), 'H', 'hpt', 'FR', [3, 0]),
+    f(at(7, 26, 19, 45), 'H', 'wst', 'FR', [3, 1]),
+    f(at(8, 3, 17), 'N', 'nbu', 'CS', [2, 1], 'Final'),
+    f(at(8, 10), 'H', 'mer', 'PD', [4, 0]),
+    f(at(8, 17), 'A', 'lyd', 'PD', [2, 2]),
+    f(at(8, 24, 17, 30), 'H', 'elm', 'PD', [5, 0]),
+    f(at(8, 31), 'A', 'ash', 'PD', [1, 1]),
+    f(at(9, 14, 15), 'H', 'crt', 'PD', [1, 1]),
+    f(at(9, 17, 20), 'H', 'ard', 'CC', [3, 0], 'League Phase'),
+    f(at(9, 21, 17, 30), 'H', 'val', 'PD', [5, 0]),
+    f(at(9, 24, 19, 45), 'H', 'lyd', 'LC', [3, 0], 'Third Round'),
+    f(at(9, 28), 'A', 'red', 'PD', [3, 1]),
+    f(at(10, 2, 20), 'A', 'brk', 'CC', [2, 0], 'League Phase'),
+    f(at(10, 5), 'H', 'sby', 'PD', [5, 1]),
+    f(at(10, 16, 20), 'H', 'crl', 'CC', [4, 1], 'League Phase'),
+    f(at(10, 19), 'H', 'dun', 'PD', [5, 1]),
     f(at(10, 22, 19, 45), 'A', 'oak', 'PD', [4, 0]),
     f(at(10, 26, 15), 'A', 'efc', 'PD', [4, 0]),
-    f(at(10, 30, 19, 45), 'H', 'hpt', 'LC'),
+    f(at(10, 30, 19, 45), 'H', 'hpt', 'LC', null, 'Fourth Round'),
     f(at(11, 2), 'H', 'swl', 'PD'),
-    f(at(11, 5, 20), 'A', 'kgd', 'CC'),
+    f(at(11, 5, 20), 'A', 'kgd', 'CC', null, 'League Phase'),
     f(at(11, 10, 14), 'A', 'nbu', 'PD'),
     f(at(11, 23), 'H', 'crl', 'PD'),
     f(at(11, 30), 'H', 'wst', 'PD')
   ];
-  const competition = { PD: division, LC: 'League Cup Fourth Round', CC: 'Continental Cup' };
-  const next = fixtures.find(item => !item.score);
+  const competition = { PD: division, LC: 'League Cup Fourth Round', CC: 'Continental Cup', CS: 'Community Shield', FR: 'Friendly', NC: 'National Cup' };
+  const fixtureCompetition = item => item.comp === 'LC' ? `League Cup${item.stage ? ' ' + item.stage : ''}` : competition[item.comp];
+  const nextIndex = fixtures.findIndex(item => !item.score);
+  const next = fixtures[nextIndex];
+  const homeFixtures = fixtures.slice(nextIndex - 2, nextIndex + 5);
+  const form = fixtures.filter(item => item.score && item.comp === 'PD').slice(-6);
   const matchConfig = () => {
     const host = next.venue === 'H' ? homeId : next.opponent;
     const visitor = next.venue === 'H' ? next.opponent : homeId;
@@ -67,12 +92,6 @@
     retention: 100, nextSeason: 94710000, wage: 7560000, spending: 6166930, committed: 6166930,
     history: [34, 19, 7, -328, -347, -374, -354, 88, 145, 247, 207, 181, 165, 187, 167, 151, 123, 376, 419, 398, 347]
   };
-  const inbox = [
-    ['Club secretary', 'League Cup fixture confirmed', 'Harbourport Town will visit Quayside Park on Wednesday. The match centre is ready when you are.'],
-    ['Scouting department', 'Harbourport Town: opponent preview', 'Harbourport favour early deliveries and two forwards. Their next visit is listed in your schedule.'],
-    ['Analytics department', 'October squad report', 'Fabio Novak leads the team in goals and rating. Diego Berg is our leading provider.'],
-    ['Finance department', 'October budget statement', 'The current transfer and wage allocations are available under Finance & Salary.']
-  ];
   const month = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const weekdays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const two = n => String(n).padStart(2, '0');
@@ -91,8 +110,8 @@
   const currency = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 });
   const money = amount => currency.format(amount);
   const millions = amount => `£${+(amount / 1000000).toFixed(2)}M`;
-  const api = { start, homeId, manager, division, clubs, fixtures, next, competition, matchConfig, standings, positionHistory, opponentManager,
-    squad, portraitFor, leaders, finance, inbox, shortDate, calendar, leadTime, ordinal, money, millions };
+  const api = { start, homeId, manager, division, clubs, fixtures, homeFixtures, form, next, competition, fixtureCompetition, matchConfig, standings, positionHistory, opponentManager,
+    squad, portraitFor, leaders, finance, shortDate, calendar, leadTime, ordinal, money, millions };
   global.TLHomeData = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

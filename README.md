@@ -2,11 +2,19 @@
 
 **Classic 2D is the main game.** The approved fixed overhead pitch and match engine are the foundation. Make future changes in `touchline-26/`; `touchline-classic/` remains a copy of the approved motion review.
 
-## Club Home
+## Riverside Clubhouse
 
-Touchline opens on **Club Home**, with your upcoming match, fixtures, league table, player leaders and budgets. It starts from a fictional season snapshot, not a simulated league or transfer market. The working panel headings and inbox open details; destinations reserved for later screens are visibly unavailable. There is no sign-in or network requirement.
+Touchline opens on **Club Home**: your upcoming match, fixtures, standings, player leaders and budgets. The FM23-inspired club pages use the same fictional 2024/25 Riverside starter season. They run from the standalone HTML with no sign-in or network requirement.
 
-Press **Continue** to move from the starter calendar to the displayed Riverside FC fixture. This opens the match centre without kicking off. **Home** takes you back and holds the current match, including the visible playhead, while you are away. Continue returns to the same match. The approved pitch, rules and speed controls are still there.
+- **Inbox** has dated messages, per-message read state, Next Unread, match and form reports, an injury advisory, a press conference, a scouting report, and the News, Social Feed, Leagues in Focus and Around the World tabs.
+- **Schedule** links month-grouped fixtures, a calendar, available reports, past meetings, and reminders. **Squad** provides position and availability filters, player details, stats and a planning team sheet with Quick Pick.
+- **Scouting and Transfers** share recruitment focuses, player reports, a shortlist, transfer drafts, clauses and staff responsibilities.
+- **Club Info, Competitions and Club Vision** cover club details and kits, the standings and cups, and five seasons of board objectives with board and supporter feedback.
+- **Dynamics, Staff, Development Centre and Finances** cover the dressing room, staffing groups and responsibilities, youth and loans, and the club's budgets and financial reports.
+
+Read state, selections, shortlists, reminders, requests and budget allocations are local to this browser when storage is available; the opaque workspace preview keeps them for the open session. This is a starter season, not a live career simulation: staff assignments and team sheets are planning tools, draft bids and board requests aren't sent, and old results have written reports rather than playable replays.
+
+**Continue** opens the advertised Riverside FC v Harbourport Town League Cup fixture at **00:00**, waiting for manual kickoff. In the Inbox reader the header offers **Next Unread** while there are unread messages; go to Home or Schedule to enter the match directly. **Home** from the match holds the playhead while you are away; Continue returns to that same match. Match Setup and the touchline controls still manage the playable match. Match results do not advance the starter season.
 
 ## Watch a match
 
@@ -49,7 +57,7 @@ Role, attributes, individual tendencies, fatigue, tactics and the score affect t
 
 Open `index.html` offline, or run `npm run preview` with Node.js 20+. The preview builds from `src/` and serves on port `4173` (`PORT` overrides it). No installs or accounts are required. Edit `src/`, then run `npm run build` to regenerate the HTML.
 
-- `npm test` checks the standalone build, seeded play, referee tracking, throw-in physics and choosing an outlet, wall and penalty positions at actual release, the discipline sequence, second touches, offside involvement and VAR confirmations and reversals. Highlight tests cover bounded search, exact event and whistle stops, playback-rate mapping and deterministic play with matching tactics and substitutions.
+- `npm test` checks the standalone build, shared club data, starter-save actions, seeded play, referee tracking, throw-in physics and choosing an outlet, wall and penalty positions at actual release, the discipline sequence, second touches, offside involvement and VAR confirmations and reversals. Highlight tests cover bounded search, exact event and whistle stops, playback-rate mapping and deterministic play with matching tactics and substitutions.
 - `npm run test:sim -- 3` runs three complete seeded fixtures.
 
 ## Pinned checkpoints

@@ -42,12 +42,12 @@ test('Home standings are ordered and the player leaders belong to the real River
   }
 });
 
-test('the bundled Club Home precedes the initially hidden match and carries the portraits offline', () => {
+test('the bundled Club Home precedes the initially hidden match and carries the portraits and editorial art offline', () => {
   const page = readFileSync(join(__dirname, '../index.html'), 'utf8');
   assert.match(page, /id="homeScreen">/);
   assert.match(page, /id="matchScreen" hidden[>\s]/);
   assert.ok(page.indexOf('id="homeScreen"') < page.indexOf('id="matchScreen"'));
   assert.match(page, /id="homeContinue"/);
-  assert.equal((page.match(/data:image\/webp;base64,/g) || []).length, 4);
-  assert.doesNotMatch(page, /@HOME_PORTRAITS@|\{\{HOME(?:_ICONS)?\}\}/);
+  assert.equal((page.match(/data:image\/webp;base64,/g) || []).length, 7);
+  assert.doesNotMatch(page, /@HOME_PORTRAITS@|@CLUB_MEDIA@|\{\{HOME(?:_ICONS)?\}\}/);
 });

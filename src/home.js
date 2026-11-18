@@ -7,22 +7,24 @@
   const esc = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const icon = name => `<svg class="hc-icon" aria-hidden="true"><use href="#${name.startsWith('i-') ? name : 'hc-i-' + name}"/></svg>`;
   const text = (id, value) => { $(id).textContent = value; };
-  const state = { now: M.start, entered: false, drawer: false, unread: M.inbox.length, note: '', pageY: 0, contentY: 0 };
+  const state = { now: M.start, entered: false, drawer: false, note: '', pageY: 0, contentY: 0 };
+  let desk;
   const NOTE_KEY = 'touchline26.clubhouse.notebook';
   const nav = [
     [['Home', 'home', 'home'], ['Inbox', 'mail', 'inbox']],
-    [['Squad', 'i-shirt', 'squad'], ['Squad Planner', 'plan'], ['Dynamics', 'team'], ['Tactics', 'tactics'], ['Data Hub', 'radar'], ['Staff', 'team'], ['Training', 'cone'], ['Medical Centre', 'medical']],
+    [['Squad', 'i-shirt', 'squad'], ['Squad Planner', 'plan'], ['Dynamics', 'team', 'dynamics'], ['Tactics', 'tactics'], ['Data Hub', 'radar'], ['Staff', 'team', 'staff'], ['Training', 'cone'], ['Medical Centre', 'medical']],
     [['Schedule', 'calendar', 'fixtures'], ['Competitions', 'cup', 'league']],
-    [['Scouting', 'search'], ['Transfers', 'swap']],
-    [['Club Info', 'shield', 'club'], ['Club Vision', 'case'], ['Finances', 'money', 'finance']],
-    [['Dev. Centre', 'trend']]
+    [['Scouting', 'search', 'scouting'], ['Transfers', 'swap', 'transfers']],
+    [['Club Info', 'shield', 'club'], ['Club Vision', 'case', 'vision'], ['Finances', 'money', 'finance']],
+    [['Dev. Centre', 'trend', 'development']]
   ];
   const tabs = [
     ['Home', 'home'], ['My Profile', 'profile', true], ['My Contract', null, true], ['Promises'], ['Relationships'], ['My History', null, true], ['Notebook', 'notebook']
   ];
 
   function crest(id) {
-    const c = M.clubs[id];
+    const c = typeof id === 'string' ? M.clubs[id] : id;
+    if (!c) return '';
     const box = '<svg class="hc-crest" viewBox="0 0 100 100" aria-hidden="true" focusable="false">';
     if (id === 'rvr') return `${box}
       <circle cx="50" cy="50" r="47" fill="#123c71" stroke="#e9bd57" stroke-width="1.8"/>
@@ -62,17 +64,20 @@
     $('homeNav').innerHTML = nav.map(group => `<div class="hc-nav-group">${group.map(([label, symbol, page]) => {
       const current = page === 'home' ? ' aria-current="page"' : '';
       const target = page ? ` data-hc-open="${page}"` : ' disabled title="Screen not added yet"';
-      return `<button type="button" class="hc-nav-button"${current}${target}>${icon(symbol)}<span>${label}</span>${page === 'inbox' ? `<small class="hc-inbox-badge" id="homeUnread" aria-label="${state.unread} unread messages">${state.unread}</small>` : ''}</button>`;
+      return `<button type="button" class="hc-nav-button"${current}${target}>${icon(symbol)}<span>${label}</span>${page === 'inbox' ? `<small class="hc-inbox-badge" id="homeUnread" aria-label="Unread messages" hidden></small>` : ''}</button>`;
     }).join('')}</div>`).join('');
+    homeTabs();
+  }
+  function homeTabs() {
     $('homeTabs').innerHTML = tabs.map(([label, page, more]) => `<button class="hc-tab" type="button"${page === 'home' ? ' aria-current="page"' : ''}${page ? ` data-hc-open="${page}"` : ' disabled title="Screen not added yet"'}>${label}${more ? icon('down') : ''}</button>`).join('');
   }
 
-  function fixtureRows(all = false) {
-    return M.fixtures.slice(0, all ? M.fixtures.length : 7).map((f, index) => {
+  function fixtureRows() {
+    return M.homeFixtures.map(f => {
       const club = M.clubs[f.opponent], next = f === M.next;
       const result = f.score ? `${f.score[0]} - ${f.score[1]}` : f.comp;
       const venue = f.venue === 'H' ? 'Home' : 'Away';
-      return `<button class="hc-fixture-row" type="button" data-hc-fixture="${index}" data-next="${next}" aria-label="${M.shortDate(f.date)}, ${venue} against ${esc(club.name)}, ${f.score ? result : esc(M.competition[f.comp])}">
+      return `<button class="hc-fixture-row" type="button" data-hc-fixture="${f.id}" data-next="${next}" aria-label="${M.shortDate(f.date)}, ${venue} against ${esc(club.name)}, ${f.score ? result : esc(M.fixtureCompetition(f))}">
         <time datetime="${new Date(f.date).toISOString()}">${M.shortDate(f.date)}</time><span title="${venue}">${f.venue}</span><span class="hc-fixture-club">${crest(club.id)}<span>${esc(club.name)}</span></span>${f.score ? '<i class="hc-form-dot" aria-hidden="true"></i>' : '<span></span>'}<span class="hc-fixture-result">${result}</span></button>`;
     }).join('');
   }
@@ -85,9 +90,8 @@
       <polyline points="${points.map(p => p.join(',')).join(' ')}" fill="none" stroke="#858dd1" stroke-width="1.4"/>
       ${points.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="1.85" fill="#969de1"/>`).join('')}</svg>`;
   }
-  function table(detail = false) {
-    const label = detail ? 'Premier Division standings' : 'League table summary';
-    return `<div class="hc-table-wrap"${detail ? '' : ' tabindex="0" role="region" aria-label="Scrollable league table"'}><table class="hc-table"><caption class="hc-sr">${label}</caption><thead><tr><th scope="col">POS</th><th scope="col">TEAM</th><th scope="col" title="Played">P</th><th scope="col" title="Goal difference">GD</th><th scope="col" title="Points">PTS</th></tr></thead>
+  function table() {
+    return `<div class="hc-table-wrap" tabindex="0" role="region" aria-label="Scrollable league table"><table class="hc-table"><caption class="hc-sr">League table summary</caption><thead><tr><th scope="col">POS</th><th scope="col">TEAM</th><th scope="col" title="Played">P</th><th scope="col" title="Goal difference">GD</th><th scope="col" title="Points">PTS</th></tr></thead>
       <tbody>${M.standings.map((row, index) => {
         const club = M.clubs[row.id], move = row.move > 0 ? 'up' : 'down';
         return `<tr class="${row.id === M.homeId ? 'hc-table-home' : index < 7 ? 'hc-tier' : ''}"><td><span class="hc-place">${M.ordinal(index + 1)}${row.move ? `<span class="hc-move" data-move="${move}" title="Moved ${move}">${row.move > 0 ? '⌃' : '⌄'}</span>` : ''}</span></td>
@@ -116,7 +120,7 @@
       <g font-family="Inter, sans-serif" font-size="10.5" fill="#f4f3fb"><text x="${x0+2}" y="${base+16}">Sep</text><text x="${x0+81}" y="${base+16}">Oct</text><text x="${x1-11}" y="${base+16}">Oct</text></g></svg>`;
   }
   function finance() {
-    const f = M.finance;
+    const f = desk.budgets();
     return `${financeChart()}<div class="hc-finance-metrics"><div><strong>Overall balance</strong><span class="hc-amount">${M.money(f.balance)}</span></div><div><strong>Profit/(loss) this season</strong><span class="hc-amount">${M.money(f.profit)}</span></div></div>
       <section class="hc-budget"><h3>Transfer budget</h3><span class="hc-amount">${M.money(f.transfer)}</span><p>Original budget was ${M.millions(f.original)}<br>${f.retention}% of transfer revenue is made available<br>Next season’s minimum guaranteed budget will be ${M.millions(f.nextSeason)}.</p></section>
       <section class="hc-budget"><h3>Wage budget</h3><span class="hc-amount">${M.money(f.wage)} p/w</span><p>Currently spending ${M.money(f.spending)} p/w<br>Committed spending ${M.money(f.committed)} p/w<br>Available Wage Budget: ${M.millions(f.wage - f.committed)} per week</p></section>`;
@@ -128,7 +132,7 @@
     $('homeNextDate').dateTime = new Date(M.next.date).toISOString();
     text('homeDay', now.day); text('homeDate', now.date);
     text('homeNextDate', `${next.long} (${M.leadTime(state.now, M.next.date)})`);
-    $('homeContinue').title = state.entered ? 'Return to your match' : 'Advance to the next fixture';
+    syncClub();
   }
 
   function renderHome() {
@@ -149,35 +153,30 @@
     refreshTime();
   }
 
-  const sectionTitles = { fixtures: 'Fixtures & results', league: 'League table', leaders: 'Player stats', finance: 'Finance & salary', inbox: 'Inbox',
-    profile: 'Manager profile', squad: 'Senior squad', club: 'Club information', search: 'Search', notebook: 'Notebook', help: 'Clubhouse guide' };
-  const snapshotNote = '<p>Starter season snapshot · 2024/25</p>';
+  const routes = {
+    home:['Home','home'], inbox:['Inbox','inbox'], squad:['Squad','squad'], dynamics:['Dynamics','dynamics'], staff:['Staff','staff'],
+    fixtures:['Schedule & fixtures','schedule'], league:['Competitions & league table','competitions','competitions','PD'],
+    scouting:['Scouting','scouting'], transfers:['Transfers','transfers'], club:['Club information','club'], vision:['Club Vision','vision'],
+    finance:['Finances','finance'], development:['Development Centre','development'], leaders:['Player stats','squad','stats']
+  };
+  const modalTitles = {profile:'Manager profile',search:'Search',notebook:'Notebook',help:'Clubhouse guide'};
   const datum = (label, value) => `<p class="hc-datum"><strong>${esc(value)}</strong><span>${esc(label)}</span></p>`;
-  const sectionLink = (id, label = sectionTitles[id]) => `<button class="hc-dialog-link" type="button" data-hc-open="${id}">${esc(label)}${icon('chevron')}</button>`;
+  const sectionLink = (id, label) => `<button class="hc-dialog-link" type="button" data-hc-open="${id}">${esc(label)}${icon('chevron')}</button>`;
   function sectionBody(id) {
     const c = M.clubs[M.homeId];
     switch (id) {
-      case 'fixtures': return `${snapshotNote}<div class="hc-fixtures">${fixtureRows(true)}</div>`;
-      case 'league': return `<p>${esc(M.division)} · Starter season snapshot</p>${table(true)}`;
-      case 'leaders': return snapshotNote + leaderRows();
-      case 'finance': return snapshotNote + finance();
-      case 'inbox': return M.inbox.map(([from, subject, body]) => `<article class="hc-message"><p>${esc(from)}</p><strong>${esc(subject)}</strong><p class="hc-message-copy">${esc(body)}</p></article>`).join('');
       case 'profile': return datum('Manager', M.manager) + datum('Current club', c.name) + datum('Role', 'First-team manager');
-      case 'club': return datum('Club', c.name) + datum('Home stadium', c.stadium) + datum('Division', M.division) + sectionLink('squad') + sectionLink('fixtures');
-      case 'squad': return `<p>${M.squad.length} senior players · ${esc(c.name)}</p>${M.squad.slice().sort((a,b) => a.num-b.num).map(p => `<article class="hc-message"><strong>${p.num} · ${esc(p.name)}</strong><p>${p.pos}</p></article>`).join('')}`;
-      case 'search': return '<label for="homeSearchInput">Find a section of the clubhouse</label><input class="hc-search-field" type="search" id="homeSearchInput" autocomplete="off" placeholder="Try fixtures, league or finances"><div id="homeSearchResults"></div>';
+      case 'search': return '<label for="homeSearchInput">Find a section of the clubhouse</label><input class="hc-search-field" type="search" id="homeSearchInput" autocomplete="off" placeholder="Try fixtures, scouting or finances"><div id="homeSearchResults"></div>';
       case 'notebook': return '<p>Keep your own notes about the club. Notes stay on this device when storage is available.</p><label class="hc-sr" for="homeNotes">Club notes</label><textarea class="hc-notebook" id="homeNotes" maxlength="16000" placeholder="Write a note…"></textarea>';
-      case 'help': return `<p>Home is your club’s starting point. The table, player leaders, and budgets show a starter season rather than a simulated career.</p><ul class="hc-details-list"><li>Continue advances to the displayed fixture and opens the match centre without kicking off.</li><li>Use Home from the match to return here. The match is held while you are away.</li><li>Open a panel heading to see more. Unavailable destinations are reserved for later screens.</li></ul>`;
+      case 'help': return `<p>Explore Riverside’s fictional 2024/25 season. The club pages share the fixtures, squad and budgets you see on Home.</p><ul class="hc-details-list"><li>Continue opens the displayed cup fixture without kicking off. Home holds the match at its current playhead.</li><li>In the Inbox reader, Next Unread opens the next unread message. Switch to Home or Schedule to enter the match at any time.</li><li>Planning changes stay in this browser when storage is allowed. Drafts and requests aren’t sent. No living season or transfer market runs in the background.</li></ul>`;
       default: return '';
     }
   }
-
   function search() {
-    const input = $('homeSearchInput'), list = $('homeSearchResults');
-    const q = input.value.trim().toLowerCase();
-    const entries = ['fixtures', 'league', 'leaders', 'finance', 'squad', 'club', 'inbox', 'profile', 'notebook'];
-    const match = entries.filter(id => !q || `${id} ${sectionTitles[id]} ${M.clubs[M.homeId].name}`.toLowerCase().includes(q));
-    list.innerHTML = match.length ? match.map(id => sectionLink(id)).join('') : '<p class="hc-message">No matching sections.</p>';
+    const input = $('homeSearchInput'), list = $('homeSearchResults'), q = input.value.trim().toLowerCase();
+    const entries = [...Object.entries(routes).map(([id,[label]])=>[id,label]), ['profile',modalTitles.profile], ['notebook',modalTitles.notebook]];
+    const match = entries.filter(([id,label]) => !q || `${id} ${label} ${id==='club'?'Riverside FC':''}`.toLowerCase().includes(q));
+    list.innerHTML = match.length ? match.map(([id,label])=>sectionLink(id,label)).join('') : '<p class="hc-message">No matching sections.</p>';
   }
   function showPanel(title, body) {
     toggleDrawer(false);
@@ -188,27 +187,44 @@
     dlg.scrollTop = 0;
   }
   function openPanel(id) {
-    if (id === 'home') { toggleDrawer(false, true); return; }
-    if (!Object.hasOwn(sectionTitles, id)) return;
-    showPanel(sectionTitles[id], sectionBody(id));
-    if (id === 'inbox') {
-      state.unread = 0;
-      $('homeUnread').hidden = true;
-    } else if (id === 'search') {
-      search(); $('homeSearchInput').focus();
-    } else if (id === 'notebook') {
-      $('homeNotes').value = state.note; $('homeNotes').focus();
+    if (Object.hasOwn(routes,id)) {
+      const [,page,tab,detail] = routes[id];
+      toggleDrawer(false, state.drawer && desk.route().page===page);
+      desk.go(page,tab,detail);
+      return;
     }
+    if (!Object.hasOwn(modalTitles,id)) return;
+    showPanel(modalTitles[id], sectionBody(id));
+    if (id === 'search') { search(); $('homeSearchInput').focus(); }
+    else if (id === 'notebook') { $('homeNotes').value = state.note; $('homeNotes').focus(); }
   }
-  function openFixture(index) {
-    const f = M.fixtures[index];
-    if (!f) return;
-    const home = M.clubs[M.homeId], opponent = M.clubs[f.opponent], host = f.venue === 'H' ? home : opponent;
-    const guest = host === home ? opponent : home;
-    const score = f.score && (host === home ? f.score : f.score.slice().reverse());
-    const result = score ? datum('Full time', score.join(' – ')) : '';
-    showPanel(`${host.name} v ${guest.name}`, datum('Competition', M.competition[f.comp]) + datum('Kickoff', `${M.calendar(f.date).long} · ${M.calendar(f.date).day.slice(4)}`) +
-      datum('Stadium', host.stadium) + result + (f === M.next ? `<button class="hc-dialog-link" type="button" data-hc-continue>Continue to match${icon('go')}</button>` : ''));
+  function onPage(r, view, history) {
+    const root=$('homeScreen'); root.dataset.page = r.page;
+    $('homeMain').hidden = r.page!=='home';
+    if (!view) homeTabs();
+    text('homeTitle', view?.title || 'Home');
+    const navButtons = $('homeNav').querySelectorAll('[data-hc-open]');
+    for (const b of navButtons) {
+      if (routes[b.dataset.hcOpen]?.[1]===r.page) b.setAttribute('aria-current','page');
+      else b.removeAttribute('aria-current');
+    }
+    $('homeBack').disabled=!history.back; $('homeForward').disabled=!history.forward;
+    document.title = `Touchline 26 — ${view?.title || 'Club Home'}`;
+    syncClub();
+  }
+  function syncClub() {
+    if (!desk) return;
+    const r=desk.route(), unread=desk.unread().length, badge=$('homeUnread');
+    badge.hidden=unread===0; badge.textContent=unread; badge.setAttribute('aria-label',`${unread} unread messages`);
+    const continueButton=$('homeContinue'), nextUnread=r.page==='inbox'&&r.tab==='messages'&&unread>0;
+    continueButton.querySelector('span').textContent=nextUnread?'Next Unread':'Continue';
+    continueButton.title=nextUnread?'Open the next unread message':state.entered?'Return to your match':'Advance to the next fixture';
+    if (r.page==='home') text('homeManager', `${M.manager} – ${M.clubs[M.homeId].name}`);
+    else text('homeManager', desk.view()?.subtitle?.(desk.context()) || `${M.ordinal(M.standings.findIndex(row=>row.id===M.homeId)+1)} in ${M.division} · Next: ${M.clubs[M.next.opponent].name} (${M.next.venue}) · ${M.leadTime(state.now,M.next.date)}`);
+    const f=desk.budgets(), financeKey=`${f.transfer}:${f.wage}`;
+    if ($('homeFinance').dataset.allocation!==financeKey) {
+      $('homeFinance').innerHTML=finance(); $('homeFinance').dataset.allocation=financeKey;
+    }
   }
 
   function toggleDrawer(open, focus = false) {
@@ -216,8 +232,9 @@
     state.drawer = open;
     $('homeSidebar').classList.toggle('hc-open', open);
     $('homeScrim').hidden = !open;
+    $('homeFrame').inert = open;
     $('homeMenu').setAttribute('aria-expanded', String(open));
-    if (open && focus) $('homeNav').querySelector('button').focus();
+    if (open && focus) ($('homeNav').querySelector('[aria-current=page]') || $('homeNav').querySelector('button')).focus();
     else if (wasOpen && focus) $('homeMenu').focus();
   }
   function enterMatch() {
@@ -227,6 +244,7 @@
     state.entered = true; state.now = M.next.date;
     refreshTime();
     state.pageY = global.scrollY; state.contentY = $('homeMain').scrollTop;
+    state.entryPage = desk.route().page;
     $('homeScreen').hidden = true;
     $('matchScreen').hidden = false;
     document.title = 'Touchline 26 — Classic 2D';
@@ -239,24 +257,36 @@
     global.TLMatchView.suspend();
     $('matchScreen').hidden = true;
     $('homeScreen').hidden = false;
+    desk.go('home');
     document.title = 'Touchline 26 — Club Home';
-    $('homeMain').scrollTop = state.contentY;
-    global.scrollTo(0, state.pageY);
+    if (state.entryPage === 'home') {
+      $('homeMain').scrollTop = state.contentY;
+      global.scrollTo(0, state.pageY);
+    }
     $('homeContinue').focus({ preventScroll: true });
   }
 
   function init() {
     try { state.note = global.localStorage.getItem(NOTE_KEY) || ''; } catch { /* Opaque offline iframe. */ }
-    navigation(); renderHome();
     const root = $('homeScreen');
+    desk = global.TLClubDesk.create({ root, content:$('clubPage'), tabs:$('homeTabs'), dialog:$('homeDialog'), crest,
+      portrait:id=>portraitImages[M.portraitFor[id]], showPanel, onPage, onState:syncClub, scrollHome:()=>$('homeMain').scrollTop=0, now:()=>state.now });
+    navigation(); renderHome();
+    root.dataset.page='home';
+    root.addEventListener('club-play', enterMatch);
     root.addEventListener('click', e => {
       const button = e.target.closest('button');
       if (!button || button.disabled) return;
-      if (button.id === 'homeContinue' || button.hasAttribute('data-hc-continue')) enterMatch();
+      if (button.id === 'homeContinue') {
+        if (desk.route().page==='inbox' && desk.route().tab==='messages' && desk.unread().length) desk.act('next-unread');
+        else enterMatch();
+      } else if (button.id === 'homeBack') desk.step(-1);
+      else if (button.id === 'homeForward') desk.step(1);
+      else if (button.id === 'homeDialogClose') $('homeDialog').close();
       else if (button.id === 'homeMenu') toggleDrawer(!state.drawer, true);
       else if (button.id === 'homeScrim') toggleDrawer(false, true);
       else if (button.hasAttribute('data-hc-open')) openPanel(button.dataset.hcOpen);
-      else if (button.hasAttribute('data-hc-fixture')) openFixture(Number(button.dataset.hcFixture));
+      else if (button.hasAttribute('data-hc-fixture')) desk.go('schedule','fixtures',button.dataset.hcFixture);
       else if (button.hasAttribute('data-hc-collapse')) {
         const body = $(button.dataset.hcCollapse);
         body.hidden = !body.hidden;
