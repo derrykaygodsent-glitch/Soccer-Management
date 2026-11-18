@@ -48,6 +48,7 @@ test('the browser bundle loads its modules without external script or style file
   }
   assert.ok(context.TLData.CLUBS.length >= 2);
   assert.equal(typeof context.TLPhysics.aerial, 'function');
+  assert.equal(typeof context.TLDecisions.pick, 'function');
   assert.equal(typeof context.TLEngine.Match, 'function');
   const fixture = new context.TLEngine.Match(context.TLData.CLUBS[0], context.TLData.CLUBS[1], { seed: 71 });
   for (let i = 0; i < 160; i++) fixture.step(.025);

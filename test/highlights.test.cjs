@@ -9,7 +9,7 @@ const B = require('../src/broadcast.js');
 const { full, comprehensive, extended, key } = V.MODES;
 
 function game() {
-  return new Match(CLUBS[1], CLUBS[0], { seed: 231 });
+  return new Match(CLUBS[1], CLUBS[0], { seed: 342 });
 }
 
 test('four cumulative viewing settings, with Extended as the default', () => {

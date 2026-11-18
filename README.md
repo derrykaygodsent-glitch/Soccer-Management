@@ -21,11 +21,17 @@ At **1×**, one shared broadcast pace moves routine play along and eases into at
 
 The **referee** is the dark square marked **R**. The official follows the play and appears in both highlights and goal replays. Existing foul, offside and card decisions are unchanged.
 
+## How players choose
+
+In v0.4.5, the ball carrier reads the play before committing. An onside run can open a through ball, but a defender closing in can make a short pass back the better option. A clean reception can lead to a quick pass or strike; a closed body position can cost an extra touch. Out wide, a cross competes with cutting inside, carrying on and recycling. A pause can buy a better angle or give the defender time to win it back.
+
+Role, attributes, individual tendencies, fatigue, tactics and the score affect those choices. The seed breaks close calls between credible options; it does not select a prewritten attack. This changes the football a seed produces compared with older builds, not the ability to reproduce a fixture within this build. The Classic 2D presentation, ball physics and viewing controls are unchanged.
+
 ## Play and build
 
 Open `index.html` offline, or run `npm run preview` with Node.js 20+. The preview builds from `src/` and serves on port `4173` (`PORT` overrides it). No installs or accounts are required. Edit `src/`, then run `npm run build` to regenerate the HTML.
 
-- `npm test` checks the standalone build, seeded play, ball mechanics, the referee’s visual tracking and replay snapshots. Highlight tests cover mode eligibility, bounded search, exact event and whistle stops, the buildup clock, and deterministic play with matching tactics and substitutions.
+- `npm test` checks the standalone build, choices under pressure, legal targets, seeded play, ball mechanics, the referee’s visual tracking and replay snapshots. Highlight tests cover mode eligibility, bounded search, exact event and whistle stops, the buildup clock, and deterministic play with matching tactics and substitutions.
 - `npm run test:sim -- 3` runs three complete seeded fixtures.
 
 ## Pinned checkpoints
