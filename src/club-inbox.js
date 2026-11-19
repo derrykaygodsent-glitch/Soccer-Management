@@ -50,7 +50,7 @@
     const out=C.medical.find(r=>r.status==='Out'), busy=H.fixtures.filter(f=>f.date>=H.next.date&&f.date<H.next.date+7*864e5).length;
     return [`<div class="cc-prose"><p>Our current match load could increase injury risk this week. ${player(out.id)} is out with a ${out.issue.toLowerCase()} and is expected back in ${out.return}.</p><p>${player('rvr_12')} and ${player('rvr_14')} are still available, but I recommend reducing their individual workload during the cup and league run.</p><p>The rest of the squad can continue with the planned sessions. We’ll reassess players after the next fixture.</p></div>
       <section class="cc-editorial cc-medical-advice"><div class="cc-grid2"><div><h3>${fixture(H.next,'Fixtures')}</h3><b>${busy} matches in 7 days</b><p class="cc-muted">League Cup, Premier Division and Continental Cup</p></div><div><h3>${btn('Training workload','workload','',{kind:'text',arrow:true})}</h3><b>Medium</b><p class="cc-muted">Individual recovery for at-risk players</p></div></div><h3 class="cc-title">Risk assessment</h3>${medicalTable(c)}</section>`,
-      `${btn('Training workload','workload','',{kind:'outline'})}${link('squad','Medical overview','medical')}${fixture(H.next,'Upcoming fixtures','outline')}`];
+      `${btn('Training workload','workload','',{kind:'outline'})}${link('medical','Medical Centre')}${link('training','Team training')}${link('squad','Injury table','medical')}${fixture(H.next,'Upcoming fixtures','outline')}`];
   }
   function press(c){
     const f=C.reportFixture;
@@ -105,9 +105,37 @@
   function world(c){
     return `<div class="cc-grid2 cc-world">${C.leagues.map(l=>card(l.name,`<p class="cc-muted">Leading clubs · 2024/25 snapshot</p>${standings(c,l.name,l.rows.slice(0,5),l.id)}<div class="cc-actions">${btn('View league table','league-table',l.id,{kind:'outline'})}</div>`)).join('')}</div>`;
   }
+  const socialPeople=[['supporters','Riverside Supporters','Supporter group'],['touchline','The Touchline','Football press'],['chronicle','Quayside Chronicle','Local news'],['academy','Riverside Academy','Club account'],['marsh',C.namedStaff['Assistant Manager'],'Riverside staff']];
+  const socialSubjects=[...['rvr','hpt','nbu','efc','kgd','oak','swl','crl','wst','sby'].map(id=>[id,H.clubs[id].name,'Club']),...socialPeople];
+  const socialRows=[
+    ['post','supporters','Today · 16:55','Six wins in a row. Bring that energy back to Quayside Park for the cup.','form','1.2K'],
+    ['news','touchline','Today · 16:41','run'],
+    ['post','chronicle','Today · 16:38','Novak takes home the match ball from Vale Arena. That second goal was the pick of the three.','match','846'],
+    ['post','hpt','Today · 16:11','Next stop: Quayside Park. We’ll see you Wednesday night for the fourth round.','fixture','714'],
+    ['post','academy','Today · 15:20','The Under 21s head to Kingsdown on Monday after beating Westhaven.','','391'],
+    ['news','rvr','Today · 15:08','cup'],
+    ['news','chronicle','Yesterday · 18:07','injury'],
+    ['post','marsh','Yesterday · 15:30','A busy week ahead. Every player will have a part to play.','preview','237'],
+    ['news','nbu','Yesterday · 14:44','title']
+  ];
+  const defaultFollows=['rvr','supporters','touchline'];
   function social(c){
-    const posts=[['Riverside Supporters','Six in a row in the league. Take that form back home for the cup.','form'],['The Touchline','Three for Fabio Novak at Vale Arena. One to remember.','match'],['Quayside Chronicle','The club will be watching player workload with three games in a week.','fitness'],['Riverside Academy','The U21s head to Kingsdown on Monday after a win against Westhaven.','']];
-    return `<div class="cc-grid2">${card('Social Feed',`<p class="cc-muted">Supporter and press reaction · Starter season</p>${posts.map(([name,text,id])=>`<article class="cc-feed-post"><div class="cc-person">${avatar(c,name)}<b>${esc(name)}</b></div><p>${esc(text)}</p>${id?link('inbox','Read more','messages',id):link('schedule','U21 fixtures','fixtures','u21')}</article>`).join('')}`)}${card('From the stands',`${c.crest(H.homeId)}<h3>Riverside FC</h3><p class="cc-muted">See how supporters rate your season so far.</p><div class="cc-actions">${link('vision','Supporter feedback','supporters')}</div>`,'cc-social-side')}</div>`;
+    const mode=c.ui.feedMode||'all', manage=!!c.ui.feedManage, following=c.ui.feedFollows||defaultFollows;
+    const names=Object.fromEntries(socialSubjects.map(([id,name])=>[id,name]));
+    const mark=(id,large=false)=>H.clubs[id]?`<span class="md-social-crest">${c.crest(id)}</span>`:avatar(c,names[id],null,large?'cc-avatar-lg':'');
+    const posts=socialRows.filter(([type,author])=>mode==='all'||mode==='following'&&following.includes(author)||mode===type).map(([type,author,when,content,id,count])=>{
+      if(type==='news'){
+        const story=lookup(C.stories,content);
+        return `<article class="md-social-news"><button class="cc-cover-btn" data-c-do="story" data-c-val="${story.id}" type="button" aria-label="Read ${esc(story.title)}">${imageTile(c,story)}</button><div><p class="cc-eyebrow">${esc(names[author])} · ${esc(when)}</p><h3>${btn(story.title,'story',story.id,{kind:'text'})}</h3><p>${esc(story.bullets[0])}</p></div>${tag('News','teal')}</article>`;
+      }
+      return `<article class="md-social-entry">${mark(author,true)}<div><div class="md-social-author"><strong>${esc(names[author])}</strong><time>${esc(when)}</time></div><p>${esc(content)} <span class="md-hashtag">#Riverside</span></p><div class="cc-actions cc-actions-start"><small>${icon('team')} ${count} reactions</small>${id?link('inbox','Related story','messages',id,'text',false):link('schedule','U21 fixtures','fixtures','u21','text',false)}</div></div>${tag('Social','info')}</article>`;
+    }).join('');
+    const subjects=socialSubjects.filter(([id,name,type])=>(!manage||following.includes(id))&&U.textMatch(c.ui.feedSearch,name,type));
+    const suggestions=subjects.map(([id,name,type])=>{
+      const on=following.includes(id);
+      return `<div class="md-social-subject">${mark(id)}<div><strong>${esc(name)}</strong><small>${esc(type)}</small></div>${btn(on?'Following':'Follow','feed-follow',id,{kind:on?'solid':'outline',pressed:on,label:`${on?'Unfollow':'Follow'} ${name}`})}</div>`;
+    }).join('');
+    return `<div class="md-social"><section class="md-social-feed"><div class="md-social-tools"><div><h2 class="cc-title">Social Feed</h2><p>Supporter reaction and football news</p></div>${select('feedMode','Filter the feed',[['all','News + Social'],['news','News only'],['post','Social only'],['following','Following']],mode)}</div>${U.scroll('md-feed-list','Preview social feed',posts||empty('Nothing in this feed','Follow more subjects or change the filter.'),'md-feed-list')}</section><aside class="cc-card md-social-rail"><h2 class="cc-title">${manage?'Manage subjects':'Subjects and people to follow'}</h2><p class="cc-muted">Search clubs, staff and outlets.</p>${search('feedSearch',c.ui.feedSearch,'Search subjects')}${U.scroll('md-feed-subjects','Clubs and people to follow',suggestions||empty('No matching subjects','Try another search.'),'md-follow-list')}<div class="md-follow-footer"><div><small>Following</small><strong>${following.length}</strong></div>${btn(manage?'Show all':'Manage','feed-manage','',{pressed:manage,kind:'outline'})}</div><p class="md-context-note">Sample feed · Follows stay in this session.</p></aside></div>`;
   }
   function moments(c) {
     c.show('Key moments · Eastvale v Riverside',`<p>Starter-season match report. No replay footage is stored for this result.</p><ol class="cc-moments">${C.matchReport.goals.map(([time,id,copy])=>`<li><b>${time}′</b><div>${player(id)}<p>${esc(copy)}</p></div></li>`).join('')}</ol>${fixture(C.reportFixture,'Full match report','outline')}`);
@@ -134,7 +162,9 @@
       else if(action==='inbox-group'||action==='league-fold'){
         const k=action==='inbox-group'?'closed':'folded', old=c.ui[k]||[];
         c.ui[k]=old.includes(id)?old.filter(x=>x!==id):[...old,id]; c.render();
-      } else if(action==='moments') moments(c);
+      } else if(action==='feed-follow' && socialSubjects.some(subject=>subject[0]===id)){const list=c.ui.feedFollows||defaultFollows; c.ui.feedFollows=list.includes(id)?list.filter(x=>x!==id):[...list,id]; c.render();}
+    else if(action==='feed-manage'){c.ui.feedManage=!c.ui.feedManage; c.render();}
+    else if(action==='moments') moments(c);
       else if(action==='workload') c.show('Training workload',`<p>Team training workload is <b>medium</b>. The sports science team recommends lighter individual sessions for players at high risk.</p>${medicalTable(c)}${link('squad','Medical overview','medical')}`);
       else if(action==='attend') c.show('Post-match press conference',U.editForm('press','',U.formSelect('response','How do you want to open?', ['Credit the team effort','Praise Fabio Novak','Focus on the next fixture']), 'Answer the press', 'The journalists are waiting at Vale Arena. Choose the tone for your opening answer.'));
       else if(action==='delegate-press'){if(c.apply('media','delegated')){c.render();c.note(`${C.namedStaff['Assistant Manager']} will handle the press conference.`);}}

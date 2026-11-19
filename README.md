@@ -14,7 +14,24 @@ Touchline opens on **Club Home**: your upcoming match, fixtures, standings, play
 
 Read state, selections, shortlists, reminders, requests and budget allocations are local to this browser when storage is available; the opaque workspace preview keeps them for the open session. This is a starter season, not a live career simulation: staff assignments and team sheets are planning tools, draft bids and board requests aren't sent, and old results have written reports rather than playable replays.
 
-**Continue** opens the advertised Riverside FC v Harbourport Town League Cup fixture at **00:00**, waiting for manual kickoff. In the Inbox reader the header offers **Next Unread** while there are unread messages; go to Home or Schedule to enter the match directly. **Home** from the match holds the playhead while you are away; Continue returns to that same match. Match Setup and the touchline controls still manage the playable match. Match results do not advance the starter season.
+**Continue** on Home opens the advertised Riverside FC v Harbourport Town League Cup fixture at **00:00**, waiting for manual kickoff. In the Inbox reader the header offers **Next Unread** while there are unread messages; go to Home or Schedule to enter the match directly. **Home** from the match holds the playhead while you are away; Continue returns to that same match. Match Setup and the touchline controls still manage the playable match. Match results do not advance the starter season.
+
+### Matchday screen preview (v0.7)
+
+Open **Matchday** from Home or the sidebar. The cyan header button moves through the scripted example; the **screen picker** at the top jumps directly to any stage. **Play Classic 2D** opens the separate playable fixture at any point.
+
+| Reference screens | Where to find them |
+| --- | --- |
+| Compact and expanded tactics, In Transition and other instructions | **Tactics** in the sidebar, then the layout switch or instruction tabs |
+| Full player information and technical, mental, physical and keeper attributes | Select a first-team player in **Squad**, **Tactics** or the Home leaders |
+| Social Feed and followable clubs, staff and outlets | **Inbox → Social Feed** |
+| Calendar progression, the day before the game, league results and cup fixtures | **Matchday → Calendar** or **Fixtures & Results** |
+| Injury/risk update and training schedule | **Medical Centre**, **Training**, or **Matchday → Post-match Inbox → Riverside injury risk update** |
+| Briefing feedback and both sides’ starting lineups | **Matchday → Briefing** or **Lineups** |
+| Half-time advice, xG, stats, team talk and in-play injury/substitution | **Matchday → Half Time** and **In-play Tactics** |
+| Full-time analysis, final team talk, news coverage and press conference | **Matchday → Full Time**, **Dressing room**, then **Post-match Inbox** |
+
+The cup score, injury incident, reactions and press coverage are **sample data**, not recorded match outcomes. Preview choices stay in the open session and do not write to the starter save or change the engine. `src/matchday-data.js` defines the illustrative dates, squads and match timeline; `club-matchday*.js` render the stages against it. Keep this data separate from `club-state.js` and the live `TLMatchView` until the screens are wired to a real season.
 
 ## Watch a match
 

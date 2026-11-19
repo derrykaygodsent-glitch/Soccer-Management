@@ -120,7 +120,7 @@ test('every enabled clubhouse destination and tab renders in the offline bundle'
   const context={document:{readyState:'loading',addEventListener(){}}};context.window=context;
   for (const [,source] of page.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)) runInNewContext(source,context);
   const views=context.TLClubUI.views;
-  const names=['inbox','schedule','squad','scouting','transfers','club','competitions','vision','dynamics','staff','development','finance'];
+  const names=['inbox','schedule','squad','scouting','transfers','club','competitions','vision','dynamics','staff','development','finance','tactics','player','matchday','medical','training'];
   assert.deepEqual(Object.keys(views).sort(),names.sort());
   const s=context.TLClubState.normalize(), fiscal=context.TLClubState.budgets(s);
   let count=0;
@@ -131,5 +131,5 @@ test('every enabled clubhouse destination and tab renders in the offline bundle'
     for(const [,target] of html.matchAll(/data-c-go="([^"]+)"/g)) assert.ok(target==='home'||views[target],`${key}/${tab} routes to ${target}`);
     count++;
   }
-  assert.ok(count>=50);
+  assert.ok(count>=80);
 });

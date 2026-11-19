@@ -1,7 +1,7 @@
 /* Club route history, reusable rendering context, and event delegation. */
 (function (global) {
   'use strict';
-  const U = global.TLClubUI, {H,C,views,esc,avatar,values,stars,link} = U, S = global.TLClubState;
+  const U = global.TLClubUI, {C,views,esc} = U, S = global.TLClubState;
   function create({ root, content, tabs, dialog, crest, portrait, showPanel, onPage, onState, scrollHome, now }) {
     let storage;
     try { storage = global.localStorage; } catch { /* standalone file preview */ }
@@ -16,7 +16,7 @@
     const ui = () => pageState[route().page] ||= {};
     const narrow = () => global.matchMedia('(max-width:720px)').matches;
     const tabsOf = view => view.tabs || [];
-    const tabMarkup = (r,view) => tabsOf(view).map(([id,label])=>`<button class="hc-tab" type="button" data-c-go="${r.page}" data-c-tab="${esc(id)}"${r.tab===id?' aria-current="page"':''}>${esc(label)}</button>`).join('');
+    const tabMarkup = (r,view) => tabsOf(view).map(([id,label])=>`<button class="hc-tab" type="button" data-c-go="${r.page}" data-c-tab="${esc(id)}"${view.retainId&&r.id?` data-c-id="${esc(r.id)}"`: ''}${r.tab===id?' aria-current="page"':''}>${esc(label)}</button>`).join('');
     function note(message) {
       status.textContent = message;
       status.hidden = false;
@@ -64,7 +64,15 @@
         global.scrollTo(0,0);
       }
       if (major || dialog.contains(document.activeElement)) heading.focus({preventScroll:true});
-      if (view && !major && previous.tab!==r.tab) tabs.querySelector('[aria-current="page"]')?.focus({preventScroll:true});
+      if (view && (!keep || view.retainId)) {
+        const active=tabs.querySelector('[aria-current="page"]');
+        if (active) {
+          const tab=active.getBoundingClientRect(), bar=tabs.getBoundingClientRect();
+          if (tab.left<bar.left) tabs.scrollLeft-=bar.left-tab.left+5;
+          else if (tab.right>bar.right) tabs.scrollLeft+=tab.right-bar.right+5;
+          if (!major && previous.tab!==r.tab) active.focus({preventScroll:true});
+        }
+      }
       view?.after?.(context(),previous);
     }
     function focusKey(el) {
@@ -97,21 +105,16 @@
           }
         }
         const markup=tabMarkup(r,view);
-        if(tabs.dataset.cTabPage!==`${r.page}:${r.tab}`) {
-          tabs.innerHTML=markup; tabs.dataset.cTabPage=`${r.page}:${r.tab}`;
+        if(tabs.dataset.cTabPage!==`${r.page}:${r.tab}:${view.retainId?r.id:''}`) {
+          tabs.innerHTML=markup; tabs.dataset.cTabPage=`${r.page}:${r.tab}:${view.retainId?r.id:''}`;
         }
       } else delete tabs.dataset.cTabPage;
       content.hidden=!view;
       onState();
     }
-    function player(c,id) {
-      const p=C.players[id]; if(!p) return;
-      const attrs = ['pace','passing','shooting','tackling','dribbling','positioning','composure','stamina'].map(k=>[k[0].toUpperCase()+k.slice(1),p.attrs[k]]);
-      c.show(p.name,`<div class="cc-person"><div>${avatar(c,p.name,p.id,'cc-avatar-xl')}</div><div><h3>${esc(p.position)}</h3><p class="cc-muted">${p.age} years old · ${esc(C.nation[p.nation])} · ${esc(H.clubs[H.homeId].name)}</p><p>${stars(p.ability)} <span class="cc-muted">Ability</span></p></div></div>${p.injury?`<p class="cc-callout cc-warn">${esc(p.injury.issue)} · ${esc(p.injury.return)}</p>`:''}${values([['Best role',p.role],['Playing time',p.playing],['Value',H.millions(p.value)],['Average rating',p.rating.toFixed(2)],['Goals',p.goals],['Assists',p.assists],...attrs])}${link('squad','Senior squad')}`);
-    }
     function act(action,value,button) {
       const c=context();
-      if(action==='player') return player(c,value);
+      if(action==='player' && Object.hasOwn(C.players,value)) return go('player','overview',value);
       if(action==='fixture') return go('schedule','fixtures',value);
       if(action==='next-unread') {
         const next=c.unread()[0]; if(!next) return;

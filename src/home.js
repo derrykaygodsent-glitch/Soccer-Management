@@ -12,14 +12,14 @@
   const NOTE_KEY = 'touchline26.clubhouse.notebook';
   const nav = [
     [['Home', 'home', 'home'], ['Inbox', 'mail', 'inbox']],
-    [['Squad', 'i-shirt', 'squad'], ['Squad Planner', 'plan'], ['Dynamics', 'team', 'dynamics'], ['Tactics', 'tactics'], ['Data Hub', 'radar'], ['Staff', 'team', 'staff'], ['Training', 'cone'], ['Medical Centre', 'medical']],
+    [['Squad', 'i-shirt', 'squad'], ['Squad Planner', 'plan'], ['Dynamics', 'team', 'dynamics'], ['Tactics', 'tactics', 'tactics'], ['Matchday', 'radar', 'matchday'], ['Staff', 'team', 'staff'], ['Training', 'cone', 'training'], ['Medical Centre', 'medical', 'medical']],
     [['Schedule', 'calendar', 'fixtures'], ['Competitions', 'cup', 'league']],
     [['Scouting', 'search', 'scouting'], ['Transfers', 'swap', 'transfers']],
     [['Club Info', 'shield', 'club'], ['Club Vision', 'case', 'vision'], ['Finances', 'money', 'finance']],
     [['Dev. Centre', 'trend', 'development']]
   ];
   const tabs = [
-    ['Home', 'home'], ['My Profile', 'profile', true], ['My Contract', null, true], ['Promises'], ['Relationships'], ['My History', null, true], ['Notebook', 'notebook']
+    ['Home', 'home'], ['Matchday', 'matchday'], ['My Profile', 'profile', true], ['My Contract', null, true], ['Promises'], ['Relationships'], ['My History', null, true], ['Notebook', 'notebook']
   ];
 
   function crest(id) {
@@ -100,7 +100,7 @@
   }
 
   function leaderRows() {
-    return M.leaders.map(({icon: metric, label, player, value}) => `<article class="hc-leader"><span class="hc-leader-art">${icon(metric)}<img class="hc-portrait" src="${portraitImages[M.portraitFor[player.id]]}" alt="" width="45" height="52"></span><p class="hc-leader-copy"><span>${esc(label)}</span><strong>${esc(player.name)}</strong><small>${esc(value)}</small></p></article>`).join('');
+    return M.leaders.map(({icon: metric, label, player, value}) => `<article class="hc-leader"><span class="hc-leader-art">${icon(metric)}<img class="hc-portrait" src="${portraitImages[M.portraitFor[player.id]]}" alt="" width="45" height="52"></span><p class="hc-leader-copy"><span>${esc(label)}</span><strong><button type="button" class="hc-leader-player" data-c-do="player" data-c-val="${player.id}">${esc(player.name)}</button></strong><small>${esc(value)}</small></p></article>`).join('');
   }
 
   function financeChart() {
@@ -126,11 +126,14 @@
       <section class="hc-budget"><h3>Wage budget</h3><span class="hc-amount">${M.money(f.wage)} p/w</span><p>Currently spending ${M.money(f.spending)} p/w<br>Committed spending ${M.money(f.committed)} p/w<br>Available Wage Budget: ${M.millions(f.wage - f.committed)} per week</p></section>`;
   }
 
-  function refreshTime() {
-    const now = M.calendar(state.now), next = M.calendar(M.next.date);
-    $('homeClock').dateTime = new Date(state.now).toISOString();
-    $('homeNextDate').dateTime = new Date(M.next.date).toISOString();
+  function setClock(date) {
+    const now=M.calendar(date);
+    $('homeClock').dateTime = new Date(date).toISOString();
     text('homeDay', now.day); text('homeDate', now.date);
+  }
+  function refreshTime() {
+    const next = M.calendar(M.next.date);
+    $('homeNextDate').dateTime = new Date(M.next.date).toISOString();
     text('homeNextDate', `${next.long} (${M.leadTime(state.now, M.next.date)})`);
     syncClub();
   }
@@ -154,6 +157,7 @@
   }
 
   const routes = {
+    matchday:['Matchday preview','matchday','calendar'], tactics:['Tactics','tactics'], player:['Player profile','player'], medical:['Medical Centre','medical'], training:['Training','training'],
     home:['Home','home'], inbox:['Inbox','inbox'], squad:['Squad','squad'], dynamics:['Dynamics','dynamics'], staff:['Staff','staff'],
     fixtures:['Schedule & fixtures','schedule'], league:['Competitions & league table','competitions','competitions','PD'],
     scouting:['Scouting','scouting'], transfers:['Transfers','transfers'], club:['Club information','club'], vision:['Club Vision','vision'],
@@ -168,7 +172,7 @@
       case 'profile': return datum('Manager', M.manager) + datum('Current club', c.name) + datum('Role', 'First-team manager');
       case 'search': return '<label for="homeSearchInput">Find a section of the clubhouse</label><input class="hc-search-field" type="search" id="homeSearchInput" autocomplete="off" placeholder="Try fixtures, scouting or finances"><div id="homeSearchResults"></div>';
       case 'notebook': return '<p>Keep your own notes about the club. Notes stay on this device when storage is available.</p><label class="hc-sr" for="homeNotes">Club notes</label><textarea class="hc-notebook" id="homeNotes" maxlength="16000" placeholder="Write a note…"></textarea>';
-      case 'help': return `<p>Explore Riverside’s fictional 2024/25 season. The club pages share the fixtures, squad and budgets you see on Home.</p><ul class="hc-details-list"><li>Continue opens the displayed cup fixture without kicking off. Home holds the match at its current playhead.</li><li>In the Inbox reader, Next Unread opens the next unread message. Switch to Home or Schedule to enter the match at any time.</li><li>Planning changes stay in this browser when storage is allowed. Drafts and requests aren’t sent. No living season or transfer market runs in the background.</li></ul>`;
+      case 'help': return `<p>Explore Riverside’s fictional 2024/25 season. The club pages share the fixtures, squad and budgets you see on Home.</p><ul class="hc-details-list"><li>Continue opens the displayed cup fixture without kicking off. Home holds the match at its current playhead.</li><li>Matchday opens a separate review walkthrough. It uses sample results and does not advance or change your season.</li><li>In the Inbox reader, Next Unread opens the next unread message. Switch to Home or Schedule to enter the match at any time.</li><li>Planning changes stay in this browser when storage is allowed. Drafts and requests aren’t sent. No living season or transfer market runs in the background.</li></ul>`;
       default: return '';
     }
   }
@@ -202,25 +206,28 @@
     const root=$('homeScreen'); root.dataset.page = r.page;
     $('homeMain').hidden = r.page!=='home';
     if (!view) homeTabs();
-    text('homeTitle', view?.title || 'Home');
+    const title=view?.heading?.(desk.context()) || view?.title || 'Home';
+    text('homeTitle', title);
     const navButtons = $('homeNav').querySelectorAll('[data-hc-open]');
     for (const b of navButtons) {
-      if (routes[b.dataset.hcOpen]?.[1]===r.page) b.setAttribute('aria-current','page');
+      if (routes[b.dataset.hcOpen]?.[1]===(view?.nav||r.page)) b.setAttribute('aria-current','page');
       else b.removeAttribute('aria-current');
     }
     $('homeBack').disabled=!history.back; $('homeForward').disabled=!history.forward;
-    document.title = `Touchline 26 — ${view?.title || 'Club Home'}`;
+    document.title = `Touchline 26 — ${r.page==='home'?'Club Home':title}`;
     syncClub();
   }
   function syncClub() {
     if (!desk) return;
-    const r=desk.route(), unread=desk.unread().length, badge=$('homeUnread');
+    const r=desk.route(), view=desk.view(), context=desk.context(), unread=desk.unread().length, badge=$('homeUnread');
+    setClock(view?.clock?.(context) ?? state.now);
     badge.hidden=unread===0; badge.textContent=unread; badge.setAttribute('aria-label',`${unread} unread messages`);
     const continueButton=$('homeContinue'), nextUnread=r.page==='inbox'&&r.tab==='messages'&&unread>0;
-    continueButton.querySelector('span').textContent=nextUnread?'Next Unread':'Continue';
-    continueButton.title=nextUnread?'Open the next unread message':state.entered?'Return to your match':'Advance to the next fixture';
+    const nextPreview=view?.nextLabel?.(context);
+    continueButton.querySelector('span').textContent=nextPreview || (nextUnread?'Next Unread':'Continue');
+    continueButton.title=nextPreview?`${nextPreview} in the scripted preview`:nextUnread?'Open the next unread message':state.entered?'Return to your match':'Advance to the next fixture';
     if (r.page==='home') text('homeManager', `${M.manager} – ${M.clubs[M.homeId].name}`);
-    else text('homeManager', desk.view()?.subtitle?.(desk.context()) || `${M.ordinal(M.standings.findIndex(row=>row.id===M.homeId)+1)} in ${M.division} · Next: ${M.clubs[M.next.opponent].name} (${M.next.venue}) · ${M.leadTime(state.now,M.next.date)}`);
+    else text('homeManager', view?.subtitle?.(context) || `${M.ordinal(M.standings.findIndex(row=>row.id===M.homeId)+1)} in ${M.division} · Next: ${M.clubs[M.next.opponent].name} (${M.next.venue}) · ${M.leadTime(state.now,M.next.date)}`);
     const f=desk.budgets(), financeKey=`${f.transfer}:${f.wage}`;
     if ($('homeFinance').dataset.allocation!==financeKey) {
       $('homeFinance').innerHTML=finance(); $('homeFinance').dataset.allocation=financeKey;
@@ -278,7 +285,8 @@
       const button = e.target.closest('button');
       if (!button || button.disabled) return;
       if (button.id === 'homeContinue') {
-        if (desk.route().page==='inbox' && desk.route().tab==='messages' && desk.unread().length) desk.act('next-unread');
+        if (desk.view()?.advance) desk.view().advance(desk.context());
+        else if (desk.route().page==='inbox' && desk.route().tab==='messages' && desk.unread().length) desk.act('next-unread');
         else enterMatch();
       } else if (button.id === 'homeBack') desk.step(-1);
       else if (button.id === 'homeForward') desk.step(1);

@@ -70,7 +70,7 @@
     else if(id==='CC')body=`<h3 class="cc-comp-phase">League Phase</h3>${standings(c,name,C.continental,'continental',true)}`;
     else if(id==='CS')body=`<div class="cc-trophy-block"><p>Competition finished on ${H.shortDate(win.date)}/2024</p>${trophy()}<strong>Winner</strong><small>Riverside FC · ${win.score.join('–')} v ${esc(H.clubs[win.opponent].name)}</small></div>`;
     else body=`<h3 class="cc-comp-phase">${id==='LC'?'Riverside fixtures':'First Round draw'}</h3>${compFixtures(c,comp)}`;
-    const actions=`<div class="cc-actions">${btn('Team stats','comp-team',id,{kind:'outline',arrow:true})}${btn('Player stats','comp-players',id,{kind:'outline',arrow:true})}${btn('Rules','comp-rules',id,{kind:'outline',arrow:true})}</div>`;
+    const actions=`<div class="cc-actions">${btn('Team stats','comp-team',id,{kind:'outline',arrow:true})}${btn('Player stats','comp-players',id,{kind:'outline',arrow:true})}${btn('Rules','comp-rules',id,{kind:'outline',arrow:true})}${id==='PD'||id==='LC'?link('matchday',id==='PD'?'Daily results':'Matchday fixtures','fixtures',id==='PD'?'league':'cup'):''}</div>`;
     return `<section class="cc-comp-card${c.r.id===id?' cc-comp-active':''}" data-comp="${id}"><h2 class="cc-comp-banner cc-comp-${tone}">${pitchCrest(tone)}${esc(name)}</h2><div class="cc-comp-expect"><div><p class="cc-eyebrow">Board expectation</p><strong>${esc(comp.aim)}</strong></div><div><p class="cc-eyebrow">Performance</p>${meter(comp.progress,`${name} performance`)}</div></div>${body}${actions}</section>`;
   }
   views.competitions={

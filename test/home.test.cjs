@@ -48,6 +48,6 @@ test('the bundled Club Home precedes the initially hidden match and carries the 
   assert.match(page, /id="matchScreen" hidden[>\s]/);
   assert.ok(page.indexOf('id="homeScreen"') < page.indexOf('id="matchScreen"'));
   assert.match(page, /id="homeContinue"/);
-  assert.equal((page.match(/data:image\/webp;base64,/g) || []).length, 7);
+  assert.equal((page.match(/data:image\/webp;base64,/g) || []).length, 9);
   assert.doesNotMatch(page, /@HOME_PORTRAITS@|@CLUB_MEDIA@|\{\{HOME(?:_ICONS)?\}\}/);
 });
