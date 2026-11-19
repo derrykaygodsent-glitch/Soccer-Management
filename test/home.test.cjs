@@ -20,7 +20,7 @@ test('Home advertises the same next fixture as the date-gated season', () => {
   assert.equal(H.next, H.fixtures.find(f => !f.score));
   assert.equal(H.leadTime(H.start, H.next.date), '4 days');
   assert.equal(H.leadTime(H.next.date, H.next.date), 'Today');
-  assert.deepEqual(H.calendar(H.start), { day: 'Sat 17:15', date: '26 Oct 2024', long: 'Saturday 26th October 2024' });
+  assert.deepEqual(H.calendar(H.start), { day: 'Mon 17:15', date: '26 Oct 2026', long: 'Monday 26th October 2026' });
   assert.equal(H.shortDate(H.next.date), '30/10');
 });
 

@@ -5,7 +5,7 @@
   const H = node ? require('./home-data.js') : global.TLHomeData;
   const C = node ? require('./club-data.js') : global.TLClubData;
   const K = node ? require('./season-calendar.js') : global.TLSeasonCalendar;
-  const key = 'touchline26.riverside.starter.v1';
+  const key = 'touchline26.2026.riverside.starter.v1';
   const handles = {
     read: C.inbox.map(x=>x.id), shortlist: C.prospects.map(x=>x.id), dismissed: C.prospects.map(x=>x.id),
     agent: C.prospects.map(x=>x.id), reminders: K.fixtureId, staffList:C.staffPool.map(x=>x.id),
@@ -20,8 +20,8 @@
     ['All positions',...Object.keys(C.roles)].includes(f.pos) && ['High','Standard','Low'].includes(f.priority);
   const feeOK = fee => number(fee) && fee >= 1000 && fee <= C.finance.transfer;
   const dateText = date => new Date(date).toISOString().slice(0,10);
-  const friendlyOK = f => f && typeof f.date === 'string' && typeof f.opponent === 'string' && f.id === `friendly-${f.date}-${f.opponent}` && /^(2024|2025)-\d\d-\d\d$/.test(f.date) &&
-    !isNaN(Date.parse(f.date)) && dateText(Date.parse(f.date)) === f.date && f.date > dateText(H.next.date) && f.date <= '2025-05-31' &&
+  const friendlyOK = f => f && typeof f.date === 'string' && typeof f.opponent === 'string' && f.id === `friendly-${f.date}-${f.opponent}` && /^(2026|2027)-\d\d-\d\d$/.test(f.date) &&
+    !isNaN(Date.parse(f.date)) && dateText(Date.parse(f.date)) === f.date && f.date > dateText(H.next.date) && f.date <= '2027-05-31' &&
     Object.hasOwn(H.clubs,f.opponent) && f.opponent !== H.homeId && !K.announcedDate(f.date) && ['H','A'].includes(f.venue);
   function normalize(raw = {}) {
     const src = raw && typeof raw==='object' ? raw : {};

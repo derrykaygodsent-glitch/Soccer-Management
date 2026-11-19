@@ -2,9 +2,13 @@
 
 **Classic 2D is the main game.** The approved fixed overhead pitch and match engine are the foundation. Make future changes in `touchline-26/`; `touchline-classic/` remains a copy of the approved motion review.
 
-## Play the Riverside season (v0.9)
+## Starting the game
 
-A new save opens in the **Manager’s Office on 26 October 2024**. The redesigned clubhouse brings the fixture, daily priorities, player leaders, standings and club finances together on Home. The Terrace is a separate social timeline for club updates, supporters and the fictional football press. Club roles, plans and match reports still draw from the same season ledger. There is no matchday picker or prewritten cup score.
+Choose **Start a new game**, pick a starting ambition, then create or reuse a manager profile. Review your personal details and appearance and select **Begin career** to enter the Manager’s Office. The familiar clubhouse screens start without an inherited club, squad or budget. New careers save on this device and appear under **Load game** on the start screen. The old local prototype slots are cleared; this does not remove cloud records.
+
+## Archived Riverside season (v0.9; not available from the new career menu)
+
+The original Riverside season begins in the **Manager’s Office on 26 October 2026**. The redesigned clubhouse brings the fixture, daily priorities, player leaders, standings and club finances together on Home. The Terrace is a separate social timeline for club updates, supporters and the fictional football press. Club roles, plans and match reports still draw from the same season ledger. There is no matchday picker or prewritten cup score.
 
 1. **Continue** or **Space** starts automatic day-by-day processing. Press **Stop processing**, **Space** or **Esc** to pause at the last saved date. Processing stops automatically for required decisions, Riverside matchday and the end of the calendar. Click the header date to inspect the calendar or select a future date and choose **Pause on this date** for a one-time stop. The Premier Division table and published results follow the club clock. At the start, Riverside’s completed Eastvale result is historical; the upcoming Harbourport tie is unplayed.
 2. **Inbox** holds the date only for items marked **Action required**. The opening week includes a training-load decision, a coaches’ meeting and a press decision. Reading or marking mail read is not the same as answering. **Next Unread** follows the Inbox order; optional updates do not hold the calendar.
@@ -15,7 +19,7 @@ A new save opens in the **Manager’s Office on 26 October 2024**. The redesigne
 
 Confirmed Riverside fixtures use the Classic engine, at home or away. Other clubs’ results are seeded and appear when the club clock passes their finish time. The league schedule runs to 38 matches per team, and League Cup qualification sets later rounds. Early archives, non-playable editorial snapshots, recruitment drafts and board requests remain part of the fictional starter club. Drafts do not sign players, spend money or create a playable match.
 
-**Saving:** Existing v0.8.x saves work without conversion. The date, decisions, club tactics, submitted team, talks and results are stored locally in the browser. A live reload restores a paused match from its checkpoint and accepted touchline actions. A late restore may take a few seconds. The file also runs with no network or sign-in. In a script-only viewer that blocks storage, progress lasts only in the open session; use the live preview or an ordinary browser window for a continuing save.
+**Saving:** The 2026/27 season uses separate local save keys. Previous 2024/25 careers remain untouched and can be played with their original build; they are not automatically converted. The date, decisions, club tactics, submitted team, talks and results are stored locally in the browser. A live reload restores a paused match from its checkpoint and accepted touchline actions. A late restore may take a few seconds. The file also runs with no network or sign-in. In a script-only viewer that blocks storage, progress lasts only in the open session; use the live preview or an ordinary browser window for a continuing save.
 
 ### The Match Office
 
@@ -85,3 +89,14 @@ Open `index.html` offline, or run `npm run preview` with Node.js 20+. The previe
 - `pre-classic-baseline` — the earlier playable version, kept for rollback or comparison.
 
 The original uploads are unchanged. The clubhouse art, fonts and icons are bundled offline. Navigation and room transitions respect reduced-motion settings. The match engine, saved-season schema and the approved Classic 2D copy were not changed in v0.9.0.
+
+### Optional private cloud saves
+
+**Cloud saves** is a manual handoff, not background sync. Sign in with email and password (confirm your email if requested), then **Upload as new slot**. On a second device running the same build, sign in and **Open selected slot**. Subsequent uploads use **Save linked slot**. If another device saved first, open its version or upload yours under a new slot. Opening a slot keeps one previous local backup, recoverable from the same dialog. Local saves are still made without signing in. Authentication lasts only for the open page; sign in again after reload or token expiry. Use one tab per local career.
+
+**Deployment (only on an approved Supabase project):**
+
+1. Enable email/password auth; configure the confirmation email’s Site URL for the hosted game. Keep confirmation enabled on public deployments.
+2. Apply `supabase/migrations/202611190001_careers.sql` once. The Data API must expose `public`. Owners can select their own slots; only the authenticated revision-checking RPC can write them. No Edge Function, Realtime subscription, service-role key or game server is needed.
+3. Set `TOUCHLINE_SUPABASE_URL` to the HTTPS project origin and `TOUCHLINE_PUBLISHABLE_KEY` to an `sb_publishable_…` key when running `npm run build`. Serve the resulting `index.html` on HTTPS on both devices. The default build uses the dedicated `touchline-26` project. Set both variables to empty strings for an offline-only build. Do not supply secret keys.
+4. Run `npm ci && npm test`. The cloud test runs the actual migration in embedded PostgreSQL with two simulated Auth identities. Before release, test real email confirmation, laptop-to-phone resume and a stale laptop upload against the approved project. An interrupted request may already have reached the server: refresh and inspect the slot rather than assuming it failed.

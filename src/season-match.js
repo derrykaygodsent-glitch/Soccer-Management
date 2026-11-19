@@ -100,7 +100,7 @@
     // Availability is frozen with the manifest. Don't regenerate a different XI after submission.
     const homePlan={...M.sheet(p,f.date),set:p.set,numbers:p.numbers,fitness:submitted.fitness,focus:f.date===H.next.date?submitted.focus:''};
     const lineups=side?[oppos,homePlan]:[homePlan,oppos], t=M.engineTactics(p.tactics);
-    const m=new E.Match(...clubs,{seed:D.seedFor(`${f.id}:2024-25`),lineups,homeTactics:side?null:t,awayTactics:side?t:null});
+    const m=new E.Match(...clubs,{seed:D.seedFor(`${f.id}:2026-27`),lineups,homeTactics:side?null:t,awayTactics:side?t:null});
     m.optimizeXI=M.bestXI;
     applyTalk(m,side,[{reactions:submitted.mood||{}}],.45);
     applyTalk(m,side,session.talks?.pre||[]);

@@ -4,7 +4,7 @@ const {test}=require('node:test');
 const K=require('../src/season-calendar');
 const S=require('../src/season-state');
 const {create,gate}=require('../src/calendar-progress');
-const pauseDay=K.date('2024-10-29');
+const pauseDay=K.date('2026-10-29');
 function fixture(){
   const memory=new Map(), storage={getItem:k=>memory.get(k),setItem:(k,v)=>memory.set(k,v)};
   const store=S.open(storage), frames=[], stops=[], timers=new Map();let id=0;
@@ -22,11 +22,11 @@ test('Continue walks the guarded date ledger until mandatory decisions; read alo
   const {store,machine,step,frames,stops,timers}=fixture(), p=machine();
   assert.ok(p.start());assert.ok(p.running);assert.equal(frames[0].days,0);assert.equal(timers.size,1);
   assert.equal(p.start(),false);step();
-  assert.equal(K.iso(store.value.now),'2024-10-27');assert.equal(stops[0].reason,'decision');assert.deepEqual(stops[0].messages,['load-review']);assert.equal(stops[0].days,1);
+  assert.equal(K.iso(store.value.now),'2026-10-27');assert.equal(stops[0].reason,'decision');assert.deepEqual(stops[0].messages,['load-review']);assert.equal(stops[0].days,1);
   store.read('load-review');assert.equal(p.start(),false);assert.equal(p.running,false);assert.equal(timers.size,0);
   assert.ok(store.answer('load-review','light'));
   assert.ok(p.start());step();
-  assert.equal(K.iso(store.value.now),'2024-10-28');assert.deepEqual(stops[1].messages,['staff-cup','press-cup']);assert.equal(timers.size,0);
+  assert.equal(K.iso(store.value.now),'2026-10-28');assert.deepEqual(stops[1].messages,['staff-cup','press-cup']);assert.equal(timers.size,0);
   assert.equal(p.running,false);assert.equal(store.value.session,null);
 });
 
@@ -34,10 +34,10 @@ test('one Continue traverses multiple quiet dates and stops at matchday without 
   const {store,machine,step,frames,stops,timers,storage}=fixture(), p=machine();
   assert.ok(store.advance());assert.ok(store.answer('load-review','light'));assert.ok(store.advance());
   assert.ok(store.answer('staff-cup','set'));assert.ok(store.answer('press-cup','respect'));
-  assert.ok(p.start());step();assert.equal(K.iso(store.value.now),'2024-10-29');assert.ok(p.running);
+  assert.ok(p.start());step();assert.equal(K.iso(store.value.now),'2026-10-29');assert.ok(p.running);
   assert.deepEqual(frames.map(f=>f.days),[0,1]);step();
   assert.equal(p.running,false);assert.equal(timers.size,0);assert.equal(stops.at(-1).reason,'fixture');assert.equal(stops.at(-1).days,2);
-  assert.equal(stops.at(-1).fixture,'2024-10-30-hpt');assert.equal(store.value.session,null);assert.deepEqual(store.value.results,{});
+  assert.equal(stops.at(-1).fixture,'2026-10-30-hpt');assert.equal(store.value.session,null);assert.deepEqual(store.value.results,{});
   const reloaded=S.open(storage);assert.equal(reloaded.value.now,store.value.now);assert.equal(gate(reloaded.value).reason,'fixture');
   assert.ok(reloaded.enter());assert.equal(reloaded.value.session.stage,'meeting');assert.equal(gate(reloaded.value).reason,'session');
 });

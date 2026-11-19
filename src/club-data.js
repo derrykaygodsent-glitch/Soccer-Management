@@ -1,10 +1,10 @@
-/* Expanded 2024/25 Riverside starter season. IDs shared by every club view. */
+/* Expanded 2026/27 Riverside starter season. IDs shared by every club view. */
 (function (global) {
   'use strict';
   const node = typeof window === 'undefined';
   const H = node ? require('./home-data.js') : global.TLHomeData;
   const D = node ? require('./data.js') : global.TLData;
-  const at = (m, d, h = 15, min = 0) => Date.UTC(2024, m - 1, d, h, min);
+  const at = (m, d, h = 15, min = 0) => Date.UTC(2026, m - 1, d, h, min);
   const by = rows => Object.fromEntries(rows.map(row => [row.id, row]));
   const nation = { ENG: 'England', WAL: 'Wales', GHA: 'Ghana', TUR: 'Türkiye', SWE: 'Sweden', IRL: 'Ireland', POR: 'Portugal', DEN: 'Denmark', JPN: 'Japan', ITA: 'Italy', FIN: 'Finland', NOR: 'Norway', NZL: 'New Zealand', GER: 'Germany', ESP: 'Spain', NED: 'Netherlands', BEL: 'Belgium' };
   const roles = { GK: ['Goalkeeper', 'GK', 'Sweeper Keeper'], DC: ['Centre-back', 'D (C)', 'Ball-Playing Defender'], FB: ['Full-back', 'D (RL)', 'Full-Back'], DM: ['Defensive midfielder', 'DM', 'Ball-Winning Midfielder'], CM: ['Central midfielder', 'M (C)', 'Deep-Lying Playmaker'], AM: ['Attacking midfielder', 'AM (C)', 'Advanced Playmaker'], W: ['Winger', 'AM (RL)', 'Inverted Winger'], ST: ['Striker', 'ST (C)', 'Advanced Forward'] };
@@ -98,11 +98,11 @@
   ];
 
   const leagueGap = H.standings[0].pts - H.standings[1].pts;
-  const reportFixture = H.fixtures.find(f => f.id === '2024-10-26-efc');
+  const reportFixture = H.fixtures.find(f => f.id === '2026-10-26-efc');
   const matchReport = { fixtureId: reportFixture.id, attendance: 27359, ratings: Object.fromEntries(quickPick().slice(0,11).map((id,i) => [id,id === leaders.forward ? '10.0' : id === leaders.winger ? '8.7' : (7.1 + i % 6 * .1).toFixed(1)])),
     potm: leaders.forward, stats: [['Shots',4,15],['xG',.62,2.71],['Possession',26,74],['On target',1,8],['Corners',2,7]],
     goals: [[25,leaders.forward,'A first-time finish into the far corner.'],[30,leaders.forward,'A low strike from the edge of the area.'],[63,leaders.winger,'A header from close range to extend the lead.'],[73,leaders.forward,'A finish from close range to seal the hat-trick.']] };
-  const lastMeetings = [H.fixtures.find(f=>f.score && f.opponent==='hpt'), {date:Date.UTC(2024,3,6,15),venue:'A',opponent:'hpt',score:[2,0],comp:'PD'}, {date:Date.UTC(2023,10,25,15),venue:'H',opponent:'hpt',score:[2,1],comp:'PD'}];
+  const lastMeetings = [H.fixtures.find(f=>f.score && f.opponent==='hpt'), {date:Date.UTC(2026,3,6,15),venue:'A',opponent:'hpt',score:[2,0],comp:'PD'}, {date:Date.UTC(2023,10,25,15),venue:'H',opponent:'hpt',score:[2,1],comp:'PD'}];
   const inbox = [
     ['scout',10,26,17,0,namedStaff['Chief Scout'],'Chief Scout','Scouting','Scouting finished: Lucas Marín','scout',true],
     ['fixture',10,26,16,49,'June Fletcher','Club Secretary','Club','League Cup fixture confirmed','simple',false],
@@ -159,7 +159,7 @@
     ground: { capacity:43218, surface:'Hybrid grass', condition:'Very good', pitch:'105 m × 68 m', built:1924, tickets:28440, seasonPrice:795, matchPrice:46 },
     rivals:[['Northbridge derby',['nbu']],['Fierce rivals',['kgd','hpt']],['Other rivals',['oak','efc','swl']]],
     legacy:[['Legends',[['Nathan Holt','Player'],['Ben Osei','Player'],['Danny Caldwell','Player and manager'],['Vince Parkin','Player']]],['Icons',[['Elijah Morton','Player'],['Frank Wilder','Manager'],['Tomas Lund','Player']]],['Favoured personnel',[[players[leaders.captain].name,'Player'],[players[leaders.forward].name,'Player'],['Mara Bennett','Staff']]]],
-    honours:[['Premier Division','1997/98, 2004/05, 2015/16, 2021/22'],['National Cup','1984, 1998, 2012, 2022'],['League Cup','2005, 2017'],['Community Shield','1998, 2005, 2024']]
+    honours:[['Premier Division','1997/98, 2004/05, 2015/16, 2021/22'],['National Cup','1984, 1998, 2012, 2022'],['League Cup','2005, 2017'],['Community Shield','1998, 2005, 2026']]
   };
   const dynamics = [
     { id:'cohesion',name:'Team cohesion',symbol:'tactics',score:92,status:'Excellent',copy:'The players know how to play together and are willing to work for each other.',reasons:['The group has settled into a consistent first-team shape.','The back line is communicating more clearly.','Players are picking up each other’s runs earlier.'] },
@@ -182,7 +182,7 @@
     ['Benji Hall','DC','brk',11,7.18],['Callum Wright','CM','mer',12,7.05],['Toby Madden','W','dun',8,6.91],['Théo Dahan','GK','ard',12,7.10],
     ['Rafi Noor','ST','ash',5,6.58],['Myles Kim','DM','wst',10,7.04],['Nathan Key','AM','elm',6,6.77],['Elias Young','FB','red',11,7.21]
   ].map(([name,pos,club,apps,rating],i)=>({id:`loan-${i}`,name,pos,club,apps,rating,advice:apps<7?'Review playing time with the loan club.':'Regular minutes are helping his development.'}));
-  const youthFixtures = { u21:[['2024-10-21','wst','H','2 – 0'],['2024-10-28','kgd','A',''],['2024-11-04','nbu','H','']], u18:[['2024-10-19','ash','A','1 – 1'],['2024-11-02','mer','H',''],['2024-11-09','efc','A','']] };
+  const youthFixtures = { u21:[['2026-10-21','wst','H','2 – 0'],['2026-10-28','kgd','A',''],['2026-11-04','nbu','H','']], u18:[['2026-10-19','ash','A','1 – 1'],['2026-11-02','mer','H',''],['2026-11-09','efc','A','']] };
 
   const finance = { ...H.finance, scouting:269372, scoutingOriginal:390000, scoutingRange:'World', income:16856408, expenditure:40040050, previousProfit:279974068,
     incomeParts:[['Gate receipts',2626224],['Broadcast revenue',5921963],['Sponsorship',5099468],['Merchandising',998372],['Prize money & other',2210381]],

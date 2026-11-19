@@ -70,7 +70,7 @@
     let body;
     if(id==='PD')body=`<div class="cc-comp-form"><div><p class="cc-eyebrow">Recent form</p>${form(c.fixtures().filter(f=>f.comp==='PD'&&f.score).slice(-5))}</div><div><p class="cc-eyebrow">League positions</p>${positionChart(c)}</div></div>${standings(c,H.division,c.standings(),'premier',true)}<div class="cc-comp-scorer"><p class="cc-eyebrow">Top goalscorer for Riverside</p><div class="cc-person">${avatar(c,top.name,top.id)}<div>${player(top.id)}<small>${top.goals} goals in all competitions</small></div></div></div>`;
     else if(id==='CC')body=`<h3 class="cc-comp-phase">League Phase</h3>${standings(c,name,K.continentalStandings(c.season.value,C.continental),'continental',true)}`;
-    else if(id==='CS')body=`<div class="cc-trophy-block"><p>Competition finished on ${H.shortDate(win.date)}/2024</p>${trophy()}<strong>Winner</strong><small>Riverside FC · ${win.score.join('–')} v ${esc(H.clubs[win.opponent].name)}</small></div>`;
+    else if(id==='CS')body=`<div class="cc-trophy-block"><p>Competition finished on ${H.shortDate(win.date)}/2026</p>${trophy()}<strong>Winner</strong><small>Riverside FC · ${win.score.join('–')} v ${esc(H.clubs[win.opponent].name)}</small></div>`;
     else body=`<h3 class="cc-comp-phase">${id==='LC'?'Riverside fixtures':'First Round draw'}</h3>${compFixtures(c,comp)}`;
     const actions=`<div class="cc-actions">${btn('Team stats','comp-team',id,{kind:'outline',arrow:true})}${btn('Player stats','comp-players',id,{kind:'outline',arrow:true})}${btn('Rules','comp-rules',id,{kind:'outline',arrow:true})}${id==='PD'||id==='LC'?link('day','Fixtures & results','fixtures'):''}</div>`;
     return `<section class="cc-comp-card${c.r.id===id?' cc-comp-active':''}" data-comp="${id}"><h2 class="cc-comp-banner cc-comp-${tone}">${pitchCrest(tone)}${esc(name)}</h2><div class="cc-comp-expect"><div><p class="cc-eyebrow">Board expectation</p><strong>${esc(comp.aim)}</strong></div><div><p class="cc-eyebrow">Performance</p>${meter(comp.progress,`${name} performance`)}</div></div>${body}${actions}</section>`;
@@ -99,7 +99,7 @@
   }
   function visionPlan(c){
     const year=Math.max(0,Math.min(C.plan.length-1,Number(c.ui.year||0)));
-    return `<section class="cc-board-plan"><div class="cc-vision-intro"><h2>Board vision</h2><p>The club’s long-term vision and expectations.</p></div>${objectiveRows(C.objectives,'Actionable objectives')}<hr>${objectiveRows([['Prioritise longer contracts for first-team players','Preferred','Not judging']],'Informational objectives')}<hr><h3>Five-year plan</h3><div class="cc-year-tabs">${['Current season','2025/26','2026/27','2027/28','2028/29'].map((name,i)=>btn(name,'plan-year',i,{pressed:i===year})).join('')}</div>${objectiveRows(C.plan[year],year?'By the end of this season':'End of current season')}</section>`;
+    return `<section class="cc-board-plan"><div class="cc-vision-intro"><h2>Board vision</h2><p>The club’s long-term vision and expectations.</p></div>${objectiveRows(C.objectives,'Actionable objectives')}<hr>${objectiveRows([['Prioritise longer contracts for first-team players','Preferred','Not judging']],'Informational objectives')}<hr><h3>Five-year plan</h3><div class="cc-year-tabs">${['Current season','2027/28','2028/29','2029/30','2030/31'].map((name,i)=>btn(name,'plan-year',i,{pressed:i===year})).join('')}</div>${objectiveRows(C.plan[year],year?'By the end of this season':'End of current season')}</section>`;
   }
   function feedback(c,which){
     const board=which==='board', completed=c.s.board.length;

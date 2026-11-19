@@ -2,7 +2,7 @@
 (function(global){
   'use strict';
   const node=typeof window==='undefined', H=node?require('./home-data.js'):global.TLHomeData, D=node?require('./data.js'):global.TLData;
-  const {homeId:R, clubs}=H, DAY=864e5, HOUR=36e5, end=Date.UTC(2025,7,31);
+  const {homeId:R, clubs}=H, DAY=864e5, HOUR=36e5, end=Date.UTC(2027,7,31);
   const day=t=>Math.floor(t/DAY)*DAY;
   const date=(s,h=0,m=0)=>Date.parse(`${s}T00:00:00Z`)+h*HOUR+m*6e4;
   const iso=t=>new Date(t).toISOString().slice(0,10);
@@ -14,11 +14,11 @@
   const cupRound=[['nbu','wst'],['kgd','elm'],['ash','lyd'],['dun','efc'],['swl','oak'],['red','crt'],['crl','sby']].map(([h,a])=>make(H.next.date,h,a,'LC','Fourth Round'));
   // The two pending opener ties bring the four clubs with a game in hand level.
   const opener=[
-    {...make(date('2024-10-26',12,30),'ash','elm','PD'),archived:[1,0]},
-    {...make(date('2024-10-26',15),'oak','kgd','PD'),archived:[2,2]},
-    {...make(date('2024-10-26',15),'hpt','swl','PD'),archived:[1,0]},
-    make(date('2024-10-26',19,45),'nbu','wst','PD'),
-    make(date('2024-10-27',14),'mer','kgd','PD')
+    {...make(date('2026-10-26',12,30),'ash','elm','PD'),archived:[1,0]},
+    {...make(date('2026-10-26',15),'oak','kgd','PD'),archived:[2,2]},
+    {...make(date('2026-10-26',15),'hpt','swl','PD'),archived:[1,0]},
+    make(date('2026-10-26',19,45),'nbu','wst','PD'),
+    make(date('2026-10-27',14),'mer','kgd','PD')
   ];
   // Continue the published fixture list with Riverside's outstanding home and away league dates.
   const used=new Set(base.filter(f=>f.comp==='PD').map(f=>`${f.home}:${f.away}`));
@@ -27,11 +27,11 @@
   for(let i=0;i<remaining.length;i++){
     for(const [h,a] of [[R,remaining[i]],[remaining[(i+7)%remaining.length],R]]){
       if(used.has(`${h}:${a}`))continue;
-      const d=date('2024-12-07',15)+n++*7*DAY;
+      const d=date('2026-12-07',15)+n++*7*DAY;
       base.push(clubFixture({id:`${iso(d)}-${h===R?a:h}`,date:d,venue:h===R?'H':'A',opponent:h===R?a:h,comp:'PD'}));
     }
   }
-  base.push(clubFixture({id:'2025-07-26-hpt',date:date('2025-07-26',15),venue:'H',opponent:'hpt',comp:'FR',stage:'Pre-season'}));
+  base.push(clubFixture({id:'2027-07-26-hpt',date:date('2027-07-26',15),venue:'H',opponent:'hpt',comp:'FR',stage:'Pre-season'}));
   // A circle schedule yields one home and one away meeting per opponent.
   // Pin Riverside's pre-announced fixtures to their actual dates, and fill
   // each of those same rounds with the corresponding background pairings.
@@ -54,7 +54,7 @@
   const backgroundCache=new Map();
   function background(f){
     if(backgroundCache.has(f.id))return backgroundCache.get(f.id);
-    const rng=D.mulberry32(D.seedFor(`${f.id}:2024`)), chance=(id,home)=>{
+    const rng=D.mulberry32(D.seedFor(`${f.id}:2026`)), chance=(id,home)=>{
       const row=H.standings.find(x=>x.id===id), factor=(row?.pts??17)/45;
       let g=0; for(let i=0;i<7;i++)if(rng()<.11+factor*.25+(home?.035:0))g++;
       return g;
@@ -71,7 +71,7 @@
   const winner=(f,r)=>!r?null:(r.pen||r.goals)[0]>(r.pen||r.goals)[1]?f.home:f.away;
   function slate(s){
     const rows=fixed.slice();let round=[base.find(f=>f.id===H.next.id),...cupRound];
-    for(const [d,stage] of [['2024-12-18','Quarter-Final'],['2025-01-15','Semi-Final'],['2025-03-16','Final']]){
+    for(const [d,stage] of [['2026-12-18','Quarter-Final'],['2027-01-15','Semi-Final'],['2027-03-16','Final']]){
       const teams=round.map(f=>winner(f,outcome(f,s)));if(teams.some(x=>!x))break;
       round=Array.from({length:teams.length/2},(_,i)=>make(date(d,stage==='Final'?16:19,stage==='Final'?0:45),teams[i*2+(stage==='Semi-Final'?1:0)],teams[i*2+(stage==='Semi-Final'?0:1)],'LC',stage));
       rows.push(...round);
@@ -105,7 +105,7 @@
     const days=[...new Set(fixed.filter(f=>f.comp==='PD'&&!f.archived&&outcome(f,s)).map(f=>day(f.date)))];
     return [...H.positionHistory,...days.map(d=>tables({...s,now:Math.min(s.now,d+DAY-1)},H.standings,'PD').findIndex(x=>x.id===R)+1)];
   };
-  const cupId=/^(2024-12-18|2025-01-15|2025-03-16)-lc-([a-z]+)-([a-z]+)$/;
+  const cupId=/^(2026-12-18|2027-01-15|2027-03-16)-lc-([a-z]+)-([a-z]+)$/;
   const fixtureId=id=>{
     if(typeof id!=='string')return false;
     if(base.some(f=>!f.archived&&f.id===id))return true;

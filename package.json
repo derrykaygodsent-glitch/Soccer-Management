@@ -11,5 +11,8 @@
     "test": "node --test test/*.test.cjs",
     "test:sim": "node test/sim-test.cjs"
   },
-  "description": "A standalone football management game with a live Classic 2D match engine."
+  "description": "A standalone football management game with a live Classic 2D match engine.",
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.16"
+  }
 }

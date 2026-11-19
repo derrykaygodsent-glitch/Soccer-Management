@@ -14,7 +14,7 @@
     <section><h3>Scouting budget</h3><strong>${H.money(f.scouting)}</strong></section><section><h3>Adjust budgets</h3>${budgetButtons(c)}${c.s.budgetShift?`<p>Local adjustment: ${c.s.budgetShift>0?'+':''}${H.money(c.s.budgetShift)} p/w</p>`:''}</section></aside>`;
   }
   function ffp(c,detail=false){
-    return `<section class="cc-ffp"><h2 class="cc-title">Financial Fair Play progress</h2><div class="cc-grid2">${C.ffp.map(r=>`<article><h3>${esc(r.name)} 2024/25</h3><p><span aria-hidden="true">✓</span> Riverside are on course to meet the regulations for the current period.</p>${detail?`<p>Estimated headroom: <strong>${H.millions(r.margin)}</strong></p>`:''}</article>`).join('')}</div>${detail?'<p class="cc-muted">Starter-season assessment. Draft offers, board requests and budget reallocations do not move cash or recalculate this forecast.</p>':''}</section>`;
+    return `<section class="cc-ffp"><h2 class="cc-title">Financial Fair Play progress</h2><div class="cc-grid2">${C.ffp.map(r=>`<article><h3>${esc(r.name)} 2026/27</h3><p><span aria-hidden="true">✓</span> Riverside are on course to meet the regulations for the current period.</p>${detail?`<p>Estimated headroom: <strong>${H.millions(r.margin)}</strong></p>`:''}</article>`).join('')}</div>${detail?'<p class="cc-muted">Starter-season assessment. Draft offers, board requests and budget reallocations do not move cash or recalculate this forecast.</p>':''}</section>`;
   }
   const settings = {
     balance:{label:'Overall balance',max:500,min:-400,color:'#ed639a',ticks:[500,200,0,-200,-400]},
@@ -27,7 +27,7 @@
   const profit = () => `<section class="cc-fin-zone cc-profit"><div class="cc-profit-head">${metric('Profit / (loss) this month',monthProfit,'trend')}<div><p class="cc-eyebrow">This season</p><strong>${H.money(F.profit)}</strong></div><div><p class="cc-eyebrow">Last season</p><strong>${H.money(F.previousProfit)}</strong></div></div>${chart(F.monthlyProfit,settings.profit)}</section>`;
   function flows(income){
     const key=income?'income':'expenditure', value=income?F.income:F.expenditure;
-    return `<section class="cc-fin-flow">${metric(`${income?'Income':'Expenditure'} this month`,value,income?'trend':'swap')}${chart(income?F.monthlyIncome:F.monthlySpend,settings[key])}<h3 class="cc-eyebrow">Breakdown · October 2024</h3>${breakdown(income?F.incomeParts:F.expenseParts)}</section>`;
+    return `<section class="cc-fin-flow">${metric(`${income?'Income':'Expenditure'} this month`,value,income?'trend':'swap')}${chart(income?F.monthlyIncome:F.monthlySpend,settings[key])}<h3 class="cc-eyebrow">Breakdown · October 2026</h3>${breakdown(income?F.incomeParts:F.expenseParts)}</section>`;
   }
   function overview(c){
     return `<div class="cc-finances cc-fill"><div class="cc-fin-layout"><div class="cc-fin-plots">${balance()}${profit()}<div class="cc-fin-duo">${flows(true)}${flows(false)}</div></div>${budgets(c)}</div>${ffp(c)}</div>`;
