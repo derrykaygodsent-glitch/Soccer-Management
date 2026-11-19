@@ -38,7 +38,7 @@
   const depthFor = (match, team) => match.teams[team].attackDir > 0 ? match.ball.x : L - match.ball.x;
 
   function eventRank(ev, match) {
-    if (DECISIVE.has(ev.type)) return 1;
+    if (DECISIVE.has(ev.type) || (match.season && ['injury','stoppage'].includes(ev.type))) return 1;
     if (ev.type === 'corner') return 1;
     if (ev.type === 'offside') return 2;
     if (ev.type === 'foul' && match.phase === 'freekick' && match.setpiece) {

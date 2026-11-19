@@ -1,4 +1,4 @@
-/* Review-only Riverside screens. Reuse the clubhouse chrome, not the live match styles. */
+/* Shared Riverside tactics, profile, editorial and room components. */
 .hc-leader-player{display:inline;padding:0;border:0;background:none;color:inherit;text-align:left;font:inherit;line-height:inherit}
 .hc-leader-player:hover{text-decoration:underline;text-underline-offset:3px;color:var(--hc-aqua)}
 .md-matchday,.md-profile,.md-calendar,.md-review,.md-dressing,.md-touchline,.md-fixture-view{display:grid;gap:11px;min-width:0;align-content:start}
@@ -281,7 +281,7 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
 .md-rating-tiles button{display:grid;justify-items:center;gap:2px;min-width:0;min-height:62px;border:1px solid #43506b;background:#222536;color:#e7effe;padding:2px;font:inherit;border-radius:3px}.md-rating-tiles button:hover{background:#344d6b}.md-rating-tiles .md-shirt{width:21px;height:21px}.md-rating-tiles .md-shirt b{font-size:7.2px}.md-rating-tiles strong{font-size:9px;white-space:nowrap}.md-rating-tiles small{font-size:8px}.md-rating-tiles .cc-rating{min-width:29px;padding:1px 3px;font-size:8.5px}
 .hc-dialog .md-xg-card{margin:0 0 8px;color:#f1f6ff}
 
-/* Sample touchline panel and the two dressing-room talks. */
+/* Touchline and dressing-room components. */
 .md-touchline-alert{display:flex;align-items:center;gap:8px 10px;min-height:46px;padding:7px 10px;color:#ffdedf;background:#4b293c;border:1px solid #bb60757a;border-left:3px solid #e38192;border-radius:5px;min-width:0}
 .md-touchline-alert>.hc-icon{width:23px;height:23px;color:#ffadbb}.md-touchline-alert>div{flex:1;min-width:0}.md-touchline-alert p{color:#e8bcc7;font-size:11.1px;margin-top:2px}
 .md-touchline-grid{display:grid;grid-template-columns:minmax(192px,.7fr) minmax(0,2.3fr);align-items:start;gap:8px}
@@ -308,7 +308,7 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
 .md-talk-status{margin-top:6px;color:#cbd7ea;font-size:10.8px}.md-talk-status>b{color:#90edec}
 .md-talk-footer{display:flex;align-items:center;gap:5px 9px;justify-content:space-between;flex-wrap:wrap;border:1px solid #414d63;background:#262c3e;border-radius:6px;padding:5px 7px}.md-talk-footer>div:not(.cc-person){display:flex;flex-wrap:wrap;gap:4px}.md-talk-footer .cc-avatar{width:23px;height:26px}.md-talk-footer .cc-person{font-size:10px}
 
-/* Medical and training links, and the cup's sample Inbox. */
+/* Medical and training components. */
 .md-injury-report .cc-prose{margin:9px 0;color:#e3eaf8}.md-treatment .cc-person{margin:7px 0}.md-treatment .cc-person p{margin-top:5px}.md-treatment>p{color:#bdc9df;margin:4px 0 6px}.md-treatment .cc-values{gap:7px}
 .md-risk-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:6px;margin:7px 0 10px}.md-risk-summary>div{display:grid;gap:3px;min-width:0;padding:6px 8px;background:#262f42;border:1px solid #4c5872;border-radius:4px}.md-risk-summary small{text-transform:uppercase;letter-spacing:.03em;font-size:9.5px;font-weight:750}.md-risk-summary b{font-size:12px}
 .md-injury-report h3.cc-title{margin-bottom:5px}.md-injury-report .cc-risk-table,.md-editorial .cc-risk-table{min-width:455px}

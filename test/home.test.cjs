@@ -6,8 +6,13 @@ const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 const H = require('../src/home-data.js');
 const D = require('../src/data.js');
+const K = require('../src/season-calendar.js');
+const S = require('../src/season-state.js');
 
-test('the next fixture on Home is the actual match-centre selection', () => {
+test('Home advertises the same next fixture as the date-gated season', () => {
+  const season=S.open().value, f=K.next(season);
+  assert.equal(f.id,H.next.id);
+  assert.equal(K.due(season),null);
   const config = H.matchConfig();
   assert.equal(D.CLUBS[config.home].id, H.homeId);
   assert.equal(D.CLUBS[config.away].id, H.next.opponent);

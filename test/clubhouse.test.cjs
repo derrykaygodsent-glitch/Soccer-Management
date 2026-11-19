@@ -109,7 +109,8 @@ test('planning changes validate known identifiers and preserve the cup fixture',
   const friendly=(date)=>({id:`friendly-${date}-nbu`,date,opponent:'nbu',venue:'A'});
   assert.equal(S.reduce(s,'friendly',friendly('2024-10-30')),s);
   assert.equal(S.reduce(s,'friendly',friendly('2024-11-02')),s);
-  const draft=friendly('2024-12-07'); s=S.reduce(s,'friendly',draft);
+  assert.equal(S.reduce(s,'friendly',friendly('2024-12-07')),s);
+  const draft=friendly('2024-12-08'); s=S.reduce(s,'friendly',draft);
   assert.deepEqual(s.friendlies,[draft]); assert.equal(S.reduce(s,'friendly',draft),s);
   assert.deepEqual(S.reduce(s,'friendly-delete',draft.id).friendlies,[]);
   assert.equal(H.next.id,'2024-10-30-hpt');
@@ -120,16 +121,19 @@ test('every enabled clubhouse destination and tab renders in the offline bundle'
   const context={document:{readyState:'loading',addEventListener(){}}};context.window=context;
   for (const [,source] of page.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)) runInNewContext(source,context);
   const views=context.TLClubUI.views;
-  const names=['inbox','schedule','squad','scouting','transfers','club','competitions','vision','dynamics','staff','development','finance','tactics','player','matchday','medical','training'];
+  const names=['inbox','schedule','squad','scouting','transfers','club','competitions','vision','dynamics','staff','development','finance','tactics','player','day','medical','training'];
   assert.deepEqual(Object.keys(views).sort(),names.sort());
   const s=context.TLClubState.normalize(), fiscal=context.TLClubState.budgets(s);
+  const season=context.TLSeasonState.open(undefined,s.sheet), ledger=season.value, api=context.TLSeasonCalendar;
+  const fixtures=()=>api.clubFixtures(ledger), mail=()=>context.TLSeasonState.messages(ledger), isRead=m=>(m.type==='season'?ledger.read:s.read).includes(m.id);
+  const ctx={ui:{},s,fiscal,season,now:ledger.now,narrow:()=>false,unread:()=>mail().filter(m=>!isRead(m)),mail,isRead,fixtures,standings:()=>api.standings(ledger),crest:()=>'<svg aria-hidden="true"></svg>',portrait:()=>''};
   let count=0;
   for(const [key,view] of Object.entries(views))for (const [tab] of view.tabs) {
-    const html=view.render({r:{page:key,tab,id:''},ui:{},s,fiscal,now:H.start,narrow:()=>false,unread:()=>S.unread(s),crest:()=>'<svg aria-hidden="true"></svg>',portrait:()=>''});
+    const html=view.render({...ctx,ui:{},r:{page:key,tab,id:''}});
     assert.ok(html.length>300,`${key}/${tab} must show the workspace`);
     assert.doesNotMatch(html,/src="(?:undefined|https?:)/);
     for(const [,target] of html.matchAll(/data-c-go="([^"]+)"/g)) assert.ok(target==='home'||views[target],`${key}/${tab} routes to ${target}`);
     count++;
   }
-  assert.ok(count>=80);
+  assert.equal(count,74);
 });

@@ -2,10 +2,19 @@
 (function (global) {
   'use strict';
   const U = global.TLClubUI, {C,views,esc} = U, S = global.TLClubState;
-  function create({ root, content, tabs, dialog, crest, portrait, showPanel, onPage, onState, scrollHome, now }) {
+  function create({ root, content, tabs, dialog, crest, portrait, showPanel, onPage, onState, scrollHome }) {
     let storage;
     try { storage = global.localStorage; } catch { /* standalone file preview */ }
-    const store = S.open(storage);
+    const store = S.open(storage), Season=global.TLSeasonState, Calendar=global.TLSeasonCalendar;
+    // Import an existing planning sheet once, but make a fresh competitive XI
+    // for new clubs instead of treating default draft picks as deliberate edits.
+    let savedSheet=[];
+    try { if(storage?.getItem(S.key))savedSheet=store.value.sheet; } catch {}
+    const season=Season.open(storage,savedSheet);
+    const mail=()=>Season.messages(season.value);
+    const unread=()=>Season.unread(season.value,store.value.read);
+    const isRead=m=>(m.type==='season'?season.value.read:store.value.read).includes(m.id);
+    const fixtures=()=>Calendar.clubFixtures(season.value);
     const history = [{page:'home',tab:'',id:''}];
     const pageState = Object.create(null);
     let cursor = 0, serial = 0, timer;
@@ -24,13 +33,14 @@
       timer = setTimeout(()=>{ status.hidden=true; }, 3800);
     }
     function actionState(type, value) {
-      const changed = store.apply(type,value);
+      const changed = type==='read'&&mail().some(m=>m.id===value&&m.type==='season')?season.read(value):store.apply(type,value);
+      if(type==='read-all')season.readAll();
       if (changed) onState();
       return changed;
     }
     function context() {
-      return { r:route(), ui:ui(), get s(){ return store.value; }, get fiscal(){return S.budgets(store.value); }, now:now(), crest,portrait,narrow,go,render,note,
-        apply:actionState, show:showPanel, close:()=>dialog.open&&dialog.close(), unread:()=>S.unread(store.value),
+      return { r:route(), ui:ui(), get s(){ return store.value; }, get fiscal(){return S.budgets(store.value); }, now:season.value.now, season, mail, isRead, fixtures, standings:()=>Calendar.standings(season.value), crest,portrait,narrow,go,render,note,
+        apply:actionState, show:showPanel, close:()=>dialog.open&&dialog.close(), unread,
         serial(prefix, existing=[]) { let id; do { id=`${prefix}-${++serial}`; } while(existing.includes(id)); return id; }
       };
     }
@@ -112,16 +122,18 @@
       content.hidden=!view;
       onState();
     }
+    function message(id){
+      const i=pageState.inbox ||= {}; i.filter='all'; i.q=''; i.closed=[];
+      return go('inbox','messages',id);
+    }
     function act(action,value,button) {
       const c=context();
       if(action==='player' && Object.hasOwn(C.players,value)) return go('player','overview',value);
       if(action==='fixture') return go('schedule','fixtures',value);
       if(action==='next-unread') {
         const next=c.unread()[0]; if(!next) return;
-        const i=pageState.inbox ||= {}; i.filter='all'; i.q=''; i.closed=[];
-        return go('inbox','messages',next.id);
+        return message(next.id);
       }
-      if(action==='go-match') return root.querySelector('#homeContinue').dispatchEvent(new CustomEvent('club-play',{bubbles:true}));
       // A dialog may have been opened from a different destination.
       const ns=button?.closest('[data-c-owner]')?.dataset.cOwner;
       return (ns?views[ns]:current())?.action?.(c,action,value,button);
@@ -166,7 +178,7 @@
     root.addEventListener('submit',event=>{
       if(event.target.dataset.cForm){event.preventDefault();submitForm(event.target);}
     });
-    return {go,step,act,render,route,context,view:current,unread:()=>S.unread(store.value),budgets:()=>S.budgets(store.value)};
+    return {go,step,act,render,route,context,view:current,unread,season,message,note,budgets:()=>S.budgets(store.value)};
   }
   global.TLClubDesk={create};
 })(window);

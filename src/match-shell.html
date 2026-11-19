@@ -1,0 +1,17 @@
+<div id="seasonMatch" class="season-match" hidden>
+  <header class="ms-header">
+    <button type="button" class="ms-back cc-icon-btn" id="seasonMatchBack" data-ms-do="back" aria-label="Back" hidden><svg class="hc-icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+    <span class="ms-mark"><svg class="hc-icon" aria-hidden="true"><use href="#i-pitch"/></svg></span>
+    <div class="ms-header-title"><span id="seasonMatchKicker">QUAYSIDE PARK</span><h1 id="seasonMatchTitle" tabindex="-1"></h1><p id="seasonMatchMeta"></p></div>
+    <time id="seasonMatchClock"></time>
+    <button type="button" class="cc-btn cc-btn-primary ms-next" id="seasonMatchAdvance" data-ms-do="next"><span></span><svg class="hc-icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+  </header>
+  <main id="seasonMatchBody" class="ms-body"></main>
+  <p id="seasonMatchStatus" class="ms-toast" role="status" hidden></p>
+  <dialog id="submitTeamDialog" class="cc-dialog ms-confirm" aria-labelledby="submitTeamTitle">
+    <header><span class="cc-eyebrow">Team selection</span><h2 id="submitTeamTitle">Submit team?</h2></header>
+    <p>This confirms the starting XI, bench and kick-off instructions. You can’t undo submission or make any more team changes before kick-off.</p>
+    <p>These pre-match changes are saved as your club’s tactics. Changes after kick-off are match-only unless you save them.</p>
+    <footer><button type="button" data-ms-do="cancel-submit" class="cc-btn cc-btn-outline" autofocus>Keep editing</button><button type="button" data-ms-do="confirm-submit" class="cc-btn cc-btn-primary">Confirm submission</button></footer>
+  </dialog>
+</div>

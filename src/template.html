@@ -29,8 +29,12 @@
   </svg>
 
   {{HOME}}
+  {{MATCH_SHELL}}
 
   <div id="matchScreen" hidden>
+  <aside id="clubRestore" class="live-restore" tabindex="-1" hidden>
+    <div><span>CLASSIC 2D · SAVED MATCH</span><h2>Restoring match</h2><p id="restoreFixture"></p><progress id="restoreProgress" aria-label="Rebuilding the saved match" value="0" max="1"></progress><p>Replaying the recorded match ticks and touchline changes.</p></div>
+  </aside>
   <header class="sitebar">
     <div class="sitebar-inner shell">
       <div class="identity" aria-label="Touchline 26"><span class="brandmark"><svg class="icon" aria-hidden="true"><use href="#i-pitch"/></svg></span><span class="wordmark">TOUCHLINE<span>26</span></span></div>
@@ -52,6 +56,7 @@
 
     <section class="broadcast" aria-label="Match broadcast">
       <div class="broadcast-head">
+        <span id="clubGroundLabel" class="live-ground" aria-label="Venue and competition"></span>
         <div class="score-strip" aria-label="Score and match time">
           <div class="score-clock"><time id="clock">00:00</time><span id="added" hidden></span></div>
           <div class="score-club score-home"><span class="score-crest" id="badgeH"></span><span id="nameH">RVR</span></div>
@@ -66,6 +71,7 @@
         <canvas id="pitch" role="img" aria-label="Fixed overhead football pitch. The referee wears a dark R marker. Select a player from the lineup below for details."></canvas>
         <div class="field-stamp" aria-hidden="true"><i></i><span id="stadiumStamp">Quayside Park</span></div>
         <div class="pitch-indicator" id="replayIndicator" role="status" hidden><i aria-hidden="true"></i><div><span id="indicatorText">Replay</span><span id="indicatorDetail"></span></div></div>
+        <div id="clubWaiting" hidden></div>
         <div class="goal-card" id="goalBanner" hidden>
           <div class="goal-kicker"><span id="goalSide"></span><span id="goalTime"></span></div>
           <strong id="goalScorer"></strong>
@@ -102,7 +108,7 @@
       <div class="team-head">
         <div class="team-title">
           <span class="lineup-crest" id="lineupCrest"></span>
-          <div><div class="team-kicker"><span>Starting XI</span><span class="team-shape" id="formationLabel">4–3–3</span></div><h2 id="teamTitle">Riverside FC</h2></div>
+          <div><div class="team-kicker"><span id="clubLineupLabel">Starting XI</span><span class="team-shape" id="formationLabel">4–3–3</span></div><h2 id="teamTitle">Riverside FC</h2></div>
         </div>
         <div class="team-actions">
           <button class="button team-button" id="btnTactics" type="button"><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg><span>Tactics <span class="and-subs">&amp; subs</span></span></button>

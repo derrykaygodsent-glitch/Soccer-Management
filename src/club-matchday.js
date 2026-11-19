@@ -1,65 +1,120 @@
-/* Standalone route through the mock matchday, isolated from Continue on Club Home. */
-(function (global) {
+/* An isolated sequential match shell. No addressable stages in clubhouse navigation. */
+(function(global){
   'use strict';
-  const X=global.TLMatchdayUI,{M,U,preview,stage}=X;
-  const {btn,select}=U;
-  const jumps=[
-    ['calendar','Calendar · Saturday 26 Oct',M.firstDay],['calendar','Calendar · Day before the match','2024-10-29'],
-    ['fixtures','League results','league'],['fixtures','Matchday cup fixtures','cup'],['fixtures','Sample cup results','cup-results'],
-    ['briefing','Briefing feedback'],['lineups','Riverside starting lineup',M.home.id],['lineups','Harbourport starting lineup',M.away.id],
-    ['half','Half-time analysis'],['half','Half-time team talk','talk'],['touchline','In-play injury & tactics'],
-    ['full','Full-time analysis'],['full','Final team talk','talk'],['post','Post-match Inbox'],['post','Injury risk update','risk'],['post','Press conference','press']
-  ];
-  const key=(tab,id='')=>`${tab}:${id}`;
-  const keyFor=c=>{
-    const defaults={calendar:M.firstDay,fixtures:'cup',lineups:M.home.id}, id=c.r.id||defaults[c.r.tab]||'';
-    const result=key(c.r.tab,id);
-    return jumps.some(row=>key(row[0],row[2])===result)?result:key(c.r.tab,defaults[c.r.tab]||'');
+  const X=global.TLMatchdayUI, {M,U}=X, {H,C}=U, P=global.TLMatchPrep, R=global.TLMatchReview, K=global.TLSeasonCalendar, Q=global.TLSeasonMatch;
+  const stages={
+    meeting:['TACTICAL MEETING','Team Selection','selection','01 / PREPARATION'],
+    selection:['TEAM SELECTION','Submit Team',null,'02 / SELECTION'],
+    briefing:['BRIEFING','Go to Match','news','03 / BRIEFING'],
+    news:['TEAM NEWS','Dressing Room','preTalk','04 / OFFICIAL LINEUPS'],
+    preTalk:['DRESSING ROOM','Match Preview','preview','05 / TEAM TALK'],
+    preview:['MATCH PREVIEW','Go to Pitch','live','06 / BROADCAST'],
+    half:['HALF TIME','Dressing Room','halfTalk','INTERVAL / ANALYSIS'],
+    halfTalk:['HALF-TIME TEAM TALK','Start Second Half',null,'INTERVAL / DRESSING ROOM'],
+    full:['FULL TIME','Dressing Room','fullTalk','FULL TIME / ANALYSIS'],
+    fullTalk:['FINAL TEAM TALK','Return to Clubhouse',null,'FULL TIME / DRESSING ROOM']
   };
-  const renderers={calendar:X.calendar,fixtures:X.fixtures,briefing:X.briefing,lineups:X.lineups,half:c=>c.r.id==='talk'?X.dressing(c):X.half(c),touchline:X.touchline,full:c=>c.r.id==='talk'?X.dressing(c):X.full(c),post:X.post};
-  const heading=c=>({calendar:'Matchday Calendar',fixtures:c.r.id==='league'?U.H.division:'League Cup',briefing:'Briefing',lineups:'Lineups',half:c.r.id==='talk'?'Team Talk':'Half Time',touchline:'In-play Tactics',full:c.r.id==='talk'?'Final Team Talk':'Full Time',post:'Post-match Inbox'})[c.r.tab];
-  const next=c=>{
-    const {tab,id}=c.r;
-    switch(tab){
-      case 'calendar':{const day=M.dateForNextDay(id);return day?['Next Day','calendar',day]:['Fixtures','fixtures','cup'];}
-      case 'fixtures':return id==='league'?['Cup Fixtures','fixtures','cup']:id==='cup-results'?['Full Time','full','']:['Briefing','briefing',''];
-      case 'briefing':return ['Lineups','lineups',''];
-      case 'lineups':return ['Half Time','half',''];
-      case 'half':return id==='talk'?['Second Half','touchline','']:['Team Talk','half','talk'];
-      case 'touchline':return ['Full Time','full',''];
-      case 'full':return id==='talk'?['Inbox','post','']:['Team Talk','full','talk'];
-      case 'post':return ['Club Home','home',''];
+  function create({store,crest,portrait,onReturn}){
+    const $=id=>document.getElementById(id), shell=$('seasonMatch'), body=$('seasonMatchBody'), live=$('matchScreen'), club=$('homeScreen'), view=()=>global.TLMatchView;
+    const ui={};let timer;
+    function note(text){const el=$('seasonMatchStatus');el.textContent=text;el.hidden=false;clearTimeout(timer);timer=setTimeout(()=>el.hidden=true,3300);}
+    const a=()=>store.value.session;
+    function ctx(){
+      const s=store.value, a=s.session, f=store.fixture(), side=Q.managed(f), opposition=M.opponent(K.club(side?f.home:f.away)), our=a.submitted?M.sheet(a.submitted.sheet,f.date):null;
+      return {s,a,f,side,opposition,our,official:K.officials(f),crest,portrait,ui};
     }
-  };
-  const date=c=>c.r.tab==='calendar'?M.time(M.day(c.r.id).id):c.r.tab==='fixtures'&&c.r.id==='league'?Date.parse(M.firstDay+'T19:45:00Z'):c.r.tab==='post'&&c.r.id==='risk'?Date.parse(M.fixtureDay+'T09:53:00Z'):c.r.tab==='post'?Date.parse(M.fixtureDay+'T21:45:00Z'):c.r.tab==='fixtures'&&c.r.id==='cup-results'?Date.parse(M.fixtureDay+'T21:40:00Z'):M.fixture.date;
-  const jumpsFor=c=>c.r.tab==='calendar'&&!jumps.some(row=>row[0]==='calendar'&&row[2]===M.day(c.r.id).id)?[...jumps,[c.r.tab,U.H.calendar(M.day(c.r.id).date).date,M.day(c.r.id).id]]:jumps;
-  U.views.matchday={title:'Matchday',tabs:M.tabs,heading,clock:date,subtitle:c=>`Screen preview · ${c.r.tab==='fixtures'&&c.r.id==='league'?'Premier Division results':M.matchTitle}`,
-    nextLabel:c=>next(c)?.[0],advance(c){const action=next(c);if(action)c.go(action[1]==='home'?'home':'matchday',action[1],action[2]);},
-    render(c){
-      const selected=c.r.tab==='calendar'?key('calendar',M.day(c.r.id).id):keyFor(c);
-      const controls=`<div class="md-preview-controls">${select('mdJump','Jump to a preview screen',[['','Jump to a screen…'],...jumpsFor(c).map(([tab,label,id])=>[key(tab,id),label])],selected)}${btn('Play Classic 2D','go-match','',{kind:'solid',icon:'i-play'})}</div>`;
-      return `<div class="md-matchday" data-preview-stage="${c.r.tab}">${preview('Matchday preview','Scripted example · No season, save or match changes.',controls)}${renderers[c.r.tab](c)}</div>`;
-    },
-    after(c,previous){
-      if(c.r.tab==='calendar')document.querySelector('.md-cal-active')?.scrollIntoView({block:'nearest',inline:'center'});
-      if(previous.page==='matchday'&&previous.tab===c.r.tab&&previous.id!==c.r.id){
-        if(c.r.tab==='half'||c.r.tab==='full'){document.getElementById('clubPage').scrollTop=0;global.scrollTo(0,0);document.getElementById('homeTitle').focus({preventScroll:true});}
-        if(c.r.tab==='post'){
-          const reader=document.querySelector('.md-post-inbox .cc-reader-copy');if(reader)reader.scrollTop=0;
-          if(c.narrow()){global.scrollTo(0,0);if(c.r.id)document.querySelector('#md-post-subject')?.focus({preventScroll:true});}
-        }
+    function screens(mode){club.hidden=mode!=='club';shell.hidden=mode!=='shell';live.hidden=mode!=='live';}
+    function liveOpts(c){
+      return {fixture:c.f,side:c.side,session:c.a,store,crest,report(type,m){
+        if(store.break(type,Q.report(m,c.f,type==='ft'),Q.ticks(m))){ui.reportMode='overview'; ui.reportSide=c.side;render(true);}
+      }};
+    }
+    function showLive(interval=false,resume=false){
+      const c=ctx();screens('live');global.scrollTo(0,0);
+      document.title=`Touchline 26 — ${interval?'Half-time instructions':'Classic 2D'}`;
+      view().openClub(liveOpts(c),()=>{
+        if(resume)view().startSecondHalf();
+        else if(interval)view().intervalDesk(()=>render(false));
+        else $('btnPlay').focus({preventScroll:true});
+      });
+    }
+    function render(reset=false){
+      if(!a())return;
+      if(a().stage==='live')return showLive();
+      view().suspend();screens('shell');
+      const c=ctx(), stage=c.a.stage, [title,label,,kicker]=stages[stage];
+      const old=document.activeElement, focusKey=old?.dataset.msField?[`[data-ms-field]`,'msField',old.dataset.msField]:old?.dataset.msDo?[`[data-ms-do]`,'msDo',old.dataset.msDo,old.dataset.msVal]:null;
+      const saved=new Map([...body.querySelectorAll('[data-c-scroll]')].map(el=>[el.dataset.cScroll,[el.scrollLeft,el.scrollTop]]));
+      shell.dataset.stage=stage;
+      $('seasonMatchTitle').textContent=title;
+      $('seasonMatchKicker').textContent=kicker;
+      $('seasonMatchMeta').textContent=`${H.clubs[c.f.home].name} v ${H.clubs[c.f.away].name} · ${P.meta(c.f)}`;
+      $('seasonMatchClock').dateTime=new Date(c.f.date).toISOString();
+      $('seasonMatchClock').textContent=`${H.calendar(c.f.date).day} · ${H.calendar(c.f.date).date}`;
+      $('seasonMatchBack').hidden=!['meeting','selection'].includes(stage);
+      $('seasonMatchBack').setAttribute('aria-label',stage==='meeting'?'Back to clubhouse':'Back to tactical meeting');
+      const advance=$('seasonMatchAdvance');advance.querySelector('span').textContent=label;
+      advance.disabled=stage==='selection'&&c.s.plan.xi.filter(Boolean).length!==11;
+      document.title=`Touchline 26 — ${title}`;
+      const html=({meeting:P.advice,selection:P.picker,briefing:P.briefing,news:P.teamNews,preTalk:c=>R.room(c,'pre'),preview:P.preview,half:c=>R.report(c,c.a.half,false),halfTalk:c=>R.room(c,'half'),full:c=>R.report(c,c.s.results[c.a.id],true),fullTalk:c=>R.room(c,'full')})[stage](c);
+      body.innerHTML=html;
+      if(reset){$('seasonMatchStatus').hidden=true;global.scrollTo(0,0);$('seasonMatchTitle').focus({preventScroll:true});}
+      else {
+        for(const el of body.querySelectorAll('[data-c-scroll]'))if(saved.has(el.dataset.cScroll))[el.scrollLeft,el.scrollTop]=saved.get(el.dataset.cScroll);
+        if(focusKey)[...body.querySelectorAll(focusKey[0])].find(el=>el.dataset[focusKey[1]]===focusKey[2]&&(focusKey.length===3||el.dataset.msVal===focusKey[3])&&!el.disabled)?.focus({preventScroll:true});
       }
-    },
-    field(c,name,val){
-      if(name==='mdJump'){
-        const option=jumpsFor(c).find(([tab,,id])=>key(tab,id)===val);
-        if(option)c.go('matchday',option[0],option[2]);else c.render();
-        return true;
+    }
+    function change(key,value){
+      if(!store.edit(key,value)){render();note(key.startsWith('number:')?'Use a unique number from 1 to 99.':'This player can’t be used in that slot.');}
+      else render();
+    }
+    shell.addEventListener('change',e=>{
+      const key=e.target.dataset.msField;
+      if(a()?.stage==='selection'&&key)change(key,e.target.value);
+      else if(['preTalk','halfTalk','fullTalk'].includes(a()?.stage)&&key==='talk-player'){ui.talk={...ui.talk,id:e.target.value};render();}
+    });
+    shell.addEventListener('click',e=>{
+      const b=e.target.closest('[data-ms-do]');if(!b||b.disabled||!a())return;
+      const {msDo:key,msVal:v}=b.dataset, stage=a().stage, dlg=$('submitTeamDialog');
+      if(key==='next'){
+        if(dlg.open)return;
+        if(stage==='selection')return dlg.showModal();
+        if(stage==='halfTalk'&&store.secondHalf(a().checkpoint.ticks)){ui.talk={};return showLive(false,true);}
+        if(stage==='fullTalk'&&store.close()){screens('club');view().unloadClub();onReturn('result');return;}
+        const next=stages[stage]?.[2];
+        if(next&&store.move(stage,next)){ui.talk={};return render(true);}
       }
-      if(name==='mdDay'){c.go('matchday','calendar',val);return true;}
-      if(name==='mdFixtureDate'){c.go('matchday','fixtures',val);return true;}
-      return X.gameField(c,name,val);
-    },
-    action(c,cmd,val){X.preAction(c,cmd,val);X.gameAction(c,cmd,val);X.postAction(c,cmd,val);}
-  };
+      if(key==='back'&&stage==='selection'&&store.move(stage,'meeting'))return render(true);
+      if(key==='back'&&stage==='meeting'&&store.leave()){screens('club');onReturn('meeting');return;}
+      if(key==='cancel-submit'&&dlg.open)return dlg.close();
+      if(key==='confirm-submit'&&dlg.open&&stage==='selection'){
+        if(!store.submit())return note('Choose a complete, available starting XI before submitting.');
+        dlg.close();return render(true);
+      }
+      if(stage==='meeting'&&key==='advice'){
+        const keys=v.split(':'), value=keys.pop();return change(keys.join(':'),value);
+      }
+      if(stage==='selection'){
+        if(key==='pick')return change('pick','');
+        if(key==='select-tab')ui.tab=v;else if(key==='layout')ui.layout=v;else return;
+        return render();
+      }
+      if(stage==='half'||stage==='full'){
+        if(key==='report-mode')ui.reportMode=v;else if(key==='report-side')ui.reportSide=Number(v);
+        else if(key==='interval-desk'&&stage==='half')return showLive(true);
+        else return;
+        return render();
+      }
+      const phase=({preTalk:'pre',halfTalk:'half',fullTalk:'full'})[stage];if(!phase)return;
+      if(key==='audience'||key==='gesture'){ui.talk={...ui.talk,[key]:v};return render();}
+      if(key==='statement'||key==='assistant'){
+        const c=ctx(), ps=R.talkPlayers(c,phase), r=phase==='half'?c.a.half:phase==='full'?c.s.results[c.a.id]:null;
+        const talk=Q.reaction(phase,c.f,c.side,{audience:ui.talk?.audience||'Room',gesture:ui.talk?.gesture||'No gesture',id:ui.talk?.id||ps[0].id,tone:v,assistant:key==='assistant'},ps,r);
+        if(talk&&store.talk(phase,talk))return render();
+        note('You have already addressed this audience.');
+      }
+    });
+    return {open(){if(a()){ui.layout='expanded';ui.tab='overview';ui.reportMode='overview';render(true);}}};
+  }
+  global.TLClubMatch={create};
 })(window);

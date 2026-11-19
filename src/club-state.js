@@ -4,14 +4,16 @@
   const node = typeof window === 'undefined';
   const H = node ? require('./home-data.js') : global.TLHomeData;
   const C = node ? require('./club-data.js') : global.TLClubData;
+  const K = node ? require('./season-calendar.js') : global.TLSeasonCalendar;
   const key = 'touchline26.riverside.starter.v1';
   const handles = {
     read: C.inbox.map(x=>x.id), shortlist: C.prospects.map(x=>x.id), dismissed: C.prospects.map(x=>x.id),
-    agent: C.prospects.map(x=>x.id), reminders: H.fixtures.filter(x=>!x.score).map(x=>x.id), staffList:C.staffPool.map(x=>x.id),
+    agent: C.prospects.map(x=>x.id), reminders: K.fixtureId, staffList:C.staffPool.map(x=>x.id),
     watch: [...C.youth, ...C.loans].map(x=>x.id), clauses:C.clauses.map(x=>x.id), board:C.boardOptions
   };
   const unique = list => [...new Set(list)];
-  const known = (name,list) => Array.isArray(list) ? unique(list.filter(id=>handles[name].includes(id))) : [];
+  const allowed = (name,id) => typeof handles[name]==='function'?handles[name](id):handles[name].includes(id);
+  const known = (name,list) => Array.isArray(list) ? unique(list.filter(id=>allowed(name,id))) : [];
   const number = value => typeof value === 'number' && Number.isSafeInteger(value);
   const limits = { min:Math.ceil((C.finance.committed - C.finance.wage)/5000)*5000, max:Math.floor(C.finance.transfer/52/5000)*5000 };
   const focusOK = f => f && typeof f.id==='string' && /^[a-z0-9-]{1,32}$/.test(f.id) && C.regions.some(r=>r[0]===f.region) &&
@@ -20,7 +22,7 @@
   const dateText = date => new Date(date).toISOString().slice(0,10);
   const friendlyOK = f => f && typeof f.date === 'string' && typeof f.opponent === 'string' && f.id === `friendly-${f.date}-${f.opponent}` && /^(2024|2025)-\d\d-\d\d$/.test(f.date) &&
     !isNaN(Date.parse(f.date)) && dateText(Date.parse(f.date)) === f.date && f.date > dateText(H.next.date) && f.date <= '2025-05-31' &&
-    Object.hasOwn(H.clubs,f.opponent) && f.opponent !== H.homeId && !H.fixtures.some(x=>dateText(x.date)===f.date) && ['H','A'].includes(f.venue);
+    Object.hasOwn(H.clubs,f.opponent) && f.opponent !== H.homeId && !K.announcedDate(f.date) && ['H','A'].includes(f.venue);
   function normalize(raw = {}) {
     const src = raw && typeof raw==='object' ? raw : {};
     const s = Object.fromEntries(Object.keys(handles).map(k=>[k,known(k,src[k])]));
@@ -44,7 +46,7 @@
   const budgets = s => ({ ...C.finance, transfer:C.finance.transfer-s.budgetShift*52, wage:C.finance.wage+s.budgetShift });
   function reduce(s, type, value) {
     if (Object.hasOwn(handles,type)) {
-      if (!handles[type].includes(value)) return s;
+      if (!allowed(type,value)) return s;
       if (['read','clauses','board'].includes(type)) return s[type].includes(value) ? s : {...s,[type]:[...s[type],value]};
       return {...s,[type]:s[type].includes(value) ? s[type].filter(id=>id!==value) : [...s[type],value]};
     }

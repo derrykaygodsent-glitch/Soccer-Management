@@ -33,7 +33,7 @@
     buffer: [], replay: null, replayQueue: null, goalFrames: null, events: [], meta: {},
     scout: null, scan: null, scanJob: null, scene: null, visiblePlay: null, nextSearch: null, lineupDirty: false,
     frameJob: null, lastFrame: null, lastFeedWall: 0, previousFlight: null, tileT: 0,
-    goalTimer: 0, toastTimer: 0, breakQueued: null
+    goalTimer: 0, toastTimer: 0, breakQueued: null, club: null, clubId: null, checkpoint: 0, waitingAt: 0, intervalReturn: null, injuryQueued: null, saveConfirm: false, restoreJob: null, loading: false
   };
 
   const html = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -45,11 +45,18 @@
   const portraitKit = color => color === '#334155' ? '#647690' : color === '#15803d' ? '#35a75c' : color;
   const viewingMatch = () => !$('matchScreen').hidden;
   const activeDialog = () => ['setupDialog', 'deskDialog', 'breakDialog'].some(id => $(id).open);
+  const managed = () => state.club?.side ?? 0;
+  const team = () => state.match.teams[managed()];
+  const seasonMatch = () => global.TLSeasonMatch;
+  function checkpoint(command, started=!state.ready){
+    if(state.club&&!state.loading)state.club.store.checkpoint(seasonMatch().ticks(state.match),command,started);
+  }
   const chosenMode = () => V.modeFor(state.config.highlights);
   const filmView = () => state.scene || state.scan;
   const viewingReview = () => !state.scan && (state.scene?.view.phase ?? state.match.phase) === 'review';
   const viewingRestart = () => state.ready || state.scan || state.replay ? null : state.scene ? state.scene.view.restart : restartFrame();
   const fraction = (t, a, b) => b > a ? Math.max(0, Math.min(1, (t - a) / (b - a))) : 0;
+  const eventStamp = ev => state.club&&ev.t!=null ? seasonMatch().eventTime(ev) : clockMinute(ev.minute);
   const clockAt = t => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 
   function crest(club) {
@@ -64,7 +71,7 @@
   function attr(el, key, next) { const value = String(next); if (el.getAttribute(key) !== value) el.setAttribute(key, value); }
   function notify(message) {
     const outlet = $('deskDialog').open && document.querySelector('.desk-tab:not([hidden]) .desk-feedback');
-    if (outlet) { outlet.textContent = message; return; }
+    if (outlet) { outlet.textContent = message; outlet.hidden=false; return; }
     text('toast', message); $('toast').hidden = false;
     clearTimeout(state.toastTimer);
     state.toastTimer = setTimeout(() => { $('toast').hidden = true; }, 2600);
@@ -84,11 +91,11 @@
     $('commentary').style.setProperty('--feed-accent', team ? portraitKit(team.club.primary) : '#c7ea91');
     text('feedLabel', label || (team ? team.club.short + ' feed' : 'Match feed'));
     text('feedText', message);
-    text('feedTime', clockMinute(event && event.minute != null ? event.minute : 0));
+    text('feedTime', event && event.minute != null ? eventStamp(event) : clockMinute(0));
     state.lastFeedWall = performance.now();
   }
 
-  function prepare(config) {
+  function prepare(config,restored) {
     state.config = { ...config, highlights: V.modeFor(config.highlights).id };
     state.ready = state.paused = true;
     state.speed = B.NORMAL_SPEED; state.acc = 0; state.replay = null;
@@ -97,21 +104,25 @@
     state.lineupDirty = false;
     state.goalFrames = null; state.replayQueue = null; state.buffer = []; state.events = []; state.previousFlight = null;
     state.selected = null; state.subMode = null; state.returnBreak = false; state.breakQueued = null;
+    state.intervalReturn = state.injuryQueued = null; state.saveConfirm=false; state.checkpoint=state.waitingAt=0;
     $('goalBanner').hidden = $('playerFocus').hidden = $('toast').hidden = true;
     clearTimeout(state.goalTimer); clearTimeout(state.toastTimer);
-    const home = D.CLUBS[config.home], away = D.CLUBS[config.away];
+    const club = state.club, K = global.TLSeasonCalendar;
+    const [home, away] = club ? [K.club(club.fixture.home),K.club(club.fixture.away)] : [D.CLUBS[config.home],D.CLUBS[config.away]];
     const homeTactics = { ...D.defaultTactics(home.style) };
     if (config.formation) homeTactics.formation = config.formation;
     if (config.mentality != null) homeTactics.mentality = config.mentality;
-    state.match = new E.Match(home, away, {
-      seed: Date.now() % 1000000007,
-      homeTactics,
-      onEvent,
-      onSnapshot: snapshot => {
-        state.buffer.push(state.scan ? withView(snapshot) : snapshot);
-        if (state.buffer.length > HISTORY) state.buffer.splice(0, 44);
-      }
-    });
+    const onSnapshot = snapshot => {
+      state.buffer.push(state.scan ? withView(snapshot) : snapshot);
+      if (state.buffer.length > HISTORY) state.buffer.splice(0, 44);
+    };
+    if(club){
+      state.match=restored||seasonMatch().create(club.fixture,club.session);
+      Object.assign(state.match,{onEvent,onSnapshot});
+      state.ready=!club.session.checkpoint.started;
+      if(!state.ready) state.events=state.match.events.filter(e=>e.text&&e.type!=='preview').slice(-245);
+      if(V.atBreak(state.match))state.breakQueued=state.match.phase==='halftime'?'ht':'ft';
+    }else state.match = new E.Match(home, away, { seed: Date.now() % 1000000007, homeTactics, onEvent, onSnapshot });
     state.scout = new V.Scout(state.match);
     syncSpeed(); syncWatchMode();
     state.meta = Object.fromEntries(state.match.teams.flatMap(t => t.players.map(p => [p.id, p])));
@@ -121,11 +132,14 @@
     text('fixtureCompetition', config.competition || 'Friendly');
     text('stadiumStamp', home.stadium);
     $('fixtureTeams').innerHTML = `${html(home.name)} <span>vs</span> ${html(away.name)}`;
-    text('nameH', home.short); text('nameA', away.short); text('teamTitle', home.name);
-    $('badgeH').innerHTML = $('lineupCrest').innerHTML = crest(home);
-    $('badgeA').innerHTML = crest(away);
+    const own = team().club;
+    text('nameH', home.short); text('nameA', away.short); text('teamTitle', own.name);
+    const getCrest = c => club ? club.crest(c.id) : crest(c);
+    $('badgeH').innerHTML = getCrest(home); $('badgeA').innerHTML = getCrest(away); $('lineupCrest').innerHTML=getCrest(own);
+    text('clubGroundLabel',`${home.stadium} · ${config.competition}`);
     setSound(config.sound, false);
-    setFeed('The players are in position. Kick off when you’re ready.');
+    setFeed(state.ready?'The players are in position. Kick off when you’re ready.':'Match restored. Press Resume when you’re ready.', null);
+    $('clubWaiting').hidden=true;
     renderLineup(); updateHUD(); draw();
   }
 
@@ -135,7 +149,7 @@
     if (state.match.phase === 'halftime') return ['paused', 'Half time'];
     if (state.match.phase === 'fulltime') return ['paused', 'Full time'];
     if (state.paused) return ['paused', 'Paused'];
-    if (state.scan) return ['live', 'Skipping'];
+    if (state.scan) return ['live', state.club ? 'Waiting for highlight' : 'Skipping'];
     if (viewingReview()) return ['review', 'VAR check'];
     if (restart) return ['restart', restartTitle(restart)];
     if (state.scene?.policy.rank || state.visiblePlay) return ['live', 'Highlight'];
@@ -150,7 +164,12 @@
     const half = film ? film.view.half : m.half;
     const added = m.added[half - 1];
     $('added').hidden = !(time >= half * 2700 && added);
-    if (!$('added').hidden) text('added', '+' + Math.floor(added / 60));
+    if (!$('added').hidden) {
+      const n=Math.floor(added/60);
+      text('added', '+'+n);
+      const beyond=state.club?' · '+clockAt(Math.max(0,time-half*2700))+' elapsed':'';
+      attr($('added'),'title',`${n} minutes of added time${beyond}`);
+    }
     const [homeScore, awayScore] = film ? film.view.score : [m.teams[0].score, m.teams[1].score];
     const score = `${homeScore}:${awayScore}`;
     if ($('score').dataset.score !== score) {
@@ -168,6 +187,7 @@
     text('playLabel', label); attr($('playIcon'), 'href', stopped || atBreak ? '#i-play' : '#i-pause');
     $('btnPlay').title = atBreak ? label : `${label} (Space)`;
     $('btnPlay').disabled = atBreak;
+    if(state.club) text('clubLineupLabel',state.ready?'Submitted XI':'On the pitch');
     const replayButton = $('btnReplay');
     const reviewing = viewingReview();
     replayButton.disabled = !state.goalFrames || !!state.replayQueue || state.ready || atBreak || reviewing || !!state.scene;
@@ -195,10 +215,23 @@
       if (view) {
         const policy = (state.scene || state.visiblePlay)?.policy;
         text('indicatorText', state.replay ? (state.replay.paused ? 'Replay paused' : 'Goal replay') :
-          state.scan ? (state.paused ? 'Search paused' : 'Skipping quiet play') :
+          state.scan ? (state.paused ? 'Search paused' : state.club?'Waiting for next highlight':'Skipping quiet play') :
           state.paused ? 'Playback paused' : policy.rank ? `${policy.label} highlights` : 'Returning to live play');
       }
     }
+    if(state.club) updateWaiting();
+  }
+  function updateWaiting(){
+    const el=$('clubWaiting'), scan=state.scan;
+    const visible=!!scan&&!state.replay;
+    if(!visible){if(!el.hidden)el.hidden=true;return;}
+    if(!el.hidden&&performance.now()-state.waitingAt<350)return;
+    state.waitingAt=performance.now();el.hidden=false;
+    const frame=scan.view, Q=seasonMatch(), last=state.events.filter(e=>Q.notables.has(e.type)).slice(-3).reverse();
+    const report={goals:frame.score,stats:frame.stats}, advice=Q.analyst(report,managed());
+    const heading=state.paused?'Highlight search paused':'Waiting for next highlight';
+    const scores=Q.teamStats(frame.stats,frame.poss).slice(0,4);
+    el.innerHTML=`<section class="live-tablet"><header><i></i><div><b>${heading}</b><small>TOUCHLINE TABLET</small></div></header><div class="live-tablet-stats">${scores.map(([l,a,b])=>statLine(l,a,b)).join('')}</div><div class="live-dugout"><b>THE DUGOUT</b><strong>${html(advice.title)}</strong><p>${html(frame.stats[0].shots+frame.stats[1].shots?advice.copy:'The analysts are tracking the opening exchanges.')}</p>${last.length?`<ul>${last.map(e=>`<li><time>${e.t!=null?Q.eventTime(e):clockMinute(e.minute)}</time>${html(e.text)}</li>`).join('')}</ul>`:''}</div></section>`;
   }
   function textReplayButton(message) {
     const el = $('btnReplay').querySelector('span');
@@ -212,6 +245,7 @@
     if (!m || V.atBreak(m)) return;
     if (state.replay) { state.replay.paused = !state.replay.paused; updateHUD(); return; }
     if (state.ready) {
+      checkpoint(null,true);
       state.ready = false; state.paused = false; state.acc = 0;
       setSound(state.sound, true); A.whistle(false);
       const event = { type: 'kickoff', minute: 1, team: 0, text: `We’re underway at ${m.teams[0].club.stadium}.`, key: true };
@@ -372,16 +406,17 @@
     if (message && ev.type !== 'preview') {
       state.events.push({ ...ev, text: message, key });
       if (state.events.length > 245) state.events.shift();
+      if(state.club&&ev.type==='injury'&&ev.team===managed()) state.injuryQueued=ev.player.name;
       const label = goal ? 'Goal' : ev.type === 'pen' ? 'Penalty' : ev.type === 'varcheck' ? 'VAR check' : ev.type === 'varresult' ? 'VAR decision' :
         ev.type === 'offside' ? 'Offside' : ev.type === 'foul' ? 'Free kick' : ev.type === 'corner' ? 'Corner' :
-        ev.type === 'yellow' ? 'Yellow card' : ev.type === 'red' ? 'Red card' : ev.type === 'throwin' ? 'Throw-in' : ev.type === 'goalkick' ? 'Goal kick' :
+        ev.type === 'injury' ? 'Physio assessment' : ev.type === 'yellow' ? 'Yellow card' : ev.type === 'red' ? 'Red card' : ev.type === 'throwin' ? 'Throw-in' : ev.type === 'goalkick' ? 'Goal kick' :
         ev.type === 'restartkick' ? restartTitle({ type: ev.restart, indirect: ev.indirect }) : null;
       if (!quiet || goal || end) setFeed(message, ev, label);
     }
     if (goal) {
       if (!quiet) {
         const g = m.lastGoal, club = m.teams[ev.team].club;
-        text('goalSide', `Goal · ${club.short}`); text('goalTime', clockMinute(ev.minute));
+        text('goalSide', `Goal · ${club.short}`); text('goalTime', eventStamp(ev));
         text('goalScorer', g && g.scorer ? g.scorer + (g.og ? ' (OG)' : '') : club.name);
         $('goalBanner').style.setProperty('--accent', portraitKit(club.primary));
         $('goalBanner').hidden = false;
@@ -497,7 +532,7 @@
   function beginSearch(policy) {
     const first = withView();
     state.visiblePlay = state.nextSearch = null;
-    state.scan = { first, view: first, time: first.elapsed, policy, entries: [], still: replayFrame(first) };
+    state.scan = { first, view: first, time: first.elapsed, policy, entries: [], still: replayFrame(first), since:performance.now(), pending:null };
     state.acc = 0;
     updateHUD(); draw(); queueScan();
   }
@@ -520,10 +555,17 @@
 
   function advanceSearch() {
     const scan = state.scan;
+    if(scan.pending){
+      if(performance.now()-scan.since>=370)showBuffered(scan,scan.policy,V.tailFor(scan.policy,scan.pending.rank),scan.pending.rank);
+      return;
+    }
     const result = V.scanBatch(state.match, state.scout, scan.policy);
     if (result.type === 'break') { closeCut(); return; }
     updateScanView(scan, result.rank);
-    if (result.type === 'moment') showBuffered(scan, scan.policy, V.tailFor(scan.policy, result.rank), result.rank);
+    if(result.type==='moment') {
+      if(state.club&&performance.now()-scan.since<370)scan.pending=result;
+      else showBuffered(scan,scan.policy,V.tailFor(scan.policy,result.rank),result.rank);
+    }
   }
 
   function advanceScene(seconds) {
@@ -544,10 +586,11 @@
 
   function renderLineup() {
     state.lineupDirty = false;
-    const home = state.match.teams[0];
+    const home = team();
     const lineup = $('lineup'), from = lineup.scrollLeft;
     text('formationLabel', shapeLabel(home.tactics.formation));
-    lineup.innerHTML = home.slots.map(({ player: p, role }) => `<button type="button" class="player-tile" data-player="${html(p.id)}" aria-label="${html(p.name)}, number ${p.num}, ${role}" aria-pressed="${state.selected === p.id}" title="${html(p.name)}" style="--kit:${portraitKit(role === 'GK' ? home.club.gk : home.club.primary)};--condition:${condition(p)}%;--condition-color:${colorCond(p)}"><span class="tile-head"><span>${role}${p.yellow ? ' · YC' : ''}</span><span class="tile-no">${p.num}</span></span><span class="tile-main">${icon('shirt')}<span class="tile-name">${html(p.name.split(' ').pop())}</span></span><span class="tile-cond" aria-hidden="true"><i></i></span></button>`).join('');
+    const captain = [home.assignments?.captain,home.assignments?.vice].find(id=>home.slots.some(s=>s.player.id===id)) || (home.assignments&&home.slots.find(s=>s.role!=='GK')?.player.id);
+    lineup.innerHTML = home.slots.map(({ player: p, role }) => `<button type="button" class="player-tile" data-player="${html(p.id)}" aria-label="${html(p.name)}, number ${p.num}, ${role}" aria-pressed="${state.selected === p.id}" title="${html(p.name)}" style="--kit:${portraitKit(role === 'GK' ? home.club.gk : home.club.primary)};--condition:${condition(p)}%;--condition-color:${colorCond(p)}"><span class="tile-head"><span>${role}${p.id===captain?' · C':''}${p.yellow ? ' · YC' : ''}${p.injury ? ' · +' : ''}</span><span class="tile-no">${p.num}</span></span><span class="tile-main">${icon('shirt')}<span class="tile-name">${html(p.name.split(' ').pop())}</span></span><span class="tile-cond" aria-hidden="true"><i></i></span></button>`).join('');
     lineup.scrollLeft = from;
     if (state.selected && !state.match.onPitchPlayers().some(p => p.id === state.selected)) selectPlayer(null);
   }
@@ -615,19 +658,21 @@
   }
 
   function renderTactics() {
-    const m = state.match, t = m.teams[0].tactics, away = m.teams[1];
-    const timing = filmView() ? `Changes take effect at ${m.clockStr()}, when the current footage ends.` : 'Set how your side plays. Changes apply when play resumes.';
-    $('tab-tactics').innerHTML = `<p class="help-text desk-feedback" role="status">${timing}</p><div class="desk-grid">${TACTICS.map(([key, title, values]) => `<label class="tactic-control">${title}<select data-tactic="${key}">${options(values, key !== 'formation')}</select></label>`).join('')}</div><div class="opposition"><strong>${html(away.club.name)} · Opposition setup</strong>${shapeLabel(away.tactics.formation)} · ${html(D.MENTALITIES[away.tactics.mentality])} · ${html(D.PRESS[away.tactics.press])} press</div>`;
+    const m = state.match, t = team().tactics, away = m.teams[1-managed()];
+    const locked=!!state.club&&(state.ready||m.phase==='fulltime');
+    const timing = locked?'The team sheet is locked. Instructions can change once play starts.':(filmView() ? `Changes take effect at ${m.clockStr()}, when the current footage ends.` : 'Set how your side plays. Changes apply when play resumes.')+(state.club?' These instructions are for this match only unless saved.':'');
+    $('tab-tactics').innerHTML = `<p class="help-text desk-feedback" role="status">${timing}</p><div class="desk-grid">${TACTICS.map(([key, title, values]) => `<label class="tactic-control">${title}<select data-tactic="${key}"${locked?' disabled':''}>${options(values, key !== 'formation')}</select></label>`).join('')}</div><div class="opposition"><strong>${html(away.club.name)} · Opposition setup</strong>${shapeLabel(away.tactics.formation)} · ${html(D.MENTALITIES[away.tactics.mentality])} · ${html(D.PRESS[away.tactics.press])} press</div>`;
+    if(state.club&&!locked)$('tab-tactics').insertAdjacentHTML('beforeend',state.saveConfirm?`<div class="live-save-confirm"><p>Save the current formation and instructions to club tactics? Substitutions stay in this match.</p><button type="button" class="button" data-cancel-live-save>Cancel</button> <button type="button" class="button primary" data-confirm-live-save>Save to club</button></div>`:`<div class="live-save-confirm"><button type="button" class="button" data-live-save>Save tactics to club</button></div>`);
     for (const select of $('tab-tactics').querySelectorAll('[data-tactic]')) select.value = t[select.dataset.tactic];
   }
   function renderSquad() {
-    const t = state.match.teams[0];
+    const t = team();
     const pendingReview = state.match.phase === 'review';
     const available = !state.ready && state.match.phase !== 'fulltime' && !pendingReview;
     const inPlayer = t.players.find(p => p.id === state.subMode);
-    const row = (p, role, bench) => `<div class="squad-row"><span>${p.num}</span><span>${html(p.name)}</span><span class="row-role">${role}</span><span class="row-cond">${condition(p)}%</span>${bench ? `<button type="button" class="button" data-bench="${html(p.id)}" ${!available || t.subsUsed >= 5 ? 'disabled' : ''}>Bring on</button>` : inPlayer ? `<button type="button" class="button" data-out="${html(p.id)}" ${!available || (role === 'GK') !== (inPlayer.pos === 'GK') ? 'disabled' : ''}>Replace</button>` : '<span></span>'}</div>`;
+    const row = (p, role, bench) => `<div class="squad-row"${p.injury?' data-knock="true"':''}><span>${p.num}</span><span>${html(p.name)}</span><span class="row-role">${role}${p.injury?' · Knock':''}</span><span class="row-cond">${condition(p)}%</span>${bench ? `<button type="button" class="button" data-bench="${html(p.id)}" ${!available || t.subsUsed >= 5 ? 'disabled' : ''}>Bring on</button>` : inPlayer ? `<button type="button" class="button" data-out="${html(p.id)}" ${!available || (role === 'GK') !== (inPlayer.pos === 'GK') ? 'disabled' : ''}>Replace</button>` : '<span></span>'}</div>`;
     const timing = filmView() ? ` · changes take effect at ${state.match.clockStr()}` : '';
-    $('tab-squad').innerHTML = `<p class="help-text desk-feedback" role="status">${state.ready ? 'Substitutions are available after kick-off.' : pendingReview ? 'Wait for the VAR decision before substituting.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining${timing}.`}</p>${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${t.bench.map(p => row(p, p.pos, true)).join('')}`;
+    $('tab-squad').innerHTML = `<p class="help-text${state.club?'':' desk-feedback'}"${state.club?'':' role="status"'}>${state.ready ? 'Substitutions are available after kick-off.' : pendingReview ? 'Wait for the VAR decision before substituting.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining${timing}.`}</p>${state.club?'<p class="help-text desk-feedback" role="status" hidden></p>':''}${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${t.bench.map(p => row(p, p.pos, true)).join('')}`;
   }
 
   const statLine = (title, a, b) => `<div class="stat-line"><strong>${a}</strong><span>${title}</span><strong>${b}</strong></div>`;
@@ -664,7 +709,7 @@
     }
   }
   function renderEvents() {
-    $('tab-events').innerHTML = state.events.length ? `<ul class="events">${state.events.slice(-90).reverse().map(ev => `<li${ev.key ? ' class="key"' : ''}><time>${clockMinute(ev.minute)}</time><span>${html(ev.text)}</span></li>`).join('')}</ul>` : '<p class="help-text">Match events will appear here after kick-off.</p>';
+    $('tab-events').innerHTML = state.events.length ? `<ul class="events">${state.events.slice(-90).reverse().map(ev => `<li${ev.key ? ' class="key"' : ''}><time>${eventStamp(ev)}</time><span>${html(ev.text)}</span></li>`).join('')}</ul>` : '<p class="help-text">Match events will appear here after kick-off.</p>';
   }
   function setDesk(tab) {
     state.desk = tab;
@@ -683,6 +728,10 @@
   }
   function showBreak(type) {
     state.breakQueued = null;
+    if(state.club){
+      if(state.club.store.value.session?.stage==='live')state.club.report(type,state.match);
+      return;
+    }
     const [h, a] = state.match.teams;
     text('breakTitle', type === 'ht' ? 'Half time' : 'Full time');
     $('breakScore').innerHTML = `<span>${h.club.short}</span><strong>${h.score} – ${a.score}</strong><span>${a.club.short}</span>`;
@@ -747,11 +796,15 @@
     });
   }
   function loop(t) {
-    if (!viewingMatch()) { state.frameJob = null; state.lastFrame = null; return; }
+    if (!viewingMatch()||state.loading) { state.frameJob = null; state.lastFrame = null; return; }
     state.frameJob = requestAnimationFrame(loop);
     const dt = state.lastFrame == null ? 0 : Math.max(0, Math.min(MAX_FRAME_DT, (t - state.lastFrame) / 1000));
     state.lastFrame = t;
-    if (state.breakQueued && !activeDialog()) showBreak(state.breakQueued);
+    if (state.breakQueued && !activeDialog()) { showBreak(state.breakQueued); if(!viewingMatch())return; }
+    if (state.club && state.injuryQueued && !activeDialog() && !filmView() && !state.replay && !V.atBreak(state.match) && state.match.phase!=='review') {
+      const name=state.injuryQueued;state.injuryQueued=null;state.paused=true;checkpoint();openDesk('squad');notify(`${name} has taken a knock. Replace him or close this panel to review the situation.`);
+    }
+    if(state.club&&!state.ready&&!V.atBreak(state.match)&&t-state.checkpoint>8000){state.checkpoint=t;checkpoint();}
     let changed = false;
     if (!document.hidden && !activeDialog()) {
       const seconds = B.matchSeconds(dt, state.speed);
@@ -772,7 +825,8 @@
     $('highlightMode').innerHTML = $('preHighlights').innerHTML = modeOptions;
     $('highlightMode').addEventListener('change', e => setWatchMode(e.target.value));
     $('preHighlights').addEventListener('change', e => updateWatchGuide(V.modeFor(e.target.value)));
-    document.addEventListener('visibilitychange', queueScan);
+    document.addEventListener('visibilitychange',()=>{if(document.hidden&&state.club&&state.match&&!state.ready)checkpoint();else queueScan();});
+    global.addEventListener('pagehide',()=>{if(state.club&&state.match&&!state.ready)checkpoint();});
     for (const id of ['setupDialog', 'deskDialog', 'breakDialog']) $(id).addEventListener('close', queueScan);
     const speedPicker = $('playbackSpeed');
     speedPicker.innerHTML = B.SPEEDS.map(speed => `<option value="${speed}"${speed === B.NORMAL_SPEED ? ' aria-label="1×, normal speed"' : ''}>${speed}×</option>`).join('');
@@ -789,7 +843,7 @@
       const b = e.target.closest('[data-player]');
       if (b) selectPlayer(state.selected === b.dataset.player ? null : state.meta[b.dataset.player]);
     });
-    $('btnSetup').addEventListener('click', openSetup);
+    $('btnSetup').addEventListener('click', () => { if(!state.club)openSetup(); });
     for (const id of ['preHome', 'preAway']) {
       $(id).innerHTML = options(D.CLUBS.map(c => c.name));
       $(id).addEventListener('change', () => fixtureSelection(id));
@@ -798,6 +852,7 @@
     $('preMent').innerHTML = options(D.MENTALITIES);
     $('setupForm').addEventListener('submit', e => {
       e.preventDefault();
+      if(state.club)return;
       const config = { home: +$('preHome').value, away: +$('preAway').value, formation: $('preForm').value, mentality: +$('preMent').value, auto: $('preReplay').checked, sound: $('preSound').checked, highlights: $('preHighlights').value };
       if (config.home === state.config.home && config.away === state.config.away) config.competition = state.config.competition;
       $('setupDialog').close(); prepare(config);
@@ -815,9 +870,9 @@
     });
     $('tab-tactics').addEventListener('change', e => {
       const key = e.target.dataset.tactic;
-      if (!key) return;
-      const m = state.match, buffered = touchlineChange();
-      m.setTactics(0, { [key]: key === 'formation' ? e.target.value : +e.target.value });
+      if (!key || state.club&&(state.ready||state.match.phase==='fulltime')) return;
+      const m = state.match, buffered = touchlineChange(), change = { [key]: key === 'formation' ? e.target.value : +e.target.value };
+      m.setTactics(managed(),change);checkpoint({type:'tactic',change});
       if (key === 'formation' || key === 'width') {
         if (state.ready) m.setupKickoff(0);
         if (buffered) state.lineupDirty = true;
@@ -826,13 +881,26 @@
       notify(buffered ? `Instruction set for ${m.clockStr()}, after the current footage.` : 'Instruction updated.');
       updateHUD(); draw();
     });
+    $('tab-tactics').addEventListener('click', e => {
+      if(!state.club||state.ready||state.match.phase==='fulltime')return;
+      const b=e.target.closest('button');if(!b)return;
+      if(b.hasAttribute('data-live-save')){state.saveConfirm=true;renderTactics();$('tab-tactics').querySelector('[data-cancel-live-save]').focus();}
+      else if(b.hasAttribute('data-cancel-live-save')){state.saveConfirm=false;renderTactics();$('tab-tactics').querySelector('[data-live-save]').focus();}
+      else if(b.hasAttribute('data-confirm-live-save')){
+        const store=state.club.store;
+        store.saveLive(seasonMatch().tacticsFrom(store.value.plan.tactics,team().tactics));
+        state.saveConfirm=false;renderTactics();notify('Formation and instructions saved to club tactics. The submitted XI remains unchanged.');
+      }
+    });
     $('tab-squad').addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b || b.disabled) return;
       if (b.hasAttribute('data-cancel-sub')) { state.subMode = null; renderSquad(); }
       else if (b.dataset.bench) { state.subMode = b.dataset.bench; renderSquad(); }
-      else if (b.dataset.out && state.subMode) {
+      else if (b.dataset.out && state.subMode && !state.ready) {
         const buffered = touchlineChange(), m = state.match;
-        const result = m.substitute(0, b.dataset.out, state.subMode);
+        const cmd={type:'sub',out:b.dataset.out,in:state.subMode};
+        const result = state.match.substitute(managed(), cmd.out, cmd.in);
+        if(result.ok)checkpoint(cmd);
         state.subMode = null; renderSquad();
         if (!buffered) renderLineup();
         notify(result.ok ? (buffered ? `Substitution set for ${m.clockStr()}, after the current footage.` : 'Substitution made.') : result.msg);
@@ -840,7 +908,8 @@
       }
     });
     $('deskDialog').addEventListener('close', () => {
-      state.subMode = null;
+      state.subMode = null; state.saveConfirm=false;
+      if(state.intervalReturn){const back=state.intervalReturn;state.intervalReturn=null;back();return;}
       if (state.returnBreak) { state.returnBreak = false; showBreak(state.match.phase === 'halftime' ? 'ht' : 'ft'); }
     });
     $('breakDialog').addEventListener('cancel', e => e.preventDefault());
@@ -848,6 +917,7 @@
       state.returnBreak = true; $('breakDialog').close(); openDesk(state.match.phase === 'halftime' ? 'tactics' : 'stats');
     });
     $('btnBreakContinue').addEventListener('click', () => {
+      if(state.club)return;
       $('breakDialog').close();
       if (state.match.phase === 'halftime') {
         state.paused = false; state.acc = 0; state.match.continueSecondHalf();
@@ -855,7 +925,7 @@
       } else prepare({ ...state.config, formation: state.match.teams[0].tactics.formation, mentality: state.match.teams[0].tactics.mentality });
     });
     document.addEventListener('keydown', e => {
-      if (!viewingMatch() || activeDialog() || e.altKey || e.ctrlKey || e.metaKey || e.repeat || e.target.matches('input, select, textarea, [contenteditable]')) return;
+      if (!viewingMatch() || state.loading || activeDialog() || e.altKey || e.ctrlKey || e.metaKey || e.repeat || e.target.matches('input, select, textarea, [contenteditable]')) return;
       const key = e.key.toLowerCase();
       if (e.code === 'Space' && !e.target.closest('button')) { e.preventDefault(); togglePlay(); }
       else if (Object.hasOwn(SPEED_SHORTCUTS, key)) setSpeed(SPEED_SHORTCUTS[key]);
@@ -885,10 +955,62 @@
   }
   function suspend() {
     stopScanWork();
+    clearTimeout(state.restoreJob);state.restoreJob=null;
     if (state.frameJob != null) cancelAnimationFrame(state.frameJob);
     state.frameJob = state.lastFrame = null;
     A.setMuted(true);
     if ($('breakDialog').open) $('breakDialog').close();
   }
-  global.TLMatchView = { open, suspend };
+  function openClub(club,onReady=()=>{}){
+    if(!viewingMatch())return;
+    const was=state.clubId;state.club=club;state.clubId=club.fixture.id;
+    const screen=$('matchScreen'), wait=$('clubRestore'), main=screen.querySelector('main');
+    screen.dataset.season='true';
+    $('matchHome').hidden=$('btnSetup').hidden=true;
+    if(!state.renderer){state.renderer=new global.TLRender.Renderer($('pitch'));wire();if(document.fonts)document.fonts.ready.then(()=>{if(viewingMatch()&&state.match&&!state.loading)draw();});}
+    state.renderer.resize();
+    const config={competition:global.TLHomeData.fixtureCompetition(club.fixture),highlights:'key',sound:false,auto:false};
+    const start=()=>{
+      state.lastFrame=null;
+      if(state.frameJob==null)state.frameJob=requestAnimationFrame(loop);
+      onReady();queueScan();
+    };
+    if(was===state.clubId&&state.match){A.setMuted(!state.sound);updateHUD();draw();return start();}
+    if(!club.session.checkpoint.ticks){prepare(config);return start();}
+    // A late checkpoint can take several seconds to reconstruct. Replay in
+    // bounded chunks so a refresh never leaves a frozen, unresponsive screen.
+    clearTimeout(state.restoreJob);
+    state.loading=true;state.match=null;main.inert=true;screen.dataset.restoring='true';
+    wait.hidden=false;$('restoreProgress').value=0;
+    text('restoreFixture',`${global.TLHomeData.clubs[club.fixture.home].name} v ${global.TLHomeData.clubs[club.fixture.away].name}`);
+    wait.focus({preventScroll:true});
+    const replay=seasonMatch().replayer(club.fixture,club.session);
+    function restore(){
+      if(!viewingMatch()||state.club!==club)return;
+      const until=performance.now()+15;
+      let done;
+      do{done=replay.advance(64);}while(!done&&performance.now()<until);
+      $('restoreProgress').value=replay.progress;
+      if(!done){state.restoreJob=setTimeout(restore,0);return;}
+      state.loading=false;state.restoreJob=null;wait.hidden=true;main.inert=false;delete screen.dataset.restoring;
+      prepare(config,replay.match);start();
+    }
+    state.restoreJob=setTimeout(restore,0);
+  }
+  function intervalDesk(back){
+    if(!state.club||state.match.phase!=='halftime')return;
+    state.breakQueued=null;state.intervalReturn=back;openDesk('tactics');
+  }
+  function startSecondHalf(){
+    if(!state.club||!state.club.store.value.session?.checkpoint.started)return;
+    if(state.match.phase==='halftime'){
+      const command=state.club.store.value.session.checkpoint.commands.at(-1);
+      if(command?.type!=='second')return;
+      seasonMatch().applyCommand(state.match,managed(),command);
+    }
+    state.breakQueued=null;state.paused=false;state.acc=0;state.goalFrames=null;state.replayQueue=null;
+    startOpening();renderLineup();updateHUD();draw();$('btnPlay').focus({preventScroll:true});
+  }
+  function unloadClub(){suspend();state.club=null;state.clubId=null;state.match=null;}
+  global.TLMatchView = { open, suspend, openClub, intervalDesk, startSecondHalf, unloadClub };
 })(typeof window !== 'undefined' ? window : globalThis);

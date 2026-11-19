@@ -66,6 +66,9 @@
       this.choiceRnd = D.mulberry32(this.seed ^ 0x9dd147a5);
       this.textRnd = D.mulberry32(this.seed ^ 0x7a19d143);
       this.onEvent = opts.onEvent || (() => {});
+      this.season = !!opts.lineups;
+      this.injuryRnd = this.season ? D.mulberry32(this.seed ^ 0x2e95160b) : null;
+      this.possessionTurn = -Infinity;
       this.onSnapshot = opts.onSnapshot || null;
       this.snapEvery = 2; this.snapCount = 0;
       this.events = [];
@@ -86,9 +89,21 @@
       this.teams = [homeClub, awayClub].map((club, i) => {
         const players = D.genSquad(club, D.seedFor(club.id));
         const tactics = (i === 0 ? opts.homeTactics : opts.awayTactics) || D.defaultTactics(club.style);
-        const { xi, bench } = D.bestXI(players, tactics.formation);
+        let { xi, bench } = D.bestXI(players, tactics.formation);
+        const lineup = opts.lineups?.[i];
+        if (lineup) {
+          const by = Object.fromEntries(players.map(p => [p.id, p]));
+          xi = lineup.xi.map(({player, ...slot}) => ({...slot, player:by[player.id]}));
+          bench = lineup.bench.map(p => by[p.id]);
+          for (const p of players) {
+            if (lineup.numbers?.[p.id]) p.num = lineup.numbers[p.id];
+            else p.num = lineup.xi.find(s=>s.player.id===p.id)?.player.num ?? lineup.bench.find(q=>q.id===p.id)?.num ?? p.num;
+            p.appeared = false;
+          }
+        }
         const team = {
           idx: i, club, players, tactics: { ...tactics }, bench,
+          listed: lineup ? new Set(bench.map(p=>p.id)) : null, assignments: lineup?.set || null,
           slots: xi.map(s => ({ ...s })),
           attackDir: i === 0 ? 1 : -1,
           subsUsed: 0, score: 0,
@@ -98,7 +113,9 @@
           p.team = i; p.onPitch = false;
           p.x = 0; p.y = 0; p.vx = 0; p.vy = 0; p.tx = 0; p.ty = 0;
           p.decisionT = 0; p.tackleT = 0; p.stunT = 0; p.contactT = 0; p.runT = 2 + this.rnd() * 6; p.runUntil = 0; p.running = 0;
-          p.offsideFlag = false; p.cond = 1; p.dir = 0; p.dribPhase = this.rnd() * 6;
+          p.offsideFlag = false; p.cond = (lineup?.fitness?.[p.id] ?? 100) / 100; p.dir = 0; p.dribPhase = this.rnd() * 6;
+          if (lineup?.focus === 'set') p.attrs = {...p.attrs, freeKicks:Math.min(20,p.attrs.freeKicks+1), passing:Math.min(20,p.attrs.passing+1)};
+          if (lineup?.focus === 'shape') p.attrs = {...p.attrs, positioning:Math.min(20,p.attrs.positioning+1)};
           p.holding = false; p.sprint = false;
           p.reading = AI.profile(p, D.seedFor(p.id));
           p.runSince = p.receivedAt = -Infinity; p.quickControl = false; p.ballPlan = p.releasePlan = null;
@@ -117,6 +134,7 @@
 
     assignSlot(p, slot, team) {
       p.onPitch = true; p.role = slot.role; p.slotX = slot.x; p.slotY = slot.y; p.teamRef = team;
+      if (team.listed) { p.appeared = true; p.job = slot.job?.[0]; p.duty = slot.job?.[2]; }
       const h = this.homePos(p, team);
       p.x = h.x; p.y = h.y; p.tx = h.x; p.ty = h.y;
     }
@@ -218,10 +236,14 @@
 
     reassignFormation(ti) {
       const team = this.teams[ti];
+      const previous = team.listed ? new Map(team.slots.map(s=>[s.player.id,s])) : null;
       const on = team.slots.map(s => s.player).filter(p => p.onPitch && !p.red);
-      const { xi } = D.bestXI(on, team.tactics.formation);
-      team.slots = xi.map(s => ({ ...s }));
-      team.slots.forEach(s => { s.player.role = s.role; s.player.slotX = s.x; s.player.slotY = s.y; });
+      const xi = (this.optimizeXI&&on.length===11) ? this.optimizeXI(on,team.tactics.formation) : D.bestXI(on,team.tactics.formation).xi;
+      team.slots = xi.map(s => {
+        const before=previous?.get(s.player.id);
+        return before?.role===s.role&&before.job?{...s,job:before.job}:{...s};
+      });
+      team.slots.forEach(s => { s.player.role = s.role; s.player.slotX = s.x; s.player.slotY = s.y; if(team.listed) {s.player.job=s.job?.[0]; s.player.duty=s.job?.[2];} });
       this.playersCache = this.onPitchPlayers(); this.brainIn = 0;
     }
 
@@ -232,14 +254,16 @@
       const slot = team.slots.find(s => s.player.id === outId);
       const np = team.players.find(p => p.id === inId);
       if (!slot || !np) return { ok: false, msg: 'Invalid substitution.' };
-      if (np.onPitch || np.red) return { ok: false, msg: 'Player not available.' };
+      if (np.onPitch || np.red || (team.listed && (!team.listed.has(np.id) || np.appeared))) return { ok: false, msg: 'Player not available from the submitted bench.' };
+      if (this.season && this.phase === 'fulltime') return { ok:false, msg:'Substitutions are only available during the match.' };
       const old = slot.player;
       const sp = this.setpiece;
       if (sp?.offender === old && (sp.card || sp.cards.length)) return { ok: false, msg: 'Wait for the referee to finish dealing with the foul.' };
       if (sp?.taker === old && (sp.stage === 'windup' || sp.stage === 'runup')) return { ok: false, msg: 'The restart is already being taken.' };
       if ((slot.role === 'GK') !== (np.pos === 'GK')) return { ok: false, msg: 'Choose a replacement for the same position type (keeper or outfield).' };
       old.onPitch = false;
-      np.onPitch = true; np.cond = 1; np.rating = 6.5;
+      np.onPitch = true; if (!team.listed) np.cond = 1; np.rating = 6.5;
+      if (team.listed) { np.appeared = true; np.job = slot.job?.[0]; np.duty = slot.job?.[2]; }
       np.x = np.prevX = old.x; np.y = np.prevY = old.y; np.vx = old.vx; np.vy = old.vy;
       np.tx = old.tx; np.ty = old.ty; np.dir = old.dir; np.spRole = old.spRole; np.kickoffHold = old.kickoffHold;
       np.role = slot.role; np.slotX = slot.x; np.slotY = slot.y; np.teamRef = team;
@@ -251,7 +275,7 @@
       if (sp?.taker === old) sp.taker = np;
       if (sp?.throwPlan?.target === old) sp.throwPlan.target = np;
       if (sp?.wall?.includes(old)) sp.wall = sp.wall.map(p => p === old ? np : p);
-      team.bench = team.players.filter(p => !p.onPitch && !p.red);
+      team.bench = team.players.filter(p => !p.onPitch && !p.red && (!team.listed || (team.listed.has(p.id) && !p.appeared)));
       team.subsUsed++;
       if (this.ball.owner === old) { this.ball.owner = np; this.ball.lastTouch = np; }
       this.playersCache = this.onPitchPlayers(); this.brainIn = 0;
@@ -266,7 +290,7 @@
       this.adjust(p, -0.8);
       team.slots = team.slots.filter(s => s.player !== p);
       this.reassignFormation(p.team);
-      team.bench = team.players.filter(pp => !pp.onPitch && !pp.red);
+      team.bench = team.players.filter(pp => !pp.onPitch && !pp.red && (!team.listed || (team.listed.has(pp.id) && !pp.appeared)));
       if (this.ball.owner === p) this.ball.owner = null;
       const n = team.slots.length;
       if (announce) this.say('red', { p: p.name, team: this.teamName(p.team), n }, { team: p.team, player: p, key: true, reason });
@@ -289,10 +313,13 @@
       const shape = type === 'freekick' ? S.freeKickShape(b, d, !!extra.indirect) : null;
       const cards = extra.cards || [];
       const near = S.byDistance(outfield, b);
-      const quick = shape && !extra.reviewed && !cards.length ? this.quickFreeKick(team, near, shape) : null;
+      const key = type === 'corner' ? ((y < CY) === (d > 0) ? 'cornerL' : 'cornerR') : type;
+      const named = outfield.find(p => p.id === team.assignments?.[key] && !p.injury);
+      const quick = shape && !named && !extra.reviewed && !cards.length ? this.quickFreeKick(team, near, shape) : null;
       let taker;
       if (type === 'goalkick') taker = this.gk(team);
       else if (type === 'penalty') taker = extra.taker || this.bestPenaltyTaker(team);
+      else if (named) taker = named;
       else if (quick) taker = quick;
       else {
         const worth = p => type === 'throwin' ? p.attrs.throwing * .27 + (Math.abs(gx - x) < 25 && team.tactics.passing !== 0 ? p.attrs.throwPower * .46 : 0) + (p.role === 'FB' ? 1.55 : 0)
@@ -497,7 +524,7 @@
     bestPenaltyTaker(team) {
       const pool = team.slots.map(s => s.player).filter(p => p.role !== 'GK');
       const skill = p => p.attrs.penalties * .68 + p.attrs.composure * .21 + p.attrs.shooting * .11 - (1 - p.cond) * 2.1;
-      return pool.sort((a, b) => skill(b) - skill(a))[0] || this.gk(team);
+      return pool.find(p=>p.id===team.assignments?.penalty&&!p.injury) || pool.sort((a, b) => skill(b) - skill(a))[0] || this.gk(team);
     }
 
     progressDiscipline(sp) {
@@ -605,6 +632,8 @@
         const shot = .985 - (range - 18) * .026 - angle * .24 + (p.attrs.freeKicks - 13) * .033 + need * .078 + (team.tactics.mentality - 2) * .037;
         options.push({ kind: 'shot', score: shot });
       }
+      const prefer = {'Look for a shot':'shot','Look for a delivery':'cross'}[team.tactics.club?.free];
+      if (prefer) for (const o of options) if (o.kind===prefer) o.score += .45;
       const action = AI.pick(options, this.choiceRnd, .19 + (16 - p.attrs.composure) * .004);
       if (action?.kind === 'shot') this.doShot(p, { fk: true, wall: sp.wall });
       else if (action?.kind === 'cross') this.doCross(p, false, action.delivery);
@@ -627,14 +656,16 @@
       this.phase = 'open'; this.brainIn = 0; this.controlTeam = sp.team; this.lastPass = null;
       if (sp.type === 'throwin') this.doThrow(sp);
       else if (sp.type === 'goalkick') {
-        const short = this.bestPassOption(taker, { noOffside: true, maxDist: 31 });
-        if (!short || this.choiceRnd() < clamp(.26 + (team.tactics.passing - 1) * .22 + short.risk * .18, .12, .84)) this.doLongBall(taker, true);
+        const preferred=team.tactics.club?.delivery;
+        const short = this.bestPassOption(taker, { noOffside: true, maxDist: preferred==='Roll it out'?23:31 });
+        if (!short || preferred==='Take long kicks'||preferred==='Throw it long'||this.choiceRnd() < clamp(.26 + (team.tactics.passing - 1) * .22 + short.risk * .18 - (preferred ? .35 : 0), preferred ? .07 : .12, .84)) this.doLongBall(taker, true);
         else this.doPassTo(taker, short, { noOffside: true });
       } else if (sp.type === 'corner') {
         team.stats.corners++;
         const short = outlet && dist(outlet.x, outlet.y, b.x, b.y) > 4.5 && dist(outlet.x, outlet.y, b.x, b.y) < 13
           && this.laneRisk(b.x, b.y, outlet.x, outlet.y, sp.team) < .33 && this.nearestOppDist(outlet) > 2.9;
-        if (short && this.choiceRnd() < [.54, .30, .15][team.tactics.passing]) {
+        const corner=team.tactics.club?.corner;
+        if (short && (corner==='Short option'||(corner!=='Cross into the box'&&this.choiceRnd() < [.54, .30, .15][team.tactics.passing]))) {
           this.doPassTo(taker, { target: outlet, lead: { x: outlet.x, y: outlet.y }, technique: 'ground' }, { noOffside: true });
         } else this.doCross(taker, true);
       } else if (sp.type === 'freekick') this.chooseFreeKick(sp);
@@ -678,7 +709,7 @@
       const period = this.half - 1;
       if (!this.addedAnnounced[period] && this.t >= 2700) {
         this.addedAnnounced[period] = true;
-        const n = this.events.filter(e => e.half === this.half && ['goal', 'og', 'penscore', 'yellow', 'red', 'sub', 'pen'].includes(e.type)).length;
+        const n = this.events.filter(e => e.half === this.half && ['goal', 'og', 'penscore', 'yellow', 'red', 'sub', 'pen', 'injury'].includes(e.type)).length;
         const mins = this.half === 1 ? 1 + Math.min(3, Math.round(n * .34)) : 2 + Math.min(4, Math.round(n * .4));
         this.added[period] = mins * 60 + this.reviewTime[period];
         this.say('stoppage', { n: mins }, { key: false });
@@ -765,7 +796,9 @@
         team.possession = this.controlTeam === idx;
         let first = null, second = null, best = Infinity, next = Infinity;
         const ownDepth = d > 0 ? b.x : L - b.x;
-        const radius = [15.4, 22.8, 31.5][team.tactics.press] + (ownDepth < 37 ? 9.6 : 0);
+        const club = team.tactics.club, transition = this.elapsed - this.possessionTurn < 6;
+        const radius = [15.4, 22.8, 31.5][team.tactics.press] + (ownDepth < 37 ? 9.6 : 0)
+          + (club?.block==='High press'?4:club?.block==='Low block'?-4:0) + (transition ? (club?.lost==='Counter-press'?6:club?.lost==='Regroup'?-3:0) : 0);
         for (const q of ps) {
           if (q.team !== idx || q.role === 'GK' || q.stunT > .1) continue;
           const gap = dist(q.x, q.y, marker.x, marker.y);
@@ -813,6 +846,7 @@
     speed(p) {
       let v = (5.97 + p.attrs.pace * .107) * (.79 + .21 * p.cond);
       if (p.stunT > 0) v *= .46;
+      if (p.injury) v *= .68;
       if (this.ball.owner === p) v *= .69 + p.attrs.dribbling * .0045 - clamp((4.1 - (p.pressure ?? 5)) * .046, 0, .18);
       return v;
     }
@@ -930,6 +964,10 @@
           }
           if (progress < 31 && !back && role !== 'ST') tx = lerp(tx, b.x + d * (role === 'DM' ? 5.2 : 10), .16);
         }
+        if (atk && p.duty && !cb) tx += d * (p.duty==='Attack'?3.3:p.duty==='Defend'?-3.3:0);
+        if (atk && !back && this.elapsed-this.possessionTurn<6 && team.tactics.club?.won==='Counter') tx += d*3;
+        if (atk && p.job==='W') ty = lerp(ty,p.slotY<.5?3.7:W-3.7,.24);
+        if (atk && p.job==='DLF') tx-=d*2.8;
         p.tx = clamp(tx, .55, L - .55); p.ty = clamp(ty, .65, W - .65);
         p.sprint ||= dist(p.x, p.y, p.tx, p.ty) > (atk ? 13.4 : 11.5);
       }
@@ -1000,7 +1038,7 @@
         const aim = P.forecast(b, Math.min(.65, Math.max(.21, P.landingTime(b.z, b.vz))));
         p.tx = clamp(aim.x, .55, L - .55); p.ty = clamp(aim.y, 1, W - 1); p.sprint = true; return;
       }
-      const offset = clamp(1.85 + depth * .047, 1.85, 5.65) + (team.possession ? 1.65 : 0);
+      const offset = clamp(1.85 + depth * .047, 1.85, 5.65) + (team.possession ? 1.65 : 0) + (p.job==='SK'&&depth>25?1.8:0);
       p.tx = own + d * offset;
       p.ty = CY + clamp((b.y - CY) * Math.min(.295, offset / Math.max(6, depth) + .085), -6.65, 6.65);
     }
@@ -1171,9 +1209,9 @@
         q.tackleT = 2.1 + this.rnd() * 1.41;
         const team = this.teams[q.team], inside = this.canHandle(q, b);
         const behind = Math.cos(o.dir) * (q.x - o.x) + Math.sin(o.dir) * (q.y - o.y) < -.26;
-        const commit = (inside ? .455 : [.39, .46, .54][team.tactics.press]) - (behind ? .17 : 0);
+        const commit = (inside ? .455 : [.39, .46, .54][team.tactics.press]) - (behind ? .17 : 0) + (team.tactics.club?.duels==='Get stuck in'?.056:0);
         if (this.rnd() > commit) continue;
-        const foul = (.007 + q.attrs.aggression * .00275 + (behind ? .030 : 0)) * (inside ? .38 : 1);
+        const foul = (.007 + q.attrs.aggression * .00275 + (behind ? .030 : 0)) * (inside ? .38 : 1) * (team.tactics.club?.duels==='Get stuck in'?1.25:1);
         const wins = clamp((inside ? .61 : .50) + (q.attrs.tackling - o.attrs.dribbling) * .027 - (behind ? .13 : 0), .16, .84);
         const roll = this.rnd();
         if (roll < foul) { this.foul(q, o); return; }
@@ -1207,7 +1245,11 @@
       if (o.role === 'GK') {
         if (o.decisionT <= 0) {
           const team = this.teams[o.team], pressure = this.nearestOppDist(o);
-          if (pressure < 4.2 || team.tactics.passing === 2 || this.rnd() < (team.tactics.passing === 0 ? .23 : .42)) this.doLongBall(o);
+          const delivery=team.tactics.club?.delivery;
+          if (delivery&&pressure>=3.65) {
+            if (delivery==='Take long kicks'||delivery==='Throw it long') this.doLongBall(o);
+            else this.doPass(o,{maxDist:delivery==='Roll it out'?22:32});
+          } else if (pressure < 4.2 || team.tactics.passing === 2 || this.rnd() < (team.tactics.passing === 0 ? .23 : .42)) this.doLongBall(o);
           else this.doPass(o, { maxDist: 32 });
         }
       } else if (o.decisionT <= 0) this.decide(o, this.nearestOppDist(o));
@@ -1259,6 +1301,7 @@
         if (f && f.team !== p.team) { p.stats.interceptions++; this.adjust(p, .064); }
         this.lastPass = null;
       }
+      if(this.season&&this.controlTeam!==p.team) this.possessionTurn=this.elapsed;
       this.controlTeam = p.team; this.brainIn = 0;
       if (this.attackCheck?.team !== p.team) this.attackCheck = null;
       for (const q of this.playersCache) { q.offsideFlag = false; q.offsideGap = null; }
@@ -1268,6 +1311,7 @@
       const openTime = clamp((bodyRoom - 2.35) * .16, 0, 1.06);
       const base = p.role === 'GK' ? 2.58 + this.rnd() * 1.48 : (depth > 74 ? .82 : 1.64) + this.choiceRnd() * .72 + openTime;
       p.decisionT = base * TEMPO_HOLD[team.tactics.tempo] + Math.max(0, ballSpeed - 11) * .029 + Math.max(0, b.z - .36) * .16;
+      if(p.role==='GK'&&team.tactics.club) p.decisionT*=team.tactics.club.gk==='Distribute quickly'?.65:1.13;
       p.receivedAt = this.elapsed;
       p.ballPlan = p.releasePlan = null;
       p.quickControl = !holding && p.role !== 'GK' && f?.kind === 'pass' && f.team === p.team && f.intended === p && b.z < .61 && ballSpeed < 11.8;
@@ -1321,6 +1365,10 @@
         const call = incident.fieldPenalty ? 'Penalty given' : 'Free kick given';
         this.beginReview(incident, victim.team, `${call}. VAR is checking the contact at the edge of the box.`);
       } else this.awardFoul(incident);
+      if (this.injuryRnd && !victim.injury && this.injuryRnd() < .019+(1-victim.cond)*.082) {
+        victim.injury=2+Math.floor(this.injuryRnd()*5);victim.cond=Math.max(.28,victim.cond-.19);
+        this.emit('injury',{team:victim.team,player:victim,key:true,text:`${victim.name} has taken a knock. The physio signals for assessment.`});
+      }
     }
 
     awardFoul(incident, reviewed = false) {
@@ -1465,7 +1513,7 @@
       }
       const carry = .574 + p.attrs.dribbling * .013 + clamp(space, 0, 13) * .022
         - clamp((2.86 - pressure) * .229, 0, .38) - (depth > 89 ? .115 : 0) - (p.role === 'DC' ? .138 : 0)
-        + p.reading.carry * .72 + intent * .50 - rush * .044;
+        + p.reading.carry * .72 + intent * .50 - rush * .044 + (team.tactics.club?.build==='Run at defence'?.14:0);
       opts.push({ kind: 'carry', score: carry, space });
       const yOffset = CY - b.y;
       if (depth > 62 && depth < 96 && Math.abs(yOffset) > 9 && pressure > 1.42 && p.attrs.dribbling >= 9) {
@@ -1614,6 +1662,11 @@
           if (cutback) score += .24;
           if (swing) score += .096;
           if (q.role === 'GK') score -= .27;
+          const club=team.tactics.club;
+          if (club?.build==='Play out of defence'&&depth<38&&dd<21&&!air) score+=.115;
+          if (club?.build==='Pass into space'&&through) score+=.12;
+          if (p.job==='BPD'&&gain>9&&dd>14) score+=.085;
+          if (p.role==='GK'&&club?.target) score+=this.keeperTargetBias(q,club.target);
           if (air && !opts.technique) score -= (opening < 5 ? .155 : technique === 'long' || technique === 'switch' ? .101 : .034);
           if (q === this.lastPass?.player && this.elapsed - this.lastPass.t < 5.4 && gain < 4) score -= .24;
           if (opts.back) score += Math.min(.19, 1 / (dd + 1) * 1.9);
@@ -1696,13 +1749,22 @@
       this.deliveryReleased(p, f);
     }
 
+    keeperTargetBias(q, target) {
+      if(target==='Flanks')return Math.abs(q.y-CY)>15?.21:0;
+      if(target==='Target forward')return q.role==='ST'?.28:0;
+      if(target==='Playmaker')return ['DM','CM','AM'].includes(q.role)?.23:0;
+      if(target==='Full-backs')return q.role==='FB'||q.role==='WB'?.23:0;
+      if(target==='Centre-backs')return q.role==='DC'?.23:0;
+      return ['ST','W'].includes(q.role)?.16:0;
+    }
+
     doLongBall(p, noOffside = false, clearance = false) {
       const b = this.ball, team = this.teams[p.team], d = team.attackDir, line = this.offsideLine(team) * d;
       let target = null, best = -Infinity;
       for (const q of this.playersCache) {
         const gain = (q.x - b.x) * d, dd = dist(b.x, b.y, q.x, q.y);
         if (q.team !== p.team || q.role === 'GK' || q === p || gain < 18 || dd > 70 || (!noOffside && q.x * d > Math.max(line, b.x * d, CX * d) + .25)) continue;
-        const score = (q.role === 'ST' ? 3 : ['W', 'AM'].includes(q.role) ? 2 : 0) + clamp(this.nearestOppDist(q), 0, 11) - Math.abs(gain - 39) * .13 + this.rnd() * 1.5;
+        const score = (q.role === 'ST' ? 3 : ['W', 'AM'].includes(q.role) ? 2 : 0) + clamp(this.nearestOppDist(q), 0, 11) - Math.abs(gain - 39) * .13 + this.rnd() * 1.5 + (p.role==='GK'&&team.tactics.club?.target ? this.keeperTargetBias(q,team.tactics.club.target)*12 : 0);
         if (score > best) { best = score; target = q; }
       }
       const scatter = clearance ? 6.8 : 2.9 + (20 - p.attrs.passing) * .142;
@@ -1787,7 +1849,7 @@
       const flightTime = lob ? clamp(1.24 + dd * .018, 1.48, 1.83) : Math.max(.11, P.airTime(distLine, power));
       const pass = this.lastPass;
       const assist = !opts.pen && pass && pass.team === p.team && pass.receiver === p && pass.player !== p && this.elapsed - pass.t < 8.4 ? pass.player : null;
-      const shot = { x: b.x, y: b.y, team: p.team, xg, outcome: 'pending', minute, half: this.half, direction: d, pen: !!opts.pen };
+      const shot = { x: b.x, y: b.y, team: p.team, xg, outcome: 'pending', minute, half: this.half, periodTime:this.t, direction: d, pen: !!opts.pen };
       this.shotMap.push(shot); team.stats.shots++; team.stats.xG += xg; p.stats.shots++;
       if (assist) assist.stats.keyPasses++;
       const guessSide = opts.pen && keeper && this.rnd() < clamp(.40 + keeper.attrs.positioning * .008 - (penSkill - 11) * .006, .32, .59)

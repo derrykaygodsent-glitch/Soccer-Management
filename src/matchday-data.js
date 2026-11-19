@@ -1,105 +1,114 @@
-/* Illustrative matchday snapshots. Do not import these into the engine or save reducer. */
+/* Persistent club tactics and immutable submitted team sheets. No display-only lineups. */
 (function (global) {
   'use strict';
-  const node=typeof window==='undefined';
-  const H=node?require('./home-data.js'):global.TLHomeData;
-  const C=node?require('./club-data.js'):global.TLClubData;
-  const D=node?require('./data.js'):global.TLData;
-  const fixture=H.next, home=H.clubs[H.homeId], away=H.clubs[fixture.opponent];
-  const matchTitle=`${home.name} v ${away.name}`;
-  const dayMs=864e5, iso=date=>new Date(date).toISOString().slice(0,10);
-  const fixtureDay=iso(fixture.date), firstDay=iso(H.start);
-  const plan = [
-    ['2024-10-25',['Attacking movement','Travel','Match preview']],
-    [firstDay,['Match review']],
-    ['2024-10-27',['Recovery','Rest','Rest']],
-    ['2024-10-28',['Endurance','Tactical shape','Rest']],
-    ['2024-10-29',['Quickness','Set-piece routines','Match preview']],
-    [fixtureDay,['Team briefing']],
-    ['2024-10-31',['Recovery','Match review','Rest']],
-    ['2024-11-01',['Defensive shape','Rest','Match preview']],
-    ['2024-11-02',['Team briefing']]
-  ].map(([id,sessions])=>({id,sessions,date:Date.parse(id+'T10:00:00Z'),fixture:H.fixtures.find(f=>iso(f.date)===id),youth:C.youthFixtures.u21.find(([date])=>date===id)}));
-  const reviewDays=plan.filter(d=>d.id>=firstDay&&d.id<=fixtureDay);
-  const day=id=>reviewDays.find(d=>d.id===id)||reviewDays[0];
-  const byDate=id=>plan.find(d=>d.id===id);
-  const time=id=>id===firstDay?H.start:id===fixtureDay?fixture.date:byDate(id)?.date||H.start;
-  const dateForNextDay=id=>reviewDays[reviewDays.indexOf(day(id))+1]?.id;
+  const node=typeof window==='undefined', H=node?require('./home-data.js'):global.TLHomeData, C=node?require('./club-data.js'):global.TLClubData, D=node?require('./data.js'):global.TLData;
+  const home=H.clubs[H.homeId];
+  const choices={
+    mentality:D.MENTALITIES,passing:['Shorter','Standard','More direct'],tempo:['Lower','Standard','Higher'],width:['Narrow','Standard','Fairly wide'],build:['Play out of defence','Run at defence','Pass into space'],
+    lost:['Counter-press','Regroup'],won:['Counter','Hold shape'],gk:['Distribute quickly','Slow pace down'],target:['Over opposition','Target forward','Flanks','Playmaker','Full-backs','Centre-backs'],delivery:['Roll it out','Throw it long','Take short kicks','Take long kicks'],
+    line:['Deeper','Standard','Higher'],press:['Less often','Standard','More often','Much more often'],block:['Low block','Mid block','High press'],duels:['Stay on feet','Get stuck in'],corner:['Mixed','Short option','Cross into the box'],free:['Mixed','Look for a shot','Look for a delivery']
+  };
   const presets=[
-    {name:'Control Possession',form:'4-3-3',mentality:'Positive',familiarity:87,intensity:69,passing:'Shorter',tempo:'Standard',width:'Fairly wide',build:'Play out of defence',lost:'Counter-press',won:'Hold shape',gk:'Slow pace down',target:'Centre-backs',delivery:'Take short kicks',line:'Higher',press:'More often',block:'High press',duels:'Stay on feet'},
-    {name:'High Press',form:'4-2-3-1',mentality:'Attacking',familiarity:72,intensity:89,passing:'Standard',tempo:'Higher',width:'Fairly wide',build:'Run at defence',lost:'Counter-press',won:'Counter',gk:'Distribute quickly',target:'Full-backs',delivery:'Roll it out',line:'Higher',press:'Much more often',block:'High press',duels:'Stay on feet'},
-    {name:'Direct Counter',form:'4-4-2',mentality:'Balanced',familiarity:78,intensity:51,passing:'More direct',tempo:'Higher',width:'Standard',build:'Pass into space',lost:'Regroup',won:'Counter',gk:'Distribute quickly',target:'Flanks',delivery:'Take long kicks',line:'Standard',press:'Standard',block:'Mid block',duels:'Stay on feet'}
+    {name:'Control Possession',form:'4-3-3',mentality:'Positive',passing:'Shorter',tempo:'Standard',width:'Standard',build:'Play out of defence',lost:'Regroup',won:'Hold shape',gk:'Slow pace down',target:'Centre-backs',delivery:'Take short kicks',line:'Standard',press:'Standard',block:'Mid block',duels:'Stay on feet',corner:'Mixed',free:'Mixed'},
+    {name:'High Press',form:'4-2-3-1',mentality:'Attacking',passing:'Standard',tempo:'Higher',width:'Fairly wide',build:'Run at defence',lost:'Counter-press',won:'Counter',gk:'Distribute quickly',target:'Full-backs',delivery:'Roll it out',line:'Higher',press:'Much more often',block:'High press',duels:'Stay on feet',corner:'Cross into the box',free:'Mixed'},
+    {name:'Direct Counter',form:'4-4-2',mentality:'Balanced',passing:'More direct',tempo:'Higher',width:'Standard',build:'Pass into space',lost:'Regroup',won:'Counter',gk:'Distribute quickly',target:'Flanks',delivery:'Take long kicks',line:'Deeper',press:'Less often',block:'Low block',duels:'Stay on feet',corner:'Mixed',free:'Mixed'}
   ];
-  const formationOptions=['4-3-3','4-2-3-1','4-4-2','3-5-2','5-3-2'];
-  const roleNames={GK:['SK','Sweeper Keeper','Defend'],FB:['FB','Full-Back','Support'],WB:['WB','Wing-Back','Support'],DC:['BPD','Ball-Playing Defender','Defend'],DM:['BWM','Ball-Winning Midfielder','Defend'],CM:['DLP','Deep-Lying Playmaker','Support'],AM:['AP','Advanced Playmaker','Support'],W:['IW','Inverted Winger','Attack'],ST:['AF','Advanced Forward','Attack']};
-  function position(slot,formation) {
-    const side=slot.y<.5?'L':'R';
-    return ({GK:'GK',DC:slot.y===.5?'DC':`DC${side}`,FB:`D${side}`,WB:`WB${side}`,DM:formation==='4-2-3-1'?`DM${side}`:'DM',CM:slot.y===.5?'MC':`MC${side}`,AM:'AMC',W:formation==='4-4-2'?`M${side}`:`AM${side}`,ST:slot.y===.5?'ST':`ST${side}`})[slot.role];
+  const roleOptions={GK:[['SK','Sweeper Keeper','Defend'],['GK','Goalkeeper','Defend']],FB:[['FB','Full-Back','Support'],['WB','Overlapping Full-Back','Attack'],['DFB','Defensive Full-Back','Defend']],WB:[['WB','Wing-Back','Support'],['AWB','Attacking Wing-Back','Attack'],['DWB','Defensive Wing-Back','Defend']],DC:[['BPD','Ball-Playing Defender','Defend'],['CD','Central Defender','Defend']],DM:[['BWM','Ball-Winning Midfielder','Defend'],['DLP','Deep-Lying Playmaker','Support']],CM:[['DLP','Deep-Lying Playmaker','Support'],['BBM','Box-to-Box Midfielder','Attack'],['HCM','Holding Midfielder','Defend']],AM:[['AP','Advanced Playmaker','Support'],['SS','Shadow Striker','Attack']],W:[['IW','Inverted Winger','Attack'],['W','Wide Winger','Support']],ST:[['AF','Advanced Forward','Attack'],['DLF','Deep-Lying Forward','Support'],['PF','Pressing Forward','Attack']]};
+  const roleNames=Object.fromEntries(Object.entries(roleOptions).map(([k,v])=>[k,v[0]]));
+  const formationOptions=Object.keys(D.FORMATIONS);
+  const takers=[['captain','Captain','rvr_3'],['vice','Vice-captain','rvr_12'],['penalty','Penalties','rvr_17'],['freekick','Free kicks','rvr_17'],['cornerL','Left corners','rvr_14'],['cornerR','Right corners','rvr_10'],['throwin','Throw-ins','rvr_7']];
+  const byPlayer=id=>Object.hasOwn(C.players,id)?C.players[id]:null;
+  const numbers=(()=>{const used=new Set();return Object.fromEntries(C.roster.map(p=>{let n=p.num;while(used.has(n))n++;used.add(n);return [p.id,n];}));})();
+  const iso=d=>new Date(d).toISOString().slice(0,10);
+  const roleLabel=(s,form)=>{const side=s.y<.5?'L':'R';return ({GK:'GK',FB:`D${side}`,DC:s.y===.5?'DC':`DC${side}`,WB:`WB${side}`,DM:form==='4-2-3-1'?`DM${side}`:'DM',CM:s.y===.5?'MC':`MC${side}`,AM:'AMC',W:form==='4-4-2'?`M${side}`:`AM${side}`,ST:s.y===.5?'ST':`ST${side}`})[s.role];};
+  const slots=form=>[{role:'GK',x:.035,y:.5},...D.FORMATIONS[form]].map(s=>({...s,label:roleLabel(s,form)}));
+  const fit=(p,role)=>typeof p?.id==='string'&&(p.pos==='GK')===(role==='GK');
+  const avail=(at,injuries={})=>C.roster.filter(p=>(p.injury?.status!=='Out'||iso(at)>='2024-11-04')&&!(injuries[p.id]>at));
+  // Reserve natural positions across the whole shape instead of greedily spending
+  // the best striker on a wing before the forward slots have been considered.
+  function bestXI(players,form){
+    const shape=slots(form), out=players.filter(p=>p.pos!=='GK'&&!p.red), keep=players.filter(p=>p.pos==='GK'&&!p.red).sort((a,b)=>D.ROLE_WEIGHTS.GK(b.attrs)-D.ROLE_WEIGHTS.GK(a.attrs))[0];
+    if(out.length<10||!keep)return D.bestXI(players,form).xi;
+    const targets=shape.slice(1), unit=Object.fromEntries(Object.entries(D.ROLE_WEIGHTS).map(([k,fn])=>[k,fn(new Proxy({},{get:()=>20}))]));
+    // Minimum-cost rectangular assignment (potential adjustment and augmenting paths).
+    const u=Array(11).fill(0), v=Array(out.length+1).fill(0), donor=v.slice(), way=v.slice();
+    for(let i=1;i<=10;i++){
+      donor[0]=i;
+      let j=0;const cost=v.map(()=>Infinity), visited=v.map(()=>false);
+      do {
+        visited[j]=true;const row=donor[j], role=targets[row-1].role;
+        let delta=Infinity, next=0;
+        for(let col=1;col<=out.length;col++)if(!visited[col]){
+          const p=out[col-1], fit=D.roleFit(p.pos,role), benefit=fit*.70+D.ROLE_WEIGHTS[role](p.attrs)/unit[role]*fit*.30;
+          const c=1-benefit-u[row]-v[col];if(c<cost[col]){cost[col]=c;way[col]=j;}
+          if(cost[col]<delta){delta=cost[col];next=col;}
+        }
+        for(let col=0;col<=out.length;col++){if(visited[col]){u[donor[col]]+=delta;v[col]-=delta;}else cost[col]-=delta;}
+        j=next;
+      }while(donor[j]);
+      do{const prev=way[j];donor[j]=donor[prev];j=prev;}while(j);
+    }
+    const xi=[{...shape[0],player:keep}];
+    for(let j=1;j<=out.length;j++)if(donor[j])xi[donor[j]]={...shape[donor[j]],player:out[j-1]};
+    return xi;
   }
-  const filled=(slots,formation)=>slots.map(slot=>({...slot,label:position(slot,formation)}));
-  const available=C.roster.filter(p=>p.injury?.status!=='Out');
-  const visitors=D.genSquad(away,D.seedFor(away.id));
-  const out=C.roster.filter(p=>p.injury?.status==='Out');
-  function sheet(formation='4-3-3', club=home.id) {
-    const visiting=club===away.id;
-    const shape=visiting?D.defaultTactics(away.style).formation:formationOptions.includes(formation)?formation:presets[0].form;
-    const {xi,bench}=D.bestXI(visiting?visitors:available,shape);
-    return { club, shape, xi:filled(xi,shape), bench:visiting?bench.slice(0,6):bench, out:visiting?[]:out };
+  function settings(raw={}){
+    const i=Number.isInteger(raw.preset)&&presets[raw.preset]?raw.preset:0, t=presets[i];
+    return {preset:i,name:t.name,form:formationOptions.includes(raw.form)?raw.form:t.form,...Object.fromEntries(Object.entries(choices).map(([k,v])=>[k,v.includes(raw[k])?raw[k]:t[k]]))};
   }
-  // Fixed sample cup tie. Both lineups, scoreboxes, xG, stats, events and coverage
-  // use these snapshots. They are independent of the playable fixture and save.
-  const starting=sheet(), opposition=sheet(undefined,away.id);
-  const knock={min:56,id:'rvr_6',sub:'rvr_8',condition:41,issue:'Ankle knock'};
-  const byPlayer=id=>C.players[id]||visitors.find(p=>p.id===id);
-  const matchSide=[home.id,away.id];
-  const shots=[
-    [4,0,.08,0],[7,1,.06,0],[9,0,.13,1],[12,0,.06,0],[16,1,.11,1],
-    [20,0,.21,1],[24,0,.34,1,'rvr_17'],[31,0,.04,0],[34,1,.10,0],
-    [38,0,.18,1],[43,0,.09,0],[47,0,.08,0],[50,1,.18,0],[54,0,.05,0],
-    [59,1,.26,1],[64,0,.19,1],[67,0,.11,0],[71,0,.29,1,'rvr_17'],
-    [75,1,.31,1,'hpt_17'],[77,1,.07,0],[79,0,.06,0],[82,0,.12,1],[86,1,.14,1]
-  ].map(([min,side,xg,on,scorer])=>({min,side,xg,on:!!on,scorer}));
-  const extras=[{min:28,side:1,kind:'card',player:'hpt_3'}, {min:40,side:0,kind:'card',player:'rvr_9'},
-    {min:knock.min,side:0,kind:'medical',player:knock.id}, {min:58,side:0,kind:'swap',player:knock.sub}, {min:69,side:1,kind:'card',player:'hpt_11'}];
-  const events=[...shots.filter(s=>s.scorer).map(s=>({min:s.min,side:s.side,kind:'ball',player:s.scorer})),...extras].sort((a,b)=>a.min-b.min);
-  const halftimeRatings={rvr_0:6.9,rvr_7:6.9,rvr_5:7.2,rvr_2:7.0,rvr_6:7.0,rvr_9:6.8,rvr_12:7.3,rvr_10:7.2,rvr_15:6.8,rvr_17:7.8,rvr_14:7.5};
-  const finalRatings={rvr_0:7.1,rvr_7:7.0,rvr_5:7.3,rvr_2:6.9,rvr_6:6.9,rvr_8:7.1,rvr_9:7.0,rvr_12:7.5,rvr_10:7.6,rvr_15:7.2,rvr_17:9.1,rvr_14:8.3};
-  function snapshot(min) {
-    const minutes=Number(min)===45?45:90, ht=minutes===45;
-    const attempts=shots.filter(s=>s.min<=minutes), groups=matchSide.map((_,side)=>attempts.filter(s=>s.side===side));
-    const score=groups.map(g=>g.filter(s=>s.scorer).length), xg=groups.map(g=>+(g.reduce((sum,s)=>sum+s.xg,0).toFixed(2)));
-    const notable=events.filter(s=>s.min<=minutes), ratings=ht?halftimeRatings:finalRatings;
-    const xi=ht?starting.xi:starting.xi.map(s=>s.player.id===knock.id?{...s,player:C.players[knock.sub]}:s);
-    const best=Object.keys(ratings).sort((a,b)=>ratings[b]-ratings[a])[0];
-    const stats=[['Shots',...groups.map(g=>g.length)],['On Target',...groups.map(g=>g.filter(s=>s.on).length)],['xG',...xg.map(n=>n.toFixed(2))],
-      ['Corners',...(ht?[3,1]:[6,3])],['Fouls',...(ht?[5,7]:[10,13])],['Yellow Cards',...matchSide.map((_,i)=>notable.filter(e=>e.side===i&&e.kind==='card').length)],
-      ['Passes completed',...(ht?['88%','74%']:['86%','76%'])],['Possession',...(ht?['62%','38%']:['60%','40%'])]];
-    return {minutes,score,xg,attempts,notable,stats,ratings,xi,best};
+  function plan(raw={}, at=H.start, injuries={}, legacy=[]){
+    const source=raw&&typeof raw==='object'?raw:{}, t=settings(source.tactics||{}), shape=slots(t.form), pool=avail(at,injuries), available=Object.fromEntries(pool.map(p=>[p.id,p]));
+    const assembled=Array(11).fill(null), chosen=new Set(), proposed=Array.isArray(source.xi)?source.xi:legacy.slice(0,11);
+    for(let i=0;i<11;i++) {const p=available[proposed[i]];if(fit(p,shape[i].role)&&!chosen.has(p.id)){assembled[i]=p.id;chosen.add(p.id);}}
+    const ideal=bestXI(pool,t.form);
+    for(let i=0;i<11;i++)if(!assembled[i]){
+      const p=[ideal[i]?.player,...pool.filter(q=>fit(q,shape[i].role)).sort((a,b)=>D.roleFit(b.pos,shape[i].role)-D.roleFit(a.pos,shape[i].role))].find(x=>fit(x,shape[i].role)&&!chosen.has(x.id));
+      if(p){assembled[i]=p.id;chosen.add(p.id);}
+    }
+    const bench=[...(Array.isArray(source.bench)?source.bench:legacy.slice(11)),...pool.map(p=>p.id)].filter(id=>{if(!Object.hasOwn(available,id)||chosen.has(id))return false;chosen.add(id);return true;}).slice(0,6);
+    const roles=shape.map((s,i)=>{const options=roleOptions[s.role];return (options.find(o=>o[0]===source.roles?.[i])||options[0])[0];});
+    const set=Object.fromEntries(takers.map(([key,,id])=>[key,byPlayer(source.set?.[key])?source.set[key]:id]));
+    const used=new Set(), nums=Object.fromEntries(C.roster.map(p=>{let n=source.numbers?.[p.id];if(!Number.isInteger(n)||n<1||n>99||used.has(n))n=numbers[p.id];while(used.has(n))n=n%99+1;used.add(n);return [p.id,n];}));
+    return {tactics:t,xi:assembled,bench,roles,set,numbers:nums};
   }
-
-  const leagueFixtures=[
-    ['12:30','oak','sby',[2,1],['T. Sinclair 19′, 66′','N. Duarte 75′']],
-    ['15:00','kgd','dun',[3,0],['C. Seong 14′, 59′ · I. Field 80′','']],
-    ['15:00','swl','ard',[1,1],['A. Larsen 32′','F. Bako 71′']],
-    [H.calendar(C.reportFixture.date).day.slice(4),C.reportFixture.opponent,home.id,C.reportFixture.score.slice().reverse(),['',C.matchReport.goals.map(([m,id])=>`${byPlayer(id).name} ${m}′`).join(' · ')]],
-    ['15:00','wst','val',[2,0],['J. Finch 12′ · M. Sato 54′','']],
-    ['17:30','hpt','lyd',[1,0],['Jonas Vidic 63′','']]
-  ];
-  const cupFixtures=[
-    ['19:45','kgd','crl',[1,0],['C. Seong 68′','']],
-    [H.calendar(fixture.date).day.slice(4),home.id,away.id,snapshot(90).score,['Fabio Novak 24′, 71′','Jonas Vidic 75′']],
-    ['19:45','nbu','wst',[2,0],['M. Lund 13′ · E. Hunt 64′','']],
-    ['19:45','oak','swl',[2,1],['T. Sinclair 12′ · C. Hardy 88′','A. Larsen 51′']]
-  ];
-  const tabs=[['calendar','Calendar'],['fixtures','Fixtures & Results'],['briefing','Briefing'],['lineups','Lineups'],['half','Half Time'],['touchline','In-play Tactics'],['full','Full Time'],['post','Post-match Inbox']];
-  const messages=[
-    {id:'player-of-match',time:'21:39',kind:'Match',from:'Sam Ellis',subject:'FW: Novak at the double as Riverside go through'},
-    {id:'report',time:'21:32',kind:'Match',from:'Sam Ellis',subject:'FW: League Cup · Riverside edge Harbourport'},
-    {id:'knock',time:'21:27',kind:'Injuries',from:C.namedStaff['Head Physio'],subject:`${byPlayer(knock.id).name} to be assessed`},
-    {id:'press',time:'21:21',kind:'Media',from:'Sam Ellis',subject:'Post-match press conference about to begin'},
-    {id:'risk',time:'09:53',kind:'Injuries',from:C.namedStaff['Head of Sports Science'],subject:'Riverside injury risk update'}
-  ];
-  const data={fixture,home,away,matchTitle,fixtureDay,firstDay,reviewDays,plan,day,byDate,time,dateForNextDay,iso,presets,formationOptions,roleNames,starting,opposition,sheet,knock,byPlayer,matchSide,snapshot,leagueFixtures,cupFixtures,tabs,messages};
-  global.TLMatchdayData=data;
-  if(typeof module!=='undefined'&&module.exports)module.exports=data;
+  function sheet(p, at=H.start, injuries={}) {
+    const make=id=>({...C.players[id],num:p.numbers[id]});
+    const active=avail(at,injuries).map(q=>q.id);
+    return {club:home.id,shape:p.tactics.form,xi:slots(p.tactics.form).map((s,i)=>({...s,player:p.xi[i]?make(p.xi[i]):null,job:roleOptions[s.role].find(r=>r[0]===p.roles[i])||roleNames[s.role]})).filter(s=>s.player),bench:p.bench.map(make),out:C.roster.filter(q=>!active.includes(q.id)).map(q=>make(q.id))};
+  }
+  function opponent(club) {
+    const shape=D.defaultTactics(club.style).formation, players=D.genSquad(club,D.seedFor(club.id)), used=new Set();
+    players.forEach(p=>{while(used.has(p.num))p.num=p.num%99+1;used.add(p.num);});
+    const {xi,bench}=D.bestXI(players,shape);
+    return {club:club.id,shape,xi:xi.map(s=>({...s,label:roleLabel(s,shape)})),bench:bench.slice(0,6)};
+  }
+  function edit(p,field,value,at,injuries={},numbersUnlocked=false){
+    let next={...p,tactics:{...p.tactics},xi:p.xi.slice(),bench:p.bench.slice(),roles:p.roles.slice(),set:{...p.set},numbers:{...p.numbers}};
+    const [key,data]=field.split(':');
+    if(key==='preset'&&presets[+value]){next.tactics=settings({preset:+value});next.xi=bestXI(avail(at,injuries),next.tactics.form).map(s=>s.player.id);next.roles=[];}
+    else if(key==='form'&&formationOptions.includes(value)){
+      if(value===p.tactics.form)return p;
+      next.tactics.form=value;next.xi=bestXI(p.xi.map(byPlayer).filter(Boolean),value).map(s=>s.player.id);next.roles=[];
+    }else if(Object.hasOwn(choices,key)&&choices[key].includes(value))next.tactics[key]=value;
+    else if(key==='pick'){
+      const ids=avail(at,injuries);next.xi=bestXI(ids,next.tactics.form).map(s=>s.player.id);next.bench=ids.filter(x=>!next.xi.includes(x.id)).slice(0,6).map(p=>p.id);
+    }else if(key==='xi'||key==='bench'){
+      const list=next[key], i=Number(data), p=byPlayer(value);
+      if(!Number.isInteger(i)||i<0||i>=list.length||!avail(at,injuries).some(q=>q.id===value))return null;
+      const orig=[...next.xi,...next.bench].indexOf(value), slot=key==='xi'?slots(next.tactics.form)[i]:null;
+      if(slot&&!fit(p,slot.role))return null;
+      if(orig>=0&&orig<11&&!fit(byPlayer(list[i]),slots(next.tactics.form)[orig].role))return null;
+      if(orig>=0) (orig<11?next.xi:next.bench)[orig<11?orig:orig-11]=list[i];
+      list[i]=value;
+    }else if(key==='role'){
+      const s=slots(p.tactics.form)[+data];if(!s||!roleOptions[s.role].some(r=>r[0]===value))return null;next.roles[+data]=value;
+    }else if(key==='set'&&takers.some(([k])=>k===data)&&byPlayer(value))next.set[data]=value;
+    else if(key==='number'&&numbersUnlocked&&byPlayer(data)){
+      const n=Number(value);if(!Number.isInteger(n)||n<1||n>99||Object.entries(next.numbers).some(([k,v])=>k!==data&&v===n))return null;next.numbers[data]=n;
+    }else return null;
+    return plan(next,at,injuries);
+  }
+  const engineTactics=t=>({formation:t.form,mentality:D.MENTALITIES.indexOf(t.mentality),passing:choices.passing.indexOf(t.passing),tempo:choices.tempo.indexOf(t.tempo),width:choices.width.indexOf(t.width),press:Math.min(2,choices.press.indexOf(t.press)),line:choices.line.indexOf(t.line),club:{build:t.build,lost:t.lost,won:t.won,gk:t.gk,target:t.target,delivery:t.delivery,block:t.block,duels:t.duels,corner:t.corner,free:t.free}});
+  const api={home,iso,choices,presets,roleNames,roleOptions,formationOptions,takers,roleLabel,byPlayer,bestXI,plan,sheet,opponent,edit,avail,engineTactics};
+  global.TLMatchdayData=api;if(node)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

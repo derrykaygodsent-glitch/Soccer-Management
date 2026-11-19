@@ -2,49 +2,43 @@
 
 **Classic 2D is the main game.** The approved fixed overhead pitch and match engine are the foundation. Make future changes in `touchline-26/`; `touchline-classic/` remains a copy of the approved motion review.
 
-## Riverside Clubhouse
+## Play the Riverside season (v0.8)
 
-Touchline opens on **Club Home**: your upcoming match, fixtures, standings, player leaders and budgets. The FM23-inspired club pages use the same fictional 2024/25 Riverside starter season. They run from the standalone HTML with no sign-in or network requirement.
+The game opens at **Club Home on 26 October 2024**. The clubhouse and Classic 2D now share one season. There is no matchday screen picker and no prewritten cup score.
 
-- **Inbox** has dated messages, per-message read state, Next Unread, match and form reports, an injury advisory, a press conference, a scouting report, and the News, Social Feed, Leagues in Focus and Around the World tabs.
-- **Schedule** links month-grouped fixtures, a calendar, available reports, past meetings, and reminders. **Squad** provides position and availability filters, player details, stats and a planning team sheet with Quick Pick.
-- **Scouting and Transfers** share recruitment focuses, player reports, a shortlist, transfer drafts, clauses and staff responsibilities.
-- **Club Info, Competitions and Club Vision** cover club details and kits, the standings and cups, and five seasons of board objectives with board and supporter feedback.
-- **Dynamics, Staff, Development Centre and Finances** cover the dressing room, staffing groups and responsibilities, youth and loans, and the club's budgets and financial reports.
+1. **Continue** or **Space** advances one calendar day. Click the header date to inspect the calendar without advancing. Scheduled matches, released results and the Premier Division table share the same club clock. At the start, Riverside’s completed Eastvale result is historical; the upcoming Harbourport tie is unplayed.
+2. **Inbox** holds the date only for items marked **Action required**. The opening week includes a training-load decision, a coaches’ meeting and a press decision. Reading or marking mail read is not the same as answering. **Next Unread** follows the Inbox order; optional updates do not hold the calendar.
+3. On **30 October**, after the required decisions, the header opens **Tactical Meeting**. The selection room lets you set the formation, roles, instructions, available XI and six-player bench, captaincy and restart takers. Competitive squad numbers are locked; the pre-season fixture lets you register free numbers. **Submit Team** confirms and freezes the team and brief for that fixture.
+4. Continue through the **Briefing**, official **Team News**, **Dressing Room** and **Match Preview**. Team talks can address the room, a unit or an individual; the reactions influence player composure in the engine. **Go to Pitch** opens the submitted fixture in Classic 2D, paused at **00:00**. Only **Kick off** starts it.
+5. **Tactics & subs** lets you change instructions or use the submitted bench after kickoff. A Riverside knock can pause play and open the squad desk. Live changes are match-only unless you confirm **Save tactics to club**; substitutions never rewrite the saved XI. At the interval you can review the numbers, make changes, give a talk and start the second half.
+6. **Full Time** shows the actual score, xG, events, shots, player statistics and closing shape. Tied League Cup matches are settled by a simulated shootout. After the final talk, the result is available in **Schedule**, the **Calendar Desk** and the **Inbox**, alongside the optional press reply and any medical update. Continue toward the next fixture rather than replaying the cup tie.
 
-Read state, selections, shortlists, reminders, requests and budget allocations are local to this browser when storage is available; the opaque workspace preview keeps them for the open session. This is a starter season, not a live career simulation: staff assignments and team sheets are planning tools, draft bids and board requests aren't sent, and old results have written reports rather than playable replays.
+Confirmed Riverside fixtures use the Classic engine, at home or away. Other clubs’ results are seeded and appear when the club clock passes their finish time. The league schedule runs to 38 matches per team, and League Cup qualification sets later rounds. Early archives, non-playable editorial snapshots, recruitment drafts and board requests remain part of the fictional starter club. Drafts do not sign players, spend money or create a playable match.
 
-**Continue** on Home opens the advertised Riverside FC v Harbourport Town League Cup fixture at **00:00**, waiting for manual kickoff. In the Inbox reader the header offers **Next Unread** while there are unread messages; go to Home or Schedule to enter the match directly. **Home** from the match holds the playhead while you are away; Continue returns to that same match. Match Setup and the touchline controls still manage the playable match. Match results do not advance the starter season.
+**Saving:** The date, decisions, club tactics, submitted team, talks and results are stored locally in the browser. A live reload restores a paused match from its checkpoint and accepted touchline actions. A late restore may take a few seconds. The file also runs with no network or sign-in. In a script-only viewer that blocks storage, progress lasts only in the open session; use the live preview or an ordinary browser window for a continuing save.
 
-### Matchday screen preview (v0.7)
+### Clubhouse reference views
 
-Open **Matchday** from Home or the sidebar. The cyan header button moves through the scripted example; the **screen picker** at the top jumps directly to any stage. **Play Classic 2D** opens the separate playable fixture at any point.
-
-| Reference screens | Where to find them |
+| View | Where to find it |
 | --- | --- |
-| Compact and expanded tactics, In Transition and other instructions | **Tactics** in the sidebar, then the layout switch or instruction tabs |
-| Full player information and technical, mental, physical and keeper attributes | Select a first-team player in **Squad**, **Tactics** or the Home leaders |
-| Social Feed and followable clubs, staff and outlets | **Inbox → Social Feed** |
-| Calendar progression, the day before the game, league results and cup fixtures | **Matchday → Calendar** or **Fixtures & Results** |
-| Injury/risk update and training schedule | **Medical Centre**, **Training**, or **Matchday → Post-match Inbox → Riverside injury risk update** |
-| Briefing feedback and both sides’ starting lineups | **Matchday → Briefing** or **Lineups** |
-| Half-time advice, xG, stats, team talk and in-play injury/substitution | **Matchday → Half Time** and **In-play Tactics** |
-| Full-time analysis, final team talk, news coverage and press conference | **Matchday → Full Time**, **Dressing room**, then **Post-match Inbox** |
-
-The cup score, injury incident, reactions and press coverage are **sample data**, not recorded match outcomes. Preview choices stay in the open session and do not write to the starter save or change the engine. `src/matchday-data.js` defines the illustrative dates, squads and match timeline; `club-matchday*.js` render the stages against it. Keep this data separate from `club-state.js` and the live `TLMatchView` until the screens are wired to a real season.
+| Club calendar, countdown, fixtures, partial results and standings | Click the header date → **Club calendar** or **Fixtures & Results** |
+| Compact and expanded tactics, possession and transition instructions | **Tactics** in the sidebar |
+| Attributes, availability and recorded player ratings | Select a player from **Home**, **Squad** or **Tactics** |
+| Team performance, press and current medical notices | **Inbox**, **Social Feed**, **Leagues in Focus**, **Medical Centre** |
+| Recruitment, staff responsibilities, budget and club planning | **Scouting**, **Transfers**, **Staff**, **Finances**, **Club Vision** |
 
 ## Watch a match
 
-In the match centre, choose **Highlights** beneath the pitch or in **Match setup**, then press **Kick off**. You can change the viewing mode mid-match without restarting. A passage already on screen plays out before the new setting takes over.
+In the match centre, choose **Highlights** beneath the pitch, then press **Kick off**. Season fixtures open in **Key** at **1×**; **Extended** is the exhibition default. You can change the viewing mode mid-match without restarting. A passage already on screen plays out before the new setting takes over.
 
 | Mode | Best for | Approx. viewing time at 1× | What you'll see |
 | --- | --- | ---: | --- |
 | **Full Match** | Tactical analysis | 90+ min | Continuous play: routine possession, off-ball movement, buildup and defending, as well as chances. |
 | **Comprehensive** | Important matches | 40–65 min | Everything in Extended, plus goal kicks, routine chances and more defensive recoveries. |
-| **Extended** (default) | Normal league matches | 30–50 min | Everything in Key, plus other free kicks, offsides, throw-ins and selected attacks. |
+| **Extended** | Normal league matches | 30–50 min | Everything in Key, plus other free kicks, offsides, throw-ins and selected attacks. |
 | **Key** | Quick season progression | 10–25 min | Goals, major chances, dangerous free kicks, corners, penalties, cards, woodwork and VAR. |
 
-**1× is real time** and is the default for each new fixture. The **Speed** menu offers **0.75×** to slow down, **1.25× / 1.5× / 1.75×** for smaller steps above normal, and **2× / 4×** for faster viewing. The same rate applies to continuous play, highlight clips and goal replays. The keyboard shortcuts **1**, **2** and **3** still select **1×**, **2×** and **4×**. For a shorter watch at normal speed, use **Key at 1×**. Automatic goal replays can be turned off in Match setup.
+**1× is real time** and is the default for each new fixture. The **Speed** menu offers **0.75×** to slow down, **1.25× / 1.5× / 1.75×** for smaller steps above normal, and **2× / 4×** for faster viewing. The same rate applies to continuous play, highlight clips and goal replays. The keyboard shortcuts **1**, **2** and **3** still select **1×**, **2×** and **4×**. For a shorter watch at normal speed, use **Key at 1×**. Season goal replays are available with **Replay** when footage exists.
 
 Highlight modes save time by cutting between passages. The times above are rough guides from seeded fixtures, not limits; they exclude pauses and replays. All modes still simulate 90 in-game minutes plus stoppage time. The engine plays every tick and records all events and stats. With the same seed and instructions at the same match times, the four modes produce identical results.
 
@@ -66,7 +60,7 @@ The **referee** is the dark square marked **R**. Watch the directional arm, the 
 
 ## How players choose
 
-In v0.4.5, the ball carrier reads the play before committing. An onside run can open a through ball, but a defender closing in can make a short pass back the better option. A clean reception can lead to a quick pass or strike; a closed body position can cost an extra touch. Out wide, a cross competes with cutting inside, carrying on and recycling. A pause can buy a better angle or give the defender time to win it back.
+The ball carrier reads the play before committing. An onside run can open a through ball, but a defender closing in can make a short pass back the better option. A clean reception can lead to a quick pass or strike; a closed body position can cost an extra touch. Out wide, a cross competes with cutting inside, carrying on and recycling. A pause can buy a better angle or give the defender time to win it back.
 
 Role, attributes, individual tendencies, fatigue, tactics and the score affect those choices. The seed breaks close calls between credible options; it does not select a prewritten attack. This changes the football a seed produces compared with older builds, not the ability to reproduce a fixture within this build. Classic 2D remains the fixed overhead view.
 
@@ -74,7 +68,7 @@ Role, attributes, individual tendencies, fatigue, tactics and the score affect t
 
 Open `index.html` offline, or run `npm run preview` with Node.js 20+. The preview builds from `src/` and serves on port `4173` (`PORT` overrides it). No installs or accounts are required. Edit `src/`, then run `npm run build` to regenerate the HTML.
 
-- `npm test` checks the standalone build, shared club data, starter-save actions, seeded play, referee tracking, throw-in physics and choosing an outlet, wall and penalty positions at actual release, the discipline sequence, second touches, offside involvement and VAR confirmations and reversals. Highlight tests cover bounded search, exact event and whistle stops, playback-rate mapping and deterministic play with matching tactics and substitutions.
+- `npm test` checks the standalone build, calendar gates, released standings, submitted lineups, deterministic checkpoint replay, match statistics, result idempotency and shootouts. Engine and broadcast tests also check restarts, offside, VAR, highlight boundaries, timing and seeded play.
 - `npm run test:sim -- 3` runs three complete seeded fixtures.
 
 ## Pinned checkpoints

@@ -2,6 +2,7 @@
 (function (global) {
   'use strict';
   const U=global.TLClubUI, {H,C,views,esc,icon,btn,link,card,empty,tag,values,tr,table,avatar,clubName,standings,form,meter,lookup,score,num,tabs}=U;
+  const K=global.TLSeasonCalendar,S=global.TLSeasonState;
   const home=H.clubs[H.homeId], ground=C.club.ground;
   const player = (id) => btn(C.players[id].name,'player',id,{kind:'text'});
   const head = label => `<h2 class="cc-title">${esc(label)}</h2>`;
@@ -42,35 +43,36 @@
       if(c.r.tab==='history')return history(c);
       if(c.r.tab==='news')return U.clubNews(c,true);
       if(c.r.tab==='affiliates')return card('Affiliated clubs',table('Club partnerships',['Club','Agreement','Focus'],[['mer','Development partnership','Senior minutes for academy players'],['brk','Loan partnership','Competitive loan placements']].map(([id,agreement,copy])=>tr([clubName(c,id),agreement,copy])),'affiliates')+`<div class="cc-actions">${link('development','Loan report','loans')}</div>`);
-      return `<div class="cc-grid2">${card('Riverside FC',`${values([['Chairperson',C.club.chair],['Manager',H.manager],['Professional status',C.club.status],['Financial status','Strong'],['Club captain',C.players[C.leaders.captain].name],['Stadium',home.stadium]])}${rivalries(c)}`)}${card('First-team record',standings(c,H.division,H.standings.slice(0,5),'club-standings')+`<div class="cc-actions">${link('schedule','Fixtures','fixtures')}${link('competitions','League table','competitions','PD')}</div>`)}</div>`;
+      return `<div class="cc-grid2">${card('Riverside FC',`${values([['Chairperson',C.club.chair],['Manager',H.manager],['Professional status',C.club.status],['Financial status','Strong'],['Club captain',C.players[c.season.value.plan.set.captain].name],['Stadium',home.stadium]])}${rivalries(c)}`)}${card('First-team record',standings(c,H.division,c.standings().slice(0,5),'club-standings')+`<div class="cc-actions">${link('schedule','Fixtures','fixtures')}${link('competitions','League table','competitions','PD')}</div>`)}</div>`;
     },
     action(c,cmd,id){
       if(cmd==='kit'&&C.kits[+id])c.show(`${C.kits[+id][0]} kit · Riverside FC`,`<div class="cc-kit-preview">${kit(+id,'cc-kit-large')}</div>`);
       else if(cmd==='rival'){
         const club=H.clubs[id]; if(!club)return;
-        c.show(club.name,`<div class="cc-rival-crest">${c.crest(id)}</div>${values([['Home ground',club.stadium||`${club.name} Ground`],['Division',H.division],['Rivalry',C.club.rivals.find(x=>x[1].includes(id))?.[0]||'Local rival']])}${H.fixtures.filter(f=>f.opponent===id).map(f=>link('schedule',`${H.calendar(f.date).date} · ${H.fixtureCompetition(f)}`,'fixtures',f.id)).join('')}`);
+        c.show(club.name,`<div class="cc-rival-crest">${c.crest(id)}</div>${values([['Home ground',club.stadium||`${club.name} Ground`],['Division',H.division],['Rivalry',C.club.rivals.find(x=>x[1].includes(id))?.[0]||'Local rival']])}${c.fixtures().filter(f=>f.opponent===id).map(f=>link('schedule',`${H.calendar(f.date).date} · ${H.fixtureCompetition(f)}`,'fixtures',f.id)).join('')}`);
       } else U.inboxActions(c,cmd,id);
     }
   };
 
-  function positionChart(){
-    const points=H.positionHistory.map((n,i)=>`${3+i*8.75},${2+n*3}`).join(' ');
-    return `<svg class="cc-position-chart" viewBox="0 0 164 37" preserveAspectRatio="none" role="img" aria-label="Premier Division position history: now first"><path d="${Array.from({length:33},(_,i)=>`M${2+i*5} 2v32`).join('')} M2 34h160" fill="none" stroke="#74798d" stroke-width=".5"/><polyline points="${points}" fill="none" stroke="#95a6ed" stroke-width="1.3"/></svg>`;
+  function positionChart(c){
+    const history=K.positions(c.season.value), points=history.map((n,i)=>`${3+i*157/Math.max(19,history.length-1)},${2+n*1.55}`).join(' ');
+    return `<svg class="cc-position-chart" viewBox="0 0 164 37" preserveAspectRatio="none" role="img" aria-label="Premier Division position history: currently ${H.ordinal(history.at(-1))}"><path d="${Array.from({length:33},(_,i)=>`M${2+i*5} 2v32`).join('')} M2 34h160" fill="none" stroke="#74798d" stroke-width=".5"/><polyline points="${points}" fill="none" stroke="#95a6ed" stroke-width="1.3"/></svg>`;
   }
   const trophy = () => `<svg viewBox="0 0 96 100" class="cc-trophy" role="img" aria-label="Community Shield trophy"><defs><radialGradient id="cc-silver" cx=".38" cy=".28"><stop stop-color="#fff"/><stop offset=".55" stop-color="#c6c8d2"/><stop offset=".8" stop-color="#7d879b"/><stop offset="1" stop-color="#d7dde4"/></radialGradient></defs><circle cx="48" cy="44" r="37" fill="url(#cc-silver)" stroke="#a0a7b3" stroke-width="2"/><circle cx="48" cy="44" r="32" fill="none" stroke="#eef1f7" stroke-width="1.2"/><circle cx="48" cy="44" r="23" fill="#7c86a0" stroke="#fafaff" stroke-width="1.2"/><path d="M48 28 58 32v13c0 8-6 12-10 16-5-4-10-8-10-16V32Z" fill="#e1e4ea"/><circle cx="48" cy="43" r="3.5" fill="#34466b"/><path d="M39 79h18l8 12H31Z" fill="#777f8b"/><path d="M22 91h52v6H22Z" fill="#ced4de"/></svg>`;
   function compFixtures(c,comp){
     if(comp.id==='NC')return `<div class="cc-competition-pairs">${[['mer','dun'],['val','sby'],['elm','red'],['brk','ash']].map(([a,b])=>`<div><span>${esc(H.clubs[a].name)}</span><small>v</small><span>${esc(H.clubs[b].name)}</span></div>`).join('')}</div>`;
-    return `<div class="cc-competition-pairs">${H.fixtures.filter(f=>f.comp===comp.id).map(f=>`<button type="button" data-c-do="fixture" data-c-val="${f.id}"><span>${esc(H.clubs[f.venue==='A'?f.opponent:H.homeId].name)}</span><b>${f.score?f.score.join(' – '):'v'}</b><span>${esc(H.clubs[f.venue==='A'?H.homeId:f.opponent].name)}</span></button>`).join('')}</div>`;
+    return `<div class="cc-competition-pairs">${c.fixtures().filter(f=>f.comp===comp.id).map(f=>`<button type="button" data-c-do="fixture" data-c-val="${f.id}"><span>${esc(H.clubs[f.venue==='A'?f.opponent:H.homeId].name)}</span><b>${f.score?f.score.join(' – '):'v'}</b><span>${esc(H.clubs[f.venue==='A'?H.homeId:f.opponent].name)}</span></button>`).join('')}</div>`;
   }
   function compCard(c,comp){
     const {id,name,tone} = comp;
+    const top=Object.values(S.playerStats(c.season.value)).sort((a,b)=>b.goals-a.goals||b.rating-a.rating)[0];
     const win=H.fixtures.find(f=>f.comp==='CS');
     let body;
-    if(id==='PD')body=`<div class="cc-comp-form"><div><p class="cc-eyebrow">Recent form</p>${form(H.form.slice(-5))}</div><div><p class="cc-eyebrow">League positions</p>${positionChart()}</div></div>${standings(c,H.division,H.standings,'premier',true)}<div class="cc-comp-scorer"><p class="cc-eyebrow">Top goalscorer for Riverside</p><div class="cc-person">${avatar(c,C.players[C.leaders.forward].name,C.leaders.forward)}<div>${player(C.leaders.forward)}<small>${C.players[C.leaders.forward].goals} goals in all competitions</small></div></div></div>`;
-    else if(id==='CC')body=`<h3 class="cc-comp-phase">League Phase</h3>${standings(c,name,C.continental,'continental',true)}`;
+    if(id==='PD')body=`<div class="cc-comp-form"><div><p class="cc-eyebrow">Recent form</p>${form(c.fixtures().filter(f=>f.comp==='PD'&&f.score).slice(-5))}</div><div><p class="cc-eyebrow">League positions</p>${positionChart(c)}</div></div>${standings(c,H.division,c.standings(),'premier',true)}<div class="cc-comp-scorer"><p class="cc-eyebrow">Top goalscorer for Riverside</p><div class="cc-person">${avatar(c,top.name,top.id)}<div>${player(top.id)}<small>${top.goals} goals in all competitions</small></div></div></div>`;
+    else if(id==='CC')body=`<h3 class="cc-comp-phase">League Phase</h3>${standings(c,name,K.continentalStandings(c.season.value,C.continental),'continental',true)}`;
     else if(id==='CS')body=`<div class="cc-trophy-block"><p>Competition finished on ${H.shortDate(win.date)}/2024</p>${trophy()}<strong>Winner</strong><small>Riverside FC · ${win.score.join('–')} v ${esc(H.clubs[win.opponent].name)}</small></div>`;
     else body=`<h3 class="cc-comp-phase">${id==='LC'?'Riverside fixtures':'First Round draw'}</h3>${compFixtures(c,comp)}`;
-    const actions=`<div class="cc-actions">${btn('Team stats','comp-team',id,{kind:'outline',arrow:true})}${btn('Player stats','comp-players',id,{kind:'outline',arrow:true})}${btn('Rules','comp-rules',id,{kind:'outline',arrow:true})}${id==='PD'||id==='LC'?link('matchday',id==='PD'?'Daily results':'Matchday fixtures','fixtures',id==='PD'?'league':'cup'):''}</div>`;
+    const actions=`<div class="cc-actions">${btn('Team stats','comp-team',id,{kind:'outline',arrow:true})}${btn('Player stats','comp-players',id,{kind:'outline',arrow:true})}${btn('Rules','comp-rules',id,{kind:'outline',arrow:true})}${id==='PD'||id==='LC'?link('day','Fixtures & results','fixtures'):''}</div>`;
     return `<section class="cc-comp-card${c.r.id===id?' cc-comp-active':''}" data-comp="${id}"><h2 class="cc-comp-banner cc-comp-${tone}">${pitchCrest(tone)}${esc(name)}</h2><div class="cc-comp-expect"><div><p class="cc-eyebrow">Board expectation</p><strong>${esc(comp.aim)}</strong></div><div><p class="cc-eyebrow">Performance</p>${meter(comp.progress,`${name} performance`)}</div></div>${body}${actions}</section>`;
   }
   views.competitions={
@@ -79,12 +81,12 @@
     after(c){if(c.r.id && c.r.id!=='PD')document.querySelector(`[data-comp="${C.comps.find(x=>x.id===c.r.id)?.id}"]`)?.scrollIntoView({block:'nearest'});},
     action(c,cmd,id){
       const comp=lookup(C.comps,id);if(!comp)return;
-      const matches=H.fixtures.filter(f=>f.comp===id), results=matches.filter(f=>f.score);
-      if(cmd==='comp-team') c.show(`${comp.name} · Team stats`,id==='PD'||id==='CC'?standings(c,comp.name,id==='PD'?H.standings:C.continental,'comp-modal',true):`${values([['Matches',results.length],['Wins',results.filter(x=>U.result(x.score)==='W').length],['Goals for',results.reduce((a,x)=>a+x.score[0],0)],['Goals against',results.reduce((a,x)=>a+x.score[1],0)]])}${compFixtures(c,comp)}`);
-      if(cmd==='comp-players') c.show(`${comp.name} · Player stats`,`<p>Career totals for Riverside's competitive fixtures. This starter save does not track a full player breakdown per competition.</p>${table('Season leaders',['Category','Player','Value'],H.leaders.map(r=>tr([esc(r.label),player(r.player.id),esc(r.value)])),'comp-players')}${link('squad','Full player statistics','stats')}`);
+      const matches=c.fixtures().filter(f=>f.comp===id), results=matches.filter(f=>f.score);
+      if(cmd==='comp-team') c.show(`${comp.name} · Team stats`,id==='PD'||id==='CC'?standings(c,comp.name,id==='PD'?c.standings():K.continentalStandings(c.season.value,C.continental),'comp-modal',true):`${values([['Matches',results.length],['Wins',results.filter(x=>U.result(x.pen||x.score)==='W').length],['Goals for',results.reduce((a,x)=>a+x.score[0],0)],['Goals against',results.reduce((a,x)=>a+x.score[1],0)]])}${compFixtures(c,comp)}`);
+      if(cmd==='comp-players') c.show(`${comp.name} · Player stats`,`<p>Riverside’s leaders across all competitive fixtures. See each match report for its individual player statistics.</p>${table('Season leaders',['Category','Player','Value'],S.leaders(c.season.value).map(r=>tr([esc(r.label),player(r.player.id),esc(r.value)])),'comp-players')}${link('squad','Full player statistics','stats')}`);
       if(cmd==='comp-rules'){
-        const text={PD:'Three points for a win and one for a draw. Teams are ranked by points, then goal difference and goals scored.',CC:'League Phase fixtures contribute to the standings. This starter snapshot shows the leading clubs after three matches.',NC:'A straight knockout competition. Riverside’s entry is not yet on this fixture list.',LC:'A knockout cup. Riverside are scheduled to face Harbourport Town in the Fourth Round.',CS:'A single-match season opener. The starter season records Riverside as the winner.'}[id];
-        c.show(`${comp.name} · Rules`,`<p>${esc(text)}</p><p>Only the advertised League Cup fixture opens the playable match centre in this starter season.</p>${id==='LC'?link('schedule','Go to the next fixture','fixtures',H.next.id):''}`);
+        const text={PD:'Three points for a win and one for a draw. Teams are ranked by points, then goal difference and goals scored.',CC:'Results from the scheduled League Phase fixtures are added to the opening standings.',NC:'A straight knockout competition. Riverside’s entry is not yet on this fixture list.',LC:'Single-match knockout ties. A draw after 90 minutes is settled by a penalty shootout.',CS:'A single-match season opener. The starter season records Riverside as the winner.'}[id];
+        c.show(`${comp.name} · Rules`,`<p>${esc(text)}</p><p>Riverside’s confirmed matches are playable only on their fixture date.</p>${id==='LC'?link('day','Fixtures & results','fixtures'):''}`);
       }
     }
   };
