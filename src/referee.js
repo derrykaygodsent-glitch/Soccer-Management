@@ -1,4 +1,4 @@
-/* Touchline 26 — on-field referee movement and signals; never draws a random number. */
+/* Touchline 26: on-field referee movement and signals; never draws a random number. */
 (function (global) {
   'use strict';
   const { L, W, CX, CY, PEN } = typeof window === 'undefined' ? require('./pitch.js') : global.TLPitch;

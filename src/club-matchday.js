@@ -32,7 +32,8 @@
     }
     function showLive(interval=false,resume=false){
       const c=ctx();screens('live');global.scrollTo(0,0);
-      document.title=`Touchline 26 — ${interval?'Half-time instructions':'Classic 2D'}`;
+      {const flash=document.createElement('i');flash.className='mo-flash';live.appendChild(flash);setTimeout(()=>flash.remove(),1300);}
+      document.title=`Touchline 26: ${interval?'Half-time instructions':'Classic 2D'}`;
       view().openClub(liveOpts(c),()=>{
         if(resume)view().startSecondHalf();
         else if(interval)view().intervalDesk(()=>render(false));
@@ -61,7 +62,7 @@
       $('seasonMatchBack').setAttribute('aria-label',stage==='meeting'?'Back to clubhouse':'Back to tactical meeting');
       const advance=$('seasonMatchAdvance');advance.querySelector('span').textContent=label;
       advance.disabled=stage==='selection'&&c.s.plan.xi.filter(Boolean).length!==11;
-      document.title=`Touchline 26 — ${title}`;
+      document.title=`Touchline 26: ${title}`;
       const html=({meeting:P.advice,selection:P.picker,briefing:P.briefing,news:P.teamNews,preTalk:c=>R.room(c,'pre'),preview:P.preview,half:c=>R.report(c,c.a.half,false),halfTalk:c=>R.room(c,'half'),full:c=>R.report(c,c.s.results[c.a.id],true),fullTalk:c=>R.room(c,'full')})[stage](c);
       body.innerHTML=html;
       if(reset&&moved&&!global.matchMedia('(prefers-reduced-motion: reduce)').matches)body.animate([{opacity:.74,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'cubic-bezier(.2,.7,.25,1)'});

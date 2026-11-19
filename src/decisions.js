@@ -1,4 +1,4 @@
-/* Touchline 26 — read the situation, then choose among sound football options. */
+/* Touchline 26: read the situation, then choose among sound football options. */
 (function (global) {
   'use strict';
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));

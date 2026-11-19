@@ -1,4 +1,4 @@
-/* Touchline 26 — playback rate and on-screen restart context. */
+/* Touchline 26: playback rate and on-screen restart context. */
 (function (global) {
   'use strict';
   const NORMAL_SPEED = 1;

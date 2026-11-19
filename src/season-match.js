@@ -7,7 +7,7 @@
   const eventTime=ev=>ev.t>2700?`${ev.half===1?45:90}+${Math.max(1,Math.floor((ev.t-2700-1e-4)/60)+1)}′`:`${ev.minute}′`;
   const teamStats=(stats,poss)=>{
     const pc=poss[0]+poss[1]?Math.round(100*poss[0]/(poss[0]+poss[1])):50;
-    const map=k=>stats.map(s=>s[k]??0), pass=stats.map(s=>s.passes?`${Math.round(100*s.passWon/s.passes)}%`:'—');
+    const map=k=>stats.map(s=>s[k]??0), pass=stats.map(s=>s.passes?`${Math.round(100*s.passWon/s.passes)}%`:'n/a');
     return [['Possession',`${pc}%`,`${100-pc}%`],['Shots',...map('shots')],['On target',...map('onTarget')],['Expected goals',...map('xG').map(x=>x.toFixed(2))],['Passes completed',...map('passWon')],['Pass accuracy',...pass],['Corners',...map('corners')],['Fouls',...map('fouls')],['Yellow cards',...map('yellow')],['Red cards',...map('red')],['Saves',...map('saves')]];
   };
   function analyst(report,side){
