@@ -8,7 +8,7 @@
   const text=(id,value)=>{$(id).textContent=value;};
   const state={drawer:false,note:'',target:null,last:null,homeSnapshot:null};
   let desk,season,match,processor;
-  const NOTE_KEY='touchline26.clubhouse.notebook', PAUSE_KEY='touchline26.calendar-pause.v1';
+  const NOTE_KEY='touchline26.2026.clubhouse.notebook', PAUSE_KEY='touchline26.2026.calendar-pause.v1';
   const nav=[
     ['Clubhouse',[['Home','home','home'],['Inbox','mail','inbox'],['Social Feed','social','social']]],
     ['First Team',[['Squad','i-shirt','squad'],['Squad Planner','plan','planner'],['Tactics','tactics','tactics'],['Dynamics','team','dynamics'],['Training','cone','training'],['Medical Centre','medical','medical']]],
@@ -66,7 +66,7 @@
 
   function navigation(){
     $('homeNav').innerHTML=nav.map(([group,rows])=>`<div class="hc-nav-group"><p>${group}</p>${rows.map(([label,glyph,id])=>`<button class="hc-nav-button" type="button" data-hc-open="${id}"${id==='home'?' aria-current="page"':''}>${icon(glyph)}<span>${label}</span>${id==='inbox'?'<small class="hc-inbox-badge" id="homeUnread" hidden></small>':''}</button>`).join('')}</div>`).join('');
-    $('homeHeaderCrest').innerHTML=crest(M.homeId);
+    $('homeHeaderCrest').textContent='◇';
     homeTabs();
   }
   function homeTabs(){
@@ -95,7 +95,7 @@
       profile:datum('Manager',M.manager)+datum('Current club',M.clubs[M.homeId].name)+datum('Role','First-team manager')+datum('Club date',M.calendar(season.value.now).date),
       search:'<label for="homeSearchInput">Find a page in the clubhouse</label><input class="hc-search-field" type="search" id="homeSearchInput" autocomplete="off" placeholder="Try fixtures, scouting or finances"><div id="homeSearchResults"></div>',
       notebook:'<p>Keep notes about the club. They stay on this device when local storage is available.</p><label class="hc-sr" for="homeNotes">Club notes</label><textarea class="hc-notebook" id="homeNotes" maxlength="16000" placeholder="Write a note…"></textarea>',
-      help:`<p>Manage Riverside through the fictional 2024/25 season.</p><ul class="hc-details-list"><li><b>Continue</b> or <kbd>Space</kbd> starts automatic calendar processing. <b>Stop processing</b>, <kbd>Space</kbd> or <kbd>Esc</kbd> stops at the saved date.</li><li>The clock pauses for mandatory Inbox decisions and Riverside matchday. Select a future date in Calendar Desk to add an optional one-time stop.</li><li>Opening a message does not answer it. While reading the Inbox, <b>Next Unread</b> opens the next message without advancing the calendar.</li><li>On matchday open the tactical meeting, submit the team, and brief your players. Kick off manually from the pitch.</li><li>Live changes are match-only unless saved. The final whistle records the real result. Saves stay in this browser where local storage is allowed.</li></ul>`
+      help:`<p>Manage Riverside through the fictional 2026/27 season.</p><ul class="hc-details-list"><li><b>Continue</b> or <kbd>Space</kbd> starts automatic calendar processing. <b>Stop processing</b>, <kbd>Space</kbd> or <kbd>Esc</kbd> stops at the saved date.</li><li>The clock pauses for mandatory Inbox decisions and Riverside matchday. Select a future date in Calendar Desk to add an optional one-time stop.</li><li>Opening a message does not answer it. While reading the Inbox, <b>Next Unread</b> opens the next message without advancing the calendar.</li><li>On matchday open the tactical meeting, submit the team, and brief your players. Kick off manually from the pitch.</li><li>Live changes are match-only unless saved. The final whistle records the real result. Saves stay in this browser where local storage is allowed.</li></ul>`
     };
     showPanel(modalTitles[id],body[id]);
     if(id==='search'){search();$('homeSearchInput').focus();}
@@ -192,47 +192,7 @@
     if(cmd==='day')return processor.start();
   }
   function init(){
-    try{state.note=global.localStorage.getItem(NOTE_KEY)||'';}catch{}
-    const root=$('homeScreen');
-    desk=global.TLClubDesk.create({root,content:$('clubPage'),tabs:$('homeTabs'),dialog:$('homeDialog'),crest,
-      portrait:id=>portraitImages[M.portraitFor[id]],showPanel,onPage,onState:syncClub,scrollHome:()=>$('homeMain').scrollTop=0,
-      calendar:()=>({target:state.target,last:state.last,setPause})});
-    season=desk.season;
-    try{const saved=Number(global.localStorage.getItem(PAUSE_KEY));if(saved&& !setPause(saved))setPause(null);}catch{}
-    processor=P.create({store:season,pauseAt:()=>state.target,onFrame:drawProgress,onStop:finishProgress});
-    match=global.TLClubMatch.create({store:season,crest,portrait:id=>portraitImages[M.portraitFor[id]],onReturn:why=>{dayDesk();if(why==='result')desk.note('Result recorded. The match report is in your Inbox.');}});
-    navigation();root.dataset.page='home';syncClub();
-    if(season.value.session)match.open();
-    root.addEventListener('click',e=>{
-      const b=e.target.closest('button');if(!b||b.disabled)return;
-      if(b.id==='homeContinue'||b.hasAttribute('data-hc-progress'))progress();
-      else if(b.id==='homeStop')processor.stop();
-      else if(b.hasAttribute('data-hc-run')&&!$('homeDialog').open&&!root.hidden)processor.start();
-      else if(b.id==='homeCalendarLink')dayDesk(false);
-      else if(b.id==='homeBack')desk.step(-1);
-      else if(b.id==='homeForward')desk.step(1);
-      else if(b.id==='homeDialogClose')$('homeDialog').close();
-      else if(b.id==='homeMenu')toggleDrawer(!state.drawer,true);
-      else if(b.id==='homeScrim')toggleDrawer(false,true);
-      else if(b.hasAttribute('data-hc-open'))openPanel(b.dataset.hcOpen);
-      else if(b.hasAttribute('data-hc-mail'))desk.message(b.dataset.hcMail);
-      else if(b.hasAttribute('data-hc-fixture'))desk.go('schedule','fixtures',b.dataset.hcFixture);
-      else if(b.hasAttribute('data-hc-collapse')){const el=$(b.dataset.hcCollapse);el.hidden=!el.hidden;b.setAttribute('aria-expanded',String(!el.hidden));}
-    });
-    root.addEventListener('input',e=>{
-      if(e.target.id==='homeSearchInput')search();
-      if(e.target.id==='homeNotes'){state.note=e.target.value;try{global.localStorage.setItem(NOTE_KEY,state.note);}catch{}}
-    });
-    document.addEventListener('keydown',e=>{
-      if(root.hidden||$('homeDialog').open)return;
-      if(e.key==='Escape'&&processor.running){e.preventDefault();return processor.stop();}
-      if(e.key==='Escape'&&state.drawer)return toggleDrawer(false,true);
-      if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'&&!processor.running){e.preventDefault();return openPanel('search');}
-      if(e.code==='Space'&&!state.drawer&&!e.repeat&&!e.altKey&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.target.closest?.('input, select, textarea, summary, [contenteditable], button:not(#homeContinue), a')){
-        e.preventDefault();progress();
-      }
-    });
-    global.matchMedia('(max-width:980px)').addEventListener?.('change',()=>toggleDrawer(false));
+    global.TLManagerDesk.install({navigation,toggleDrawer});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })(window);

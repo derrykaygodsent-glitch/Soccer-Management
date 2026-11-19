@@ -23,7 +23,7 @@
   const roleLabel=(s,form)=>{const side=s.y<.5?'L':'R';return ({GK:'GK',FB:`D${side}`,DC:s.y===.5?'DC':`DC${side}`,WB:`WB${side}`,DM:form==='4-2-3-1'?`DM${side}`:'DM',CM:s.y===.5?'MC':`MC${side}`,AM:'AMC',W:form==='4-4-2'?`M${side}`:`AM${side}`,ST:s.y===.5?'ST':`ST${side}`})[s.role];};
   const slots=form=>[{role:'GK',x:.035,y:.5},...D.FORMATIONS[form]].map(s=>({...s,label:roleLabel(s,form)}));
   const fit=(p,role)=>typeof p?.id==='string'&&(p.pos==='GK')===(role==='GK');
-  const avail=(at,injuries={})=>C.roster.filter(p=>(p.injury?.status!=='Out'||iso(at)>='2024-11-04')&&!(injuries[p.id]>at));
+  const avail=(at,injuries={})=>C.roster.filter(p=>(p.injury?.status!=='Out'||iso(at)>='2026-11-04')&&!(injuries[p.id]>at));
   // Reserve natural positions across the whole shape instead of greedily spending
   // the best striker on a wing before the forward slots have been considered.
   function bestXI(players,form){

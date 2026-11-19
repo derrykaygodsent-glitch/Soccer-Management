@@ -14,7 +14,7 @@ test('Home, Schedule and the historical report share one dated fixture list and 
   assert.ok(H.fixtures.every((f,i)=>!!H.clubs[f.opponent]&&(!i||f.date>H.fixtures[i-1].date)));
   assert.ok(H.homeFixtures.includes(H.next));
   assert.ok(H.homeFixtures.includes(C.reportFixture));
-  assert.equal(H.next.id,'2024-10-30-hpt');
+  assert.equal(H.next.id,'2026-10-30-hpt');
   assert.equal(H.fixtureCompetition(H.next),H.matchConfig().competition);
   const record=H.standings.find(r=>r.id===H.homeId);
   const played=H.fixtures.filter(f=>f.comp==='PD'&&f.score);
@@ -107,13 +107,13 @@ test('planning changes validate known identifiers and preserve the cup fixture',
   s=S.reduce(s,'focus-put',{...focus,priority:'Low'});assert.equal(s.focus[0].priority,'Low');
   s=S.reduce(s,'focus-delete',focus.id);assert.deepEqual(s.focus,[]);
   const friendly=(date)=>({id:`friendly-${date}-nbu`,date,opponent:'nbu',venue:'A'});
-  assert.equal(S.reduce(s,'friendly',friendly('2024-10-30')),s);
-  assert.equal(S.reduce(s,'friendly',friendly('2024-11-02')),s);
-  assert.equal(S.reduce(s,'friendly',friendly('2024-12-07')),s);
-  const draft=friendly('2024-12-08'); s=S.reduce(s,'friendly',draft);
+  assert.equal(S.reduce(s,'friendly',friendly('2026-10-30')),s);
+  assert.equal(S.reduce(s,'friendly',friendly('2026-11-02')),s);
+  assert.equal(S.reduce(s,'friendly',friendly('2026-12-07')),s);
+  const draft=friendly('2026-12-08'); s=S.reduce(s,'friendly',draft);
   assert.deepEqual(s.friendlies,[draft]); assert.equal(S.reduce(s,'friendly',draft),s);
   assert.deepEqual(S.reduce(s,'friendly-delete',draft.id).friendlies,[]);
-  assert.equal(H.next.id,'2024-10-30-hpt');
+  assert.equal(H.next.id,'2026-10-30-hpt');
 });
 
 test('every enabled clubhouse destination and tab renders in the offline bundle',()=>{

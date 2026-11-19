@@ -112,7 +112,7 @@ test('selection uses available players, natural slots and unique, registered num
   const form=M.edit(base,'form','4-2-3-1',H.start), {xi}=M.sheet(form);
   assert.ok(xi.some(s=>s.role==='ST'&&s.player.id===C.leaders.forward));
   assert.equal(M.edit(base,'number:rvr_0',72,H.start),null);
-  const camp=K.date('2025-07-26',15), from=M.plan(base,camp);
+  const camp=K.date('2027-07-26',15), from=M.plan(base,camp);
   const edit=M.edit(from,'number:rvr_0','72',camp,{},true);
   assert.equal(edit.numbers.rvr_0,72);
   assert.equal(M.edit(edit,'number:rvr_3','72',camp,{},true),null);
@@ -203,10 +203,10 @@ test('actual whistles, journal replay, result archive, medical and next game are
   }
   store=S.open(disk);assert.equal(store.value.session.stage,'full');assert.deepEqual(store.value.results[f.id].goals,ft.goals);
   assert.ok(store.move('full','fullTalk'));assert.ok(store.close());assert.ok(!store.close());
-  assert.equal(K.next(store.value).id,'2024-11-02-swl');assert.equal(K.due(store.value),null);
-  assert.ok(store.advance());assert.equal(K.iso(store.value.now),'2024-10-31');
+  assert.equal(K.next(store.value).id,'2026-11-02-swl');assert.equal(K.due(store.value),null);
+  assert.ok(store.advance());assert.equal(K.iso(store.value.now),'2026-10-31');
   assert.ok(store.advance());assert.ok(store.advance());assert.ok(store.enter());
-  assert.equal(store.fixture().id,'2024-11-02-swl');assert.deepEqual(Object.keys(store.value.results),[f.id]);
+  assert.equal(store.fixture().id,'2026-11-02-swl');assert.deepEqual(Object.keys(store.value.results),[f.id]);
   assert.deepEqual(C.reportFixture.score,[4,0]);assert.equal(H.next.score,null);
 });
 

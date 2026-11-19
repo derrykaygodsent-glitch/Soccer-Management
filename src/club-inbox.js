@@ -41,7 +41,7 @@
     const recent=H.form.slice().reverse(), row=H.standings.find(r=>r.id===H.homeId);
     return [`<p class="cc-intro">I’m forwarding the following news article for your attention.</p>${banner('Riverside hit four as run goes on','Saturday Football',
       `<div class="cc-streak-grid"><div class="cc-streak-info"><div class="cc-streak">${c.crest(H.homeId)}<div><strong>${recent.length}</strong><p>matches won in a row</p></div></div><div class="cc-streak-matches">${recent.map(f=>`<button class="cc-streak-row" type="button" data-c-do="fixture" data-c-val="${f.id}"><time>${H.shortDate(f.date)}</time>${clubName(c,f.opponent,`${H.clubs[f.opponent].name} (${f.venue})`)}<strong>${f.score.join(' – ')}</strong></button>`).join('')}<div class="cc-actions">${clubMatches()}</div></div></div>
-      <div class="cc-prose"><p>Riverside have extended their run of straight wins in the Premier Division to ${recent.length} games following their ${recent[0].score.join('–')} victory at Eastvale City.</p><p>${esc(H.manager)}’s side are unbeaten after ${row.played} matches. They have scored ${row.gf} times, giving them the best attack in the division.</p><p>Attention turns to the League Cup on Wednesday, when ${esc(H.clubs[H.next.opponent].name)} visit ${esc(H.clubs[H.homeId].stadium)}.</p></div></div>`)}`,
+      <div class="cc-prose"><p>Riverside have extended their run of straight wins in the Premier Division to ${recent.length} games following their ${recent[0].score.join('–')} victory at Eastvale City.</p><p>${esc(H.manager)}’s side are unbeaten after ${row.played} matches. They have scored ${row.gf} times, giving them the best attack in the division.</p><p>Attention turns to the League Cup on Friday, when ${esc(H.clubs[H.next.opponent].name)} visit ${esc(H.clubs[H.homeId].stadium)}.</p></div></div>`)}`,
       `${fixture(H.next,'Next match','outline')}${league()}`];
   }
   function medicalTable(c){
@@ -65,7 +65,7 @@
   function simple(c,m){
     const opponent=H.clubs[H.next.opponent], home=H.clubs[H.homeId];
     const messages={
-      fixture:[`<p>${esc(opponent.name)} will visit ${esc(home.stadium)} on Wednesday evening in the League Cup fourth round. Your kickoff is set for ${stamp(H.next.date)}.</p>${score(c,H.next)}`,`${fixture(H.next,'View fixture','outline')}${link('day','Club calendar','today',String(K.day(H.next.date)),'outline')}`],
+      fixture:[`<p>${esc(opponent.name)} will visit ${esc(home.stadium)} on Friday evening in the League Cup fourth round. Your kickoff is set for ${stamp(H.next.date)}.</p>${score(c,H.next)}`,`${fixture(H.next,'View fixture','outline')}${link('day','Club calendar','today',String(K.day(H.next.date)),'outline')}`],
       preview:[`<p>${esc(opponent.name)} typically use two forwards and look for early deliveries from wide areas. Look out for second balls at the edge of the box.</p><p>Use the schedule to compare recent meetings and check the time of kickoff.</p>`,fixture(H.next,'View fixture','outline')],
       analysis:[`<p>${player(C.leaders.forward)} leads the squad in goals, average rating and Player of the Match awards. ${player(C.leaders.winger)} is our leading provider.</p>${values(H.leaders.slice(0,4).map(row=>[row.label,`${row.player.name} · ${row.value}`]))}`,link('squad','Player stats','stats')],
       budget:[`<p>The latest transfer and wage allocations are available. Current and committed spending remain within the weekly wage budget.</p>${values([['Transfer budget',H.money(c.fiscal.transfer)],['Wage budget per week',H.money(c.fiscal.wage)],['Available per week',H.money(c.fiscal.wage-c.fiscal.committed)]])}`,link('finance','Finances','summary')],
@@ -116,7 +116,7 @@
     }).join('')}</div>`;
   }
   function world(c){
-    return `<div class="cc-grid2 cc-world">${C.leagues.map(l=>card(l.name,`<p class="cc-muted">Leading clubs · 2024/25 snapshot</p>${standings(c,l.name,(l.id==='premier'?c.standings():l.rows).slice(0,5),l.id)}<div class="cc-actions">${btn('View league table','league-table',l.id,{kind:'outline'})}</div>`)).join('')}</div>`;
+    return `<div class="cc-grid2 cc-world">${C.leagues.map(l=>card(l.name,`<p class="cc-muted">Leading clubs · 2026/27 snapshot</p>${standings(c,l.name,(l.id==='premier'?c.standings():l.rows).slice(0,5),l.id)}<div class="cc-actions">${btn('View league table','league-table',l.id,{kind:'outline'})}</div>`)).join('')}</div>`;
   }
   const socialPeople=[['supporters','Riverside Supporters','Supporter group'],['touchline','The Touchline','Football press'],['chronicle','Quayside Chronicle','Local news'],['academy','Riverside Academy','Club account'],['marsh',C.namedStaff['Assistant Manager'],'Riverside staff']];
   const socialSubjects=[...['rvr','hpt','nbu','efc','kgd','oak','swl','crl','wst','sby'].map(id=>[id,H.clubs[id].name,'Club']),...socialPeople];
@@ -124,15 +124,15 @@
     ['post','supporters','26 Oct · 16:55','Six wins in a row. Bring that energy back to Quayside Park for the cup.','form','1.2K'],
     ['news','touchline','26 Oct · 16:41','run'],
     ['post','chronicle','26 Oct · 16:38','Novak takes home the match ball from Vale Arena. That second goal was the pick of the three.','match','846'],
-    ['post','hpt','26 Oct · 16:11','Next stop: Quayside Park. We’ll see you Wednesday night for the fourth round.','fixture','714'],
-    ['post','academy','26 Oct · 15:20','The Under 21s head to Kingsdown on Monday after beating Westhaven.','','391'],
+    ['post','hpt','26 Oct · 16:11','Next stop: Quayside Park. We’ll see you Friday night for the fourth round.','fixture','714'],
+    ['post','academy','26 Oct · 15:20','The Under 21s head to Kingsdown on Wednesday after beating Westhaven.','','391'],
     ['news','rvr','26 Oct · 15:08','cup'],
     ['news','chronicle','25 Oct · 18:07','injury'],
     ['post','marsh','25 Oct · 15:30','A busy week ahead. Every player will have a part to play.','preview','237'],
     ['news','nbu','25 Oct · 14:44','title']
   ];
   const defaultFollows=['rvr','supporters','touchline'];
-  const FEED_KEY='touchline26.social.v1';
+  const FEED_KEY='touchline26.2026.social.v1';
   function library(c){
     if(c.ui.feedLibrary)return c.ui.feedLibrary;
     let saved;

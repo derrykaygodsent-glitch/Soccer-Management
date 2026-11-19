@@ -2,17 +2,17 @@
 (function(global){
   'use strict';
   const node=typeof window==='undefined', H=node?require('./home-data.js'):global.TLHomeData, C=node?require('./club-data.js'):global.TLClubData, K=node?require('./season-calendar.js'):global.TLSeasonCalendar, M=node?require('./matchday-data.js'):global.TLMatchdayData;
-  const {date,day,iso,DAY,HOUR}=K, key='touchline26.riverside.season.v1';
+  const {date,day,iso,DAY,HOUR}=K, key='touchline26.2026.riverside.season.v1';
   const mail=(id,ts,from,role,category,subject,body,options=[],required=false)=>({id,date:ts,from,role,category,subject,body,options,required,type:'season'});
   const asst=C.namedStaff['Assistant Manager'], phys=C.namedStaff['Head of Sports Science'];
   const scheduled=[
-    mail('load-review',date('2024-10-27',10),phys,'Head of Sports Science','Injuries','Approve the cup-week training load',`${C.players.rvr_12.name} and ${C.players.rvr_14.name} are carrying a heavy workload. We need your decision before assigning Monday’s sessions. Individual recovery improves their condition for Wednesday.`,[['light','Give at-risk players recovery','Individual recovery added for the at-risk players.'],['normal','Keep the planned sessions','All available players will follow the main group.']],true),
-    mail('staff-cup',date('2024-10-28',9),asst,'Assistant Manager','Club','Coaches’ meeting: priorities for Harbourport','We can use the last slot on Tuesday to work on first contact at set pieces or rehearse our response to a direct attack. Pick a focus in the coaches’ meeting.',[['set','Rehearse set-piece delivery','Set pieces added to Tuesday’s programme.'],['shape','Rehearse defensive shape','Defensive shape added to Tuesday’s programme.']],true),
-    mail('press-cup',date('2024-10-28',14,15),'Sam Ellis','Press Officer','Media','Confirm the pre-match press appearance','The press want to ask about Wednesday’s cup tie. Please give us a line to publish, or send the assistant in your place.',[['respect','“We respect their threat.”','You told the press Riverside will respect Harbourport’s threat.'],['confidence','“We’ll take the game to them.”','You backed Riverside to take the game to Harbourport.'],['delegate','Send Elliot Marsh','Elliot Marsh will handle the press conference.']],true),
-    mail('board-cup',date('2024-10-28',16),'Eleanor Voss','Chairperson','Club','Board meeting: the Quayside cup allocation','We can hold a block of seats for community groups or release it for general sale. Let me know which you prefer.',[['community','Reserve seats for community groups','The board reserved a community allocation for Wednesday.'],['sale','Release them for general sale','The board opened the remaining allocation for general sale.']]),
-    mail('cup-observations',date('2024-10-29',12),'Iona Wallace','Performance Analyst','Scouting','Harbourport: protect the space behind the back line','Harbourport’s first pass often goes long. Keep a covering defender close to the second ball, and use width to move their two banks apart.'),
-    mail('cup-logistics',date('2024-10-29',16),'June Fletcher','Club Secretary','Club','Wednesday’s match arrangements','The tie kicks off at 19:45 at Quayside Park. The tactical meeting takes place before team submission. A draw after 90 minutes goes straight to penalties.'),
-    mail('cup-reminder',date('2024-10-30',11),asst,'Assistant Manager','Match','Tactical meeting at Quayside Park','We’ll discuss our expected opposition and your selection before the teams are submitted.')
+    mail('load-review',date('2026-10-27',10),phys,'Head of Sports Science','Injuries','Approve the cup-week training load',`${C.players.rvr_12.name} and ${C.players.rvr_14.name} are carrying a heavy workload. We need your decision before assigning Wednesday’s sessions. Individual recovery improves their condition for Friday.`,[['light','Give at-risk players recovery','Individual recovery added for the at-risk players.'],['normal','Keep the planned sessions','All available players will follow the main group.']],true),
+    mail('staff-cup',date('2026-10-28',9),asst,'Assistant Manager','Club','Coaches’ meeting: priorities for Harbourport','We can use the last slot on Thursday to work on first contact at set pieces or rehearse our response to a direct attack. Pick a focus in the coaches’ meeting.',[['set','Rehearse set-piece delivery','Set pieces added to Thursday’s programme.'],['shape','Rehearse defensive shape','Defensive shape added to Thursday’s programme.']],true),
+    mail('press-cup',date('2026-10-28',14,15),'Sam Ellis','Press Officer','Media','Confirm the pre-match press appearance','The press want to ask about Friday’s cup tie. Please give us a line to publish, or send the assistant in your place.',[['respect','“We respect their threat.”','You told the press Riverside will respect Harbourport’s threat.'],['confidence','“We’ll take the game to them.”','You backed Riverside to take the game to Harbourport.'],['delegate','Send Elliot Marsh','Elliot Marsh will handle the press conference.']],true),
+    mail('board-cup',date('2026-10-28',16),'Eleanor Voss','Chairperson','Club','Board meeting: the Quayside cup allocation','We can hold a block of seats for community groups or release it for general sale. Let me know which you prefer.',[['community','Reserve seats for community groups','The board reserved a community allocation for Friday.'],['sale','Release them for general sale','The board opened the remaining allocation for general sale.']]),
+    mail('cup-observations',date('2026-10-29',12),'Iona Wallace','Performance Analyst','Scouting','Harbourport: protect the space behind the back line','Harbourport’s first pass often goes long. Keep a covering defender close to the second ball, and use width to move their two banks apart.'),
+    mail('cup-logistics',date('2026-10-29',16),'June Fletcher','Club Secretary','Club','Friday’s match arrangements','The tie kicks off at 19:45 at Quayside Park. The tactical meeting takes place before team submission. A draw after 90 minutes goes straight to penalties.'),
+    mail('cup-reminder',date('2026-10-30',11),asst,'Assistant Manager','Match','Tactical meeting at Quayside Park','We’ll discuss our expected opposition and your selection before the teams are submitted.')
   ];
   const copy=v=>JSON.parse(JSON.stringify(v));
   const stages=['meeting','selection','briefing','news','preTalk','preview','live','half','halfTalk','full','fullTalk'];
@@ -37,10 +37,10 @@
     // Future activities are visible on the planning strip without exposing future Inbox items.
     const agenda=[...scheduled.filter(m=>day(m.date)===day(at)&&m.date>s.now),...mailEvents];
     const session=(h,min,label,desc,kind='training')=>({time:day(at)+h*HOUR+min*6e4,label,desc,kind});
-    const work=d==='2024-10-26'?[session(9,30,'Match preparation','Set plays and shape')]
-      :d==='2024-10-27'?[session(9,30,'Recovery','First team · North Quayside'),session(13,30,'Rest','Individual recovery')]
-      :d==='2024-10-28'?[session(9,30,'Endurance','First team · On-pitch'),session(13,30,s.answers['load-review']==='light'?'Individual recovery':'Resistance','Strength & conditioning')]
-      :d==='2024-10-29'?[session(9,30,'Quickness','First team · North Quayside'),session(15,0,s.answers['staff-cup']==='set'?'Set-piece rehearsal':s.answers['staff-cup']==='shape'?'Defensive shape':'Match preparation','Tactical session')]
+    const work=d==='2026-10-26'?[session(9,30,'Match preparation','Set plays and shape')]
+      :d==='2026-10-27'?[session(9,30,'Recovery','First team · North Quayside'),session(13,30,'Rest','Individual recovery')]
+      :d==='2026-10-28'?[session(9,30,'Endurance','First team · On-pitch'),session(13,30,s.answers['load-review']==='light'?'Individual recovery':'Resistance','Strength & conditioning')]
+      :d==='2026-10-29'?[session(9,30,'Quickness','First team · North Quayside'),session(15,0,s.answers['staff-cup']==='set'?'Set-piece rehearsal':s.answers['staff-cup']==='shape'?'Defensive shape':'Match preparation','Tactical session')]
       :f?[session(10,30,'Match preparation','First team · Tactical review')]
       :last?[session(9,30,'Recovery','Post-match recovery'),session(13,30,'Rest','First team')]
       :next&&day(next.date)===day(at)+DAY?[session(10,0,'Match preparation','Shape and set pieces'),session(14,0,next.venue==='A'?'Travel':'Team briefing','Staff & first team','staff')]
@@ -52,12 +52,12 @@
     if(s.injuries[id]>s.now)return 39;
     const recent=Object.values(s.results).reverse().find(r=>r.players?.flat().some(q=>q.id===id)), played=recent?.players.flat().find(q=>q.id===id);
     if(recent&&played){const days=(day(s.now)-day(recent.date))/DAY;return Math.min(100,Math.round(played.cond+Math.max(0,days)*8));}
-    const risk=p.injury?.risk;if(p.injury?.status==='Out'&&iso(s.now)<'2024-11-04')return 39;
+    const risk=p.injury?.risk;if(p.injury?.status==='Out'&&iso(s.now)<'2026-11-04')return 39;
     if(risk==='High'||risk==='Elevated')return Math.min(100,(risk==='High'?80:84)+elapsed*(s.answers['load-review']==='light'?4:2));
     return Math.min(100,93+(p.num%5)+elapsed*2);
   }
   function availability(s,id){
-    const p=M.byPlayer(id), info=p?.injury, returnDate=Math.max(s.injuries[id]||0,info?.status==='Out'?Date.UTC(2024,10,4):0);
+    const p=M.byPlayer(id), info=p?.injury, returnDate=Math.max(s.injuries[id]||0,info?.status==='Out'?Date.UTC(2026,10,4):0);
     const out=returnDate>s.now, today=condition(s,id), risk=!out&&info?.status!=='Out'&&today<96?info?.risk||'Low':'Low';
     return {p,returnDate,out,today,risk,status:out?'Out':today<92?'Managing load':'Available',issue:out?(s.injuries[id]?'Match knock':info.issue):risk!=='Low'?info.issue:'–'};
   }
@@ -93,7 +93,7 @@
       return {...row,player,value};
     });
   }
-  const numbersUnlocked=(s,f)=>f?.comp==='FR'||(iso(s.now)>='2025-06-01'&&iso(s.now)<='2025-08-31');
+  const numbersUnlocked=(s,f)=>f?.comp==='FR'||(iso(s.now)>='2027-06-01'&&iso(s.now)<='2027-08-31');
   const validScore=v=>Array.isArray(v)&&v.length===2&&v.every(n=>Number.isInteger(n)&&n>=0&&n<100);
   function validReport(r){
     return !!r&&Number.isFinite(r.date)&&validScore(r.goals)&&(r.pen==null||validScore(r.pen)&&r.pen[0]!==r.pen[1]&&r.goals[0]===r.goals[1])&&

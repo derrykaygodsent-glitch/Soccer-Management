@@ -1065,5 +1065,5 @@
     startOpening();renderLineup();updateHUD();draw();$('btnPlay').focus({preventScroll:true});
   }
   function unloadClub(){suspend();state.club=null;state.clubId=null;state.match=null;}
-  global.TLMatchView = { open, suspend, openClub, intervalDesk, startSecondHalf, unloadClub };
+  global.TLMatchView = { cloudPause(){if(state.club && state.match && !state.loading && viewingMatch()){state.paused=true;checkpoint();updateHUD();}}, open, suspend, openClub, intervalDesk, startSecondHalf, unloadClub };
 })(typeof window !== 'undefined' ? window : globalThis);

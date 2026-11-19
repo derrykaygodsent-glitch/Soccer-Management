@@ -8,7 +8,7 @@
   const dayMs=864e5;
   const allFixtures = c => [...c.fixtures(),...c.s.friendlies.map(f=>({...f,comp:'FR',date:Date.parse(`${f.date}T15:00:00Z`),planned:true}))].sort((a,b)=>a.date-b.date);
   const monthId = f => iso(f.date).slice(0,7);
-  const months = Array.from({length:14},(_,i)=>iso(Date.UTC(2024,6+i,1)).slice(0,7));
+  const months = Array.from({length:14},(_,i)=>iso(Date.UTC(2026,6+i,1)).slice(0,7));
   const periods = () => months;
   const readableMonth = id => month(Date.parse(`${id}-01T12:00Z`));
   const compFilter = [['all','All competitions'], ...C.comps.filter(x=>x.id!=='NC').map(x=>[x.id,x.name]),['FR','Friendlies']];
@@ -33,7 +33,7 @@
       const cls=active?'cc-selected-fixture':f.comp==='FR'?'cc-friendly-row':f.comp==='LC'||f.comp==='CC'||f.comp==='CS'?'cc-cup-row':'';
       return `<tr class="${cls}" data-fixture-row="${f.id}"><td><button class="cc-fixture-button" type="button" data-c-go="schedule" data-c-tab="fixtures" data-c-id="${f.id}" aria-label="${esc(H.clubs[f.opponent].name)}, ${H.calendar(f.date).date}${f.id===K.next(c.season.value)?.id?', next match':''}"${active?' aria-current="true"':''}><span class="cc-fixture-bullet ${f.id===K.next(c.season.value)?.id?'cc-next-fixture':''}"></span>${week(f.date)}, ${H.shortDate(f.date)}/${String(new Date(f.date).getUTCFullYear()).slice(-2)}</button></td><td>${stamp(f.date)}</td><td>${clubName(c,f.opponent,`${H.clubs[f.opponent].name}`)}<small class="cc-fixture-venue-mobile">${f.venue}</small></td><td>${['LC','CC','CS'].includes(f.comp)?`<span role="img" aria-label="Televised">${icon('tv')}</span>`:''}</td><td title="${{H:'Home',A:'Away',N:'Neutral'}[f.venue]}">${f.venue}</td><td><span class="cc-fixture-result"><i class="cc-result-dot cc-${U.resultColor(f.pen||f.score)}"></i>${f.score?f.score.join(' – '):f.id===K.next(c.season.value)?.id?'Next':f.planned?'Draft':'–'}</span></td><td>${esc(comp)}</td></tr>`;
     }).join('')}</tbody>`).join('');
-    return rows.length?U.scroll('fixtures','First-team fixtures',`<table class="cc-table cc-fixtures-table"><caption class="hc-sr">Riverside schedule, season 2024/25</caption><thead><tr>${columns.map(x=>`<th scope="col">${x}</th>`).join('')}</tr></thead>${markup}</table>`,'cc-table-wrap'):empty('No fixtures match these filters','Choose another month or competition.');
+    return rows.length?U.scroll('fixtures','First-team fixtures',`<table class="cc-table cc-fixtures-table"><caption class="hc-sr">Riverside schedule, season 2026/27</caption><thead><tr>${columns.map(x=>`<th scope="col">${x}</th>`).join('')}</tr></thead>${markup}</table>`,'cc-table-wrap'):empty('No fixtures match these filters','Choose another month or competition.');
   }
   function reportRows(c,f){
     if(f.id!==C.matchReport.fixtureId) return '';
@@ -57,7 +57,7 @@
     if(C.youthFixtures[c.r.id])return youthFixtures(c,c.r.id);
     const rows=allFixtures(c).filter(f=>(!c.ui.comp||c.ui.comp==='all'||c.ui.comp===f.comp)&&(!c.ui.period||c.ui.period==='all'||c.ui.period===monthId(f))&&(!c.ui.fixtureMode||c.ui.fixtureMode==='all'||(c.ui.fixtureMode==='played'?!!f.score:!f.score)));
     const selected=lookup(rows,c.r.id)||lookup(rows,c.ui.selected)||rows.find(f=>f.id===K.next(c.season.value)?.id)||rows[0];
-    return `<div class="cc-schedule cc-fill"><section class="cc-schedule-list"><div class="cc-toolbar cc-schedule-tools"><h2 class="cc-title">Fixtures</h2>${select('fixtureMode','Fixture view',[['all','All fixtures'],['upcoming','Upcoming'],['played','Results']],c.ui.fixtureMode||'all')}<span class="cc-spacer"></span><span class="cc-season">2024/25</span>${commonPeriod(c)}${select('comp','Competition filter',compFilter,c.ui.comp||'all')}</div>${fixturesTable(c,rows,selected)}${fixturesNav()}</section>${fixtureDetail(c,selected)}</div>`;
+    return `<div class="cc-schedule cc-fill"><section class="cc-schedule-list"><div class="cc-toolbar cc-schedule-tools"><h2 class="cc-title">Fixtures</h2>${select('fixtureMode','Fixture view',[['all','All fixtures'],['upcoming','Upcoming'],['played','Results']],c.ui.fixtureMode||'all')}<span class="cc-spacer"></span><span class="cc-season">2026/27</span>${commonPeriod(c)}${select('comp','Competition filter',compFilter,c.ui.comp||'all')}</div>${fixturesTable(c,rows,selected)}${fixturesNav()}</section>${fixtureDetail(c,selected)}</div>`;
   }
   function calendar(c){
     const id=c.ui.calendar||iso(c.now).slice(0,7), start=Date.parse(`${id}-01T00:00Z`), startDay=(new Date(start).getUTCDay()+6)%7;
@@ -112,11 +112,11 @@
         c.show(`Past meetings · ${H.clubs[f.opponent].name}`,previous.length?table('Past meetings',['Date','Venue','Riverside score','Competition'],previous.map(x=>tr([H.calendar(x.date).date,x.venue,x.score.join(' – '),esc(H.fixtureCompetition(x))])),'meetings'):empty('No result in the starter records'));
       } else if(cmd==='plan-friendly'){
         const candidates=Object.values(H.clubs).filter(x=>x.id!==H.homeId).map(x=>[x.id,x.name]);
-        const first=Math.max(K.day(c.now)+K.DAY,K.date('2024-10-31')), occupied=new Set(allFixtures(c).map(f=>K.iso(f.date)));
+        const first=Math.max(K.day(c.now)+K.DAY,K.date('2026-10-31')), occupied=new Set(allFixtures(c).map(f=>K.iso(f.date)));
         let free=first;while(occupied.has(K.iso(free)))free+=K.DAY;
-        const max=K.date('2025-05-31'), available=free<=max;
+        const max=K.date('2027-05-31'), available=free<=max;
         if(!available)return c.show('Arrange a friendly',empty('No dates left for friendly drafts','Published fixtures and results stay unchanged.'));
-        c.show('Arrange a friendly',U.editForm('friendly','',U.formSelect('opponent','Opponent',candidates)+U.formField('date','Preferred date','date',K.iso(free),`min="${K.iso(first)}" max="2025-05-31"`)+U.formSelect('venue','Venue',[['H','Home'],['A','Away']]),'Save friendly draft','Plan a date for the staff to review. This only adds a draft to the schedule.'));
+        c.show('Arrange a friendly',U.editForm('friendly','',U.formSelect('opponent','Opponent',candidates)+U.formField('date','Preferred date','date',K.iso(free),`min="${K.iso(first)}" max="2027-05-31"`)+U.formSelect('venue','Venue',[['H','Home'],['A','Away']]),'Save friendly draft','Plan a date for the staff to review. This only adds a draft to the schedule.'));
       } else if(cmd==='delete-friendly' && c.apply('friendly-delete',id)) { c.go('schedule','fixtures','',true); c.note('Friendly draft removed.'); }
     },
     submit(c,cmd,id,data){
