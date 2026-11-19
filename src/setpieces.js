@@ -1,4 +1,4 @@
-/* Touchline 26 — dead-ball decisions and geometry, independent of the broadcast. */
+/* Touchline 26: dead-ball decisions and geometry, independent of the broadcast. */
 (function (global) {
   'use strict';
   const { L, W, CX, CY, GOAL_HALF, FREE_DISTANCE } = typeof window === 'undefined' ? require('./pitch.js') : global.TLPitch;

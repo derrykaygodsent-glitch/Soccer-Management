@@ -21,12 +21,12 @@ Confirmed Riverside fixtures use the Classic engine, at home or away. Other club
 
 | View | Where to find it |
 | --- | --- |
-| Club calendar, pause date, countdown, partial results and standings | Click the header date → **Club calendar** or **Fixtures & Results** |
+| Club calendar, pause date, countdown, partial results and standings | Click the header date, then **Club calendar** or **Fixtures & Results** |
 | Compact and expanded tactics, possession and transition instructions | **Tactics** in the sidebar |
 | Attributes, availability and recorded player ratings | Select a player from **Home**, **Squad** or **Tactics** |
-| Supporter posts, football news and completed match updates | **Social Feed** → The Terrace. Follow accounts, filter topics, react to posts and save them locally. |
+| Supporter posts, football news and completed match updates | **Social Feed**, then The Terrace. Follow accounts, filter topics, react to posts and save them locally. |
 | Team correspondence, decisions and current medical notices | **Inbox**, **Medical Centre** and **Training** |
-| Natural positions, current condition and selections | **Squad Planner** → Depth chart or **Club tactics** for the competitive XI |
+| Natural positions, current condition and selections | **Squad Planner** shows the depth chart, **Club tactics** holds the competitive XI |
 | Recruitment, staff responsibilities, budget and club planning | **Scouting**, **Transfers**, **Staff**, **Finances**, **Club Vision** |
 
 ## Touchline and run-off (v0.8.1)
@@ -72,6 +72,12 @@ The ball carrier reads the play before committing. An onside run can open a thro
 
 Role, attributes, individual tendencies, fatigue, tactics and the score affect those choices. The seed breaks close calls between credible options; it does not select a prewritten attack. This changes the football a seed produces compared with older builds, not the ability to reproduce a fixture within this build. Classic 2D remains the fixed overhead view.
 
+## Interaction and motion
+
+Every control that can be chosen answers the pointer: buttons lift a little, brighten and take a colour wash, list rows show a coloured edge, and board markers slide up with their name plate lit. Icons move on the controls that navigate, the scoreboard pulses when a goal goes in, and a short passage into the Classic 2D view settles the page. Clubhouse photography drifts slowly, the clubhouse brandmark catches the light, and live indicators breathe.
+
+The motion is deliberately quiet: nothing flashes, nothing loops faster than a heartbeat, and hover states stay readable at 200 percent zoom. Every animation is turned off when the operating system asks for reduced motion. The layer lives in `src/polish.css` and is loaded after the page styles.
+
 ## Play and build
 
 Open `index.html` offline, or run `npm run preview` with Node.js 20+. The preview builds from `src/` and serves on port `4173` (`PORT` overrides it). No installs or accounts are required. Edit `src/`, then run `npm run build` to regenerate the HTML.
@@ -81,7 +87,7 @@ Open `index.html` offline, or run `npm run preview` with Node.js 20+. The previe
 
 ## Pinned checkpoints
 
-- `classic-2d-approved` — local Git tag for the approved Classic 2D foundation. Its standalone HTML SHA-256 is `d19da99cb41ae886a1bef224ec712e67388556c39615f240b45909e3c3aa1aed`.
-- `pre-classic-baseline` — the earlier playable version, kept for rollback or comparison.
+- `classic-2d-approved`: local Git tag for the approved Classic 2D foundation. Its standalone HTML SHA-256 is `d19da99cb41ae886a1bef224ec712e67388556c39615f240b45909e3c3aa1aed`.
+- `pre-classic-baseline`: the earlier playable version, kept for rollback or comparison.
 
 The original uploads are unchanged. The clubhouse art, fonts and icons are bundled offline. Navigation and room transitions respect reduced-motion settings. The match engine, saved-season schema and the approved Classic 2D copy were not changed in v0.9.0.

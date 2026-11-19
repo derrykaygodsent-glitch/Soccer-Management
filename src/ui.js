@@ -1,4 +1,4 @@
-/* Touchline 26 — Classic 2D match controls and replay playback. */
+/* Touchline 26: Classic 2D match controls and replay playback. */
 (function (global) {
   'use strict';
   const D = global.TLData, E = global.TLEngine, A = global.TLAudio, V = global.TLHighlights, O = global.TLReferee, B = global.TLBroadcast;
@@ -178,6 +178,13 @@
       $('score').dataset.score = score;
       $('score').innerHTML = `${homeScore}<span class="score-dash">–</span>${awayScore}`;
       attr($('score'), 'aria-label', `${m.teams[0].club.name} ${homeScore}, ${m.teams[1].club.name} ${awayScore}`);
+      // Give the new score one short pulse on the side that just scored.
+      const before = String($('score').dataset.score || '').split(':').map(Number);
+      const hit = [homeScore - before[0], awayScore - before[1]];
+      if (Number.isFinite(hit[0]) && (hit[0] > 0 || hit[1] > 0)) {
+        $('score').dataset.hit = hit[0] > 0 ? 'home' : 'away';
+        setTimeout(() => { delete $('score').dataset.hit; }, 760);
+      }
     }
     const restart = viewingRestart();
     const [status, phase] = currentStatus(restart);

@@ -40,7 +40,7 @@
   function overview(c,s){
     const store=c.season.value, sheet=M.sheet(store.plan,store.now,store.injuries), expanded=c.ui.tacticLayout!=='compact';
     const form=select('tacticForm','Formation',M.formationOptions,s.form,{show:true});
-    return `<div class="md-tactics-grid" data-layout="${expanded?'expanded':'compact'}"><section class="md-tactics-board">${controls(c,s)}<div class="md-board-inner">${tacticsRail(c,s,!expanded)}<div class="md-formation"><div class="md-form-title">${icon('i-pitch')}${form}<span>First team</span></div>${pitch(c,sheet.xi,{mode:expanded?'roles':'numbers',clickable:expanded,label:`${s.form} starting formation`})}<div class="md-pitch-cap"><span><i></i> Attacking direction ↑</span><span>XI · Club plan</span></div></div></div></section>${roster(c,sheet)}</div>`;
+    return `<div class="md-tactics-grid" data-layout="${expanded?'expanded':'compact'}"><section class="md-tactics-board">${controls(c,s)}<div class="md-board-inner">${tacticsRail(c,s,!expanded)}<div class="md-formation"><div class="md-form-title">${icon('i-pitch')}${form}<span>First team</span></div>${pitch(c,sheet.xi,{mode:expanded?'roles':'numbers',clickable:expanded,label:`${s.form} starting formation`})}<div class="md-pitch-cap"><span><span class="md-attack-glyph" aria-hidden="true">▲</span> Attacking direction</span><span>XI · Club plan</span></div></div></div></section>${roster(c,sheet)}</div>`;
   }
   const chosen=(s,key,label)=>btn(label,'tactic-choice',`${key}:${label}`,{pressed:s[key]===label,kind:'solid'});
   const choiceField=(s,key,extra='')=>`<div class="md-choice ${extra}"><h3>${labels[key]}</h3><div>${choices[key].map(v=>chosen(s,key,v)).join('')}</div></div>`;

@@ -1,0 +1,420 @@
+/* ---------------------------------------------------------------------------
+   Touchline 26 interaction and motion layer.
+
+   Two rules sit under everything here:
+   1. Anything you can pick answers the pointer: it lifts, brightens and shows
+      a colour wash, so a hover always reads as a selection.
+   2. Anything that represents movement, weather, sound or a live clock keeps
+      a slow, low-amplitude animation. Nothing loops faster than a heartbeat.
+   The whole file is inert under prefers-reduced-motion (see style.css).
+--------------------------------------------------------------------------- */
+
+:root{
+  --lift:-1px;
+  --glow:0 10px 26px -14px #000000d9;
+  --ring:0 0 0 1px var(--hover-line, #5b7f9d);
+  --hover-line:#5b7f9d;
+  --hover-wash:#ffffff0f;
+  --hover-icon:#eaffc9;
+}
+
+/* --- Interaction base ---------------------------------------------------- */
+
+.hc-shell button,
+.hc-shell .hc-dialog-link,
+.hc-shell [data-c-go],
+#matchScreen button,
+#matchScreen .technical-person{
+  transition:background-color .16s ease,color .16s ease,border-color .16s ease,
+             box-shadow .2s ease,transform .16s cubic-bezier(.22,.72,.24,1),
+             filter .16s ease,outline-color .16s ease
+}
+
+button:not(:disabled):hover{
+  filter:brightness(1.13) saturate(1.05);
+}
+
+button:not(:disabled):not(.technical-person):not(.md-marker):active{
+  transform:scale(.975);
+  filter:brightness(.95);
+}
+
+/* Icons travel a step in the direction of travel on navigation controls. */
+:is(button,[data-c-go],.hc-dialog-link):is(:hover,:focus-visible) :is(.hc-icon,.icon){
+  animation:mo-bump .38s cubic-bezier(.22,.72,.24,1) 1;
+}
+
+.tl-brand:hover .tl-brandmark,
+.tl-club-card:hover .hc-crest,
+.tl-manager:hover .tl-initials,
+.hc-clock-link:hover>.hc-icon,
+.cc-resource:hover .cc-resource-icon{
+  animation:mo-tilt .5s cubic-bezier(.22,.72,.24,1) 1;
+}
+
+.hc-crest,
+.tl-initials,
+.tl-brandmark,
+.cc-resource-icon,
+.cc-avatar{
+  transition:transform .24s cubic-bezier(.22,.72,.24,1),box-shadow .24s ease,filter .24s ease;
+}
+
+.tl-club-card:hover .hc-crest,
+.tl-brand:hover .tl-brandmark{
+  transform:scale(1.06);
+  filter:drop-shadow(0 3px 9px #00000073);
+}
+
+/* --- Selection colour ---------------------------------------------------- */
+
+.hc-nav-button:hover{
+  background:linear-gradient(90deg,#2a3f57,#1e2c3c 78%);
+  color:#ffffff;
+  box-shadow:inset 2px 0 var(--tl-lime);
+}
+
+.hc-nav-button:hover .hc-icon{color:var(--tl-lime)}
+
+.hc-tab:hover{color:#eaffc9}
+
+.hc-tab::before{
+  content:'';
+  position:absolute;
+  inset:auto 0 0 0;
+  height:2px;
+  border-radius:2px;
+  background:var(--tl-lime);
+  opacity:0;
+  transform:scaleX(.35);
+  transition:opacity .18s ease,transform .24s cubic-bezier(.22,.72,.24,1);
+}
+
+.hc-tab:hover::before{opacity:.55;transform:scaleX(1)}
+.hc-tab[aria-current=page]::before{opacity:0}
+
+.hc-tool:hover:not(:disabled){
+  box-shadow:0 0 0 3px #d7f88912,var(--glow);
+}
+
+.cc-btn:not(:disabled):hover{
+  box-shadow:0 0 0 1px #7f9dc0 inset,var(--glow);
+}
+
+.cc-btn-primary:not(:disabled):hover,
+.cc-btn-teal:not(:disabled):hover,
+.cc-btn-green:not(:disabled):hover,
+.hc-continue:not(:disabled):hover,
+.button.primary:not(:disabled):hover{
+  box-shadow:0 0 18px -4px #c8f27a80,var(--glow);
+}
+
+.cc-btn[aria-pressed=true],
+.cc-btn-outline[aria-pressed=true]{
+  box-shadow:0 0 0 1px #63dbe28c inset,0 0 16px -6px #63dbe2a6;
+}
+
+.cc-btn-text:not(:disabled):hover{text-decoration-thickness:1.5px}
+
+/* Row selectors: mails, fixtures, tasks, depth players, leaders, posts. */
+:is(.cc-mail,.cc-fixture-button,.tl-fixture,.tl-leader,.tl-depth-player,.cc-date-btn,.tl-account,.cc-clause-rail>button,.cc-calendar-fixture,.md-cal-fixture,.season-match-row){transition:background-color .16s ease,box-shadow .2s ease,transform .16s ease,color .16s ease}
+
+.cc-mail:hover{
+  background:linear-gradient(90deg,#2c3950,#243043 82%);
+  box-shadow:inset 3px 0 #63dbe2b3;
+}
+
+.cc-mail[data-unread=true]:hover strong{color:#effcff}
+
+.tl-fixture:hover,.tl-leader:hover,.tl-depth-player:hover{
+  background:linear-gradient(90deg,#263a4f,#1d2b3b 80%);
+  box-shadow:inset 3px 0 var(--tl-lime);
+}
+
+.tl-fixture:hover .tl-fixture-pill,
+.tl-leader:hover>strong{color:#f2ffd8}
+
+.tl-kpi:hover{
+  transform:translateY(-2px);
+  box-shadow:inset 0 1px #ffffff14,0 14px 30px -18px #000,0 0 0 1px #6a8cab59;
+}
+
+.tl-kpi:hover .tl-kpi-top svg:first-child{color:var(--tl-lime)}
+
+.cc-date-btn:hover{box-shadow:inset 2px 0 #8cc4ea}
+
+.season-match-row:hover{background:#2b3648}
+.season-match-row.season-our-match:hover{background:#2f4a5e}
+
+.md-cal-fixture:hover{transform:translateY(-1px);box-shadow:0 6px 14px -8px #000000ab}
+.md-cal-date:hover>b{color:#eaffc9}
+
+.cc-card,.tl-panel,.ms-panel,.md-panel,.tl-kpi,.season-board,.tl-post,.cc-news-lead,.tl-processing-day,.hc-dialog{
+  transition:box-shadow .22s ease,border-color .22s ease,background-color .22s ease;
+}
+
+.cc-card:hover,.tl-panel:hover,.ms-panel:hover,.md-panel:hover,.season-board:hover,.tl-post:hover,.cc-news-lead:hover{
+  border-color:#506d8c99;
+  box-shadow:0 12px 30px -22px #000;
+}
+
+.tl-post:hover{background:#1b2b3d}
+
+/* Selections on the tactics board and the live pitch. */
+button.md-marker:hover .md-shirt{
+  transform:translateY(-3px) scale(1.06);
+  filter:drop-shadow(0 5px 7px #031923b8);
+}
+
+button.md-marker:hover .md-pitch-name{
+  background:#1a6a80;
+  color:#f4ffff;
+  box-shadow:0 0 0 1px #8fe6f1a6;
+}
+
+.md-shirt{transition:transform .2s cubic-bezier(.22,.72,.24,1),filter .2s ease}
+
+.technical-person:hover{
+  background:#d9f99c1f;
+  box-shadow:0 0 0 1px #d9f99c73,0 0 14px -4px #d9f99c59;
+}
+
+.player-tile:hover{
+  transform:translateY(-2px);
+  border-color:#8ba37d;
+  background:linear-gradient(165deg,#27392b,#1b241d);
+  box-shadow:0 10px 20px -16px #000;
+}
+
+.player-tile[aria-pressed=true]{
+  box-shadow:0 0 0 1px #d9f99c73,0 0 16px -6px #d9f99c66;
+}
+
+.player-tile:hover .tile-main .icon{animation:mo-bob .55s ease-in-out}
+.player-tile .icon{transition:transform .2s ease,color .2s ease}
+
+.and-subs,.tl-row-arrow,.ms-next{transition:transform .18s ease}
+.ms-next:hover .hc-icon,.tl-row-arrow:hover .hc-icon{transform:translateX(3px)}
+.hc-back:hover .hc-icon{animation-name:mo-bump-left}
+.hc-continue:hover .hc-icon{transform:translateX(3px)}
+
+.hc-dialog-link:hover{
+  transform:translateX(2px);
+  border-color:#587c9d;
+  box-shadow:inset 3px 0 var(--tl-lime);
+}
+
+/* Form controls join in. */
+.hc-shell :is(select,input[type=search],input[type=text],textarea):hover{
+  border-color:#6d8dab;
+  box-shadow:0 0 0 2px #9ad2ff14;
+}
+
+.hc-shell :is(select,input[type=search],input[type=text],textarea):focus{
+  box-shadow:0 0 0 3px #d7f8891f;
+}
+
+.cc-check:hover{color:#f1f8ff}
+.cc-check:hover input{accent-color:var(--tl-lime,#d9f99c)}
+
+.hc-continue[data-action=required],
+.hc-continue[data-action=stop],
+.hc-continue[data-action=meeting]{
+  animation:mo-attention 2.8s ease-in-out infinite;
+}
+
+/* --- Living chrome ------------------------------------------------------- */
+
+.tl-brandmark .hc-icon{animation:mo-bob 6s ease-in-out infinite}
+.tl-brand:hover .tl-brandmark .hc-icon{animation:mo-tilt .6s cubic-bezier(.22,.72,.24,1) 1}
+
+.hc-shell[data-processing=false] .tl-brandmark{box-shadow:0 0 0 1px #d7f88930,0 6px 18px -12px #d7f889}
+
+.brandmark{position:relative;overflow:hidden}
+.brandmark::after{
+  content:'';
+  position:absolute;
+  inset:-40% -70%;
+  background:linear-gradient(115deg,transparent 3%,#ffffff73 9%,transparent 15%);
+  transform:translateX(-120%);
+  animation:mo-sheen 8s ease-in-out infinite;
+  pointer-events:none;
+}
+
+.match-status[data-status=live] i{
+  animation:mo-live 1.8s ease-in-out infinite;
+}
+
+.live-tablet header i{animation:mo-live 2.2s ease-in-out infinite}
+
+.pitch-indicator[data-view=highlight] i{animation:mo-live 1.6s ease-in-out infinite}
+
+.feed-pip{animation:mo-live 2.4s ease-in-out infinite}
+
+.tl-running i{animation:mo-run .68s ease-in-out infinite alternate}
+
+/* --- Ambient artwork ----------------------------------------------------- */
+
+.cc-score-art,.tl-match-hero,.tl-room-art,.tl-dispatch-lead,.tl-social-cover,.cc-competitions,.tl-terrace,.tl-hero{
+  overflow:hidden;
+}
+#matchScreen{position:relative}
+
+/* The photography keeps breathing, and stadium art gets a slow pass of light. */
+:is(.cc-score-art,.tl-match-hero,.tl-room-art,.tl-dispatch-lead,.tl-social-cover,.tl-terrace,.tl-hero) .cc-art,
+:is(.cc-score-art,.tl-match-hero,.tl-room-art,.tl-dispatch-lead,.tl-social-cover,.tl-terrace,.tl-hero) img.cc-art{
+  animation:mo-drift 34s ease-in-out infinite alternate;
+}
+
+:is(.cc-score-art,.tl-match-hero,.tl-room-art,.tl-dispatch-lead,.tl-social-cover,.tl-terrace,.cc-competitions) > .cc-art{
+  animation:mo-breathe 12s ease-in-out infinite alternate;
+  filter:saturate(1.04) brightness(1.02);
+}
+
+.tl-match-hero::after,
+.tl-room-art::after,
+.tl-dispatch-lead::after,
+.tl-social-cover::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:1;
+  background:radial-gradient(58% 46% at 20% 10%,#ffffff0d,transparent 68%),
+             linear-gradient(100deg,transparent 30%,#cfe9ff14 46%,transparent 62%);
+  background-size:100% 100%,260% 100%;
+  animation:mo-light 16s ease-in-out infinite;
+}
+
+/* Hovering a hero lifts its space without moving the layout. */
+.tl-match-hero,.tl-room-art,.tl-dispatch-lead,.tl-social-cover,.tl-terrace,.cc-score-art{
+  transition:box-shadow .28s ease,border-color .28s ease;
+}
+
+:is(.tl-match-hero,.tl-room-art,.tl-dispatch-lead,.tl-social-cover,.tl-terrace,.cc-score-art):hover{
+  box-shadow:0 18px 44px -28px #000000e6,0 0 0 1px #6f93b447;
+}
+
+:is(.tl-match-hero,.tl-room-art,.tl-dispatch-lead,.tl-social-cover,.tl-terrace):hover .cc-art{
+  animation-duration:18s;
+  transition:filter .3s ease;
+  filter:saturate(1.12) brightness(1.06);
+}
+
+/* --- Entrance and state changes ----------------------------------------- */
+
+.cc-workspace:not([hidden])>*,
+.tl-home:not([hidden])>*{
+  animation:mo-rise .32s cubic-bezier(.22,.72,.24,1) both;
+}
+
+.cc-workspace:not([hidden])>*:nth-child(2),
+.tl-home:not([hidden])>*:nth-child(2){animation-delay:.04s}
+.cc-workspace:not([hidden])>*:nth-child(3),
+.tl-home:not([hidden])>*:nth-child(3){animation-delay:.08s}
+.cc-workspace:not([hidden])>*:nth-child(4),
+.tl-home:not([hidden])>*:nth-child(4){animation-delay:.12s}
+.cc-workspace:not([hidden])>*:nth-child(n+5),
+.tl-home:not([hidden])>*:nth-child(n+5){animation-delay:.16s}
+
+.tl-processing-day{animation:mo-rise .34s cubic-bezier(.22,.72,.24,1) both}
+.tl-processing-day:nth-child(2){animation-delay:.05s}
+.tl-processing-day:nth-child(3){animation-delay:.1s}
+.tl-processing-day:nth-child(4){animation-delay:.15s}
+.tl-processing-day:nth-child(5){animation-delay:.2s}
+.tl-processing-day:nth-child(6){animation-delay:.25s}
+
+#goalBanner:not([hidden]){animation:mo-banner .5s cubic-bezier(.18,.8,.24,1) both}
+#playerFocus:not([hidden]){animation:mo-slide-in .26s cubic-bezier(.22,.72,.24,1) both}
+#replayIndicator:not([hidden]){animation:mo-slide-in .22s ease-out both}
+#clubRestore:not([hidden]){animation:mo-fade .3s ease-out both}
+
+:is(#toast,.cc-toast):not([hidden]){
+  animation:mo-toast .3s cubic-bezier(.22,.72,.24,1) both;
+}
+
+.hc-scrim:not([hidden]){animation:mo-fade .18s ease-out both}
+
+/* A goal lifts the scoreboard. */
+#score[data-hit]{animation:mo-score .7s cubic-bezier(.18,.8,.24,1) 1}
+#score[data-hit=home]{--hit:#9ee06b}
+#score[data-hit=away]{--hit:#ff9a92}
+
+/* Meters, ratings and progress feel alive. */
+.cc-meter i{
+  position:relative;
+  overflow:hidden;
+  transition:width .5s cubic-bezier(.22,.72,.24,1);
+}
+
+.cc-meter i::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,transparent,#ffffff40 48%,transparent);
+  transform:translateX(-100%);
+  animation:mo-sweep 5.2s ease-in-out infinite;
+}
+
+.mo-flash{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+  background:radial-gradient(circle at 50% 44%,#d9f99c47 0 8%,transparent 26%);
+  animation:mo-flash 1s ease-out 1 both;
+}
+
+.mo-flash::before,.mo-flash::after{
+  content:'';
+  position:absolute;
+  top:44%;
+  left:50%;
+  width:19vmax;
+  height:19vmax;
+  margin:-9.5vmax 0 0 -9.5vmax;
+  border:2px solid #d9f99c8c;
+  border-radius:50%;
+  animation:mo-ring 1.15s cubic-bezier(.2,.7,.3,1) 1 both;
+}
+
+.mo-flash::after{animation-delay:.16s;border-color:#9ad2ff6b}
+
+/* Clubhouse loading bars keep sweeping even when a page is idle. */
+.tl-processing-line::before{animation-duration:1.6s}
+
+.md-attack-glyph{
+  display:inline-block;
+  color:#d7f889;
+  font-size:7px;
+  line-height:1;
+  transform-origin:50% 60%;
+  animation:mo-bob 2.6s ease-in-out infinite;
+}
+
+/* --- Keyframes ----------------------------------------------------------- */
+
+@keyframes mo-rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@keyframes mo-slide-in{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
+@keyframes mo-banner{from{opacity:0;transform:translateY(-12px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes mo-toast{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes mo-fade{from{opacity:0}to{opacity:1}}
+@keyframes mo-bump{0%{transform:none}45%{transform:translateX(3px)}100%{transform:none}}
+@keyframes mo-tilt{0%{transform:none}40%{transform:rotate(-7deg) scale(1.07)}70%{transform:rotate(3deg) scale(1.05)}100%{transform:none}}
+@keyframes mo-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+@keyframes mo-bump-left{0%{transform:none}45%{transform:translateX(-3px)}100%{transform:none}}
+@keyframes mo-sheen{0%,62%{transform:translateX(-120%)}86%,100%{transform:translateX(120%)}}
+@keyframes mo-live{0%,100%{box-shadow:0 0 0 0 #a9e88b00;opacity:.72}50%{box-shadow:0 0 0 4px #a9e88b26;opacity:1}}
+@keyframes mo-run{from{transform:scaleY(.55);opacity:.35}to{transform:scaleY(1);opacity:1}}
+@keyframes mo-drift{from{transform:scale(1.02) translate3d(0,0,0)}to{transform:scale(1.1) translate3d(-1.4%,-1%,0)}}
+@keyframes mo-light{0%,100%{background-position:0 0,100% 0}50%{background-position:0 0,-60% 0}}
+@keyframes mo-breathe{from{opacity:.72}to{opacity:1}}
+@keyframes mo-score{0%{transform:scale(1)}28%{transform:scale(1.16);text-shadow:0 0 14px var(--hit,#d9f99c),0 0 26px var(--hit,#d9f99c)}100%{transform:scale(1)}}
+@keyframes mo-sweep{0%{transform:translateX(-110%)}55%,100%{transform:translateX(110%)}}
+@keyframes mo-flash{0%{opacity:0;transform:scale(.9)}22%{opacity:1}100%{opacity:0;transform:scale(1.06)}}
+@keyframes mo-ring{from{opacity:.9;transform:scale(.15)}to{opacity:0;transform:scale(1.5)}}
+@keyframes mo-attention{0%,100%{box-shadow:0 0 0 0 #f0c38a00}50%{box-shadow:0 0 0 4px #f0c38a2e}}
+
+@media(prefers-reduced-motion:reduce){
+  .brandmark::after,.cc-meter i::after,.mo-flash{display:none}
+}

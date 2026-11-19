@@ -9,7 +9,7 @@
     return C.roster.map(p=>S.availability(s,p.id)).sort((a,b)=>Number(b.out)-Number(a.out)||a.today-b.today);
   }
   function riskTable(c){
-    return table('Current availability',['Player','Condition','Issue','Status','Expected return'],fitness(c).map(x=>tr([player(x.p.id),condition(x.today),esc(x.issue),tag(x.status,x.out?'bad':x.today<92?'warn':'good'),x.out?H.calendar(x.returnDate).date:'—'])), 'md-medical-risk','cc-risk-table');
+    return table('Current availability',['Player','Condition','Issue','Status','Expected return'],fitness(c).map(x=>tr([player(x.p.id),condition(x.today),esc(x.issue),tag(x.status,x.out?'bad':x.today<92?'warn':'good'),x.out?H.calendar(x.returnDate).date:'Not set'])), 'md-medical-risk','cc-risk-table');
   }
   function medical(c){
     const s=c.season.value,out=fitness(c).filter(p=>p.out), soon=c.fixtures().filter(f=>!f.score&&K.day(f.date)<K.day(c.now)+7*K.DAY).length;

@@ -1,4 +1,4 @@
-/* Touchline 26 — shared pitch geometry, in metres. */
+/* Touchline 26: shared pitch geometry, in metres. */
 (function (global) {
   'use strict';
   const api = Object.freeze({
