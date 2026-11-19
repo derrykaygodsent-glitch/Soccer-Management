@@ -94,12 +94,17 @@
   const tone = { Pleased:'lime','On course':'good',Satisfied:'info','Not judging':'violet','Reserving judgment':'violet','Very pleased':'good',Delighted:'good',Passed:'good' };
   const objectiveRows = (entries,kind='Objective')=>`<div class="cc-objectives"><div class="cc-objective-head"><span>${esc(kind)}</span><span>Importance</span><span>Status</span></div>${entries.map(([label,importance,status,comp])=>`<div class="cc-objective-row"><span class="cc-icon-text">${icon(comp?'cup':'plan')}${comp?link('competitions',label,'competitions',comp,'text',false):esc(label)}</span><span>${esc(importance)}</span>${tag(status,tone[status]||'info')}</div>`).join('')}</div>`;
   const request = c => btn('Make board request','board-request','',{kind:'outline',icon:'case'});
+  const boardFocus = c => {
+    const choices=[['performance','Protect the winning run','Keep the first team stable and make the title chase the centre of every conversation.','Pleased'],['infrastructure','Build the club underneath the team','Put facilities, academy and the next generation ahead of short-term comfort.','On course'],['ambition','Ask for the next level','Use the current momentum to demand bigger standards, wider scouting and a bolder horizon.','Reserving judgment']];
+    const active=c.ui.boardFocus||'performance';
+    return `<section class="br-command-room"><div class="br-room-copy"><p class="cc-eyebrow">CLUB GOVERNANCE / LIVE BOARD</p><h2>The Boardroom</h2><p>Every request spends attention. Set the priority you want the directors to remember when the next decision arrives.</p><div class="br-room-meta"><span><b>JOB SECURITY</b><strong>SECURE</strong></span><span><b>BOARD MOOD</b><strong>VERY PLEASED</strong></span><span><b>REQUESTS LOGGED</b><strong>${c.s.board.length}</strong></span></div></div><div class="br-chair-card"><span>CHAIRPERSON’S DESK</span><strong>${esc(C.club.chair)}</strong><small>Listening before the next quarterly review</small><i></i><b>${active==='performance'?'The board want the winning run protected.':active==='infrastructure'?'The board will ask what lasts beyond this season.':'The board want a statement of ambition.'}</b></div></section><section class="br-focus-panel"><header><div><p class="cc-eyebrow">SET THE AGENDA</p><h3>What should the board hear from you?</h3><p>Choose a position before you open a request. This is your leadership signal, not a final board decision.</p></div>${request(c)}</header><div class="br-focus-grid">${choices.map(([id,title,copy,status])=>`<button type="button" class="br-focus-card" data-c-do="board-focus" data-c-val="${id}" aria-pressed="${active===id}"><span class="br-focus-index">0${choices.findIndex(x=>x[0]===id)+1}</span><div><b>${esc(title)}</b><p>${esc(copy)}</p></div><span class="br-focus-status">${esc(status)}</span><i>↗</i></button>`).join('')}</div><div class="br-choice-readout"><span class="cc-dot cc-lime"></span><strong>${choices.find(x=>x[0]===active)[1]}</strong><span>${choices.find(x=>x[0]===active)[2]}</span></div></section>`;
+  };
   function requests(c){
     return c.s.board.length?`<section class="cc-board-requests">${head('Requests logged')}<ul>${c.s.board.map(r=>`<li>${esc(r)} ${tag('Pending','warn')}</li>`).join('')}</ul></section>`:'';
   }
   function visionPlan(c){
     const year=Math.max(0,Math.min(C.plan.length-1,Number(c.ui.year||0)));
-    return `<section class="cc-board-plan"><div class="cc-vision-intro"><h2>Board vision</h2><p>The club’s long-term vision and expectations.</p></div>${objectiveRows(C.objectives,'Actionable objectives')}<hr>${objectiveRows([['Prioritise longer contracts for first-team players','Preferred','Not judging']],'Informational objectives')}<hr><h3>Five-year plan</h3><div class="cc-year-tabs">${['Current season','2027/28','2028/29','2029/30','2030/31'].map((name,i)=>btn(name,'plan-year',i,{pressed:i===year})).join('')}</div>${objectiveRows(C.plan[year],year?'By the end of this season':'End of current season')}</section>`;
+    return `<section class="cc-board-plan"><div class="cc-vision-intro"><p class="cc-eyebrow">THE CLUB’S NORTH STAR</p><h2>Board vision</h2><p>The club’s long-term vision and expectations.</p></div>${objectiveRows(C.objectives,'Actionable objectives')}<hr>${objectiveRows([['Prioritise longer contracts for first-team players','Preferred','Not judging']],'Informational objectives')}<hr><h3>Five-year plan</h3><div class="cc-year-tabs">${['Current season','2027/28','2028/29','2029/30','2030/31'].map((name,i)=>btn(name,'plan-year',i,{pressed:i===year})).join('')}</div>${objectiveRows(C.plan[year],year?'By the end of this season':'End of current season')}</section>`;
   }
   function feedback(c,which){
     const board=which==='board', completed=c.s.board.length;
@@ -113,10 +118,11 @@
     title:'Club Vision',subtitle:()=> 'Job security: Secure',tabs:tabs(['overview','Overview'],['performance','Performance'],['board','Board'],['supporters','Supporters']),
     render(c){
       if(c.r.tab==='performance')return `<div class="cc-grid2">${card('Performance against expectations',objectiveRows(C.plan[0],'Competitions')+objectiveRows(C.objectives,'Club management'))}${feedback(c,'board')}</div>`;
-      return `<div class="cc-vision-grid">${visionPlan(c)}${feedback(c,c.r.tab==='supporters'||(c.r.tab==='overview'&&c.ui.who==='supporters')?'supporters':'board')}</div>`;
+      return `<div class="br-boardroom"><div class="br-boardroom-top">${boardFocus(c)}</div><div class="cc-vision-grid">${visionPlan(c)}${feedback(c,c.r.tab==='supporters'||(c.r.tab==='overview'&&c.ui.who==='supporters')?'supporters':'board')}</div></div>`;
     },
     action(c,cmd,id){
       if(cmd==='plan-year'){c.ui.year=Number(id);c.render();}
+      else if(cmd==='board-focus'){c.ui.boardFocus=id;c.render();}
       else if(cmd==='feedback'){
         if(c.r.tab==='overview'){c.ui.who=id;c.render();}else c.go('vision',id);
       } else if(cmd==='board-request'){
