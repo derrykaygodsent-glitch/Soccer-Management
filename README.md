@@ -100,3 +100,7 @@ The original uploads are unchanged. The clubhouse art, fonts and icons are bundl
 2. Apply `supabase/migrations/202611190001_careers.sql` once. The Data API must expose `public`. Owners can select their own slots; only the authenticated revision-checking RPC can write them. No Edge Function, Realtime subscription, service-role key or game server is needed.
 3. Set `TOUCHLINE_SUPABASE_URL` to the HTTPS project origin and `TOUCHLINE_PUBLISHABLE_KEY` to an `sb_publishable_…` key when running `npm run build`. Serve the resulting `index.html` on HTTPS on both devices. The default build uses the dedicated `touchline-26` project. Set both variables to empty strings for an offline-only build. Do not supply secret keys.
 4. Run `npm ci && npm test`. The cloud test runs the actual migration in embedded PostgreSQL with two simulated Auth identities. Before release, test real email confirmation, laptop-to-phone resume and a stale laptop upload against the approved project. An interrupted request may already have reached the server: refresh and inspect the slot rather than assuming it failed.
+
+### Meridian Football Universe
+
+New profiles choose a home nation from the Meridian foundation. In the clubhouse, open **Competitions → Explore the Meridian atlas** to browse the continents, capitals, club homes and derbies. See [foundation scope and roadmap](docs/meridian-foundation.md) for the distinction between the 100 founding clubs and the eventual 960-club pyramid. Existing pre-Meridian careers keep their original world when loaded.
