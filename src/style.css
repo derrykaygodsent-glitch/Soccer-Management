@@ -72,6 +72,10 @@ h1{font:700 clamp(35px,4vw,45px)/.99 'Barlow Condensed','Arial Narrow',sans-seri
 .meta-divider{height:10px;width:1px;background:#46574a}
 .pitchwrap{width:100%;height:var(--pitch-h);position:relative;background:#121d16;overflow:hidden}
 #pitch{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:default;touch-action:manipulation}
+/* Canvas markers share coordinates with transparent, keyboard-focusable buttons. */
+.technical-areas{position:absolute;inset:0;pointer-events:none;z-index:1}
+.technical-person{position:absolute;transform:translate(-50%,-50%);border:0;border-radius:8px;background:none;padding:0;margin:0;pointer-events:auto;cursor:pointer}
+.technical-person:focus-visible{outline:1px solid var(--accent);outline-offset:-1px}
 .field-stamp{position:absolute;bottom:16px;left:18px;display:flex;align-items:center;gap:6px;line-height:1;text-transform:uppercase;font-weight:750;letter-spacing:.125em;color:#8c9f8f;font-size:9px;pointer-events:none}
 .field-stamp i{width:4px;height:4px;border-radius:1px;background:#7d957e}
 .pitch-indicator,.goal-card,.player-focus{position:absolute;background:#111d16eF;border:1px solid #577050;border-radius:8px;color:var(--text);box-shadow:0 6px 25px #080f0bb0}
@@ -94,6 +98,8 @@ h1{font:700 clamp(35px,4vw,45px)/.99 'Barlow Condensed','Arial Narrow',sans-seri
 .goal-kicker{display:flex;align-items:center;gap:8px;font-size:9px;font-weight:760;color:#d5e9c8;letter-spacing:.1em;text-transform:uppercase}
 #goalScorer{display:block;font:700 26px/.98 'Barlow Condensed',sans-serif;margin-top:3px}
 .player-focus{right:14px;bottom:13px;padding:9px 8px 9px 10px;display:flex;align-items:flex-start;gap:8px;border-color:#47604d;max-width:calc(100% - 28px);z-index:2}
+.player-focus[data-technical=true]{top:var(--pitch-overlay-top,14px);bottom:auto;right:auto;left:clamp(6px,calc(var(--person-x) - 82px),calc(100% - 199px));max-width:min(192px,calc(100% - 12px));width:max-content;z-index:3}
+.player-focus[data-technical=true]>div{min-width:0}
 .focus-meta{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:750}.player-focus strong{display:block;font-size:12px;margin-top:3px}.focus-stats{display:block;font-size:10px;color:var(--muted);margin-top:3px}
 .commentary{--feed-accent:#c7ea91;position:relative;display:flex;align-items:center;gap:11px;min-height:37px;padding:0 11px 0 13px;background:color-mix(in srgb,var(--feed-accent) 10%,#18271f);border-top:1px solid color-mix(in srgb,var(--feed-accent) 38%,#2c4434);border-bottom:1px solid #35493b;box-shadow:inset 3px 0 var(--feed-accent)}
 .feed-label{display:flex;align-items:center;gap:6px;flex:none;color:#d0dec9;white-space:nowrap;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding-right:10px;border-right:1px solid #4a5c4c}
@@ -198,6 +204,9 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   .shortcut{display:none!important}.footer{padding-top:6px}.footer>div{flex-wrap:wrap}
   .dialog{max-height:88svh}.dialog-head{padding:14px 13px}.dialog-body{padding:12px 13px 16px}
 }
+@media(max-width:760px){
+  .pitch-indicator,.goal-card{top:var(--pitch-overlay-top,14px)}
+}
 @media(max-width:565px){
   .watch-mode{flex:1;padding:0;min-width:122px}
   .speed-mode{padding-left:0}
@@ -214,7 +223,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   .score-crest{width:12px;height:14px}#score{min-width:44px;gap:4px;font-size:16px}
   .match-status{padding-left:8px;gap:4px;font-size:9px;letter-spacing:.035em;white-space:normal}.match-status span{max-width:60px}
   .feed-label>span:last-child{display:none}.feed-label{border:0;padding:0}#feedText{font-size:11px}
-  #feedTime{font-size:10px}.goal-card{right:8px;top:8px;padding:6px 8px}.pitch-indicator{left:8px;top:8px}.pitch-indicator[data-side=right]{left:auto;right:8px}.player-focus{bottom:6px;right:7px;padding:6px;gap:4px}
+  #feedTime{font-size:10px}.goal-card{right:8px;padding:6px 8px}.pitch-indicator{left:8px}.pitch-indicator[data-side=right]{left:auto;right:8px}.player-focus{bottom:6px;right:7px;padding:6px;gap:4px}
   .team-actions{gap:4px}.team-button{padding-inline:7px;gap:4px;font-size:11px}.team-button .icon{width:15px;height:15px}.and-subs{display:none}
 }
 @media(max-width:355px){

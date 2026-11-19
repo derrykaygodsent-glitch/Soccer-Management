@@ -2,7 +2,13 @@
 (function (global) {
   'use strict';
   const { L, W, CX, CY, GOAL_HALF, BOX_L, BOX_HALF, SIX_L, SIX_HALF, PEN } = global.TLEngine;
+  const { APRON_END, APRON_SIDE } = global.TLPitch;
   const TAU = Math.PI * 2;
+  // Fixed to the venue, not to the direction of attack. The dugouts don't
+  // trade places when the teams change ends.
+  const AREA = { inset: 8, middleGap: 2.4, back: -7.12, front: -1.12, seatsY: -5.82, coachY: -2.48 };
+  const areaWidth = CX - AREA.inset - AREA.middleGap;
+  const dugoutLeft = side => side ? CX + AREA.middleGap : AREA.inset;
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   const mix = (a, b, t) => a + (b - a) * t;
   const surname = p => p.name.split(' ').pop();
@@ -47,6 +53,7 @@
       this.grain = lawnGrain();
       this.dpr = 1;
       this.drawn = [];
+      this.touchline = [];
       this.reduced = global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)');
       this.resize();
       if (typeof global.ResizeObserver === 'function') {
@@ -65,12 +72,13 @@
       this.canvas.width = this.back.width = Math.round(width * dpr);
       this.canvas.height = this.back.height = Math.round(height * dpr);
       this.compact = width < 650;
-      const margin = this.compact ? 6 : 12;
-      this.scale = Math.min((width - margin) / (L + 16), (height - margin) / (W + 11.9));
+      const margin = this.compact ? 8 : 14;
+      this.scale = Math.min((width - margin) / (L + 2 * (APRON_END + .95)), (height - margin) / (W + 2 * (APRON_SIDE + 1.1)));
       this.scale = Math.max(.05, this.scale);
       this.ox = (width - L * this.scale) / 2;
-      this.oy = (height - W * this.scale) / 2 + this.scale * .2;
+      this.oy = (height - W * this.scale) / 2 + this.scale * .28;
       this.radius = clamp(this.scale * 1.03 + .35, 4.1, 9.6);
+      this.seating = null;
       this.buildStadium();
     }
 
@@ -94,27 +102,26 @@
         if (fill) { ctx.fillStyle = fill; ctx.fill(); }
         if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = Math.max(.5, .1 * s); ctx.stroke(); }
       };
-      shell(7.7, 6.25, 4.1, '#202e26', '#40544a');
-      shell(6.75, 5.6, 3.35, '#25392d', '#304a38');
-      ctx.save();
-      round(ctx, x(-6.3), y(-5.15), (L + 12.6) * s, (W + 10.3) * s, 2.9 * s); ctx.clip();
-      // Repeating rows around the boundary read as a stand, not a second field.
-      ctx.fillStyle = '#18291e'; ctx.fillRect(x(-6.3), y(-5.15), (L + 12.6) * s, (W + 10.3) * s);
+      shell(APRON_END + .88, APRON_SIDE + .9, 4, '#29372e', '#43564a');
+      shell(APRON_END, APRON_SIDE, 3.1, '#38483c', '#69806f');
+      // A real strip of grass and service path runs beyond the white lines;
+      // the near fence is not the edge of the camera.
+      shell(APRON_END - 2.15, APRON_SIDE - .65, 2.8, '#313f35', '#45594a');
+      shell(5.2, 3.9, .65, '#405b3b', '#728f69');
       const strip = (x0, y0, ww, hh, color) => { ctx.fillStyle = color; ctx.fillRect(x(x0), y(y0), ww * s, hh * s); };
-      for (let a = -6.2; a < L + 6; a += 2.32) {
+      for (let a = 0; a <= L - 2.1; a += 2.75) {
         const alternate = Math.round(a * 3) % 4 === 0;
-        strip(a, -5.1, 1.7, 1.6, alternate ? '#3d5245' : '#2c4234');
-        strip(a + .35, W + 3.35, 1.7, 1.7, alternate ? '#3e5345' : '#2d4437');
+        strip(a, W + 5.75, 2.04, .78, alternate ? '#617467' : '#465a4c');
+        if (a < 6 || a > L - 7) strip(a, -6.55, 2.04, .79, '#4f6454');
       }
-      for (let a = -3.9; a < W + 3.9; a += 2.08) {
-        strip(-6.25, a, 1.85, 1.6, '#304838');
-        strip(L + 4.4, a, 1.85, 1.6, '#304838');
+      for (let a = 2.1; a < W - 2.1; a += 2.65) {
+        strip(-8.98, a, .66, 1.98, '#506658');
+        strip(L + 8.32, a, .66, 1.98, '#506658');
       }
-      ctx.restore();
 
       const grass = ctx.createLinearGradient(x(-2), y(0), x(L), y(W));
       grass.addColorStop(0, '#4e6b3d'); grass.addColorStop(.47, '#526f43'); grass.addColorStop(1, '#405e39');
-      shell(4.35, 3.23, .8, '#334f36', '#82a57b');
+      shell(3.95, 2.98, .55, '#4a633f', '#9bb08a');
       const lx = x(0), ly = y(0), lw = L * s, lh = W * s;
       ctx.fillStyle = grass; ctx.fillRect(lx, ly, lw, lh);
       for (let i = 0; i < 12; i++) {
@@ -127,16 +134,23 @@
       ctx.fillRect(lx, ly, lw, lh);
       ctx.restore();
 
-      // Perimeter boards and the two technical areas, painted once per resize.
+      // Dugout shelters sit behind the marked technical areas on the far side.
       const line = (x1, y1, x2, y2) => { ctx.beginPath(); ctx.moveTo(x(x1), y(y1)); ctx.lineTo(x(x2), y(y2)); ctx.stroke(); };
       const rect = (x0, y0, ww, hh) => ctx.strokeRect(x(x0), y(y0), ww * s, hh * s);
-      ctx.fillStyle = '#779169';
-      for (const a of [4.5, 16, 27.5, 69, 80.5, 92]) ctx.fillRect(x(a), y(-3.85), 9.2 * s, .42 * s);
-      ctx.strokeStyle = '#a9bd9fba'; ctx.lineWidth = Math.max(.55, s * .105);
-      for (const a of [CX - 17.2, CX + 4]) {
-        rect(a, -2.65, 13.2, 1.82);
-        ctx.fillStyle = '#869d84';
-        for (let i = 0; i < 6; i++) ctx.fillRect(x(a + .75 + i * 2), y(-2.35), 1.28 * s, .6 * s);
+      ctx.fillStyle = '#79956e';
+      for (const a of [5, 17, 29, 67, 79, 91]) ctx.fillRect(x(a), y(W + 3.72), 9.2 * s, .44 * s);
+      for (const side of [0, 1]) {
+        const a = dugoutLeft(side), w = areaWidth, inner = side ? a + 8.1 : a + .45;
+        round(ctx, x(a), y(AREA.back), w * s, (AREA.front - AREA.back) * s, .5 * s);
+        ctx.fillStyle = '#355447'; ctx.fill();
+        ctx.strokeStyle = '#96b4a2'; ctx.lineWidth = Math.max(.55, s * .095); ctx.stroke();
+        round(ctx, x(inner), y(AREA.back + .19), (w - 8.55) * s, 2.61 * s, .49 * s);
+        ctx.fillStyle = '#182c25'; ctx.fill();
+        ctx.strokeStyle = '#708b7c'; ctx.lineWidth = Math.max(.5, s * .085); ctx.stroke();
+        ctx.strokeStyle = '#c2d6b8b8'; ctx.lineWidth = Math.max(.56, s * .092);
+        ctx.setLineDash([Math.max(2, s * .65), Math.max(2, s * .65)]);
+        line(a + .4, AREA.front, a + w - .4, AREA.front);
+        ctx.setLineDash([]);
       }
 
       // Line widths are physical where possible, with a floor for small phones.
@@ -261,12 +275,79 @@
       ctx.lineCap = 'butt';
     }
 
+    // The same pixel coordinates paint the badges and position native hit targets.
+    // Only recompute them for a new frame roster or a viewport change.
+    positionDugouts(match, frame, managers) {
+      const home = frame?.dugouts?.[0] || match.teams[0].dugout;
+      const away = frame?.dugouts?.[1] || match.teams[1].dugout;
+      const last = this.seating;
+      if (last && last.match === match && last.home === home && last.away === away && last.managers === managers) return;
+      this.seating = { match, home, away, managers };
+      const s = this.scale;
+      this.touchline = match.teams.flatMap((team, side) => {
+        const seats = side ? away : home, byId = new Map(team.players.map(p => [p.id, p]));
+        const staffX = CX - 5.94, managerRadius = clamp(s * 1.04, 5.8, 8.25);
+        const benchRadius = clamp(s * .96, 4.25, 7.4), span = areaWidth - 12.4;
+        const point = (x, y, r, tapW, tapH) => ({
+          x: this.ox + (side ? L-x : x) * s, y: this.oy + y * s, r, tapW, tapH
+        });
+        const bench = seats.map(({ id, used }, i) => {
+          const p = byId.get(id);
+          const xx = AREA.inset + 2.5 + (seats.length === 1 ? span / 2 : i * span / Math.max(1, seats.length-1));
+          return { id, name: p.name, num: p.num, role: p.pos, team: side, club: team.club, kind: used ? 'Substituted off' : 'Substitute',
+            ...point(xx, AREA.seatsY, benchRadius, clamp(span * s / Math.max(1, seats.length-1) - .65, 9, 25), clamp(benchRadius*2+8, 17, 28)) };
+        });
+        const manager = { id: `manager-${side}`, name: managers?.[side] || `${team.club.name} manager`, team: side, club: team.club, kind: 'Manager',
+          ...point(staffX, AREA.coachY, managerRadius, clamp(s*7.5, 16, 30), clamp(managerRadius*2+8, 19, 30)) };
+        return [...bench, manager];
+      });
+    }
+
+    drawDugouts(match, frame, managers, selected) {
+      this.positionDugouts(match, frame, managers);
+      const ctx = this.ctx, s = this.scale;
+      for (const t of match.teams) {
+        ctx.fillStyle = t.club.primary;
+        ctx.fillRect(this.ox + (dugoutLeft(t.idx) + .40) * s, this.oy + (AREA.back + .12) * s, (areaWidth - .8) * s, Math.max(.95, s * .23));
+      }
+      for (const p of this.touchline) {
+        const { x, y, r } = p, isManager = p.kind === 'Manager', off = p.kind === 'Substituted off';
+        const kit = off ? '#405548' : p.role === 'GK' ? p.club.gk : p.club.primary;
+        paint(ctx, x + .42, y + .85, r + .84, '#0e1b17b8');
+        if (p.id === selected) {
+          ctx.beginPath(); ctx.arc(x, y, r + 2.15, 0, TAU);
+          ctx.strokeStyle = '#e2ffb8'; ctx.lineWidth = 1.22; ctx.stroke();
+        }
+        paint(ctx, x, y, r, kit);
+        ctx.strokeStyle = off ? '#bbc8bd' : '#f2f9ed'; ctx.lineWidth = isManager ? 1.03 : .74; ctx.stroke();
+        ctx.fillStyle = lightKit(kit) ? '#151d18' : '#f8fbf8';
+        ctx.font = `800 ${clamp(r*1.21, 6.4, 9.6)}px Inter,system-ui,sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(isManager ? 'M' : p.num, x, y+.22);
+      }
+    }
+
+    drawAttendant(ball, projection) {
+      if (!(ball.carried > .006)) return;
+      const ctx = this.ctx, s = this.scale, r = clamp(s * .71, 2.6, 5.30);
+      const end = Math.abs(ball.x-CX)/L > Math.abs(ball.y-CY)/W;
+      const x = this.ox + ball.x*s + (end ? Math.sign(ball.x-CX) * r*1.30 : r*.74);
+      const y = this.oy + ball.y*s + (!end ? Math.sign(ball.y-CY) * r*1.18 : r*.56);
+      ctx.save(); ctx.globalAlpha = ball.carried;
+      paint(ctx, x+.55, y+.94, r+1.04, '#1620189c');
+      paint(ctx, x, y, r, '#cbd981');
+      ctx.strokeStyle = '#17271c'; ctx.lineWidth = .85; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(projection.x, projection.y);
+      ctx.strokeStyle = '#b5c574'; ctx.lineWidth = Math.max(1.3, r*.50); ctx.stroke();
+      ctx.restore();
+    }
+
     draw(match, options = {}) {
       if (!match) return;
       this.needsPaint = false;
       const ctx = this.ctx, frame = options.frame;
       const players = frame ? frame.players : match.onPitchPlayers();
-      const ball = frame ? frame.ball : match.ball;
+      const ball = frame ? frame.ball : match.visibleBall();
       const pose = frame ? frame.restartPose : match.restartPose();
       const referee = frame ? frame.referee : options.referee;
       const ownerId = frame ? frame.ownerId : ball.owner && ball.owner.id;
@@ -276,6 +357,7 @@
       ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
       const s = this.scale, r = this.radius, alpha = options.alpha == null ? 1 : options.alpha;
       const toScreen = (x, y) => [this.ox + x * s, this.oy + y * s];
+      this.drawDugouts(match, frame, options.managers, options.technical);
       const positions = players.map(p => {
         let x = p.x, y = p.y;
         if (!frame && alpha < 1 && Number.isFinite(p.prevX) && Math.abs(x - p.prevX) + Math.abs(y - p.prevY) < 2.2) {
@@ -334,11 +416,9 @@
 
       // x/y is where the ball is over the grass; z raises its sprite independently.
       const interpolate = !frame && alpha < 1 && Number.isFinite(ball.prevX) && Math.abs(ball.x - ball.prevX) + Math.abs(ball.y - ball.prevY) < 2.55;
-      const projection = this.ballProjection(
-        interpolate ? mix(ball.prevX, ball.x, alpha) : ball.x,
-        interpolate ? mix(ball.prevY, ball.y, alpha) : ball.y,
-        interpolate ? mix(ball.prevZ, ball.z, alpha) : ball.z
-      );
+      const bxGround = interpolate ? mix(ball.prevX, ball.x, alpha) : ball.x;
+      const byGround = interpolate ? mix(ball.prevY, ball.y, alpha) : ball.y;
+      const projection = this.ballProjection(bxGround, byGround, interpolate ? mix(ball.prevZ, ball.z, alpha) : ball.z);
       const { x: bx, y: by, shadowX, shadowY, z } = projection;
       const base = clamp(s * .37 + 1.3, 2.6, 4.25);
       const radius = base * (1 + Math.min(z, 10) * .012);
@@ -366,6 +446,7 @@
           ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(bx, by); ctx.strokeStyle = streak; ctx.lineWidth = 1.05; ctx.stroke();
         }
       }
+      if (ball.carried) this.drawAttendant({ x: bxGround, y: byGround, carried: ball.carried }, projection);
       paint(ctx, bx, by, radius + 1.05, '#182019');
       paint(ctx, bx, by, radius, '#fffdf1');
       if (radius > 3.2) paint(ctx, bx + radius * .26, by + radius * .23, radius * .31, '#849087');

@@ -68,7 +68,8 @@
       </div>
 
       <div id="pitchwrap" class="pitchwrap">
-        <canvas id="pitch" role="img" aria-label="Fixed overhead football pitch. The referee wears a dark R marker. Select a player from the lineup below for details."></canvas>
+        <canvas id="pitch" role="img" aria-label="Fixed overhead football pitch. The referee wears an R. The technical areas have M markers for managers and numbered markers for substitutes."></canvas>
+        <div class="technical-areas" id="technicalAreas" role="group" aria-label="Pitchside managers and substitutes"></div>
         <div class="field-stamp" aria-hidden="true"><i></i><span id="stadiumStamp">Quayside Park</span></div>
         <div class="pitch-indicator" id="replayIndicator" role="status" hidden><i aria-hidden="true"></i><div><span id="indicatorText">Replay</span><span id="indicatorDetail"></span></div></div>
         <div id="clubWaiting" hidden></div>
@@ -77,8 +78,8 @@
           <strong id="goalScorer"></strong>
         </div>
         <div class="player-focus" id="playerFocus" hidden>
-          <div><div class="focus-meta" id="focusMeta"></div><strong id="focusName"></strong><span class="focus-stats" id="focusStats"></span></div>
-          <button class="icon-button mini" id="btnClearPlayer" type="button" aria-label="Clear selected player"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+          <div><div class="focus-meta" id="focusMeta"></div><strong id="focusName" aria-live="polite"></strong><span class="focus-stats" id="focusStats"></span></div>
+          <button class="icon-button mini" id="btnClearPlayer" type="button" aria-label="Clear selection"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
         </div>
       </div>
 

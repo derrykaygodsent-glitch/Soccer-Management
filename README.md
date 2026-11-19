@@ -27,6 +27,12 @@ Confirmed Riverside fixtures use the Classic engine, at home or away. Other club
 | Team performance, press and current medical notices | **Inbox**, **Social Feed**, **Leagues in Focus**, **Medical Centre** |
 | Recruitment, staff responsibilities, budget and club planning | **Scouting**, **Transfers**, **Staff**, **Finances**, **Club Vision** |
 
+## Touchline and run-off (v0.8.1)
+
+Balls shown going out for a throw-in, corner or goal kick keep their original direction and height across the line. There’s room beyond the pitch markings to see the ball slow or bounce before it’s brought back to the restart spot. The referee still awards the restart when the whole ball crosses; the retrieval does not change restart timing or affect play. Choose **Extended** to see routine throw-ins or **Full Match** to see all exits.
+
+The two marked technical areas sit beyond the far touchline. Click or tap either **M** to identify that club’s manager, or select a numbered seat to identify a substitute. These markers can also be selected with Tab and Enter. The incoming player leaves the bench when the substitution appears on screen; an outgoing player’s marker is labelled **Substituted off** if they cannot return.
+
 ## Watch a match
 
 In the match centre, choose **Highlights** beneath the pitch, then press **Kick off**. Season fixtures open in **Key** at **1×**; **Extended** is the exhibition default. You can change the viewing mode mid-match without restarting. A passage already on screen plays out before the new setting takes over.

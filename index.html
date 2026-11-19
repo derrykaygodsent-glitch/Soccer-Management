@@ -79,6 +79,10 @@ h1{font:700 clamp(35px,4vw,45px)/.99 'Barlow Condensed','Arial Narrow',sans-seri
 .meta-divider{height:10px;width:1px;background:#46574a}
 .pitchwrap{width:100%;height:var(--pitch-h);position:relative;background:#121d16;overflow:hidden}
 #pitch{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:default;touch-action:manipulation}
+/* Canvas markers share coordinates with transparent, keyboard-focusable buttons. */
+.technical-areas{position:absolute;inset:0;pointer-events:none;z-index:1}
+.technical-person{position:absolute;transform:translate(-50%,-50%);border:0;border-radius:8px;background:none;padding:0;margin:0;pointer-events:auto;cursor:pointer}
+.technical-person:focus-visible{outline:1px solid var(--accent);outline-offset:-1px}
 .field-stamp{position:absolute;bottom:16px;left:18px;display:flex;align-items:center;gap:6px;line-height:1;text-transform:uppercase;font-weight:750;letter-spacing:.125em;color:#8c9f8f;font-size:9px;pointer-events:none}
 .field-stamp i{width:4px;height:4px;border-radius:1px;background:#7d957e}
 .pitch-indicator,.goal-card,.player-focus{position:absolute;background:#111d16eF;border:1px solid #577050;border-radius:8px;color:var(--text);box-shadow:0 6px 25px #080f0bb0}
@@ -101,6 +105,8 @@ h1{font:700 clamp(35px,4vw,45px)/.99 'Barlow Condensed','Arial Narrow',sans-seri
 .goal-kicker{display:flex;align-items:center;gap:8px;font-size:9px;font-weight:760;color:#d5e9c8;letter-spacing:.1em;text-transform:uppercase}
 #goalScorer{display:block;font:700 26px/.98 'Barlow Condensed',sans-serif;margin-top:3px}
 .player-focus{right:14px;bottom:13px;padding:9px 8px 9px 10px;display:flex;align-items:flex-start;gap:8px;border-color:#47604d;max-width:calc(100% - 28px);z-index:2}
+.player-focus[data-technical=true]{top:var(--pitch-overlay-top,14px);bottom:auto;right:auto;left:clamp(6px,calc(var(--person-x) - 82px),calc(100% - 199px));max-width:min(192px,calc(100% - 12px));width:max-content;z-index:3}
+.player-focus[data-technical=true]>div{min-width:0}
 .focus-meta{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:750}.player-focus strong{display:block;font-size:12px;margin-top:3px}.focus-stats{display:block;font-size:10px;color:var(--muted);margin-top:3px}
 .commentary{--feed-accent:#c7ea91;position:relative;display:flex;align-items:center;gap:11px;min-height:37px;padding:0 11px 0 13px;background:color-mix(in srgb,var(--feed-accent) 10%,#18271f);border-top:1px solid color-mix(in srgb,var(--feed-accent) 38%,#2c4434);border-bottom:1px solid #35493b;box-shadow:inset 3px 0 var(--feed-accent)}
 .feed-label{display:flex;align-items:center;gap:6px;flex:none;color:#d0dec9;white-space:nowrap;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding-right:10px;border-right:1px solid #4a5c4c}
@@ -205,6 +211,9 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   .shortcut{display:none!important}.footer{padding-top:6px}.footer>div{flex-wrap:wrap}
   .dialog{max-height:88svh}.dialog-head{padding:14px 13px}.dialog-body{padding:12px 13px 16px}
 }
+@media(max-width:760px){
+  .pitch-indicator,.goal-card{top:var(--pitch-overlay-top,14px)}
+}
 @media(max-width:565px){
   .watch-mode{flex:1;padding:0;min-width:122px}
   .speed-mode{padding-left:0}
@@ -221,7 +230,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   .score-crest{width:12px;height:14px}#score{min-width:44px;gap:4px;font-size:16px}
   .match-status{padding-left:8px;gap:4px;font-size:9px;letter-spacing:.035em;white-space:normal}.match-status span{max-width:60px}
   .feed-label>span:last-child{display:none}.feed-label{border:0;padding:0}#feedText{font-size:11px}
-  #feedTime{font-size:10px}.goal-card{right:8px;top:8px;padding:6px 8px}.pitch-indicator{left:8px;top:8px}.pitch-indicator[data-side=right]{left:auto;right:8px}.player-focus{bottom:6px;right:7px;padding:6px;gap:4px}
+  #feedTime{font-size:10px}.goal-card{right:8px;padding:6px 8px}.pitch-indicator{left:8px}.pitch-indicator[data-side=right]{left:auto;right:8px}.player-focus{bottom:6px;right:7px;padding:6px;gap:4px}
   .team-actions{gap:4px}.team-button{padding-inline:7px;gap:4px;font-size:11px}.team-button .icon{width:15px;height:15px}.and-subs{display:none}
 }
 @media(max-width:355px){
@@ -1652,7 +1661,8 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
       </div>
 
       <div id="pitchwrap" class="pitchwrap">
-        <canvas id="pitch" role="img" aria-label="Fixed overhead football pitch. The referee wears a dark R marker. Select a player from the lineup below for details."></canvas>
+        <canvas id="pitch" role="img" aria-label="Fixed overhead football pitch. The referee wears an R. The technical areas have M markers for managers and numbered markers for substitutes."></canvas>
+        <div class="technical-areas" id="technicalAreas" role="group" aria-label="Pitchside managers and substitutes"></div>
         <div class="field-stamp" aria-hidden="true"><i></i><span id="stadiumStamp">Quayside Park</span></div>
         <div class="pitch-indicator" id="replayIndicator" role="status" hidden><i aria-hidden="true"></i><div><span id="indicatorText">Replay</span><span id="indicatorDetail"></span></div></div>
         <div id="clubWaiting" hidden></div>
@@ -1661,8 +1671,8 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
           <strong id="goalScorer"></strong>
         </div>
         <div class="player-focus" id="playerFocus" hidden>
-          <div><div class="focus-meta" id="focusMeta"></div><strong id="focusName"></strong><span class="focus-stats" id="focusStats"></span></div>
-          <button class="icon-button mini" id="btnClearPlayer" type="button" aria-label="Clear selected player"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+          <div><div class="focus-meta" id="focusMeta"></div><strong id="focusName" aria-live="polite"></strong><span class="focus-stats" id="focusStats"></span></div>
+          <button class="icon-button mini" id="btnClearPlayer" type="button" aria-label="Clear selection"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
         </div>
       </div>
 
@@ -2866,7 +2876,8 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
   const api = Object.freeze({
     L: 105, W: 68, CX: 52.5, CY: 34, GOAL_HALF: 3.66, GOAL_H: 2.44,
     BOX_L: 16.5, BOX_HALF: 20.16, SIX_L: 5.5, SIX_HALF: 9.16, PEN: 11,
-    FREE_DISTANCE: 9.15, THROW_DISTANCE: 2
+    FREE_DISTANCE: 9.15, THROW_DISTANCE: 2,
+    APRON_END: 11.7, APRON_SIDE: 7.65
   });
   global.TLPitch = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
@@ -2976,6 +2987,79 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
   const api = { G, DRAG, ROLL, RADIUS, airRange, airTime, landingTime, ground, aerial, overarm, advance, forecast, firstExit };
   global.TLPhysics = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+;
+/* ===== runoff.js ===== */
+/* The visible, dead ball outside the lines. Not a second playable ball. */
+(function (global) {
+  'use strict';
+  const node = typeof window === 'undefined';
+  const P = node ? require('./physics.js') : global.TLPhysics;
+  const { L, W, APRON_END, APRON_SIDE } = node ? require('./pitch.js') : global.TLPitch;
+  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  const mix = (a, b, t) => a + (b - a) * t;
+  const smooth = t => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
+  const curve = (a, b, c, d, t) => (1-t)**3*a + 3*(1-t)**2*t*b + 3*(1-t)*t*t*c + t**3*d;
+
+  function capture(ball, before, exit, dt) {
+    const { x, y, z, vx, vy, vz, ax, ay, bounces } = ball;
+    return { x, y, z, vx: ball.owner && dt ? (x-before.x)/dt : vx, vy: ball.owner && dt ? (y-before.y)/dt : vy,
+      vz, ax, ay, bounces, prevX: before.x, prevY: before.y, prevZ: before.z, axis: exit.axis, line: exit.line };
+  }
+
+  function start(ball, sp, setupSeconds) {
+    // Fit inside the preparation that was already going to happen. In particular
+    // a quick throw and a saved match's command timings must not change.
+    const seconds = setupSeconds - .065;
+    const coast = Math.min(seconds * .55, .53 + ball.z * .095 + Math.hypot(ball.vx, ball.vy) * .012, 1.28);
+    return { ball, x: sp.x, y: sp.y, seconds, coast, age: 0, pickup: null, finished: false };
+  }
+
+  function coast(ball, dt) {
+    P.advance(ball, dt);
+    const x = clamp(ball.x, -APRON_END, L + APRON_END), y = clamp(ball.y, -APRON_SIDE, W + APRON_SIDE);
+    // The outer perimeter stops a hard clearance going off camera. A soft roll
+    // can come to rest much closer to the line, without hitting the perimeter.
+    if (x !== ball.x) { ball.x = x; ball.vx *= -.09; ball.vy *= .38; ball.ax = ball.ay = 0; }
+    if (y !== ball.y) { ball.y = y; ball.vy *= -.09; ball.vx *= .38; ball.ax = ball.ay = 0; }
+    if ((ball[ball.axis] - ball.line) * (ball.line === 0 ? -1 : 1) < P.RADIUS) {
+      // Do not let a rebound from the perimeter resume play.
+      ball[ball.axis] = ball.line + (ball.line === 0 ? -1 : 1) * P.RADIUS;
+      ball['v' + ball.axis] = ball['a' + ball.axis] = 0;
+    }
+  }
+
+  function collect(track) {
+    const a = track.ball, { x, y } = track, { axis, line } = a, sign = line === 0 ? -1 : 1;
+    // Follow the apron before coming to the restart spot; returning a corner
+    // straight across the goalmouth would look like a new ball in play.
+    const u = axis === 'x' ? { x: a.x, y: mix(a.y, y, .50) } : { x: mix(a.x, x, .50), y: a.y };
+    const v = axis === 'x' ? { x: line + sign * .72, y } : { x, y: line + sign * .45 };
+    const path = Math.hypot(a.x-u.x, a.y-u.y) + Math.hypot(u.x-v.x, u.y-v.y) + Math.hypot(v.x-x, v.y-y);
+    return { x: a.x, y: a.y, z: a.z, u, v, duration: Math.min(track.seconds-track.coast, Math.max(.52, path/7.5 + .28)) };
+  }
+
+  function advance(track, dt) {
+    if (!track || track.finished) return;
+    const b = track.ball, elapsed = track.age;
+    b.prevX = b.x; b.prevY = b.y; b.prevZ = b.z;
+    if (elapsed < track.coast) coast(b, Math.min(dt, track.coast-elapsed));
+    track.age += dt;
+    if (track.age < track.coast) return;
+    const a = track.pickup ||= collect(track);
+    const t = clamp((track.age-track.coast)/a.duration, 0, 1), p = smooth(t);
+    b.x = curve(a.x, a.u.x, a.v.x, track.x, p);
+    b.y = curve(a.y, a.u.y, a.v.y, track.y, p);
+    b.z = mix(a.z, .64, smooth(t/.27)) * (1-smooth((t-.70)/.30));
+    b.vx = b.vy = 0;
+    b.carried = smooth(t/.17)*(1-smooth((t-.78)/.22));
+    track.finished = t >= 1;
+  }
+
+  const api = { capture, start, advance };
+  global.TLRunoff = api;
+  if (node) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
 
 ;
@@ -3272,6 +3356,7 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
 
   const { L, W, CX, CY, GOAL_HALF, GOAL_H, BOX_L, BOX_HALF, SIX_L, SIX_HALF, PEN, FREE_DISTANCE, THROW_DISTANCE } = typeof window === 'undefined' ? require('./pitch.js') : global.TLPitch;
   const S = typeof window === 'undefined' ? require('./setpieces.js') : global.TLSetPieces;
+  const Runoff = typeof window === 'undefined' ? require('./runoff.js') : global.TLRunoff;
   const { Referee } = typeof window === 'undefined' ? require('./referee.js') : global.TLReferee;
   const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
   const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
@@ -3367,6 +3452,8 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
         }
         const team = {
           idx: i, club, players, tactics: { ...tactics }, bench,
+          // Seat numbers stay put when the incoming player swaps with the outgoing one.
+          dugout: bench.map(p => ({ id: p.id, used: false })),
           listed: lineup ? new Set(bench.map(p=>p.id)) : null, assignments: lineup?.set || null,
           slots: xi.map(s => ({ ...s })),
           attackDir: i === 0 ? 1 : -1,
@@ -3540,6 +3627,7 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
       if (sp?.throwPlan?.target === old) sp.throwPlan.target = np;
       if (sp?.wall?.includes(old)) sp.wall = sp.wall.map(p => p === old ? np : p);
       team.bench = team.players.filter(p => !p.onPitch && !p.red && (!team.listed || (team.listed.has(p.id) && !p.appeared)));
+      team.dugout = team.dugout.map(seat => seat.id === np.id ? { id: old.id, used: !!team.listed } : seat);
       team.subsUsed++;
       if (this.ball.owner === old) { this.ball.owner = np; this.ball.lastTouch = np; }
       this.playersCache = this.onPitchPlayers(); this.brainIn = 0;
@@ -3564,7 +3652,7 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
 
     /* ---------------- set pieces ---------------- */
 
-    startSetPiece(type, teamIdx, x, y, extra = {}) {
+    startSetPiece(type, teamIdx, x, y, extra = {}, departure = null) {
       const team = this.teams[teamIdx], opp = this.teams[1 - teamIdx], d = team.attackDir;
       const gx = d > 0 ? L : 0, b = this.ball;
       x = clamp(x, .3, L - .3);
@@ -3598,6 +3686,7 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
       const delay = type === 'penalty' ? 7.8 : type === 'corner' ? 6.2 : type === 'throwin' ? 1.6
         : type === 'freekick' ? (sp.quick ? .9 : sp.managed ? 5.6 : 3.35) : 3.1;
       this.phaseTimer = delay + this.choiceRnd() * (sp.quick ? .5 : 1.05);
+      if (departure) sp.runoff = Runoff.start(departure, sp, this.phaseTimer);
       for (const p of this.playersCache) {
         p.spRole = p.ballPlan = p.releasePlan = null;
         p.offsideFlag = p.sprint = false; p.offsideGap = null;
@@ -3824,6 +3913,7 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
     advanceSetPiece(h) {
       const sp = this.setpiece;
       if (!sp) { this.phase = 'open'; return; }
+      Runoff.advance(sp.runoff, h);
       const d = this.teams[sp.team].attackDir, p = sp.taker;
       if (this.progressDiscipline(sp)) return;
       if (sp.stage === 'windup') {
@@ -4036,12 +4126,18 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
       if (this.onSnapshot && ++this.snapCount % this.snapEvery === 0) this.onSnapshot(this.snapshotFrame());
     }
 
+    visibleBall() {
+      const runway = this.setpiece?.runoff;
+      return runway && !runway.finished ? runway.ball : this.ball;
+    }
+
     snapshotFrame() {
-      const ps = this.playersCache, b = this.ball;
+      const ps = this.playersCache, b = this.visibleBall();
       const arr = new Float32Array(ps.length * 2 + 4);
       for (let i = 0; i < ps.length; i++) { arr[2 * i] = ps[i].x; arr[2 * i + 1] = ps[i].y; }
-      arr.set([b.x, b.y, b.z, ps.indexOf(b.owner)], ps.length * 2);
+      arr.set([b.x, b.y, b.z, ps.indexOf(this.ball.owner)], ps.length * 2);
       return { t: this.t + (this.half === 2 ? 2700 : 0), elapsed: this.elapsed, half: this.half, n: ps.length, arr, ids: ps.map(p => p.id),
+        carried: b.carried || 0, dugouts: this.teams.map(t => t.dugout),
         referee: this.referee.pose(this), restartPose: this.restartPose() };
     }
 
@@ -4364,34 +4460,35 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
       if (b.flight && b.flight.kind === 'shot') {
         const f = b.flight;
         if (this.shotContact(f, before, exit || b)) return;
-        if (exit && exit.axis === 'x' && exit.line === f.goalX) { this.resolveShotLine(exit.line, exit); return; }
+        if (exit && exit.axis === 'x' && exit.line === f.goalX) { this.resolveShotLine(exit.line, exit, before, h); return; }
         if (exit || this.elapsed - b.releaseT > 5.6 || (b.z === 0 && Math.hypot(b.vx, b.vy) < 1.1)) {
           this.finishShot(f, 'miss'); b.flight = null;
           this.describeMiss(f, exit && exit.z > GOAL_H ? 'over' : 'wide');
         }
       }
       if (!exit) return;
+      const departure = Runoff.capture(b, before, exit, h);
       if (exit.axis === 'y') {
         const team = b.lastTouch ? 1 - b.lastTouch.team : this.controlTeam;
-        this.startSetPiece('throwin', team, exit.x, exit.line);
+        this.startSetPiece('throwin', team, exit.x, exit.line, {}, departure);
         this.say('throwin', { team: this.teamName(team) }, { team, restartId: this.setpiece.id });
         return;
       }
       const defending = this.teams.find(t => (t.attackDir > 0 ? 0 : L) === exit.line);
       if (Math.abs(exit.y - CY) <= GOAL_HALF - P.RADIUS * .55 && exit.z < GOAL_H - P.RADIUS * .45) {
-        b.x = exit.x; b.y = exit.y; b.z = exit.z; this.considerGoal(exit.line); return;
+        b.x = exit.x; b.y = exit.y; b.z = exit.z; this.considerGoal(exit.line, null, departure); return;
       }
-      this.goalRestart(exit.line, exit.y, defending);
+      this.goalRestart(exit.line, exit.y, defending, departure);
     }
 
-    goalRestart(line, y, defending) {
+    goalRestart(line, y, defending, departure) {
       const b = this.ball;
       if (b.lastTouch && b.lastTouch.team === defending.idx) {
         const team = 1 - defending.idx;
-        this.startSetPiece('corner', team, line === 0 ? .42 : L - .42, y < CY ? .42 : W - .42);
+        this.startSetPiece('corner', team, line === 0 ? .42 : L - .42, y < CY ? .42 : W - .42, {}, departure);
         this.say('corner', { team: this.teamName(team) }, { team, restartId: this.setpiece.id });
       } else {
-        this.startSetPiece('goalkick', defending.idx, line === 0 ? SIX_L - .5 : L - SIX_L + .5, CY + (y > CY ? 4 : -4));
+        this.startSetPiece('goalkick', defending.idx, line === 0 ? SIX_L - .5 : L - SIX_L + .5, CY + (y > CY ? 4 : -4), {}, departure);
         this.say('goalkick', { team: this.teamName(defending.idx) }, { team: defending.idx, restartId: this.setpiece.id });
       }
     }
@@ -5231,14 +5328,15 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
       this.emit(f.pen ? 'penmiss' : 'miss', { text, team: f.shooter.team, key: f.pen || f.xG > .19 });
     }
 
-    resolveShotLine(lineX, at = this.ball) {
+    resolveShotLine(lineX, at = this.ball, before = this.ball, dt = 0) {
       const b = this.ball, f = b.flight;
       if (!f || f.kind !== 'shot') { this.considerGoal(lineX); return; }
       const offset = Math.abs(at.y - CY);
       const post = Math.abs(offset - GOAL_HALF) <= .157 && at.z <= GOAL_H + .065;
       const bar = offset < GOAL_HALF + .075 && Math.abs(at.z - GOAL_H) <= .124;
+      const departure = !post && !bar ? Runoff.capture(b, before, { axis: 'x', line: lineX }, dt) : null;
       b.x = at.x; b.y = at.y; b.z = at.z;
-      if (!post && !bar && offset < GOAL_HALF - .062 && at.z < GOAL_H - .056) { this.considerGoal(lineX, f); return; }
+      if (!post && !bar && offset < GOAL_HALF - .062 && at.z < GOAL_H - .056) { this.considerGoal(lineX, f, departure); return; }
       b.flight = null;
       if (post || bar) {
         this.finishShot(f, 'post');
@@ -5252,14 +5350,14 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
         return;
       }
       this.finishShot(f, 'miss'); this.describeMiss(f, at.z > GOAL_H ? 'over' : 'wide');
-      this.goalRestart(lineX, at.y, this.teams[1 - f.shooter.team]);
+      this.goalRestart(lineX, at.y, this.teams[1 - f.shooter.team], departure);
     }
 
-    considerGoal(line, shot = null) {
+    considerGoal(line, shot = null, departure) {
       const scoringTeam = this.teams.find(t => (t.attackDir > 0 ? L : 0) === line).idx;
       const restart = this.ball.restart;
       if (restart && (restart.indirect || restart.taker.team !== scoringTeam)) {
-        this.goalRestart(line, this.ball.y, this.teams[1 - scoringTeam]);
+        this.goalRestart(line, this.ball.y, this.teams[1 - scoringTeam], departure);
         return;
       }
       const evidence = this.attackCheck;
@@ -5325,7 +5423,13 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
 (function (global) {
   'use strict';
   const { L, W, CX, CY, GOAL_HALF, BOX_L, BOX_HALF, SIX_L, SIX_HALF, PEN } = global.TLEngine;
+  const { APRON_END, APRON_SIDE } = global.TLPitch;
   const TAU = Math.PI * 2;
+  // Fixed to the venue, not to the direction of attack. The dugouts don't
+  // trade places when the teams change ends.
+  const AREA = { inset: 8, middleGap: 2.4, back: -7.12, front: -1.12, seatsY: -5.82, coachY: -2.48 };
+  const areaWidth = CX - AREA.inset - AREA.middleGap;
+  const dugoutLeft = side => side ? CX + AREA.middleGap : AREA.inset;
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   const mix = (a, b, t) => a + (b - a) * t;
   const surname = p => p.name.split(' ').pop();
@@ -5370,6 +5474,7 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
       this.grain = lawnGrain();
       this.dpr = 1;
       this.drawn = [];
+      this.touchline = [];
       this.reduced = global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)');
       this.resize();
       if (typeof global.ResizeObserver === 'function') {
@@ -5388,12 +5493,13 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
       this.canvas.width = this.back.width = Math.round(width * dpr);
       this.canvas.height = this.back.height = Math.round(height * dpr);
       this.compact = width < 650;
-      const margin = this.compact ? 6 : 12;
-      this.scale = Math.min((width - margin) / (L + 16), (height - margin) / (W + 11.9));
+      const margin = this.compact ? 8 : 14;
+      this.scale = Math.min((width - margin) / (L + 2 * (APRON_END + .95)), (height - margin) / (W + 2 * (APRON_SIDE + 1.1)));
       this.scale = Math.max(.05, this.scale);
       this.ox = (width - L * this.scale) / 2;
-      this.oy = (height - W * this.scale) / 2 + this.scale * .2;
+      this.oy = (height - W * this.scale) / 2 + this.scale * .28;
       this.radius = clamp(this.scale * 1.03 + .35, 4.1, 9.6);
+      this.seating = null;
       this.buildStadium();
     }
 
@@ -5417,27 +5523,26 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
         if (fill) { ctx.fillStyle = fill; ctx.fill(); }
         if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = Math.max(.5, .1 * s); ctx.stroke(); }
       };
-      shell(7.7, 6.25, 4.1, '#202e26', '#40544a');
-      shell(6.75, 5.6, 3.35, '#25392d', '#304a38');
-      ctx.save();
-      round(ctx, x(-6.3), y(-5.15), (L + 12.6) * s, (W + 10.3) * s, 2.9 * s); ctx.clip();
-      // Repeating rows around the boundary read as a stand, not a second field.
-      ctx.fillStyle = '#18291e'; ctx.fillRect(x(-6.3), y(-5.15), (L + 12.6) * s, (W + 10.3) * s);
+      shell(APRON_END + .88, APRON_SIDE + .9, 4, '#29372e', '#43564a');
+      shell(APRON_END, APRON_SIDE, 3.1, '#38483c', '#69806f');
+      // A real strip of grass and service path runs beyond the white lines;
+      // the near fence is not the edge of the camera.
+      shell(APRON_END - 2.15, APRON_SIDE - .65, 2.8, '#313f35', '#45594a');
+      shell(5.2, 3.9, .65, '#405b3b', '#728f69');
       const strip = (x0, y0, ww, hh, color) => { ctx.fillStyle = color; ctx.fillRect(x(x0), y(y0), ww * s, hh * s); };
-      for (let a = -6.2; a < L + 6; a += 2.32) {
+      for (let a = 0; a <= L - 2.1; a += 2.75) {
         const alternate = Math.round(a * 3) % 4 === 0;
-        strip(a, -5.1, 1.7, 1.6, alternate ? '#3d5245' : '#2c4234');
-        strip(a + .35, W + 3.35, 1.7, 1.7, alternate ? '#3e5345' : '#2d4437');
+        strip(a, W + 5.75, 2.04, .78, alternate ? '#617467' : '#465a4c');
+        if (a < 6 || a > L - 7) strip(a, -6.55, 2.04, .79, '#4f6454');
       }
-      for (let a = -3.9; a < W + 3.9; a += 2.08) {
-        strip(-6.25, a, 1.85, 1.6, '#304838');
-        strip(L + 4.4, a, 1.85, 1.6, '#304838');
+      for (let a = 2.1; a < W - 2.1; a += 2.65) {
+        strip(-8.98, a, .66, 1.98, '#506658');
+        strip(L + 8.32, a, .66, 1.98, '#506658');
       }
-      ctx.restore();
 
       const grass = ctx.createLinearGradient(x(-2), y(0), x(L), y(W));
       grass.addColorStop(0, '#4e6b3d'); grass.addColorStop(.47, '#526f43'); grass.addColorStop(1, '#405e39');
-      shell(4.35, 3.23, .8, '#334f36', '#82a57b');
+      shell(3.95, 2.98, .55, '#4a633f', '#9bb08a');
       const lx = x(0), ly = y(0), lw = L * s, lh = W * s;
       ctx.fillStyle = grass; ctx.fillRect(lx, ly, lw, lh);
       for (let i = 0; i < 12; i++) {
@@ -5450,16 +5555,23 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
       ctx.fillRect(lx, ly, lw, lh);
       ctx.restore();
 
-      // Perimeter boards and the two technical areas, painted once per resize.
+      // Dugout shelters sit behind the marked technical areas on the far side.
       const line = (x1, y1, x2, y2) => { ctx.beginPath(); ctx.moveTo(x(x1), y(y1)); ctx.lineTo(x(x2), y(y2)); ctx.stroke(); };
       const rect = (x0, y0, ww, hh) => ctx.strokeRect(x(x0), y(y0), ww * s, hh * s);
-      ctx.fillStyle = '#779169';
-      for (const a of [4.5, 16, 27.5, 69, 80.5, 92]) ctx.fillRect(x(a), y(-3.85), 9.2 * s, .42 * s);
-      ctx.strokeStyle = '#a9bd9fba'; ctx.lineWidth = Math.max(.55, s * .105);
-      for (const a of [CX - 17.2, CX + 4]) {
-        rect(a, -2.65, 13.2, 1.82);
-        ctx.fillStyle = '#869d84';
-        for (let i = 0; i < 6; i++) ctx.fillRect(x(a + .75 + i * 2), y(-2.35), 1.28 * s, .6 * s);
+      ctx.fillStyle = '#79956e';
+      for (const a of [5, 17, 29, 67, 79, 91]) ctx.fillRect(x(a), y(W + 3.72), 9.2 * s, .44 * s);
+      for (const side of [0, 1]) {
+        const a = dugoutLeft(side), w = areaWidth, inner = side ? a + 8.1 : a + .45;
+        round(ctx, x(a), y(AREA.back), w * s, (AREA.front - AREA.back) * s, .5 * s);
+        ctx.fillStyle = '#355447'; ctx.fill();
+        ctx.strokeStyle = '#96b4a2'; ctx.lineWidth = Math.max(.55, s * .095); ctx.stroke();
+        round(ctx, x(inner), y(AREA.back + .19), (w - 8.55) * s, 2.61 * s, .49 * s);
+        ctx.fillStyle = '#182c25'; ctx.fill();
+        ctx.strokeStyle = '#708b7c'; ctx.lineWidth = Math.max(.5, s * .085); ctx.stroke();
+        ctx.strokeStyle = '#c2d6b8b8'; ctx.lineWidth = Math.max(.56, s * .092);
+        ctx.setLineDash([Math.max(2, s * .65), Math.max(2, s * .65)]);
+        line(a + .4, AREA.front, a + w - .4, AREA.front);
+        ctx.setLineDash([]);
       }
 
       // Line widths are physical where possible, with a floor for small phones.
@@ -5584,12 +5696,79 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
       ctx.lineCap = 'butt';
     }
 
+    // The same pixel coordinates paint the badges and position native hit targets.
+    // Only recompute them for a new frame roster or a viewport change.
+    positionDugouts(match, frame, managers) {
+      const home = frame?.dugouts?.[0] || match.teams[0].dugout;
+      const away = frame?.dugouts?.[1] || match.teams[1].dugout;
+      const last = this.seating;
+      if (last && last.match === match && last.home === home && last.away === away && last.managers === managers) return;
+      this.seating = { match, home, away, managers };
+      const s = this.scale;
+      this.touchline = match.teams.flatMap((team, side) => {
+        const seats = side ? away : home, byId = new Map(team.players.map(p => [p.id, p]));
+        const staffX = CX - 5.94, managerRadius = clamp(s * 1.04, 5.8, 8.25);
+        const benchRadius = clamp(s * .96, 4.25, 7.4), span = areaWidth - 12.4;
+        const point = (x, y, r, tapW, tapH) => ({
+          x: this.ox + (side ? L-x : x) * s, y: this.oy + y * s, r, tapW, tapH
+        });
+        const bench = seats.map(({ id, used }, i) => {
+          const p = byId.get(id);
+          const xx = AREA.inset + 2.5 + (seats.length === 1 ? span / 2 : i * span / Math.max(1, seats.length-1));
+          return { id, name: p.name, num: p.num, role: p.pos, team: side, club: team.club, kind: used ? 'Substituted off' : 'Substitute',
+            ...point(xx, AREA.seatsY, benchRadius, clamp(span * s / Math.max(1, seats.length-1) - .65, 9, 25), clamp(benchRadius*2+8, 17, 28)) };
+        });
+        const manager = { id: `manager-${side}`, name: managers?.[side] || `${team.club.name} manager`, team: side, club: team.club, kind: 'Manager',
+          ...point(staffX, AREA.coachY, managerRadius, clamp(s*7.5, 16, 30), clamp(managerRadius*2+8, 19, 30)) };
+        return [...bench, manager];
+      });
+    }
+
+    drawDugouts(match, frame, managers, selected) {
+      this.positionDugouts(match, frame, managers);
+      const ctx = this.ctx, s = this.scale;
+      for (const t of match.teams) {
+        ctx.fillStyle = t.club.primary;
+        ctx.fillRect(this.ox + (dugoutLeft(t.idx) + .40) * s, this.oy + (AREA.back + .12) * s, (areaWidth - .8) * s, Math.max(.95, s * .23));
+      }
+      for (const p of this.touchline) {
+        const { x, y, r } = p, isManager = p.kind === 'Manager', off = p.kind === 'Substituted off';
+        const kit = off ? '#405548' : p.role === 'GK' ? p.club.gk : p.club.primary;
+        paint(ctx, x + .42, y + .85, r + .84, '#0e1b17b8');
+        if (p.id === selected) {
+          ctx.beginPath(); ctx.arc(x, y, r + 2.15, 0, TAU);
+          ctx.strokeStyle = '#e2ffb8'; ctx.lineWidth = 1.22; ctx.stroke();
+        }
+        paint(ctx, x, y, r, kit);
+        ctx.strokeStyle = off ? '#bbc8bd' : '#f2f9ed'; ctx.lineWidth = isManager ? 1.03 : .74; ctx.stroke();
+        ctx.fillStyle = lightKit(kit) ? '#151d18' : '#f8fbf8';
+        ctx.font = `800 ${clamp(r*1.21, 6.4, 9.6)}px Inter,system-ui,sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(isManager ? 'M' : p.num, x, y+.22);
+      }
+    }
+
+    drawAttendant(ball, projection) {
+      if (!(ball.carried > .006)) return;
+      const ctx = this.ctx, s = this.scale, r = clamp(s * .71, 2.6, 5.30);
+      const end = Math.abs(ball.x-CX)/L > Math.abs(ball.y-CY)/W;
+      const x = this.ox + ball.x*s + (end ? Math.sign(ball.x-CX) * r*1.30 : r*.74);
+      const y = this.oy + ball.y*s + (!end ? Math.sign(ball.y-CY) * r*1.18 : r*.56);
+      ctx.save(); ctx.globalAlpha = ball.carried;
+      paint(ctx, x+.55, y+.94, r+1.04, '#1620189c');
+      paint(ctx, x, y, r, '#cbd981');
+      ctx.strokeStyle = '#17271c'; ctx.lineWidth = .85; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(projection.x, projection.y);
+      ctx.strokeStyle = '#b5c574'; ctx.lineWidth = Math.max(1.3, r*.50); ctx.stroke();
+      ctx.restore();
+    }
+
     draw(match, options = {}) {
       if (!match) return;
       this.needsPaint = false;
       const ctx = this.ctx, frame = options.frame;
       const players = frame ? frame.players : match.onPitchPlayers();
-      const ball = frame ? frame.ball : match.ball;
+      const ball = frame ? frame.ball : match.visibleBall();
       const pose = frame ? frame.restartPose : match.restartPose();
       const referee = frame ? frame.referee : options.referee;
       const ownerId = frame ? frame.ownerId : ball.owner && ball.owner.id;
@@ -5599,6 +5778,7 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
       ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
       const s = this.scale, r = this.radius, alpha = options.alpha == null ? 1 : options.alpha;
       const toScreen = (x, y) => [this.ox + x * s, this.oy + y * s];
+      this.drawDugouts(match, frame, options.managers, options.technical);
       const positions = players.map(p => {
         let x = p.x, y = p.y;
         if (!frame && alpha < 1 && Number.isFinite(p.prevX) && Math.abs(x - p.prevX) + Math.abs(y - p.prevY) < 2.2) {
@@ -5657,11 +5837,9 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
 
       // x/y is where the ball is over the grass; z raises its sprite independently.
       const interpolate = !frame && alpha < 1 && Number.isFinite(ball.prevX) && Math.abs(ball.x - ball.prevX) + Math.abs(ball.y - ball.prevY) < 2.55;
-      const projection = this.ballProjection(
-        interpolate ? mix(ball.prevX, ball.x, alpha) : ball.x,
-        interpolate ? mix(ball.prevY, ball.y, alpha) : ball.y,
-        interpolate ? mix(ball.prevZ, ball.z, alpha) : ball.z
-      );
+      const bxGround = interpolate ? mix(ball.prevX, ball.x, alpha) : ball.x;
+      const byGround = interpolate ? mix(ball.prevY, ball.y, alpha) : ball.y;
+      const projection = this.ballProjection(bxGround, byGround, interpolate ? mix(ball.prevZ, ball.z, alpha) : ball.z);
       const { x: bx, y: by, shadowX, shadowY, z } = projection;
       const base = clamp(s * .37 + 1.3, 2.6, 4.25);
       const radius = base * (1 + Math.min(z, 10) * .012);
@@ -5689,6 +5867,7 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
           ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(bx, by); ctx.strokeStyle = streak; ctx.lineWidth = 1.05; ctx.stroke();
         }
       }
+      if (ball.carried) this.drawAttendant({ x: bxGround, y: byGround, carried: ball.carried }, projection);
       paint(ctx, bx, by, radius + 1.05, '#182019');
       paint(ctx, bx, by, radius, '#fffdf1');
       if (radius > 3.2) paint(ctx, bx + radius * .26, by + radius * .23, radius * .31, '#849087');
@@ -6234,7 +6413,7 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
   const state = {
     match: null, renderer: null, ready: true, paused: true, speed: B.NORMAL_SPEED, acc: 0,
     config: { home: 1, away: 0, auto: true, sound: false, highlights: V.DEFAULT_MODE }, names: false, sound: false,
-    selected: null, subMode: null, desk: 'tactics', returnBreak: false,
+    selected: null, technical: null, people: null, managers: null, subMode: null, desk: 'tactics', returnBreak: false,
     buffer: [], replay: null, replayQueue: null, goalFrames: null, events: [], meta: {},
     scout: null, scan: null, scanJob: null, scene: null, visiblePlay: null, nextSearch: null, lineupDirty: false,
     frameJob: null, lastFrame: null, lastFeedWall: 0, previousFlight: null, tileT: 0,
@@ -6308,7 +6487,8 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
     state.scan = state.scene = state.visiblePlay = state.nextSearch = null;
     state.lineupDirty = false;
     state.goalFrames = null; state.replayQueue = null; state.buffer = []; state.events = []; state.previousFlight = null;
-    state.selected = null; state.subMode = null; state.returnBreak = false; state.breakQueued = null;
+    state.selected = state.technical = state.people = null;
+    state.subMode = null; state.returnBreak = false; state.breakQueued = null;
     state.intervalReturn = state.injuryQueued = null; state.saveConfirm=false; state.checkpoint=state.waitingAt=0;
     $('goalBanner').hidden = $('playerFocus').hidden = $('toast').hidden = true;
     clearTimeout(state.goalTimer); clearTimeout(state.toastTimer);
@@ -6328,6 +6508,7 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
       if(!state.ready) state.events=state.match.events.filter(e=>e.text&&e.type!=='preview').slice(-245);
       if(V.atBreak(state.match))state.breakQueued=state.match.phase==='halftime'?'ht':'ft';
     }else state.match = new E.Match(home, away, { seed: Date.now() % 1000000007, homeTactics, onEvent, onSnapshot });
+    state.managers = state.match.teams.map(t => K.manager(t.club.id));
     state.scout = new V.Scout(state.match);
     syncSpeed(); syncWatchMode();
     state.meta = Object.fromEntries(state.match.teams.flatMap(t => t.players.map(p => [p.id, p])));
@@ -6412,7 +6593,7 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
       const { title, detail, kind } = restartCopy(restart, m);
       if (indicator.dataset.restart !== kind) indicator.dataset.restart = kind;
       // Don't sit over the taker at the upper-left flag on a narrow pitch.
-      const side = restart.x < E.CX && restart.y < 19 ? 'right' : 'left';
+      const side = restart.apronSide || (restart.x < E.CX && restart.y < 19 ? 'right' : 'left');
       if (indicator.dataset.side !== side) indicator.dataset.side = side;
       text('indicatorText', title); text('indicatorDetail', detail);
     } else {
@@ -6556,13 +6737,14 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
     }
     const i = snap.n * 2, j = next.n * 2;
     const w = Math.abs(snap.arr[i] - next.arr[j]) + Math.abs(snap.arr[i + 1] - next.arr[j + 1]) < 3 ? amount : 0;
-    const ball = { x: mix(snap.arr[i], next.arr[j], w), y: mix(snap.arr[i + 1], next.arr[j + 1], w), z: mix(snap.arr[i + 2], next.arr[j + 2], w) };
+    const ball = { x: mix(snap.arr[i], next.arr[j], w), y: mix(snap.arr[i + 1], next.arr[j + 1], w), z: mix(snap.arr[i + 2], next.arr[j + 2], w),
+      carried: mix(snap.carried || 0, next.carried || 0, w) };
     const referee = snap.referee && O.between(snap.referee, next.referee || snap.referee, amount);
     let restartPose = snap.restartPose;
     if (restartPose?.thrower && next.restartPose?.thrower === restartPose.thrower) {
       restartPose = { ...restartPose, load: mix(restartPose.load, next.restartPose.load, amount) };
     }
-    return { elapsed: mix(snap.elapsed, next.elapsed, amount), players, ball, referee, restartPose, ownerId: snap.ids[snap.arr[i + 3]] };
+    return { elapsed: mix(snap.elapsed, next.elapsed, amount), players, ball, referee, restartPose, dugouts: snap.dugouts, ownerId: snap.ids[snap.arr[i + 3]] };
   }
   function startReplay() {
     if (!state.goalFrames || state.replayQueue || state.scene) return;
@@ -6653,8 +6835,9 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
   function restartFrame() {
     const sp = B.restartAt(state.match, 5.5);
     if (!sp) return null;
-    const wall = sp.wall ?? [];
-    return { type: sp.type, reason: sp.reason, indirect: !!sp.indirect, taken: sp.takenAt != null, technique: sp.technique, style: sp.style,
+    const wall = sp.wall ?? [], path = sp.runoff;
+    const apronSide = path && !path.finished ? ((path.ball.axis === 'x' ? path.ball.line : sp.x) < E.CX ? 'right' : 'left') : null;
+    return { apronSide, type: sp.type, reason: sp.reason, indirect: !!sp.indirect, taken: sp.takenAt != null, technique: sp.technique, style: sp.style,
       stage: sp.stage, wall: wall.length, wallReady: wall.every(p => Math.hypot(p.x - p.tx, p.y - p.ty) <= .58),
       card: sp.card?.kind, offender: sp.offender?.name, team: sp.team, x: sp.x, y: sp.y,
       quick: sp.quick, managed: sp.managed, taker: sp.taker?.name || state.match.teams[sp.team].club.short };
@@ -6815,11 +6998,53 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
     text('focusStats', `${condition(p)}% condition${state.ready ? '' : ` · ${p.rating.toFixed(1)} rating`}`);
   }
   function selectPlayer(p) {
+    state.technical = null;
     state.selected = p ? p.id : null;
+    delete $('playerFocus').dataset.technical;
     $('playerFocus').hidden = !p;
+    updateTechnicalButtons();
     if (p) updateFocus(state.meta[p.id] || p);
     for (const b of $('lineup').querySelectorAll('[data-player]')) attr(b, 'aria-pressed', b.dataset.player === state.selected);
     draw();
+  }
+
+  function updateTechnicalButtons() {
+    for (const b of $('technicalAreas').querySelectorAll('[data-technical]')) attr(b, 'aria-pressed', b.dataset.technical === state.technical);
+  }
+
+  function technicalFocus(person) {
+    const card = $('playerFocus');
+    card.hidden = !person;
+    if (!person) { delete card.dataset.technical; return; }
+    card.dataset.technical = 'true';
+    card.style.setProperty('--person-x', person.x.toFixed(2) + 'px');
+    text('focusMeta', `${person.kind} · ${person.club.short}`);
+    text('focusName', person.name);
+    text('focusStats', person.num == null ? person.club.name : `#${person.num} · ${person.role} · ${person.club.name}`);
+  }
+
+  function syncTechnicalAreas() {
+    const r = state.renderer, people = r.touchline;
+    if (people === state.people) return;
+    state.people = people;
+    $('pitchwrap').style.setProperty('--pitch-overlay-top', Math.ceil(r.oy + 7) + 'px');
+    const focus = document.activeElement?.dataset.technical, root = $('technicalAreas');
+    const active = people.find(p => p.id === state.technical);
+    if (!active && state.technical) { state.technical = null; technicalFocus(null); }
+    if (active) technicalFocus(active);
+    root.innerHTML = state.match.teams.map(t => `<div role="group" aria-label="${html(t.club.name)} technical area">${people.filter(p => p.team === t.idx).map(p => {
+      const name = html(`${p.name}, ${p.kind}${p.num == null ? '' : ` #${p.num}`}, ${p.club.name}`);
+      return `<button type="button" class="technical-person" data-technical="${html(p.id)}" data-kind="${p.kind}" aria-pressed="${p.id === state.technical}" aria-label="${name}" title="${name}" style="left:${p.x.toFixed(2)}px;top:${p.y.toFixed(2)}px;width:${p.tapW.toFixed(2)}px;height:${p.tapH.toFixed(2)}px"></button>`;
+    }).join('')}</div>`).join('');
+    if (focus) [...root.querySelectorAll('[data-technical]')].find(b => b.dataset.technical === focus)?.focus({ preventScroll: true });
+  }
+
+  function selectTechnical(person) {
+    state.technical = state.technical === person.id ? null : person.id;
+    state.selected = null;
+    for (const b of $('lineup').querySelectorAll('[data-player]')) attr(b, 'aria-pressed', false);
+    technicalFocus(state.technical ? person : null);
+    updateTechnicalButtons(); draw();
   }
 
   const options = (items, isIndex = true) => items.map((entry, i) => `<option value="${html(isIndex ? i : entry)}">${html(entry)}</option>`).join('');
@@ -6992,13 +7217,15 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
   }
 
   function draw() {
+    if (!state.match) return;
     const frame = state.replay?.frame || state.scene?.frame || state.scan?.still;
     const alpha = !frame && !state.paused ? fraction(state.acc, 0, H) : 1;
     state.renderer.draw(state.match, {
-      ready: state.ready, names: state.names, selected: state.selected,
+      ready: state.ready, names: state.names, selected: state.selected, managers: state.managers, technical: state.technical,
       live: !state.ready && !state.scan, frame, alpha, restart: viewingRestart(),
       referee: frame ? null : state.match.referee.pose(state.match, state.match.elapsed - (state.paused ? 0 : H * (1 - alpha)))
     });
+    syncTechnicalAreas();
   }
   function loop(t) {
     if (!viewingMatch()||state.loading) { state.frameJob = null; state.lastFrame = null; return; }
@@ -7040,6 +7267,11 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
     $('btnSound').addEventListener('click', () => { setSound(!state.sound, true); state.config.sound = state.sound; });
     $('btnReplay').addEventListener('click', () => state.replay ? endReplay() : startReplay());
     $('btnClearPlayer').addEventListener('click', () => selectPlayer(null));
+    $('technicalAreas').addEventListener('click', e => {
+      const key = e.target.closest('[data-technical]')?.dataset.technical;
+      const person = key && state.people?.find(p => p.id === key);
+      if (person) selectTechnical(person);
+    });
     $('pitch').addEventListener('click', e => {
       const b = $('pitch').getBoundingClientRect();
       selectPlayer(state.renderer.pickPlayer(e.clientX - b.left, e.clientY - b.top));

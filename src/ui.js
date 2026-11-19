@@ -29,7 +29,7 @@
   const state = {
     match: null, renderer: null, ready: true, paused: true, speed: B.NORMAL_SPEED, acc: 0,
     config: { home: 1, away: 0, auto: true, sound: false, highlights: V.DEFAULT_MODE }, names: false, sound: false,
-    selected: null, subMode: null, desk: 'tactics', returnBreak: false,
+    selected: null, technical: null, people: null, managers: null, subMode: null, desk: 'tactics', returnBreak: false,
     buffer: [], replay: null, replayQueue: null, goalFrames: null, events: [], meta: {},
     scout: null, scan: null, scanJob: null, scene: null, visiblePlay: null, nextSearch: null, lineupDirty: false,
     frameJob: null, lastFrame: null, lastFeedWall: 0, previousFlight: null, tileT: 0,
@@ -103,7 +103,8 @@
     state.scan = state.scene = state.visiblePlay = state.nextSearch = null;
     state.lineupDirty = false;
     state.goalFrames = null; state.replayQueue = null; state.buffer = []; state.events = []; state.previousFlight = null;
-    state.selected = null; state.subMode = null; state.returnBreak = false; state.breakQueued = null;
+    state.selected = state.technical = state.people = null;
+    state.subMode = null; state.returnBreak = false; state.breakQueued = null;
     state.intervalReturn = state.injuryQueued = null; state.saveConfirm=false; state.checkpoint=state.waitingAt=0;
     $('goalBanner').hidden = $('playerFocus').hidden = $('toast').hidden = true;
     clearTimeout(state.goalTimer); clearTimeout(state.toastTimer);
@@ -123,6 +124,7 @@
       if(!state.ready) state.events=state.match.events.filter(e=>e.text&&e.type!=='preview').slice(-245);
       if(V.atBreak(state.match))state.breakQueued=state.match.phase==='halftime'?'ht':'ft';
     }else state.match = new E.Match(home, away, { seed: Date.now() % 1000000007, homeTactics, onEvent, onSnapshot });
+    state.managers = state.match.teams.map(t => K.manager(t.club.id));
     state.scout = new V.Scout(state.match);
     syncSpeed(); syncWatchMode();
     state.meta = Object.fromEntries(state.match.teams.flatMap(t => t.players.map(p => [p.id, p])));
@@ -207,7 +209,7 @@
       const { title, detail, kind } = restartCopy(restart, m);
       if (indicator.dataset.restart !== kind) indicator.dataset.restart = kind;
       // Don't sit over the taker at the upper-left flag on a narrow pitch.
-      const side = restart.x < E.CX && restart.y < 19 ? 'right' : 'left';
+      const side = restart.apronSide || (restart.x < E.CX && restart.y < 19 ? 'right' : 'left');
       if (indicator.dataset.side !== side) indicator.dataset.side = side;
       text('indicatorText', title); text('indicatorDetail', detail);
     } else {
@@ -351,13 +353,14 @@
     }
     const i = snap.n * 2, j = next.n * 2;
     const w = Math.abs(snap.arr[i] - next.arr[j]) + Math.abs(snap.arr[i + 1] - next.arr[j + 1]) < 3 ? amount : 0;
-    const ball = { x: mix(snap.arr[i], next.arr[j], w), y: mix(snap.arr[i + 1], next.arr[j + 1], w), z: mix(snap.arr[i + 2], next.arr[j + 2], w) };
+    const ball = { x: mix(snap.arr[i], next.arr[j], w), y: mix(snap.arr[i + 1], next.arr[j + 1], w), z: mix(snap.arr[i + 2], next.arr[j + 2], w),
+      carried: mix(snap.carried || 0, next.carried || 0, w) };
     const referee = snap.referee && O.between(snap.referee, next.referee || snap.referee, amount);
     let restartPose = snap.restartPose;
     if (restartPose?.thrower && next.restartPose?.thrower === restartPose.thrower) {
       restartPose = { ...restartPose, load: mix(restartPose.load, next.restartPose.load, amount) };
     }
-    return { elapsed: mix(snap.elapsed, next.elapsed, amount), players, ball, referee, restartPose, ownerId: snap.ids[snap.arr[i + 3]] };
+    return { elapsed: mix(snap.elapsed, next.elapsed, amount), players, ball, referee, restartPose, dugouts: snap.dugouts, ownerId: snap.ids[snap.arr[i + 3]] };
   }
   function startReplay() {
     if (!state.goalFrames || state.replayQueue || state.scene) return;
@@ -448,8 +451,9 @@
   function restartFrame() {
     const sp = B.restartAt(state.match, 5.5);
     if (!sp) return null;
-    const wall = sp.wall ?? [];
-    return { type: sp.type, reason: sp.reason, indirect: !!sp.indirect, taken: sp.takenAt != null, technique: sp.technique, style: sp.style,
+    const wall = sp.wall ?? [], path = sp.runoff;
+    const apronSide = path && !path.finished ? ((path.ball.axis === 'x' ? path.ball.line : sp.x) < E.CX ? 'right' : 'left') : null;
+    return { apronSide, type: sp.type, reason: sp.reason, indirect: !!sp.indirect, taken: sp.takenAt != null, technique: sp.technique, style: sp.style,
       stage: sp.stage, wall: wall.length, wallReady: wall.every(p => Math.hypot(p.x - p.tx, p.y - p.ty) <= .58),
       card: sp.card?.kind, offender: sp.offender?.name, team: sp.team, x: sp.x, y: sp.y,
       quick: sp.quick, managed: sp.managed, taker: sp.taker?.name || state.match.teams[sp.team].club.short };
@@ -610,11 +614,53 @@
     text('focusStats', `${condition(p)}% condition${state.ready ? '' : ` · ${p.rating.toFixed(1)} rating`}`);
   }
   function selectPlayer(p) {
+    state.technical = null;
     state.selected = p ? p.id : null;
+    delete $('playerFocus').dataset.technical;
     $('playerFocus').hidden = !p;
+    updateTechnicalButtons();
     if (p) updateFocus(state.meta[p.id] || p);
     for (const b of $('lineup').querySelectorAll('[data-player]')) attr(b, 'aria-pressed', b.dataset.player === state.selected);
     draw();
+  }
+
+  function updateTechnicalButtons() {
+    for (const b of $('technicalAreas').querySelectorAll('[data-technical]')) attr(b, 'aria-pressed', b.dataset.technical === state.technical);
+  }
+
+  function technicalFocus(person) {
+    const card = $('playerFocus');
+    card.hidden = !person;
+    if (!person) { delete card.dataset.technical; return; }
+    card.dataset.technical = 'true';
+    card.style.setProperty('--person-x', person.x.toFixed(2) + 'px');
+    text('focusMeta', `${person.kind} · ${person.club.short}`);
+    text('focusName', person.name);
+    text('focusStats', person.num == null ? person.club.name : `#${person.num} · ${person.role} · ${person.club.name}`);
+  }
+
+  function syncTechnicalAreas() {
+    const r = state.renderer, people = r.touchline;
+    if (people === state.people) return;
+    state.people = people;
+    $('pitchwrap').style.setProperty('--pitch-overlay-top', Math.ceil(r.oy + 7) + 'px');
+    const focus = document.activeElement?.dataset.technical, root = $('technicalAreas');
+    const active = people.find(p => p.id === state.technical);
+    if (!active && state.technical) { state.technical = null; technicalFocus(null); }
+    if (active) technicalFocus(active);
+    root.innerHTML = state.match.teams.map(t => `<div role="group" aria-label="${html(t.club.name)} technical area">${people.filter(p => p.team === t.idx).map(p => {
+      const name = html(`${p.name}, ${p.kind}${p.num == null ? '' : ` #${p.num}`}, ${p.club.name}`);
+      return `<button type="button" class="technical-person" data-technical="${html(p.id)}" data-kind="${p.kind}" aria-pressed="${p.id === state.technical}" aria-label="${name}" title="${name}" style="left:${p.x.toFixed(2)}px;top:${p.y.toFixed(2)}px;width:${p.tapW.toFixed(2)}px;height:${p.tapH.toFixed(2)}px"></button>`;
+    }).join('')}</div>`).join('');
+    if (focus) [...root.querySelectorAll('[data-technical]')].find(b => b.dataset.technical === focus)?.focus({ preventScroll: true });
+  }
+
+  function selectTechnical(person) {
+    state.technical = state.technical === person.id ? null : person.id;
+    state.selected = null;
+    for (const b of $('lineup').querySelectorAll('[data-player]')) attr(b, 'aria-pressed', false);
+    technicalFocus(state.technical ? person : null);
+    updateTechnicalButtons(); draw();
   }
 
   const options = (items, isIndex = true) => items.map((entry, i) => `<option value="${html(isIndex ? i : entry)}">${html(entry)}</option>`).join('');
@@ -787,13 +833,15 @@
   }
 
   function draw() {
+    if (!state.match) return;
     const frame = state.replay?.frame || state.scene?.frame || state.scan?.still;
     const alpha = !frame && !state.paused ? fraction(state.acc, 0, H) : 1;
     state.renderer.draw(state.match, {
-      ready: state.ready, names: state.names, selected: state.selected,
+      ready: state.ready, names: state.names, selected: state.selected, managers: state.managers, technical: state.technical,
       live: !state.ready && !state.scan, frame, alpha, restart: viewingRestart(),
       referee: frame ? null : state.match.referee.pose(state.match, state.match.elapsed - (state.paused ? 0 : H * (1 - alpha)))
     });
+    syncTechnicalAreas();
   }
   function loop(t) {
     if (!viewingMatch()||state.loading) { state.frameJob = null; state.lastFrame = null; return; }
@@ -835,6 +883,11 @@
     $('btnSound').addEventListener('click', () => { setSound(!state.sound, true); state.config.sound = state.sound; });
     $('btnReplay').addEventListener('click', () => state.replay ? endReplay() : startReplay());
     $('btnClearPlayer').addEventListener('click', () => selectPlayer(null));
+    $('technicalAreas').addEventListener('click', e => {
+      const key = e.target.closest('[data-technical]')?.dataset.technical;
+      const person = key && state.people?.find(p => p.id === key);
+      if (person) selectTechnical(person);
+    });
     $('pitch').addEventListener('click', e => {
       const b = $('pitch').getBoundingClientRect();
       selectPlayer(state.renderer.pickPlayer(e.clientX - b.left, e.clientY - b.top));

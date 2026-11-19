@@ -8,6 +8,7 @@
 
   const { L, W, CX, CY, GOAL_HALF, GOAL_H, BOX_L, BOX_HALF, SIX_L, SIX_HALF, PEN, FREE_DISTANCE, THROW_DISTANCE } = typeof window === 'undefined' ? require('./pitch.js') : global.TLPitch;
   const S = typeof window === 'undefined' ? require('./setpieces.js') : global.TLSetPieces;
+  const Runoff = typeof window === 'undefined' ? require('./runoff.js') : global.TLRunoff;
   const { Referee } = typeof window === 'undefined' ? require('./referee.js') : global.TLReferee;
   const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
   const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
@@ -103,6 +104,8 @@
         }
         const team = {
           idx: i, club, players, tactics: { ...tactics }, bench,
+          // Seat numbers stay put when the incoming player swaps with the outgoing one.
+          dugout: bench.map(p => ({ id: p.id, used: false })),
           listed: lineup ? new Set(bench.map(p=>p.id)) : null, assignments: lineup?.set || null,
           slots: xi.map(s => ({ ...s })),
           attackDir: i === 0 ? 1 : -1,
@@ -276,6 +279,7 @@
       if (sp?.throwPlan?.target === old) sp.throwPlan.target = np;
       if (sp?.wall?.includes(old)) sp.wall = sp.wall.map(p => p === old ? np : p);
       team.bench = team.players.filter(p => !p.onPitch && !p.red && (!team.listed || (team.listed.has(p.id) && !p.appeared)));
+      team.dugout = team.dugout.map(seat => seat.id === np.id ? { id: old.id, used: !!team.listed } : seat);
       team.subsUsed++;
       if (this.ball.owner === old) { this.ball.owner = np; this.ball.lastTouch = np; }
       this.playersCache = this.onPitchPlayers(); this.brainIn = 0;
@@ -300,7 +304,7 @@
 
     /* ---------------- set pieces ---------------- */
 
-    startSetPiece(type, teamIdx, x, y, extra = {}) {
+    startSetPiece(type, teamIdx, x, y, extra = {}, departure = null) {
       const team = this.teams[teamIdx], opp = this.teams[1 - teamIdx], d = team.attackDir;
       const gx = d > 0 ? L : 0, b = this.ball;
       x = clamp(x, .3, L - .3);
@@ -334,6 +338,7 @@
       const delay = type === 'penalty' ? 7.8 : type === 'corner' ? 6.2 : type === 'throwin' ? 1.6
         : type === 'freekick' ? (sp.quick ? .9 : sp.managed ? 5.6 : 3.35) : 3.1;
       this.phaseTimer = delay + this.choiceRnd() * (sp.quick ? .5 : 1.05);
+      if (departure) sp.runoff = Runoff.start(departure, sp, this.phaseTimer);
       for (const p of this.playersCache) {
         p.spRole = p.ballPlan = p.releasePlan = null;
         p.offsideFlag = p.sprint = false; p.offsideGap = null;
@@ -560,6 +565,7 @@
     advanceSetPiece(h) {
       const sp = this.setpiece;
       if (!sp) { this.phase = 'open'; return; }
+      Runoff.advance(sp.runoff, h);
       const d = this.teams[sp.team].attackDir, p = sp.taker;
       if (this.progressDiscipline(sp)) return;
       if (sp.stage === 'windup') {
@@ -772,12 +778,18 @@
       if (this.onSnapshot && ++this.snapCount % this.snapEvery === 0) this.onSnapshot(this.snapshotFrame());
     }
 
+    visibleBall() {
+      const runway = this.setpiece?.runoff;
+      return runway && !runway.finished ? runway.ball : this.ball;
+    }
+
     snapshotFrame() {
-      const ps = this.playersCache, b = this.ball;
+      const ps = this.playersCache, b = this.visibleBall();
       const arr = new Float32Array(ps.length * 2 + 4);
       for (let i = 0; i < ps.length; i++) { arr[2 * i] = ps[i].x; arr[2 * i + 1] = ps[i].y; }
-      arr.set([b.x, b.y, b.z, ps.indexOf(b.owner)], ps.length * 2);
+      arr.set([b.x, b.y, b.z, ps.indexOf(this.ball.owner)], ps.length * 2);
       return { t: this.t + (this.half === 2 ? 2700 : 0), elapsed: this.elapsed, half: this.half, n: ps.length, arr, ids: ps.map(p => p.id),
+        carried: b.carried || 0, dugouts: this.teams.map(t => t.dugout),
         referee: this.referee.pose(this), restartPose: this.restartPose() };
     }
 
@@ -1100,34 +1112,35 @@
       if (b.flight && b.flight.kind === 'shot') {
         const f = b.flight;
         if (this.shotContact(f, before, exit || b)) return;
-        if (exit && exit.axis === 'x' && exit.line === f.goalX) { this.resolveShotLine(exit.line, exit); return; }
+        if (exit && exit.axis === 'x' && exit.line === f.goalX) { this.resolveShotLine(exit.line, exit, before, h); return; }
         if (exit || this.elapsed - b.releaseT > 5.6 || (b.z === 0 && Math.hypot(b.vx, b.vy) < 1.1)) {
           this.finishShot(f, 'miss'); b.flight = null;
           this.describeMiss(f, exit && exit.z > GOAL_H ? 'over' : 'wide');
         }
       }
       if (!exit) return;
+      const departure = Runoff.capture(b, before, exit, h);
       if (exit.axis === 'y') {
         const team = b.lastTouch ? 1 - b.lastTouch.team : this.controlTeam;
-        this.startSetPiece('throwin', team, exit.x, exit.line);
+        this.startSetPiece('throwin', team, exit.x, exit.line, {}, departure);
         this.say('throwin', { team: this.teamName(team) }, { team, restartId: this.setpiece.id });
         return;
       }
       const defending = this.teams.find(t => (t.attackDir > 0 ? 0 : L) === exit.line);
       if (Math.abs(exit.y - CY) <= GOAL_HALF - P.RADIUS * .55 && exit.z < GOAL_H - P.RADIUS * .45) {
-        b.x = exit.x; b.y = exit.y; b.z = exit.z; this.considerGoal(exit.line); return;
+        b.x = exit.x; b.y = exit.y; b.z = exit.z; this.considerGoal(exit.line, null, departure); return;
       }
-      this.goalRestart(exit.line, exit.y, defending);
+      this.goalRestart(exit.line, exit.y, defending, departure);
     }
 
-    goalRestart(line, y, defending) {
+    goalRestart(line, y, defending, departure) {
       const b = this.ball;
       if (b.lastTouch && b.lastTouch.team === defending.idx) {
         const team = 1 - defending.idx;
-        this.startSetPiece('corner', team, line === 0 ? .42 : L - .42, y < CY ? .42 : W - .42);
+        this.startSetPiece('corner', team, line === 0 ? .42 : L - .42, y < CY ? .42 : W - .42, {}, departure);
         this.say('corner', { team: this.teamName(team) }, { team, restartId: this.setpiece.id });
       } else {
-        this.startSetPiece('goalkick', defending.idx, line === 0 ? SIX_L - .5 : L - SIX_L + .5, CY + (y > CY ? 4 : -4));
+        this.startSetPiece('goalkick', defending.idx, line === 0 ? SIX_L - .5 : L - SIX_L + .5, CY + (y > CY ? 4 : -4), {}, departure);
         this.say('goalkick', { team: this.teamName(defending.idx) }, { team: defending.idx, restartId: this.setpiece.id });
       }
     }
@@ -1967,14 +1980,15 @@
       this.emit(f.pen ? 'penmiss' : 'miss', { text, team: f.shooter.team, key: f.pen || f.xG > .19 });
     }
 
-    resolveShotLine(lineX, at = this.ball) {
+    resolveShotLine(lineX, at = this.ball, before = this.ball, dt = 0) {
       const b = this.ball, f = b.flight;
       if (!f || f.kind !== 'shot') { this.considerGoal(lineX); return; }
       const offset = Math.abs(at.y - CY);
       const post = Math.abs(offset - GOAL_HALF) <= .157 && at.z <= GOAL_H + .065;
       const bar = offset < GOAL_HALF + .075 && Math.abs(at.z - GOAL_H) <= .124;
+      const departure = !post && !bar ? Runoff.capture(b, before, { axis: 'x', line: lineX }, dt) : null;
       b.x = at.x; b.y = at.y; b.z = at.z;
-      if (!post && !bar && offset < GOAL_HALF - .062 && at.z < GOAL_H - .056) { this.considerGoal(lineX, f); return; }
+      if (!post && !bar && offset < GOAL_HALF - .062 && at.z < GOAL_H - .056) { this.considerGoal(lineX, f, departure); return; }
       b.flight = null;
       if (post || bar) {
         this.finishShot(f, 'post');
@@ -1988,14 +2002,14 @@
         return;
       }
       this.finishShot(f, 'miss'); this.describeMiss(f, at.z > GOAL_H ? 'over' : 'wide');
-      this.goalRestart(lineX, at.y, this.teams[1 - f.shooter.team]);
+      this.goalRestart(lineX, at.y, this.teams[1 - f.shooter.team], departure);
     }
 
-    considerGoal(line, shot = null) {
+    considerGoal(line, shot = null, departure) {
       const scoringTeam = this.teams.find(t => (t.attackDir > 0 ? L : 0) === line).idx;
       const restart = this.ball.restart;
       if (restart && (restart.indirect || restart.taker.team !== scoringTeam)) {
-        this.goalRestart(line, this.ball.y, this.teams[1 - scoringTeam]);
+        this.goalRestart(line, this.ball.y, this.teams[1 - scoringTeam], departure);
         return;
       }
       const evidence = this.attackCheck;
