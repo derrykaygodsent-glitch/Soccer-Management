@@ -121,7 +121,7 @@ test('every enabled clubhouse destination and tab renders in the offline bundle'
   const context={document:{readyState:'loading',addEventListener(){}}};context.window=context;
   for (const [,source] of page.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)) runInNewContext(source,context);
   const views=context.TLClubUI.views;
-  const names=['inbox','schedule','squad','scouting','transfers','club','competitions','vision','dynamics','staff','development','finance','tactics','player','day','medical','training'];
+  const names=['inbox','schedule','squad','planner','scouting','transfers','club','competitions','vision','dynamics','staff','development','finance','tactics','player','day','medical','training'];
   assert.deepEqual(Object.keys(views).sort(),names.sort());
   const s=context.TLClubState.normalize(), fiscal=context.TLClubState.budgets(s);
   const season=context.TLSeasonState.open(undefined,s.sheet), ledger=season.value, api=context.TLSeasonCalendar;
@@ -129,11 +129,15 @@ test('every enabled clubhouse destination and tab renders in the offline bundle'
   const ctx={ui:{},s,fiscal,season,now:ledger.now,narrow:()=>false,unread:()=>mail().filter(m=>!isRead(m)),mail,isRead,fixtures,standings:()=>api.standings(ledger),crest:()=>'<svg aria-hidden="true"></svg>',portrait:()=>''};
   let count=0;
   for(const [key,view] of Object.entries(views))for (const [tab] of view.tabs) {
-    const html=view.render({...ctx,ui:{},r:{page:key,tab,id:''}});
+    const html=context.TLClubOffice.room({...ctx,ui:{},r:{page:key,tab,id:''}},view);
     assert.ok(html.length>300,`${key}/${tab} must show the workspace`);
     assert.doesNotMatch(html,/src="(?:undefined|https?:)/);
     for(const [,target] of html.matchAll(/data-c-go="([^"]+)"/g)) assert.ok(target==='home'||views[target],`${key}/${tab} routes to ${target}`);
     count++;
   }
-  assert.equal(count,74);
+  assert.equal(count,75);
+  const home=context.TLClubOffice.clubhouse(ctx);
+  assert.match(home,/Manager’s Office[\s\S]+Fixture list[\s\S]+The Terrace/);
+  assert.match(home,/16 goals/);
+  assert.doesNotMatch(home,/>[^<]*(?:undefined|NaN)[^<]*</);
 });

@@ -1,26 +1,30 @@
-/* Touchline 26 — clubhouse, date clock and fixture gate. */
-(function (global) {
+/* Touchline 26 — clubhouse navigation and calendar handover. */
+(function(global){
   'use strict';
-  const M = global.TLHomeData, K=global.TLSeasonCalendar, S=global.TLSeasonState;
-  const portraitImages = /* @HOME_PORTRAITS@ */ {};
-  const $ = id => document.getElementById(id);
-  const esc = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const icon = name => `<svg class="hc-icon" aria-hidden="true"><use href="#${name.startsWith('i-') ? name : 'hc-i-' + name}"/></svg>`;
-  const text = (id, value) => { $(id).textContent = value; };
-  const state = { drawer: false, note: '', dashboardStamp: '' };
-  let desk, season, match;
-  const NOTE_KEY = 'touchline26.clubhouse.notebook';
-  const nav = [
-    [['Home', 'home', 'home'], ['Inbox', 'mail', 'inbox']],
-    [['Squad', 'i-shirt', 'squad'], ['Squad Planner', 'plan'], ['Dynamics', 'team', 'dynamics'], ['Tactics', 'tactics', 'tactics'], ['Staff', 'team', 'staff'], ['Training', 'cone', 'training'], ['Medical Centre', 'medical', 'medical']],
-    [['Schedule', 'calendar', 'fixtures'], ['Competitions', 'cup', 'league']],
-    [['Scouting', 'search', 'scouting'], ['Transfers', 'swap', 'transfers']],
-    [['Club Info', 'shield', 'club'], ['Club Vision', 'case', 'vision'], ['Finances', 'money', 'finance']],
-    [['Dev. Centre', 'trend', 'development']]
+  const M=global.TLHomeData, K=global.TLSeasonCalendar, S=global.TLSeasonState, P=global.TLCalendarProgress;
+  const U=global.TLClubUI, Office=global.TLClubOffice, {esc,icon}=U;
+  const portraitImages=/* @HOME_PORTRAITS@ */ {};
+  const $=id=>document.getElementById(id);
+  const text=(id,value)=>{$(id).textContent=value;};
+  const state={drawer:false,note:'',target:null,last:null,homeSnapshot:null};
+  let desk,season,match,processor;
+  const NOTE_KEY='touchline26.clubhouse.notebook', PAUSE_KEY='touchline26.calendar-pause.v1';
+  const nav=[
+    ['Clubhouse',[['Home','home','home'],['Inbox','mail','inbox'],['Social Feed','social','social']]],
+    ['First Team',[['Squad','i-shirt','squad'],['Squad Planner','plan','planner'],['Tactics','tactics','tactics'],['Dynamics','team','dynamics'],['Training','cone','training'],['Medical Centre','medical','medical']]],
+    ['Season',[['Schedule','calendar','fixtures'],['Competitions','cup','league']]],
+    ['Club Operations',[['Scouting','radar','scouting'],['Transfers','swap','transfers'],['Staff','team','staff'],['Development Centre','trend','development']]],
+    ['Front Office',[['Club Info','shield','club'],['Club Vision','case','vision'],['Finances','money','finance']]]
   ];
-  const tabs = [
-    ['Home', 'home'], ['My Profile', 'profile', true], ['My Contract', null, true], ['Promises'], ['Relationships'], ['My History', null, true], ['Notebook', 'notebook']
-  ];
+  const routes={
+    home:['Home','home'], inbox:['Inbox','inbox','messages'], social:['Social Feed','inbox','social'], news:['News','inbox','news'], squad:['Squad','squad'], planner:['Squad Planner','planner'],
+    dynamics:['Dynamics','dynamics'], tactics:['Tactics','tactics'], staff:['Staff','staff'], medical:['Medical Centre','medical'], training:['Training','training'],
+    fixtures:['Schedule & fixtures','schedule'], league:['Competitions & league table','competitions','competitions','PD'], day:['Calendar Desk','day','today'],
+    scouting:['Scouting','scouting'], transfers:['Transfers','transfers'], club:['Club information','club'], vision:['Club Vision','vision'],
+    finance:['Finances','finance'], development:['Development Centre','development'], leaders:['Player stats','squad','stats'], player:['Player profile','player']
+  };
+  const tabs=[['Overview','home'],['Calendar Desk','day'],['Club vision','vision']];
+  const modalTitles={profile:'Manager profile',search:'Search',notebook:'Notebook',help:'Clubhouse guide'};
 
   function crest(id) {
     const c = typeof id === 'string' ? M.clubs[id] : id;
@@ -60,263 +64,175 @@
       <text x="50" y="83" fill="${c.secondary}" text-anchor="middle" font-size="10" font-weight="900" letter-spacing=".9">${esc(c.short)}</text></svg>`;
   }
 
-  function navigation() {
-    $('homeNav').innerHTML = nav.map(group => `<div class="hc-nav-group">${group.map(([label, symbol, page]) => {
-      const current = page === 'home' ? ' aria-current="page"' : '';
-      const target = page ? ` data-hc-open="${page}"` : ' disabled title="Screen not added yet"';
-      return `<button type="button" class="hc-nav-button"${current}${target}>${icon(symbol)}<span>${label}</span>${page === 'inbox' ? `<small class="hc-inbox-badge" id="homeUnread" aria-label="Unread messages" hidden></small>` : ''}</button>`;
-    }).join('')}</div>`).join('');
+  function navigation(){
+    $('homeNav').innerHTML=nav.map(([group,rows])=>`<div class="hc-nav-group"><p>${group}</p>${rows.map(([label,glyph,id])=>`<button class="hc-nav-button" type="button" data-hc-open="${id}"${id==='home'?' aria-current="page"':''}>${icon(glyph)}<span>${label}</span>${id==='inbox'?'<small class="hc-inbox-badge" id="homeUnread" hidden></small>':''}</button>`).join('')}</div>`).join('');
+    $('homeHeaderCrest').innerHTML=crest(M.homeId);
     homeTabs();
   }
-  function homeTabs() {
-    $('homeTabs').innerHTML = tabs.map(([label, page, more]) => `<button class="hc-tab" type="button"${page === 'home' ? ' aria-current="page"' : ''}${page ? ` data-hc-open="${page}"` : ' disabled title="Screen not added yet"'}>${label}${more ? icon('down') : ''}</button>`).join('');
+  function homeTabs(){
+    $('homeTabs').innerHTML=tabs.map(([label,id])=>`<button class="hc-tab" type="button" data-hc-open="${id}"${id==='home'?' aria-current="page"':''}>${label}</button>`).join('');
   }
-
-  function fixtureRows(rows,id) {
-    return rows.map(f => {
-      const club = M.clubs[f.opponent], next = f.id === id;
-      const result = f.score ? `${f.score[0]} - ${f.score[1]}` : f.comp;
-      const venue = ({H:'Home',A:'Away',N:'Neutral'})[f.venue]||'Home';
-      return `<button class="hc-fixture-row" type="button" data-hc-fixture="${f.id}" data-next="${next}" aria-label="${M.shortDate(f.date)}, ${venue} against ${esc(club.name)}, ${f.score ? result : esc(M.fixtureCompetition(f))}">
-        <time datetime="${new Date(f.date).toISOString()}">${M.shortDate(f.date)}</time><span title="${venue}">${f.venue}</span><span class="hc-fixture-club">${crest(club.id)}<span>${esc(club.name)}</span></span>${f.score ? `<i class="hc-form-dot" data-form="${f.pen ? (f.pen[0]>f.pen[1]?'W':'L') : f.score[0]>f.score[1]?'W':f.score[0]===f.score[1]?'D':'L'}" aria-hidden="true"></i>` : '<span></span>'}<span class="hc-fixture-result">${result}</span></button>`;
-    }).join('');
+  const datum=(label,value)=>`<p class="hc-datum"><strong>${esc(value)}</strong><span>${esc(label)}</span></p>`;
+  function search(){
+    const input=$('homeSearchInput'), q=input.value.trim().toLowerCase(), entries=[...Object.entries(routes).map(([id,[label]])=>[id,label]),['profile',modalTitles.profile],['notebook',modalTitles.notebook]];
+    const results=entries.filter(([id,label])=>!q||`${id} ${label} ${id==='club'?'Riverside FC':''}`.toLowerCase().includes(q));
+    $('homeSearchResults').innerHTML=results.length?results.map(([id,label])=>`<button class="hc-dialog-link" type="button" data-hc-open="${id}">${esc(label)}${icon('i-arrow')}</button>`).join(''):'<p class="cc-empty">No matching sections.</p>';
   }
-
-  function leagueChart(history) {
-    const position=history.at(-1);
-    const grid = Array.from({length:39}, (_, i) => `M${3 + i * 7} 7v28`).join('');
-    const points = history.map((pos, i) => [4 + i * 261/Math.max(39,history.length-1), 5 + pos * 1.46]);
-    return `<svg class="hc-league-chart" viewBox="0 0 273 38" preserveAspectRatio="none" role="img" aria-label="Riverside league positions · currently ${M.ordinal(position)}">
-      <path d="${grid}M3 7h266M3 30h266" stroke="currentColor" stroke-width=".7" opacity=".48" fill="none"/>
-      <polyline points="${points.map(p => p.join(',')).join(' ')}" fill="none" stroke="#858dd1" stroke-width="1.4"/>
-      ${points.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="1.85" fill="#969de1"/>`).join('')}</svg>`;
-  }
-  function table(rows) {
-    return `<div class="hc-table-wrap" tabindex="0" role="region" aria-label="Scrollable league table"><table class="hc-table"><caption class="hc-sr">League table summary</caption><thead><tr><th scope="col">POS</th><th scope="col">TEAM</th><th scope="col" title="Played">P</th><th scope="col" title="Goal difference">GD</th><th scope="col" title="Points">PTS</th></tr></thead>
-      <tbody>${rows.map((row, index) => {
-        const club = M.clubs[row.id], move = row.move > 0 ? 'up' : 'down';
-        return `<tr class="${row.id === M.homeId ? 'hc-table-home' : index < 7 ? 'hc-tier' : ''}"><td><span class="hc-place">${M.ordinal(index + 1)}${row.move ? `<span class="hc-move" data-move="${move}" title="Moved ${move}">${row.move > 0 ? '⌃' : '⌄'}</span>` : ''}</span></td>
-          <td><span class="hc-club-cell">${crest(row.id)}<span title="${esc(club.name)}">${esc(club.name)}</span></span></td><td>${row.played}</td><td>${row.gd}</td><td>${row.pts}</td></tr>`;
-      }).join('')}</tbody></table></div>`;
-  }
-
-  function leaderRows(s) {
-    return S.leaders(s).map(({icon: metric, label, player, value})=>{
-      const src=portraitImages[M.portraitFor[player.id]], art=src?`<img class="hc-portrait" src="${src}" alt="" width="45" height="52">`:`<span class="hc-portrait hc-portrait-placeholder" aria-hidden="true">${player.name.split(' ').map(n=>n[0]).slice(0,2).join('')}</span>`;
-      return `<article class="hc-leader"><span class="hc-leader-art">${icon(metric)}${art}</span><p class="hc-leader-copy"><span>${esc(label)}</span><strong><button type="button" class="hc-leader-player" data-c-do="player" data-c-val="${player.id}">${esc(player.name)}</button></strong><small>${esc(value)}</small></p></article>`;
-    }).join('');
-  }
-
-  function financeChart() {
-    const x0 = 74, x1 = 247, top = 9, bottom = 140;
-    const y = value => top + (500 - value) * (bottom - top) / 900;
-    const base = +y(0).toFixed(2);
-    const points = M.finance.history.map((value, i, a) => `${(x0 + i * (x1 - x0) / (a.length - 1)).toFixed(2)},${y(value).toFixed(2)}`);
-    const labels = [500, 300, 100, -100, -300].map(value => {
-      const py = y(value).toFixed(2), amount = value < 0 ? `(£${-value}M)` : `£${value}M`;
-      return `<path d="M${x0-4} ${py}h4"/><text x="${x0-6}" y="${py}" dy=".3em" text-anchor="end" stroke="none">${amount}</text>`;
-    }).join('');
-    const ticks = Array.from({length:28}, (_, i) => `M${(x0 + i * (x1 - x0) / 27).toFixed(1)} ${base}v5`).join('');
-    return `<svg class="hc-finance-chart" viewBox="0 0 274 146" role="img" aria-label="Season balance history: below zero in September, recovering through October to 347 million pounds">
-      <path d="M${x0} ${base} L${points.join(' L')} L${x1} ${base} Z" fill="#ec609b"/>
-      <g stroke="#8990a6" stroke-width=".75" fill="none"><path d="M${x0} ${top}v${bottom-top}M${x0} ${base}h${x1-x0}"/><path d="${ticks}"/></g>
-      <g font-family="Inter, sans-serif" font-size="12" fill="#f2eff8" stroke="#8990a6" stroke-width=".75">${labels}</g>
-      <g font-family="Inter, sans-serif" font-size="10.5" fill="#f4f3fb"><text x="${x0+2}" y="${base+16}">Sep</text><text x="${x0+81}" y="${base+16}">Oct</text><text x="${x1-11}" y="${base+16}">Oct</text></g></svg>`;
-  }
-  function finance() {
-    const f = desk.budgets();
-    return `${financeChart()}<div class="hc-finance-metrics"><div><strong>Overall balance</strong><span class="hc-amount">${M.money(f.balance)}</span></div><div><strong>Profit/(loss) this season</strong><span class="hc-amount">${M.money(f.profit)}</span></div></div>
-      <section class="hc-budget"><h3>Transfer budget</h3><span class="hc-amount">${M.money(f.transfer)}</span><p>Original budget was ${M.millions(f.original)}<br>${f.retention}% of transfer revenue is made available<br>Next season’s minimum guaranteed budget will be ${M.millions(f.nextSeason)}.</p></section>
-      <section class="hc-budget"><h3>Wage budget</h3><span class="hc-amount">${M.money(f.wage)} p/w</span><p>Currently spending ${M.money(f.spending)} p/w<br>Committed spending ${M.money(f.committed)} p/w<br>Available Wage Budget: ${M.millions(f.wage - f.committed)} per week</p></section>`;
-  }
-
-  function setClock(date) {
-    const now=M.calendar(date);
-    $('homeClock').dateTime = new Date(date).toISOString();
-    text('homeDay', now.day); text('homeDate', now.date);
-  }
-  function updateDashboard(next,rows){
-    const s=season.value, stamp=`${s.now}:${Object.keys(s.results).length}`;
-    if(state.dashboardStamp===stamp)return;
-    state.dashboardStamp=stamp;
-    const home=M.clubs[M.homeId], away=next?K.club(next.opponent):null, host=next?K.club(next.home):home;
-    text('homeFixtureTitle',next?`${host.name} v ${M.clubs[next.away].name}`:'No upcoming fixture');
-    text('homeCompetition',next?M.fixtureCompetition(next):'First team');
-    text('homeStadium',next?host.stadium:'Calendar up to date');
-    text('homeOpponentManager',away?K.manager(away.id):'—');
-    $('homeOpponentCrest').innerHTML=away?crest(away.id):'';
-    $('homeNextDate').dateTime=next?new Date(next.date).toISOString():'';
-    text('homeNextDate',next?`${M.calendar(next.date).long} (${K.countdown(s.now,next.date)})`:'All published fixtures played');
-    const window=K.clubFixtures(s), i=next?window.findIndex(x=>x.id===next.id):window.length;
-    $('homeFixtures').innerHTML=fixtureRows(window.slice(Math.max(0,i-2),i+5),next?.id);
-    const records=window.filter(f=>f.score&&f.comp==='PD').slice(-5);
-    const mark=score=>score[0]===score[1]?'D':score[0]>score[1]?'W':'L';
-    $('homeLeague').innerHTML=`<div class="hc-league-top"><span>League Positions</span><span class="hc-form" aria-label="Recent form: ${records.map(f=>mark(f.score)).join(', ')}">${records.map(f=>`<i data-form="${mark(f.score)}"></i>`).join('')}</span></div>${leagueChart(K.positions(s))}${table(rows)}`;
-    $('homeLeaders').innerHTML=leaderRows(s);
-  }
-  function renderHome() {
-    const home=M.clubs[M.homeId];
-    text('homeManager', `${M.manager} – ${home.name}`);
-    text('homeFixturesTitle', `${home.city} fixtures`);
-    for (const id of ['homeHeaderCrest', 'homeBigCrest']) $(id).innerHTML = crest(home.id);
-    $('homeFinance').innerHTML = finance();
-    syncClub();
-  }
-
-  const routes = {
-    day:['Calendar Desk','day','today'], tactics:['Tactics','tactics'], player:['Player profile','player'], medical:['Medical Centre','medical'], training:['Training','training'],
-    home:['Home','home'], inbox:['Inbox','inbox'], squad:['Squad','squad'], dynamics:['Dynamics','dynamics'], staff:['Staff','staff'],
-    fixtures:['Schedule & fixtures','schedule'], league:['Competitions & league table','competitions','competitions','PD'],
-    scouting:['Scouting','scouting'], transfers:['Transfers','transfers'], club:['Club information','club'], vision:['Club Vision','vision'],
-    finance:['Finances','finance'], development:['Development Centre','development'], leaders:['Player stats','squad','stats']
-  };
-  const modalTitles = {profile:'Manager profile',search:'Search',notebook:'Notebook',help:'Clubhouse guide'};
-  const datum = (label, value) => `<p class="hc-datum"><strong>${esc(value)}</strong><span>${esc(label)}</span></p>`;
-  const sectionLink = (id, label) => `<button class="hc-dialog-link" type="button" data-hc-open="${id}">${esc(label)}${icon('chevron')}</button>`;
-  function sectionBody(id) {
-    const c = M.clubs[M.homeId];
-    switch (id) {
-      case 'profile': return datum('Manager', M.manager) + datum('Current club', c.name) + datum('Role', 'First-team manager');
-      case 'search': return '<label for="homeSearchInput">Find a section of the clubhouse</label><input class="hc-search-field" type="search" id="homeSearchInput" autocomplete="off" placeholder="Try fixtures, scouting or finances"><div id="homeSearchResults"></div>';
-      case 'notebook': return '<p>Keep your own notes about the club. Notes stay on this device when storage is available.</p><label class="hc-sr" for="homeNotes">Club notes</label><textarea class="hc-notebook" id="homeNotes" maxlength="16000" placeholder="Write a note…"></textarea>';
-      case 'help': return `<p>Manage Riverside one calendar day at a time in the fictional 2024/25 season.</p><ul class="hc-details-list"><li>Continue or Space advances one day. Click the date to open the calendar without advancing.</li><li>Only Inbox items marked Action required hold the date. In the reader, Next Unread follows the message order.</li><li>On a fixture date the header opens the Tactical Meeting. Submit your team, brief the players and enter the pitch. Kick off manually.</li><li>Club tactics are saved before the match. Live changes are temporary unless you explicitly save your instructions. The fixture result is recorded at the final whistle.</li><li>Progress stays in this browser where local storage is available. In an offline sandbox without storage, the current session still works.</li></ul>`;
-      default: return '';
-    }
-  }
-  function search() {
-    const input = $('homeSearchInput'), list = $('homeSearchResults'), q = input.value.trim().toLowerCase();
-    const entries = [...Object.entries(routes).map(([id,[label]])=>[id,label]), ['profile',modalTitles.profile], ['notebook',modalTitles.notebook]];
-    const match = entries.filter(([id,label]) => !q || `${id} ${label} ${id==='club'?'Riverside FC':''}`.toLowerCase().includes(q));
-    list.innerHTML = match.length ? match.map(([id,label])=>sectionLink(id,label)).join('') : '<p class="hc-message">No matching sections.</p>';
-  }
-  function showPanel(title, body) {
+  function showPanel(title,body){
     toggleDrawer(false);
-    text('homeDialogTitle', title);
-    $('homeDialogBody').innerHTML = body;
-    const dlg = $('homeDialog');
-    if (!dlg.open) dlg.showModal();
-    dlg.scrollTop = 0;
+    text('homeDialogTitle',title);$('homeDialogBody').innerHTML=body;
+    const dlg=$('homeDialog');if(!dlg.open)dlg.showModal();
+    $('homeDialogBody').scrollTop=0;
   }
-  function openPanel(id) {
-    if (Object.hasOwn(routes,id)) {
-      const [,page,tab,detail] = routes[id];
-      toggleDrawer(false, state.drawer && desk.route().page===page);
-      desk.go(page,tab,detail);
-      return;
+  function openPanel(id){
+    if(Object.hasOwn(routes,id)){
+      const [,page,tab,key]=routes[id];
+      toggleDrawer(false,state.drawer&&desk.route().page===page);
+      return desk.go(page,tab,key);
     }
-    if (!Object.hasOwn(modalTitles,id)) return;
-    showPanel(modalTitles[id], sectionBody(id));
-    if (id === 'search') { search(); $('homeSearchInput').focus(); }
-    else if (id === 'notebook') { $('homeNotes').value = state.note; $('homeNotes').focus(); }
+    if(!Object.hasOwn(modalTitles,id))return;
+    const body={
+      profile:datum('Manager',M.manager)+datum('Current club',M.clubs[M.homeId].name)+datum('Role','First-team manager')+datum('Club date',M.calendar(season.value.now).date),
+      search:'<label for="homeSearchInput">Find a page in the clubhouse</label><input class="hc-search-field" type="search" id="homeSearchInput" autocomplete="off" placeholder="Try fixtures, scouting or finances"><div id="homeSearchResults"></div>',
+      notebook:'<p>Keep notes about the club. They stay on this device when local storage is available.</p><label class="hc-sr" for="homeNotes">Club notes</label><textarea class="hc-notebook" id="homeNotes" maxlength="16000" placeholder="Write a note…"></textarea>',
+      help:`<p>Manage Riverside through the fictional 2024/25 season.</p><ul class="hc-details-list"><li><b>Continue</b> or <kbd>Space</kbd> starts automatic calendar processing. <b>Stop processing</b>, <kbd>Space</kbd> or <kbd>Esc</kbd> stops at the saved date.</li><li>The clock pauses for mandatory Inbox decisions and Riverside matchday. Select a future date in Calendar Desk to add an optional one-time stop.</li><li>Opening a message does not answer it. While reading the Inbox, <b>Next Unread</b> opens the next message without advancing the calendar.</li><li>On matchday open the tactical meeting, submit the team, and brief your players. Kick off manually from the pitch.</li><li>Live changes are match-only unless saved. The final whistle records the real result. Saves stay in this browser where local storage is allowed.</li></ul>`
+    };
+    showPanel(modalTitles[id],body[id]);
+    if(id==='search'){search();$('homeSearchInput').focus();}
+    if(id==='notebook'){$('homeNotes').value=state.note;$('homeNotes').focus();}
   }
-  function onPage(r, view, history) {
-    const root=$('homeScreen'); root.dataset.page = r.page;
-    $('homeMain').hidden = r.page!=='home';
-    if (!view) homeTabs();
-    const title=view?.heading?.(desk.context()) || view?.title || 'Home';
-    text('homeTitle', title);
-    const navButtons = $('homeNav').querySelectorAll('[data-hc-open]');
-    for (const b of navButtons) {
-      if (routes[b.dataset.hcOpen]?.[1]===(view?.nav||r.page)) b.setAttribute('aria-current','page');
-      else b.removeAttribute('aria-current');
+  const navKey=(r,view)=>r.page==='inbox'&&r.tab==='social'?'social':r.page==='day'?'fixtures':r.page==='competitions'?'league':(view?.nav||r.page);
+  function onPage(r,view,history){
+    const root=$('homeScreen'), page=navKey(r,view);root.dataset.page=r.page;
+    $('homeMain').hidden=r.page!=='home';
+    if(!view)homeTabs();
+    const title=view?.heading?.(desk.context())||view?.title||'Home';
+    text('homeTitle',title);
+    text('homeSection',nav.find(([,entries])=>entries.some(([, ,key])=>key===page))?.[0]||'Clubhouse');
+    for(const b of $('homeNav').querySelectorAll('[data-hc-open]')){
+      if(b.dataset.hcOpen===page)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
     }
-    $('homeBack').disabled=!history.back; $('homeForward').disabled=!history.forward;
-    document.title = `Touchline 26 — ${r.page==='home'?'Club Home':title}`;
+    $('homeBack').disabled=!history.back;$('homeForward').disabled=!history.forward;
+    document.title=`Touchline 26 — ${r.page==='home'?'Manager’s Office':title}`;
     syncClub();
   }
   function action(){
+    if(processor?.running)return ['Stop processing','stop','Stop at the current club date (Esc or Space)','stop'];
     const s=season.value,r=desk.route(), unread=desk.unread();
-    if(r.page==='inbox'&&r.tab==='messages'&&unread.length)return ['Next Unread','next-unread','Open the next unread message'];
-    const required=S.pending(s);
-    if(required.length)return ['Inbox','required',`${required.length} club ${required.length===1?'decision requires':'decisions require'} your attention`];
-    if(K.due(s))return ['Tactical Meeting','meeting','Prepare for today’s fixture'];
-    if(K.day(s.now)>=K.end)return ['Season complete','end','All published calendar dates have passed'];
-    return ['Continue','day','Advance one calendar day (Space)'];
+    if(r.page==='inbox'&&r.tab==='messages'&&unread.length)return ['Next Unread','next-unread','Open the next unread message','mail'];
+    const g=P.gate(s);
+    if(g?.reason==='decision')return ['Inbox','required',`${g.messages.length} ${g.messages.length===1?'decision requires':'decisions require'} your attention`,'mail'];
+    if(g?.reason==='fixture')return ['Tactical Meeting','meeting','Prepare for today’s fixture','tactics'];
+    if(g?.reason==='end')return ['Season complete','end','All published calendar dates have passed','check'];
+    return ['Continue','day','Process the club calendar (Space)','i-arrow'];
   }
-  function syncClub() {
-    if (!desk||!season) return;
-    const r=desk.route(), view=desk.view(), context=desk.context(), unread=desk.unread().length, badge=$('homeUnread'), s=season.value;
-    const next=K.next(s), rows=K.standings(s);
-    setClock(s.now);updateDashboard(next,rows);
-    badge.hidden=unread===0; badge.textContent=unread; badge.setAttribute('aria-label',`${unread} unread messages`);
-    const continueButton=$('homeContinue'), [label,cmd,tip]=action();
-    continueButton.querySelector('span').textContent=label;continueButton.title=tip;continueButton.dataset.action=cmd;continueButton.disabled=cmd==='end';
-    if (r.page==='home') text('homeManager', `${M.manager} – ${M.clubs[M.homeId].name}`);
-    else text('homeManager', view?.subtitle?.(context) || `${M.ordinal(rows.findIndex(row=>row.id===M.homeId)+1)} in ${M.division}${next?` · Next: ${M.clubs[next.opponent].name} (${next.venue}) · ${K.countdown(s.now,next.date)}`:''}`);
-    const f=desk.budgets(), financeKey=`${f.transfer}:${f.wage}`;
-    if ($('homeFinance').dataset.allocation!==financeKey) {
-      $('homeFinance').innerHTML=finance(); $('homeFinance').dataset.allocation=financeKey;
+  function clock(now){
+    const date=M.calendar(now);
+    $('homeClock').dateTime=new Date(now).toISOString();text('homeDay',date.day);text('homeDate',date.date);
+  }
+  function syncClub(){
+    if(!desk||!season)return;
+    const c=desk.context(), s=season.value, unread=c.unread().length;
+    clock(s.now);
+    const badge=$('homeUnread');badge.hidden=unread===0;badge.textContent=unread;badge.setAttribute('aria-label',`${unread} unread messages`);
+    const b=$('homeContinue'),[label,cmd,tip,glyph]=action();
+    b.querySelector('span').textContent=label;b.title=tip;b.dataset.action=cmd;b.disabled=cmd==='end';
+    $('homeContinueIcon').setAttribute('href',`#${glyph.startsWith('i-')?glyph:'hc-i-'+glyph}`);
+    if(!processor?.running&&c.r.page==='home'&&(state.homeSnapshot?.s!==s||state.homeSnapshot?.club!==c.s)){
+      state.homeSnapshot={s,club:c.s};$('homeMain').innerHTML=Office.clubhouse(c);
     }
   }
-
-  function toggleDrawer(open, focus = false) {
-    const wasOpen = state.drawer;
-    state.drawer = open;
-    $('homeSidebar').classList.toggle('hc-open', open);
-    $('homeScrim').hidden = !open;
-    $('homeFrame').inert = open;
-    $('homeMenu').setAttribute('aria-expanded', String(open));
-    if (open && focus) ($('homeNav').querySelector('[aria-current=page]') || $('homeNav').querySelector('button')).focus();
-    else if (wasOpen && focus) $('homeMenu').focus();
+  function toggleDrawer(open,focus=false){
+    if(open&&processor?.running)return;
+    const wasOpen=state.drawer;state.drawer=open;
+    $('homeSidebar').classList.toggle('hc-open',open);$('homeScrim').hidden=!open;$('homeFrame').inert=open;
+    $('homeMenu').setAttribute('aria-expanded',String(open));
+    if(open&&focus)($('homeNav').querySelector('[aria-current=page]')||$('homeNav').querySelector('button')).focus();
+    else if(wasOpen&&focus)$('homeMenu').focus();
   }
   function dayDesk(focus=true){
-    const s=season.value, tab=K.onDate(s,s.now).length?'fixtures':'today';
-    desk.go('day',tab);desk.render(false);syncClub();
-    if(focus){global.scrollTo(0,0);$('homeContinue').focus({preventScroll:true});}
+    const s=season.value, tab=K.onDate(s,s.now).length?'fixtures':'today', r=desk.route();
+    if(r.page==='day'&&r.tab===tab&&!r.id){desk.render(false);$('clubPage').scrollTop=0;}
+    else desk.go('day',tab);
+    if(focus)$('homeContinue').focus({preventScroll:true});
+  }
+  function setPause(value){
+    const ts=Number(value);
+    if(value!==null&&(!Number.isFinite(ts)||K.day(ts)!==ts||ts<=K.day(season.value.now)||ts>K.end))return false;
+    state.target=value===null?null:ts;
+    try{if(state.target===null)global.localStorage.removeItem(PAUSE_KEY);else global.localStorage.setItem(PAUSE_KEY,String(ts));}catch{}
+    return true;
+  }
+  function processingUI(on){
+    const root=$('homeScreen'), pane=$('homeProcessing');
+    root.dataset.processing=String(on);pane.hidden=!on;
+    for(const id of ['homeSidebar','homeTabs','homeMain','clubPage','homeCalendarLink','homeMenu','homeBack','homeForward'])$(id).inert=on;
+    for(const control of root.querySelectorAll('.hc-bar [data-hc-open]'))control.inert=on;
+  }
+  function drawProgress(frame){
+    if(!frame.days){state.last=null;processingUI(true);syncClub();$('homeProcessing').scrollTop=0;$('homeContinue').focus({preventScroll:true});}
+    else clock(frame.now);
+    $('processingCount').innerHTML=`<strong>${frame.days}</strong><span>${frame.days===1?'DAY':'DAYS'}<br>PROCESSED</span>`;
+    $('processingDays').innerHTML=Office.processing(desk.context(),frame);
+    $('processingTarget').hidden=frame.target==null;
+    if(frame.target!=null)text('processingTarget',`Selected pause: ${M.calendar(frame.target).date}`);
+    text('processingSpeech',`${M.calendar(frame.now).date}. ${frame.days} ${frame.days===1?'day':'days'} processed.`);
+  }
+  function finishProgress(result){
+    state.last=result;if(state.target!==null&&state.target<=K.day(result.now))setPause(null);
+    processingUI(false);dayDesk();
   }
   function progress(){
     if($('homeScreen').hidden||$('homeDialog').open||state.drawer)return;
     const [,cmd]=action();
+    if(cmd==='stop')return processor.stop();
     if(cmd==='next-unread')return desk.act('next-unread');
     if(cmd==='required')return desk.message(S.pending(season.value)[0].id);
     if(cmd==='meeting'&&season.enter())return match.open();
-    if(cmd==='day'&&season.advance())return dayDesk();
+    if(cmd==='day')return processor.start();
   }
-
-  function init() {
-    try { state.note = global.localStorage.getItem(NOTE_KEY) || ''; } catch { /* Opaque offline iframe. */ }
-    const root = $('homeScreen');
-    desk = global.TLClubDesk.create({ root, content:$('clubPage'), tabs:$('homeTabs'), dialog:$('homeDialog'), crest,
-      portrait:id=>portraitImages[M.portraitFor[id]], showPanel, onPage, onState:syncClub, scrollHome:()=>$('homeMain').scrollTop=0 });
+  function init(){
+    try{state.note=global.localStorage.getItem(NOTE_KEY)||'';}catch{}
+    const root=$('homeScreen');
+    desk=global.TLClubDesk.create({root,content:$('clubPage'),tabs:$('homeTabs'),dialog:$('homeDialog'),crest,
+      portrait:id=>portraitImages[M.portraitFor[id]],showPanel,onPage,onState:syncClub,scrollHome:()=>$('homeMain').scrollTop=0,
+      calendar:()=>({target:state.target,last:state.last,setPause})});
     season=desk.season;
+    try{const saved=Number(global.localStorage.getItem(PAUSE_KEY));if(saved&& !setPause(saved))setPause(null);}catch{}
+    processor=P.create({store:season,pauseAt:()=>state.target,onFrame:drawProgress,onStop:finishProgress});
     match=global.TLClubMatch.create({store:season,crest,portrait:id=>portraitImages[M.portraitFor[id]],onReturn:why=>{dayDesk();if(why==='result')desk.note('Result recorded. The match report is in your Inbox.');}});
-    navigation(); renderHome();
-    root.dataset.page='home';
+    navigation();root.dataset.page='home';syncClub();
     if(season.value.session)match.open();
-    root.addEventListener('click', e => {
-      const button = e.target.closest('button');
-      if (!button || button.disabled) return;
-      if (button.id === 'homeContinue') progress();
-      else if (button.id === 'homeCalendarLink') dayDesk(false);
-      else if (button.id === 'homeBack') desk.step(-1);
-      else if (button.id === 'homeForward') desk.step(1);
-      else if (button.id === 'homeDialogClose') $('homeDialog').close();
-      else if (button.id === 'homeMenu') toggleDrawer(!state.drawer, true);
-      else if (button.id === 'homeScrim') toggleDrawer(false, true);
-      else if (button.hasAttribute('data-hc-open')) openPanel(button.dataset.hcOpen);
-      else if (button.hasAttribute('data-hc-fixture')) desk.go('schedule','fixtures',button.dataset.hcFixture);
-      else if (button.hasAttribute('data-hc-collapse')) {
-        const body = $(button.dataset.hcCollapse);
-        body.hidden = !body.hidden;
-        button.setAttribute('aria-expanded', String(!body.hidden));
-      }
+    root.addEventListener('click',e=>{
+      const b=e.target.closest('button');if(!b||b.disabled)return;
+      if(b.id==='homeContinue'||b.hasAttribute('data-hc-progress'))progress();
+      else if(b.id==='homeStop')processor.stop();
+      else if(b.hasAttribute('data-hc-run')&&!$('homeDialog').open&&!root.hidden)processor.start();
+      else if(b.id==='homeCalendarLink')dayDesk(false);
+      else if(b.id==='homeBack')desk.step(-1);
+      else if(b.id==='homeForward')desk.step(1);
+      else if(b.id==='homeDialogClose')$('homeDialog').close();
+      else if(b.id==='homeMenu')toggleDrawer(!state.drawer,true);
+      else if(b.id==='homeScrim')toggleDrawer(false,true);
+      else if(b.hasAttribute('data-hc-open'))openPanel(b.dataset.hcOpen);
+      else if(b.hasAttribute('data-hc-mail'))desk.message(b.dataset.hcMail);
+      else if(b.hasAttribute('data-hc-fixture'))desk.go('schedule','fixtures',b.dataset.hcFixture);
+      else if(b.hasAttribute('data-hc-collapse')){const el=$(b.dataset.hcCollapse);el.hidden=!el.hidden;b.setAttribute('aria-expanded',String(!el.hidden));}
     });
-    root.addEventListener('input', e => {
-      if (e.target.id === 'homeSearchInput') search();
-      else if (e.target.id === 'homeNotes') {
-        state.note = e.target.value;
-        try { global.localStorage.setItem(NOTE_KEY, state.note); } catch { /* Keep the current session editable. */ }
-      }
+    root.addEventListener('input',e=>{
+      if(e.target.id==='homeSearchInput')search();
+      if(e.target.id==='homeNotes'){state.note=e.target.value;try{global.localStorage.setItem(NOTE_KEY,state.note);}catch{}}
     });
-    document.addEventListener('keydown', e => {
-      if (root.hidden || $('homeDialog').open) return;
-      if (state.drawer && e.key === 'Escape') return toggleDrawer(false, true);
-      if(e.code==='Space'&&!state.drawer&&!e.repeat&&!e.altKey&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.target.closest('input, select, textarea, summary, [contenteditable], button:not(#homeContinue), a')){
+    document.addEventListener('keydown',e=>{
+      if(root.hidden||$('homeDialog').open)return;
+      if(e.key==='Escape'&&processor.running){e.preventDefault();return processor.stop();}
+      if(e.key==='Escape'&&state.drawer)return toggleDrawer(false,true);
+      if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'&&!processor.running){e.preventDefault();return openPanel('search');}
+      if(e.code==='Space'&&!state.drawer&&!e.repeat&&!e.altKey&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.target.closest?.('input, select, textarea, summary, [contenteditable], button:not(#homeContinue), a')){
         e.preventDefault();progress();
       }
     });
-    global.matchMedia?.('(max-width:925px)').addEventListener?.('change', () => toggleDrawer(false));
+    global.matchMedia('(max-width:980px)').addEventListener?.('change',()=>toggleDrawer(false));
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
-  else init();
-})(typeof window !== 'undefined' ? window : globalThis);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})(window);

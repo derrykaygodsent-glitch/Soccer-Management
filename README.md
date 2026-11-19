@@ -2,29 +2,31 @@
 
 **Classic 2D is the main game.** The approved fixed overhead pitch and match engine are the foundation. Make future changes in `touchline-26/`; `touchline-classic/` remains a copy of the approved motion review.
 
-## Play the Riverside season (v0.8)
+## Play the Riverside season (v0.9)
 
-The game opens at **Club Home on 26 October 2024**. The clubhouse and Classic 2D now share one season. There is no matchday screen picker and no prewritten cup score.
+A new save opens in the **Manager’s Office on 26 October 2024**. The redesigned clubhouse brings the fixture, daily priorities, player leaders, standings and club finances together on Home. The Terrace is a separate social timeline for club updates, supporters and the fictional football press. Club roles, plans and match reports still draw from the same season ledger. There is no matchday picker or prewritten cup score.
 
-1. **Continue** or **Space** advances one calendar day. Click the header date to inspect the calendar without advancing. Scheduled matches, released results and the Premier Division table share the same club clock. At the start, Riverside’s completed Eastvale result is historical; the upcoming Harbourport tie is unplayed.
+1. **Continue** or **Space** starts automatic day-by-day processing. Press **Stop processing**, **Space** or **Esc** to pause at the last saved date. Processing stops automatically for required decisions, Riverside matchday and the end of the calendar. Click the header date to inspect the calendar or select a future date and choose **Pause on this date** for a one-time stop. The Premier Division table and published results follow the club clock. At the start, Riverside’s completed Eastvale result is historical; the upcoming Harbourport tie is unplayed.
 2. **Inbox** holds the date only for items marked **Action required**. The opening week includes a training-load decision, a coaches’ meeting and a press decision. Reading or marking mail read is not the same as answering. **Next Unread** follows the Inbox order; optional updates do not hold the calendar.
 3. On **30 October**, after the required decisions, the header opens **Tactical Meeting**. The selection room lets you set the formation, roles, instructions, available XI and six-player bench, captaincy and restart takers. Competitive squad numbers are locked; the pre-season fixture lets you register free numbers. **Submit Team** confirms and freezes the team and brief for that fixture.
 4. Continue through the **Briefing**, official **Team News**, **Dressing Room** and **Match Preview**. Team talks can address the room, a unit or an individual; the reactions influence player composure in the engine. **Go to Pitch** opens the submitted fixture in Classic 2D, paused at **00:00**. Only **Kick off** starts it.
 5. **Tactics & subs** lets you change instructions or use the submitted bench after kickoff. A Riverside knock can pause play and open the squad desk. Live changes are match-only unless you confirm **Save tactics to club**; substitutions never rewrite the saved XI. At the interval you can review the numbers, make changes, give a talk and start the second half.
-6. **Full Time** shows the actual score, xG, events, shots, player statistics and closing shape. Tied League Cup matches are settled by a simulated shootout. After the final talk, the result is available in **Schedule**, the **Calendar Desk** and the **Inbox**, alongside the optional press reply and any medical update. Continue toward the next fixture rather than replaying the cup tie.
+6. **Full Time** shows the actual score, xG, events, shots, player statistics and closing shape. **Press & supporters** covers the actual result and player of the match. Tied League Cup matches are settled by a simulated shootout. After the final talk, the result is available in **Schedule**, the **Calendar Desk** and the **Inbox**, alongside the optional press reply and any medical update. Continue toward the next fixture rather than replaying the cup tie.
 
 Confirmed Riverside fixtures use the Classic engine, at home or away. Other clubs’ results are seeded and appear when the club clock passes their finish time. The league schedule runs to 38 matches per team, and League Cup qualification sets later rounds. Early archives, non-playable editorial snapshots, recruitment drafts and board requests remain part of the fictional starter club. Drafts do not sign players, spend money or create a playable match.
 
-**Saving:** The date, decisions, club tactics, submitted team, talks and results are stored locally in the browser. A live reload restores a paused match from its checkpoint and accepted touchline actions. A late restore may take a few seconds. The file also runs with no network or sign-in. In a script-only viewer that blocks storage, progress lasts only in the open session; use the live preview or an ordinary browser window for a continuing save.
+**Saving:** Existing v0.8.x saves work without conversion. The date, decisions, club tactics, submitted team, talks and results are stored locally in the browser. A live reload restores a paused match from its checkpoint and accepted touchline actions. A late restore may take a few seconds. The file also runs with no network or sign-in. In a script-only viewer that blocks storage, progress lasts only in the open session; use the live preview or an ordinary browser window for a continuing save.
 
-### Clubhouse reference views
+### The Match Office
 
 | View | Where to find it |
 | --- | --- |
-| Club calendar, countdown, fixtures, partial results and standings | Click the header date → **Club calendar** or **Fixtures & Results** |
+| Club calendar, pause date, countdown, partial results and standings | Click the header date → **Club calendar** or **Fixtures & Results** |
 | Compact and expanded tactics, possession and transition instructions | **Tactics** in the sidebar |
 | Attributes, availability and recorded player ratings | Select a player from **Home**, **Squad** or **Tactics** |
-| Team performance, press and current medical notices | **Inbox**, **Social Feed**, **Leagues in Focus**, **Medical Centre** |
+| Supporter posts, football news and completed match updates | **Social Feed** → The Terrace. Follow accounts, filter topics, react to posts and save them locally. |
+| Team correspondence, decisions and current medical notices | **Inbox**, **Medical Centre** and **Training** |
+| Natural positions, current condition and selections | **Squad Planner** → Depth chart or **Club tactics** for the competitive XI |
 | Recruitment, staff responsibilities, budget and club planning | **Scouting**, **Transfers**, **Staff**, **Finances**, **Club Vision** |
 
 ## Touchline and run-off (v0.8.1)
@@ -82,4 +84,4 @@ Open `index.html` offline, or run `npm run preview` with Node.js 20+. The previe
 - `classic-2d-approved` — local Git tag for the approved Classic 2D foundation. Its standalone HTML SHA-256 is `d19da99cb41ae886a1bef224ec712e67388556c39615f240b45909e3c3aa1aed`.
 - `pre-classic-baseline` — the earlier playable version, kept for rollback or comparison.
 
-The original uploads are unchanged. Roadmap steps are reviewed one at a time.
+The original uploads are unchanged. The clubhouse art, fonts and icons are bundled offline. Navigation and room transitions respect reduced-motion settings. The match engine, saved-season schema and the approved Classic 2D copy were not changed in v0.9.0.

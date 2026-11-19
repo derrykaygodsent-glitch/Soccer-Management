@@ -14,6 +14,7 @@
     full:['FULL TIME','Dressing Room','fullTalk','FULL TIME / ANALYSIS'],
     fullTalk:['FINAL TEAM TALK','Return to Clubhouse',null,'FULL TIME / DRESSING ROOM']
   };
+  const tunnel=[['meeting','Tactical meeting','Meet'],['selection','Team selection','XI'],['briefing','Briefing','Brief'],['news','Team news','News'],['preTalk','Dressing room','Talk'],['preview','Broadcast','Pitch'],['half','Half time','HT'],['full','Full time','FT']];
   function create({store,crest,portrait,onReturn}){
     const $=id=>document.getElementById(id), shell=$('seasonMatch'), body=$('seasonMatchBody'), live=$('matchScreen'), club=$('homeScreen'), view=()=>global.TLMatchView;
     const ui={};let timer;
@@ -45,7 +46,12 @@
       const c=ctx(), stage=c.a.stage, [title,label,,kicker]=stages[stage];
       const old=document.activeElement, focusKey=old?.dataset.msField?[`[data-ms-field]`,'msField',old.dataset.msField]:old?.dataset.msDo?[`[data-ms-do]`,'msDo',old.dataset.msDo,old.dataset.msVal]:null;
       const saved=new Map([...body.querySelectorAll('[data-c-scroll]')].map(el=>[el.dataset.cScroll,[el.scrollLeft,el.scrollTop]]));
+      const moved=shell.dataset.stage!==stage;
       shell.dataset.stage=stage;
+      if(moved){
+        const active=tunnel.findIndex(([key])=>key===({halfTalk:'half',fullTalk:'full'})[stage]||key===stage);
+        $('seasonMatchRoute').innerHTML=tunnel.map(([,name,short],i)=>`<li${i===active?' aria-current="step"':i<active?' data-complete="true"':''}><span>${String(i+1).padStart(2,'0')}</span><b>${name}</b><small>${short}</small></li>`).join('');
+      }
       $('seasonMatchTitle').textContent=title;
       $('seasonMatchKicker').textContent=kicker;
       $('seasonMatchMeta').textContent=`${H.clubs[c.f.home].name} v ${H.clubs[c.f.away].name} · ${P.meta(c.f)}`;
@@ -58,6 +64,7 @@
       document.title=`Touchline 26 — ${title}`;
       const html=({meeting:P.advice,selection:P.picker,briefing:P.briefing,news:P.teamNews,preTalk:c=>R.room(c,'pre'),preview:P.preview,half:c=>R.report(c,c.a.half,false),halfTalk:c=>R.room(c,'half'),full:c=>R.report(c,c.s.results[c.a.id],true),fullTalk:c=>R.room(c,'full')})[stage](c);
       body.innerHTML=html;
+      if(reset&&moved&&!global.matchMedia('(prefers-reduced-motion: reduce)').matches)body.animate([{opacity:.74,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'cubic-bezier(.2,.7,.25,1)'});
       if(reset){$('seasonMatchStatus').hidden=true;global.scrollTo(0,0);$('seasonMatchTitle').focus({preventScroll:true});}
       else {
         for(const el of body.querySelectorAll('[data-c-scroll]'))if(saved.has(el.dataset.cScroll))[el.scrollLeft,el.scrollTop]=saved.get(el.dataset.cScroll);

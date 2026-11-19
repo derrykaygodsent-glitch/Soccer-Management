@@ -2,7 +2,7 @@
 (function (global) {
   'use strict';
   const U = global.TLClubUI, {C,views,esc} = U, S = global.TLClubState;
-  function create({ root, content, tabs, dialog, crest, portrait, showPanel, onPage, onState, scrollHome }) {
+  function create({ root, content, tabs, dialog, crest, portrait, showPanel, onPage, onState, scrollHome, calendar }) {
     let storage;
     try { storage = global.localStorage; } catch { /* standalone file preview */ }
     const store = S.open(storage), Season=global.TLSeasonState, Calendar=global.TLSeasonCalendar;
@@ -39,7 +39,7 @@
       return changed;
     }
     function context() {
-      return { r:route(), ui:ui(), get s(){ return store.value; }, get fiscal(){return S.budgets(store.value); }, now:season.value.now, season, mail, isRead, fixtures, standings:()=>Calendar.standings(season.value), crest,portrait,narrow,go,render,note,
+      return { r:route(), ui:ui(), get s(){ return store.value; }, get fiscal(){return S.budgets(store.value); }, now:season.value.now, season, mail, isRead, fixtures, standings:()=>Calendar.standings(season.value), crest,portrait,narrow,go,render,note,calendar,
         apply:actionState, show:showPanel, close:()=>dialog.open&&dialog.close(), unread,
         serial(prefix, existing=[]) { let id; do { id=`${prefix}-${++serial}`; } while(existing.includes(id)); return id; }
       };
@@ -69,6 +69,12 @@
       const keep = !major && previous.tab===r.tab;
       render(keep);
       onPage(r,view, { back:cursor>0, forward:cursor<history.length-1 });
+      const panel=view?content:document.getElementById('homeMain');
+      if((!keep||view?.retainId)&&!global.matchMedia('(prefers-reduced-motion: reduce)').matches){
+        panel.getAnimations().filter(a=>a.id==='tl-reveal').forEach(a=>a.cancel());
+        const anim=panel.animate([{opacity:.55,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:190,easing:'cubic-bezier(.2,.7,.25,1)'});
+        anim.id='tl-reveal';
+      }
       if (!keep) {
         if (view) content.scrollTop=0; else scrollHome();
         global.scrollTo(0,0);
@@ -104,7 +110,9 @@
         if(inContent && oldFocus.tagName==='INPUT') { try {caret=[oldFocus.selectionStart,oldFocus.selectionEnd];} catch {} }
         const scrolled=keep?saveScroll():new Map();
         const top=keep?content.scrollTop:0;
-        content.innerHTML=view.render(context());
+        content.dataset.room=r.page;
+        content.dataset.view=r.tab;
+        content.innerHTML=global.TLClubOffice.room(context(),view);
         if (keep) {
           content.scrollTop=top;
           content.querySelectorAll('[data-c-scroll]').forEach(el=>{const xy=scrolled.get(el.dataset.cScroll); if(xy) [el.scrollTop,el.scrollLeft]=xy; });

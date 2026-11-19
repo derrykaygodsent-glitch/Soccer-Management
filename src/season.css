@@ -1,8 +1,4 @@
 /* Date desk, match rooms and the season-specific Classic broadcast chrome. */
-.hc-clock-link{display:block;flex:none;padding:0;border:0;border-radius:4px;background:none;text-align:left}
-.hc-clock-link:hover{background:#17829825}
-.hc-continue[data-action=meeting]{background:#087f89;border-color:#26acb6}
-.hc-form i[data-form=D]{background:#eac27c}.hc-form i[data-form=L]{background:#ea8b97}
 .season-calendar{display:grid;gap:11px;align-content:start;min-width:0;padding-bottom:8px}
 .season-next{position:relative;display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;min-height:86px;padding:12px 15px;background:radial-gradient(ellipse at 37% 0,#2e4c7980,transparent 65%),linear-gradient(110deg,#162739,#26354c 56%,#26293e);border:1px solid #485974;border-radius:8px;isolation:isolate}
 .season-next::after{position:absolute;content:'';inset:0;pointer-events:none;z-index:-1;border-radius:inherit;background:repeating-linear-gradient(-48deg,transparent 0 34px,#95b2e80b 34px 38px,transparent 38px 52px);mask-image:linear-gradient(90deg,transparent 35%,black)}

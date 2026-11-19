@@ -81,7 +81,7 @@
     const body=`<div class="season-letter"><div class="cc-prose"><p>${esc(m.body)}</p></div>${r&&f?`<div class="season-message-result">${global.TLMatchdayUI.scoreStrip(c,f,'Full time',r.goals,r.pen?`${r.pen.join('–')} on penalties`:'')}${best?`<p>Player of the match: <b>${esc(best.name)}</b> ${rank(best.rating)}</p>`:''}${digest}</div>`:''}${picked?`<p class="cc-callout cc-good">${esc(picked[2])}</p>`:''}${m.options.length&&!picked?`<section class="cc-editorial season-mail-actions"><h3>${m.required?'Decision required':'Reply to this message'}</h3><p>${m.required?'Make a decision before advancing to the next date. Reading this message does not clear it.':'This is optional and does not hold the calendar.'}</p>${m.options.map(([v,label])=>btn(label,'season-answer',`${m.id}:${v}`,{kind:'solid',arrow:true})).join('')}</section>`:''}</div>`;
     return [body,`${r&&f?btn('Match analysis','season-report',id,{kind:'primary',icon:'i-bars'}):''}${f?fixture(f,'Fixture details','outline'):''}${m.id==='load-review'||m.id==='staff-cup'?link('training','Training schedule','week'):m.id.startsWith('injury-')?link('medical','Medical Centre','overview'):''}${link('day','Back to calendar','today',null,'outline')}`];
   }
-  const seasonPosts=c=>c.mail().filter(m=>m.type==='season'&&(m.id.startsWith('result-')||m.id==='cup-observations'||c.season.value.answers[m.id]&&m.category==='Media')).slice(0,12);
+  const seasonPosts=(c,limit=12)=>c.mail().filter(m=>m.type==='season'&&(m.id.startsWith('result-')||m.id==='cup-observations'||c.season.value.answers[m.id]&&m.category==='Media')).slice(0,limit);
   function reader(c,m) {
     const parts=m.type==='season'?seasonReader(c,m):({match,form:formStory,injury,media:press,scout: x=>[U.scoutReport(x,C.prospects[0]),`${link('scouting','Scouted players','players')}${link('scouting','Scout report','report','marin')}`]})[m.type]?.(c) || simple(c,m);
     if(!parts) return empty('Select a message');
@@ -89,8 +89,9 @@
       ${U.scroll('reader','Message content',parts[0],'cc-reader-copy')}${footer(parts[1])}</article>`;
   }
   function messages(c) {
-    const m=selectedMessage(c);
-    return `<div class="cc-inbox cc-fill" data-mobile-reader="${!!lookup(c.mail(),c.r.id)}">${messageList(c,c.narrow()&&!c.r.id?null:m)}${reader(c,m)}</div>`;
+    const m=selectedMessage(c), pending=S.pending(c.season.value), count=c.unread().length;
+    const ribbon=`<div class="tl-inbox-ribbon"><span class="tl-inbox-symbol">${icon('mail')}</span><div><h2>Club correspondence</h2><p>${count} unread ${count===1?'message':'messages'} · ${c.mail().length} total</p></div>${pending.length?`<button class="cc-btn cc-btn-outline" type="button" data-hc-mail="${esc(pending[0].id)}">${pending.length} ${pending.length===1?'decision':'decisions'} due ${icon('i-arrow')}</button>`:!global.TLCalendarProgress.gate(c.season.value)?'<button class="cc-btn cc-btn-outline" type="button" data-hc-run>Process calendar '+icon('i-arrow')+'</button>':link('day','Calendar Desk','today',null,'text')}</div>`;
+    return `${c.narrow()&&c.r.id?'':ribbon}<div class="cc-inbox cc-fill" data-mobile-reader="${!!lookup(c.mail(),c.r.id)}">${messageList(c,c.narrow()&&!c.r.id?null:m)}${reader(c,m)}</div>`;
   }
 
   function imageTile(c,story,feature=false) {
@@ -104,7 +105,7 @@
       <div class="cc-story-grid">${rest.map(s=>`<article class="cc-story-card">${imageTile(c,s)}<div><p class="cc-eyebrow">${esc(s.category)}</p><h3>${btn(s.title,'story',s.id,{kind:'text'})}</h3><ul>${s.bullets.map(b=>`<li>${esc(b)}</li>`).join('')}</ul></div></article>`).join('')}</div>`;
     const side=card('Upcoming events',`<div class="cc-news-events">${c.fixtures().filter(f=>!f.score).slice(0,2).map(f=>`<div>${c.crest(f.opponent)}<div>${fixture(f, f.venue==='H'?`Riverside v ${H.clubs[f.opponent].name}`:`${H.clubs[f.opponent].name} v Riverside`)}<p class="cc-muted">${H.calendar(f.date).long}</p></div></div>`).join('')}</div>
       <hr><h2 class="cc-title">Manager watch</h2><p class="cc-muted">No recent movements.</p><hr><h2 class="cc-title">Recent transfer activity</h2><div class="cc-news-transfers">${C.transfers.filter(x=>x.status==='Completed').map(t=>`<div>${avatar(c,t.name)}<div><b>${esc(t.name)}</b><small>${esc(t.club)}</small></div><strong>${U.compact(t.fee)}</strong></div>`).join('')}</div><div class="cc-news-fact"><span class="cc-muted">${esc(H.division)}, England</span><p>${esc(C.players[C.leaders.captain].name)} leads the Riverside squad in pass completion with ${C.players[C.leaders.captain].pass}%.</p></div>`, 'cc-news-rail');
-    return `<div class="cc-news cc-fill">${U.scroll('stories','Football news',latest+headlines,'cc-news-list')}${side}</div>`;
+    return `${local?'':`<header class="tl-news-mast"><div><p class="tl-label">NEWSROOM / FOOTBALL DESK</p><h2>The Touchline Dispatch</h2></div><time>${esc(H.calendar(c.now).date)}</time></header>`}<div class="cc-news cc-fill">${U.scroll('stories','Football news',latest+headlines,'cc-news-list')}${side}</div>`;
   }
   U.clubNews = news;
   function leagues(c) {
@@ -131,33 +132,67 @@
     ['news','nbu','25 Oct · 14:44','title']
   ];
   const defaultFollows=['rvr','supporters','touchline'];
-  function social(c){
-    const mode=c.ui.feedMode||'all', manage=!!c.ui.feedManage, following=c.ui.feedFollows||defaultFollows;
-    const names=Object.fromEntries(socialSubjects.map(([id,name])=>[id,name]));
-    const mark=(id,large=false)=>H.clubs[id]?`<span class="md-social-crest">${c.crest(id)}</span>`:avatar(c,names[id],null,large?'cc-avatar-lg':'');
-    const livePosts=(mode==='all'||mode==='post'||mode==='following'&&following.includes('rvr'))?seasonPosts(c).map(m=>{
+  const FEED_KEY='touchline26.social.v1';
+  function library(c){
+    if(c.ui.feedLibrary)return c.ui.feedLibrary;
+    let saved;
+    try{saved=JSON.parse(global.localStorage.getItem(FEED_KEY));}catch{}
+    const keys=(x,test)=>Array.isArray(x)?[...new Set(x.filter(v=>typeof v==='string'&&test(v)))].slice(0,450):[];
+    const post=id=>/^(post-\d+|season-[\da-z-]+)$/.test(id);
+    return c.ui.feedLibrary={follows:Array.isArray(saved?.follows)?keys(saved.follows,id=>socialSubjects.some(([x])=>x===id)):defaultFollows.slice(),
+      likes:keys(saved?.likes,post), saved:keys(saved?.saved,post)};
+  }
+  function feedEntries(c){
+    const season=seasonPosts(c,Infinity).map(m=>{
       const answered=m.options.find(([key])=>key===c.season.value.answers[m.id]);
-      return `<article class="md-social-entry">${mark('rvr')}<div><div class="md-social-author"><strong>Riverside FC</strong><time>${H.shortDate(m.date)} · ${stamp(m.date)}</time></div><p>${esc(answered?answered[2]:m.subject)} <span class="md-hashtag">#Riverside</span></p>${link('inbox','Read update','messages',m.id,'text',false)}</div>${tag('Club','teal')}</article>`;
-    }).join(''):'';
-    const posts=livePosts+socialRows.filter(([type,author])=>mode==='all'||mode==='following'&&following.includes(author)||mode===type).map(([type,author,when,content,id,count])=>{
-      if(type==='news'){
-        const story=lookup(C.stories,content);
-        return `<article class="md-social-news"><button class="cc-cover-btn" data-c-do="story" data-c-val="${story.id}" type="button" aria-label="Read ${esc(story.title)}">${imageTile(c,story)}</button><div><p class="cc-eyebrow">${esc(names[author])} · ${esc(when)}</p><h3>${btn(story.title,'story',story.id,{kind:'text'})}</h3><p>${esc(story.bullets[0])}</p></div>${tag('News','teal')}</article>`;
-      }
-      return `<article class="md-social-entry">${mark(author,true)}<div><div class="md-social-author"><strong>${esc(names[author])}</strong><time>${esc(when)}</time></div><p>${esc(content)} <span class="md-hashtag">#Riverside</span></p><div class="cc-actions cc-actions-start"><small>${icon('team')} ${count} reactions</small>${id?link('inbox','Related story','messages',id,'text',false):link('schedule','U21 fixtures','fixtures','u21','text',false)}</div></div>${tag('Social','info')}</article>`;
+      return {key:`season-${m.id}`,type:m.id.startsWith('result-')?'news':'post',author:'rvr',when:`${H.shortDate(m.date)} · ${stamp(m.date)}`,
+        title:m.subject,copy:answered?answered[2]:m.body,mail:m.id,topic:m.category==='Match'?'Matchday':'Club'};
+    });
+    return [...season,...socialRows.map(([type,author,when,content,id,count],i)=>{
+      const story=type==='news'?lookup(C.stories,content):null;
+      return {key:`post-${i}`,type,author,when,title:story?.title||'',copy:story?.bullets[0]||content,story,mail:id,count,topic:author==='academy'?'Academy':content==='cup'||id==='fixture'||id==='match'?'Matchday':author==='nbu'?'Premier Division':'Club'};
+    })];
+  }
+  function social(c){
+    const mode=c.ui.feedMode||'all', manage=!!c.ui.feedManage, prefs=library(c), following=prefs.follows;
+    const names=Object.fromEntries(socialSubjects.map(([id,name])=>[id,name]));
+    const roles=Object.fromEntries(socialSubjects.map(([id,,type])=>[id,type]));
+    const mark=id=>H.clubs[id]?`<span class="md-social-crest">${c.crest(id)}</span>`:avatar(c,names[id],null,`tl-social-avatar tl-social-${id}`);
+    const entries=feedEntries(c), topics=['Matchday','Club','Academy','Premier Division'], query=c.ui.postSearch||'';
+    const filter=[['all','Latest'],['following','Following'],['news','News'],['post','Supporters'],['saved','Saved']];
+    const posts=entries.filter(e=>(mode==='all'||mode===e.type||mode==='following'&&following.includes(e.author)||mode==='saved'&&prefs.saved.includes(e.key))&&(!c.ui.feedTopic||e.topic===c.ui.feedTopic)&&U.textMatch(query,names[e.author],e.title,e.copy,e.topic)).map(e=>{
+      const on=prefs.likes.includes(e.key), saved=prefs.saved.includes(e.key);
+      const historic=e.count?.endsWith('K')?parseFloat(e.count)*1000:Number(e.count||0);
+      const extra=e.story?btn('Read story','story',e.story.id,{kind:'text',arrow:true}):e.mail?link('inbox',e.type==='news'?'Match report':'Related update','messages',e.mail,'text'):e.author==='academy'?link('development','Academy report','overview',null,'text'):'';
+      return `<article class="tl-post ${e.type==='news'?'tl-post-news':''}" data-feed-key="${e.key}"><header>${mark(e.author)}<div><strong>${esc(names[e.author])}</strong><p>${esc(roles[e.author])} <span>·</span> <time>${esc(e.when)}</time></p></div>${tag(e.type==='news'?'Story':'Post',e.type==='news'?'teal':'info')}</header><div class="tl-post-copy">${e.title?`<h3>${esc(e.title)}</h3>`:''}<p>${esc(e.copy)}</p>${btn('#'+e.topic.replaceAll(' ',''),'feed-topic',e.topic,{kind:'text',pressed:c.ui.feedTopic===e.topic})}</div>${e.story?.art?`<button class="tl-story-cover cc-cover-btn" data-c-do="story" data-c-val="${e.story.id}" type="button" aria-label="Read ${esc(e.title)}">${imageTile(c,e.story)}</button>`:''}<footer><div>${btn(historic||on?num(historic+Number(on)):'React','feed-like',e.key,{kind:'quiet',icon:'heart',pressed:on,label:on?'Remove reaction':'React to post'})}${btn(saved?'Saved':'Save','feed-save',e.key,{kind:'quiet',icon:'bookmark',pressed:saved,label:saved?'Remove saved post':'Save post'})}</div>${extra}</footer></article>`;
     }).join('');
-    const subjects=socialSubjects.filter(([id,name,type])=>(!manage||following.includes(id))&&U.textMatch(c.ui.feedSearch,name,type));
-    const suggestions=subjects.map(([id,name,type])=>{
-      const on=following.includes(id);
-      return `<div class="md-social-subject">${mark(id)}<div><strong>${esc(name)}</strong><small>${esc(type)}</small></div>${btn(on?'Following':'Follow','feed-follow',id,{kind:on?'solid':'outline',pressed:on,label:`${on?'Unfollow':'Follow'} ${name}`})}</div>`;
-    }).join('');
-    return `<div class="md-social"><section class="md-social-feed"><div class="md-social-tools"><div><h2 class="cc-title">Social Feed</h2><p>Supporter reaction and football news</p></div>${select('feedMode','Filter the feed',[['all','News + Social'],['news','News only'],['post','Social only'],['following','Following']],mode)}</div>${U.scroll('md-feed-list','Club social feed',posts||empty('Nothing in this feed','Follow more subjects or change the filter.'),'md-feed-list')}</section><aside class="cc-card md-social-rail"><h2 class="cc-title">${manage?'Manage subjects':'Subjects and people to follow'}</h2><p class="cc-muted">Search clubs, staff and outlets.</p>${search('feedSearch',c.ui.feedSearch,'Search subjects')}${U.scroll('md-feed-subjects','Clubs and people to follow',suggestions||empty('No matching subjects','Try another search.'),'md-follow-list')}<div class="md-follow-footer"><div><small>Following</small><strong>${following.length}</strong></div>${btn(manage?'Show all':'Manage','feed-manage','',{pressed:manage,kind:'outline'})}</div><p class="md-context-note">Follows stay in this session.</p></aside></div>`;
+    const accounts=socialSubjects.filter(([id,name,type])=>(!manage||following.includes(id))&&U.textMatch(c.ui.feedSearch,name,type));
+    return `<div class="tl-social-page"><section class="tl-social-cover">${art('supporters')}<div><p class="tl-label"><i></i> RIVERSIDE SUPPORTERS & PRESS</p><h2>The Terrace</h2><p>Talk from the stands, the dressing room and the local papers.</p></div><dl><div><dt>Following</dt><dd>${following.length}</dd></div><div><dt>Saved posts</dt><dd>${prefs.saved.length}</dd></div></dl></section>
+    <div class="tl-social-grid"><section class="tl-feed" aria-label="Social timeline"><div class="tl-feed-tools"><div class="tl-feed-tabs" aria-label="Feed views">${filter.map(([id,label])=>btn(label,'feed-mode',id,{pressed:mode===id})).join('')}<button class="tl-feed-skip cc-btn cc-btn-outline" type="button" data-c-do="feed-network" aria-controls="feedNetwork">Explore ${icon('i-arrow')}</button></div>${search('postSearch',query,'Search posts')}</div>${c.ui.feedTopic?`<div class="tl-topic-active">${tag('Topic: '+c.ui.feedTopic,'teal')} ${btn('Clear topic','feed-topic',c.ui.feedTopic,{kind:'text'})}</div>`:''}<div class="tl-feed-entries">${posts||empty(mode==='saved'?'No saved posts in this view':'Nothing matches this view','Change filters or explore the latest posts.')}</div></section>
+    <aside class="tl-social-side" id="feedNetwork" tabindex="-1" aria-label="Social topics and accounts"><section class="tl-side-panel"><p class="tl-label">DISCOVER</p><h3>Topics</h3><div class="tl-topics">${topics.map(t=>btn(t,'feed-topic',t,{kind:'outline',pressed:c.ui.feedTopic===t})).join('')}</div></section><section class="tl-side-panel"><p class="tl-label">YOUR NETWORK</p><div class="tl-side-head"><h3>${manage?'Following':'Accounts'}</h3>${btn(manage?'All accounts':'Manage','feed-manage','',{kind:'text',pressed:manage})}</div>${search('feedSearch',c.ui.feedSearch,'Find clubs or people')}${U.scroll('tl-follow','Clubs and people to follow',accounts.length?accounts.map(([id,name,type])=>`<div class="tl-account">${mark(id)}<div><strong>${esc(name)}</strong><p>${esc(type)}</p></div>${btn(following.includes(id)?'Following':'Follow','feed-follow',id,{kind:'outline',pressed:following.includes(id),label:`${following.includes(id)?'Unfollow':'Follow'} ${name}`})}</div>`).join(''):empty('No matching accounts'),'tl-account-list')}<p class="tl-feed-caption">Follows, reactions and saved posts are local to this browser.</p></section><section class="tl-side-panel tl-press-link"><span>${icon('radar')}</span><div><p class="tl-label">FOOTBALL DESK</p><h3>Go beyond the feed</h3>${link('inbox','Read the news','news',null,'text')}</div></section></aside></div></div>`;
+  }
+  function feedAction(c,action,id){
+    if(action==='feed-network'){
+      const panel=document.getElementById('feedNetwork');panel?.focus({preventScroll:true});panel?.scrollIntoView({block:'start'});return;
+    }
+    const state=library(c), flip=(values,key)=>values.includes(key)?values.filter(x=>x!==key):[...values,key];
+    if(action==='feed-like'||action==='feed-save'){
+      if(!feedEntries(c).some(post=>post.key===id))return;
+      const key=action==='feed-like'?'likes':'saved';state[key]=flip(state[key],id);
+    }else if(action==='feed-follow'){
+      if(!socialSubjects.some(subject=>subject[0]===id))return;state.follows=flip(state.follows,id);
+    }else if(action==='feed-manage')c.ui.feedManage=!c.ui.feedManage;
+    else if(action==='feed-mode')c.ui.feedMode=id;
+    else if(action==='feed-topic')c.ui.feedTopic=c.ui.feedTopic===id?'':id;
+    else return;
+    try{global.localStorage.setItem(FEED_KEY,JSON.stringify(state));}catch{}
+    c.render();
   }
   function moments(c) {
     c.show('Key moments · Eastvale v Riverside',`<p>Starter-season match report. No replay footage is stored for this result.</p><ol class="cc-moments">${C.matchReport.goals.map(([time,id,copy])=>`<li><b>${time}′</b><div>${player(id)}<p>${esc(copy)}</p></div></li>`).join('')}</ol>${fixture(C.reportFixture,'Full match report','outline')}`);
   }
   const inboxView={
-    title:'Inbox',tabs:tabs(['messages','Inbox'],['social','Social Feed'],['news','News'],['leagues','Leagues in Focus'],['world','Around the World']),
+    title:'Inbox',heading:c=>({social:'Social Feed',news:'News',leagues:'Leagues in Focus',world:'Around the World'})[c.r.tab]||'Inbox',tabs:tabs(['messages','Inbox'],['social','Social Feed'],['news','News'],['leagues','Leagues in Focus'],['world','Around the World']),
     enter(c){if(c.r.tab==='messages' && (c.r.id || !c.narrow())){const m=selectedMessage(c);c.ui.selected=m.id;c.apply('read',m.id);}},
     after(c,prev){
       if(c.r.tab!=='messages'||prev.id===c.r.id) return;
@@ -183,8 +218,7 @@
       else if(action==='inbox-group'||action==='league-fold'){
         const k=action==='inbox-group'?'closed':'folded', old=c.ui[k]||[];
         c.ui[k]=old.includes(id)?old.filter(x=>x!==id):[...old,id]; c.render();
-      } else if(action==='feed-follow' && socialSubjects.some(subject=>subject[0]===id)){const list=c.ui.feedFollows||defaultFollows; c.ui.feedFollows=list.includes(id)?list.filter(x=>x!==id):[...list,id]; c.render();}
-    else if(action==='feed-manage'){c.ui.feedManage=!c.ui.feedManage; c.render();}
+      } else if(action.startsWith('feed-'))feedAction(c,action,id);
     else if(action==='moments') moments(c);
       else if(action==='workload') c.show('Training workload',`<p>Team training workload is <b>medium</b>. The sports science team recommends lighter individual sessions for players at high risk.</p>${medicalTable(c)}${link('squad','Medical overview','medical')}`);
       else if(action==='attend') c.show('Post-match press conference',U.editForm('press','',U.formSelect('response','How do you want to open?', ['Credit the team effort','Praise Fabio Novak','Focus on the next fixture']), 'Answer the press', 'The journalists are waiting at Vale Arena. Choose the tone for your opening answer.'));

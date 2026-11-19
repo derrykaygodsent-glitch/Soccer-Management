@@ -7,7 +7,7 @@
   const dayMs=K.DAY;
   function strips(c,s,ts){
     const d=K.day(ts), cols=Array.from({length:8},(_,i)=>d+(i-1)*dayMs);
-    return `<div class="season-strip-frame"><header><h3>Club calendar</h3><span>One day at a time · <kbd>Space</kbd> to continue</span>${link('schedule','Full schedule','calendar',null,'text')}</header>${U.scroll('season-calendar','Eight-day club calendar',`<div class="season-strip">${cols.map(t=>{
+    return `<div class="season-strip-frame"><header><h3>Club calendar</h3><span>Auto-process · <kbd>Space</kbd> to continue</span>${link('schedule','Full schedule','calendar',null,'text')}</header>${U.scroll('season-calendar','Eight-day club calendar',`<div class="season-strip">${cols.map(t=>{
       const classes=t===K.day(s.now)?' season-current':t<K.day(s.now)?' season-past':'';
       return `<article class="season-strip-day${classes}"><button type="button" data-c-do="day-open" data-c-val="${t}" aria-pressed="${t===d}"><b>${new Date(t).getUTCDate()}</b><span>${dayName(t).slice(0,3)}<small>${H.calendar(t).date.split(' ')[1]}</small></span>${t===K.day(s.now)?'<i></i>':''}</button><div>${S.activities(s,t).map(x=>`<span class="season-tile" data-kind="${x.kind}" data-session="${x.kind==='training'?sessionClass(x.label):''}" title="${esc(x.label)}">${icon(x.kind==='training'?sessionIcon(x.label)||'calendar':kindIcon[x.kind])}<span>${esc(x.label)}${x.kind==='fixture'?`<small>${esc(x.desc)}</small>`:''}</span>${x.required&&!x.done?'<b aria-label="Action required">!</b>':''}</span>`).join('')}</div></article>`;
     }).join('')}</div>`,'season-strip-scroll')}</div>`;
@@ -34,11 +34,18 @@
       const s=c.season.value, now=s.now, ts=c.r.id?Number(c.r.id):now,
         d=Number.isFinite(ts)&&ts>=H.start-dayMs*15&&ts<K.end+dayMs*9?ts:now, next=K.next(s), need=S.pending(s);
       const banner=`<div class="season-next"><div class="season-count"><span>${next?'Next fixture':'Season calendar'}</span><strong>${next?K.countdown(now,next.date):'No fixture'}</strong></div>${next?`<div class="season-next-crests">${c.crest(next.home)}<small>v</small>${c.crest(next.away)}</div><div><h2>${esc(H.clubs[next.home].name)} <em>v</em> ${esc(H.clubs[next.away].name)}</h2><p>${esc(H.fixtureCompetition(next))} · ${longDate(next.date)} · ${stamp(next.date)}</p></div>`:'<div><h2>All published fixtures played</h2><p>The calendar remains available through August.</p></div>'}<div class="season-clock-card"><span>${need.length?`${need.length} inbox ${need.length===1?'decision':'decisions'} due`:'Club time'}</span><b>${H.calendar(now).day} · ${H.calendar(now).date}</b></div></div>`;
+      const target=c.calendar?.().target;
+      const stops=`<div class="tl-calendar-policy"><span>Stops for required decisions and Riverside matchday.</span>${target!=null?`<span>${tag('Pause: '+H.calendar(target).date,'warn')} ${btn('Clear pause','pause-clear','',{kind:'text'})}</span>`:''}${K.day(d)>K.day(now)&&K.day(d)<=K.end&&K.day(d)!==target?btn('Pause on this date','pause-set',K.day(d),{kind:'outline',icon:'calendar'}):''}</div>`;
       const rows=K.onDate(s,d), focus=c.r.tab==='fixtures'||rows.some(f=>K.isClub(f)&&!f.result);
       const switcher=`<div class="season-date-actions"><span>${longDate(d)} ${K.day(d)===K.day(now)?tag('Current date','teal'):''}</span><div>${btn('‹','day-open',K.day(d)-dayMs,{label:'Previous calendar date'})}${btn('Today','day-now','',{kind:'solid'})}${btn('›','day-open',K.day(d)+dayMs,{label:'Next calendar date'})}</div></div>`;
-      return `<div class="season-calendar">${banner}${strips(c,s,d)}${switcher}${focus?fixtures(c,s,d)+agenda(c,s,d):agenda(c,s,d)+(rows.length?fixtures(c,s,d):'')}</div>`;
+      return `<div class="season-calendar">${global.TLClubOffice.handover(c)}${banner}${strips(c,s,d)}${switcher}${stops}${focus?fixtures(c,s,d)+agenda(c,s,d):agenda(c,s,d)+(rows.length?fixtures(c,s,d):'')}</div>`;
     },
-    action(c,key,v){if(key==='day-now'||key==='day-open')c.go('day',c.r.tab,key==='day-now'?'':v);}
+    action(c,key,v){
+      if(key==='day-now'||key==='day-open')c.go('day',c.r.tab,key==='day-now'?'':v);
+      else if((key==='pause-set'||key==='pause-clear')&&c.calendar?.().setPause(key==='pause-clear'?null:v)){
+        c.render();c.note(key==='pause-clear'?'Calendar pause cleared.':`The calendar will pause on ${longDate(Number(v))}.`);
+      }
+    }
   };
   U.views.day=desk;
   global.TLClubSeason={fixtures};

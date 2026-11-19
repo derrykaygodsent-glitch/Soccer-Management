@@ -1,84 +1,39 @@
 <div class="hc-shell" id="homeScreen">
   <aside class="hc-sidebar" id="homeSidebar" aria-label="Club navigation">
+    <button class="tl-brand" type="button" data-hc-open="home" aria-label="Touchline 26 home"><span class="tl-brandmark"><svg class="hc-icon" aria-hidden="true"><use href="#tl-i-mark"/></svg></span><span><b>TOUCHLINE<span>26</span></b><small>FOOTBALL MANAGEMENT</small></span></button>
+    <button class="tl-club-card" type="button" data-hc-open="club"><span id="homeHeaderCrest"></span><span><b>Riverside FC</b><small>Season 2024/25</small></span><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-chevron"/></svg></button>
     <nav id="homeNav" aria-label="Sections"></nav>
-    <span class="hc-sidebar-mark" title="Touchline 26"><svg class="hc-icon" aria-hidden="true"><use href="#i-pitch"/></svg></span>
+    <button class="tl-manager" type="button" data-hc-open="profile"><span class="tl-initials" aria-hidden="true">AM</span><span><b>Alex Mercer</b><small>First-team manager</small></span><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-chevron"/></svg></button>
   </aside>
   <button class="hc-scrim" type="button" id="homeScrim" aria-label="Close club navigation" hidden></button>
   <div class="hc-main" id="homeFrame">
     <header class="hc-header">
-      <svg class="hc-header-art" viewBox="0 0 1214 93" preserveAspectRatio="none" aria-hidden="true">
-        <defs>
-          <linearGradient id="hc-header-base"><stop stop-color="#233269"/><stop offset=".38" stop-color="#1e2339"/><stop offset="1" stop-color="#1b1e2b"/></linearGradient>
-          <linearGradient id="hc-header-light"><stop stop-color="#34477b" stop-opacity=".6"/><stop offset="1" stop-color="#272c40" stop-opacity=".06"/></linearGradient>
-        </defs>
-        <rect width="1214" height="93" fill="url(#hc-header-base)"/>
-        <path d="M0 0h264l-19 10-37 3-16-5-13 9-34 4-14 11-32-5-16 9-24 2-13 10-29-2L0 55Z" fill="url(#hc-header-light)" stroke="#556183" stroke-opacity=".35"/>
-        <path d="M0 58l20-6 31 4 18-6 17 5 9-6 13 2 18-9 21-3 9-8 23 1 16-8 11 2 17-9 25-5 11-9 21-3" fill="none" stroke="#7d8295" stroke-opacity=".31"/>
-        <path d="M1015 93l12-8 10 2 11-5 23 5 42-6 38-14 2-5 22-1 25-9 14-4v45Z" fill="#333644" stroke="#777986" stroke-opacity=".24"/>
-        <path d="M1036 93l17-8 25 1 31-6 56-13-16 26Zm144-28 13-7-18 35h-11Z" fill="#171b2b" opacity=".54"/>
-      </svg>
       <div class="hc-bar">
         <button type="button" class="hc-tool hc-mobile-menu" id="homeMenu" aria-expanded="false" aria-controls="homeSidebar" aria-label="Club navigation"><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-menu"/></svg></button>
         <div class="hc-history" aria-label="Navigation history">
           <button class="hc-tool hc-back" type="button" id="homeBack" disabled aria-label="Back"><svg class="hc-icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
           <button class="hc-tool" type="button" id="homeForward" disabled aria-label="Forward"><svg class="hc-icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
         </div>
-        <button class="hc-club-switch" type="button" data-hc-open="club" aria-label="Club information"><span id="homeHeaderCrest"></span><svg class="hc-icon hc-switch-chevrons" aria-hidden="true"><use href="#hc-i-switch"/></svg></button>
-        <button class="hc-tool hc-search" type="button" data-hc-open="search" aria-label="Search the club dashboard" title="Search the club dashboard"><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-search"/></svg></button>
-        <div class="hc-location"><h1 id="homeTitle" tabindex="-1">Home</h1><p id="homeManager"></p></div>
-        <div class="hc-bar-tools">
-          <button class="hc-tool" type="button" data-hc-open="profile" aria-label="Manager profile" title="Manager profile"><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-pencil"/></svg></button>
-          <button class="hc-tool" type="button" data-hc-open="league" aria-label="League overview" title="League overview"><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-globe"/></svg></button>
-          <button class="hc-tool" type="button" data-hc-open="help" aria-label="Clubhouse help" title="Clubhouse help"><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-help"/></svg></button>
-          <span class="hc-monogram" aria-label="Touchline 26">TL<span>26</span></span>
-        </div>
-        <button type="button" id="homeCalendarLink" class="hc-clock-link" aria-label="Open calendar desk" title="Open calendar desk"><time class="hc-clock" id="homeClock"><span id="homeDay"></span><strong id="homeDate"></strong></time></button>
-        <button class="hc-continue" id="homeContinue" type="button"><span>Continue</span><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-go"/></svg></button>
+        <div class="hc-location"><p id="homeSection">Clubhouse</p><h1 id="homeTitle" tabindex="-1">Home</h1></div>
+        <button class="hc-tool hc-search" type="button" data-hc-open="search" aria-label="Search the club dashboard" title="Search the club dashboard"><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-search"/></svg><span>Find a page</span></button>
+        <button class="hc-tool hc-help" type="button" data-hc-open="help" aria-label="Clubhouse help" title="Clubhouse help"><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-help"/></svg></button>
+        <button type="button" id="homeCalendarLink" class="hc-clock-link" aria-label="Open calendar desk" title="Open calendar desk"><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-calendar"/></svg><time class="hc-clock" id="homeClock"><span id="homeDay"></span><strong id="homeDate"></strong></time></button>
+        <button class="hc-continue" id="homeContinue" type="button"><span>Continue</span><svg class="hc-icon" aria-hidden="true"><use id="homeContinueIcon" href="#i-arrow"/></svg></button>
       </div>
       <nav class="hc-tabs" id="homeTabs" aria-label="Section tabs"></nav>
     </header>
-
-    <main class="hc-content" id="homeMain" aria-labelledby="homeTitle">
-      <section class="hc-feature" aria-label="Next match and fixtures">
-        <div class="hc-next">
-          <span class="hc-big-crest hc-playing-crest" id="homeBigCrest"></span>
-          <div class="hc-next-copy">
-            <p class="hc-kicker">Next match</p>
-            <time id="homeNextDate" class="hc-next-date"></time>
-            <div class="hc-next-match">
-              <h2 id="homeFixtureTitle"></h2>
-              <p id="homeCompetition"></p>
-              <div class="hc-match-meta"><span><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-stadium"/></svg><span id="homeStadium"></span></span><span><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-weather"/></svg>Breezy 6°C</span></div>
-            </div>
-            <div class="hc-next-footer">
-              <div><strong>Manager</strong><span id="homeOpponentManager"></span></div>
-              <div><strong>Previous meetings</strong><span class="hc-form hc-last-meet" aria-label="Last three meetings: three wins" title="Last three meetings: three wins"><i></i><i></i><i></i></span></div>
-            </div>
-          </div>
-          <span class="hc-big-crest hc-opponent-crest" id="homeOpponentCrest"></span>
-        </div>
-        <section class="hc-fixture-panel" aria-label="Club fixtures">
-          <h2><button class="hc-heading" type="button" data-hc-open="fixtures"><span id="homeFixturesTitle">Fixtures</span><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-chevron"/></svg></button></h2>
-          <div class="hc-fixtures" id="homeFixtures"></div>
-        </section>
-      </section>
-
-      <div class="hc-board">
-        <section class="hc-pane" aria-label="League table">
-          <div class="hc-pane-head"><h2><button class="hc-heading" type="button" data-hc-open="league">League table<svg class="hc-icon" aria-hidden="true"><use href="#hc-i-chevron"/></svg></button></h2><button class="hc-disclosure" type="button" data-hc-collapse="homeLeague" aria-expanded="true" aria-controls="homeLeague" aria-label="Toggle league table"><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-down"/></svg></button></div>
-          <div class="hc-pane-body hc-league-body" id="homeLeague"></div>
-        </section>
-        <section class="hc-pane hc-stats-pane" aria-label="Player stats">
-          <div class="hc-pane-head"><h2><button class="hc-heading" type="button" data-hc-open="leaders">Player stats<svg class="hc-icon" aria-hidden="true"><use href="#hc-i-chevron"/></svg></button></h2><button class="hc-disclosure" type="button" data-hc-collapse="homeLeaders" aria-expanded="true" aria-controls="homeLeaders" aria-label="Toggle player stats"><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-down"/></svg></button></div>
-          <div class="hc-pane-body hc-leader-body" id="homeLeaders"></div>
-        </section>
-        <section class="hc-pane hc-finance-pane" aria-label="Finance and salary">
-          <div class="hc-pane-head"><h2><button class="hc-heading" type="button" data-hc-open="finance">Finance &amp; salary<svg class="hc-icon" aria-hidden="true"><use href="#hc-i-chevron"/></svg></button></h2><button class="hc-disclosure" type="button" data-hc-collapse="homeFinance" aria-expanded="true" aria-controls="homeFinance" aria-label="Toggle finance and salary"><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-down"/></svg></button></div>
-          <div class="hc-pane-body hc-finance-body" id="homeFinance"></div>
-        </section>
+    <main class="hc-content tl-home" id="homeMain" aria-labelledby="homeTitle"></main>
+    <main class="hc-content cc-workspace" id="clubPage" aria-labelledby="homeTitle" hidden></main>
+    <main class="hc-content tl-processing" id="homeProcessing" aria-labelledby="processingTitle" hidden>
+      <div class="tl-processing-wrap">
+        <div class="tl-processing-kicker"><span class="tl-running" aria-hidden="true"><i></i><i></i><i></i></span> SEASON CLOCK <span></span> RIVERSIDE FC</div>
+        <div class="tl-processing-heading"><div><h2 id="processingTitle">Processing calendar</h2><p>Training, club business and fixtures around the league.</p></div><div class="tl-processing-count" id="processingCount"></div></div>
+        <div class="tl-processing-line" aria-hidden="true"></div>
+        <div id="processingDays" class="tl-processing-days"></div>
+        <div class="tl-processing-foot"><p><span>Automatic stops</span> Required decisions · Riverside matchday · Season end<small id="processingTarget" hidden></small></p><button type="button" class="cc-btn cc-btn-outline" id="homeStop">Stop here <kbd>Esc</kbd></button></div>
+        <p class="hc-sr" id="processingSpeech" role="status"></p>
       </div>
     </main>
-    <main class="hc-content cc-workspace" id="clubPage" aria-labelledby="homeTitle" hidden></main>
   </div>
   <p id="clubStatus" class="cc-toast" role="status" hidden></p>
 
