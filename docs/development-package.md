@@ -1,5 +1,5 @@
 # Connected football roadmap
-1. Contracts and transfers. First playable slice: career-local professional terms, agent replies, weekly payroll, expiry and renewal. Next: selling clubs, fees, country windows, loan returns and rival recruitment budgets. Keep founding catalogue immutable; historical matches must not change after a transfer.
+1. Contracts and transfers. Implemented: grassroots founding invitations, professional terms, agent replies, weekly payroll, expiry and renewal, permanent purchases and sales, domestic registration windows, 18-week loans, automatic returns and rival recruitment with finite budgets. Keep founding catalogue immutable; historical matches must not change after a transfer.
 2. Dated promises: record parties, evidence, review date and successor obligations.
 3. League pyramid: promotion, relegation, entry, scheduling and financial consequences.
 4. Grounds, ownership and sustainable club investment.
