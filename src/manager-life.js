@@ -3,6 +3,7 @@
 const D=g.TLData||require('./data.js');
 const Y=g.TLTurnover||require('./season-turnover');
 const B=g.TLTechnical||require('./technical-area');let activeCareer=null;const FA=g.TLFAHearing||require('./fa-hearing');
+const Board=g.TLBoardroom||require('./boardroom');
 const atlas=g.TLMeridian||require('./meridian.js');
 const legacy={Ovela:['Loombridge Athletic','Mill End','Claybank','Willow Vale'],Nerava:['Lantern Quay','East Pier','Saltworks','Ferry Town'],Istren:['Cairn Bell','Stonebridge','Summit Vale','High Tor']};
 const meridian=Object.fromEntries(atlas.countries.map(c=>[c.name,c.places.map(p=>p.club.name)]));
@@ -31,7 +32,7 @@ const table=(n,day)=>district(n,day).rows;
 function act(old,cmd,v){const s=JSON.parse(JSON.stringify(old)),p=s.profile,mail=(from,text)=>s.mail.unshift({day:s.day,from,text}),queue=(kind,id,days)=>s.plans.push({kind,id,due:s.day+days}),require=(ok,msg)=>{if(!ok)throw Error(msg);};
  if(s.worldVersion)activeCareer=s;
  const install=(name,owner)=>{s.club={name,owner,nick:owner?s.draft.nick:'The first team',emblem:owner?s.draft.emblem:'◆',board:owner?'Founding members':'Elected directors'};};
- switch(cmd){case 'advance':require(!(s.practice&&Y.season(s.day)!==Y.season(s.day+1)),'Finish your district practice before season turnover.');s.day++;break;
+ switch(cmd){case 'groundMotion':case 'directorOffer':Board.apply(s,cmd,v);break;case 'advance':require(!(s.practice&&Y.season(s.day)!==Y.season(s.day+1)),'Finish your district practice before season turnover.');s.day++;break;
  case 'bookDiary':case 'shift':case 'family':case 'date':{const task=cmd==='bookDiary'?v.task:cmd,due=cmd==='bookDiary'?v.day:s.day+1;require(['shift','family','date'].includes(task)&&Number.isInteger(due)&&due>s.day,'Choose a future day.');require(!s.plans.some(x=>x.kind==='diary'&&x.due===due),'You already have plans that day.');if(task==='date'){require(s.cash>=20,'A night out costs 20.');s.cash-=20;}queue('diary',task,due-s.day);break;}
  case 'deposit':require(s.cash>=100,'You need 100 personal funds.');s.cash-=100;s.fund+=100;break;
  case 'apply':require(!s.club&&!s.draft&&!s.interview&&!s.plans.some(x=>['application','decision'].includes(x.kind))&&Object.entries(nations).some(([n,xs])=>xs.includes(v)&&(s.worldVersion?!B.office(s,v,n,xs).coach:xs[0]===v))&&(!s.applications[v]||s.applications[v]<=s.day),'This vacancy is not open to you right now.');s.applications[v]=s.day+14;queue('application',v,2);break;
@@ -47,6 +48,7 @@ function act(old,cmd,v){const s=JSON.parse(JSON.stringify(old)),p=s.profile,mail
  default:throw Error('Unknown action.');}
  if(cmd==='advance'){if(s.worldVersion&&Y.season(s.day)!==Y.season(old.day)){closeSeason(old,s,mail);}if(s.worldVersion)B.tick(s,nations,table,mail);if(s.day%7===0){const lead=table(p.nation,s.day)[0];mail('Meridian Wire',lead.name+' sit first in the '+p.nation+' district table on '+lead.pts+' points.');}for(const e of s.plans.filter(e=>e.due<=s.day)){(s.planHistory||=[]).push({...e});const roll=D.seedFor(s.id+e.kind+e.id+s.day)%100;
  if(e.kind==='diary'){s.activity={shift:'Completed a paid shift (+100)',family:'Spent time with family and friends',date:'Went out on a date'}[e.id];if(e.id==='shift')s.cash+=100;}
+ if(e.kind==='director')Board.apply(s,'directorReply',e.id);
  if(e.kind==='foundersMeeting'&&s.club?.owner){s.club.report=`First month: ${s.roster.length} players, ${s.staff.length} staff and ${s.fund} in the club account.`;mail('Founding members',s.club.report+' You decide the next investment.');}
  if(e.kind==='mandate'&&s.club?.promise){const m=s.club.promise,rank=table(m.nation,s.day).findIndex(r=>r.name===s.club.name)+1,young=pool.filter(p=>s.roster.includes(p.id)&&p.age<=21).length,met=m.answer==='budget'?s.fund>=m.reserve:m.answer==='academy'?young>0&&s.trained>=m.day:rank>0&&rank<=m.target;s.club.report=(met?'On track':'Below target')+' · '+(m.answer==='budget'?`Club reserve ${s.fund} / ${m.reserve}.`:m.answer==='academy'?`${young} under-22 players; team training ${s.trained>=m.day?'completed':'still due'}.`:`League position ${rank}; target top ${m.target}.`);mail('Club directors',s.club.report);}
  if(e.kind==='training'){s.trained=s.day;mail('Training ground','Team practice completed.');}
