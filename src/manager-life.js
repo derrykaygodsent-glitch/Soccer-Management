@@ -6,6 +6,7 @@ const B=g.TLTechnical||require('./technical-area');let activeCareer=null;const F
 const Board=g.TLBoardroom||require('./boardroom');
 const L=g.TLLuma||require('./luma');
 const F=g.TLFASeason||require('./fa-season');
+const District=g.TLDistrictLife||require('./district-life');
 const atlas=g.TLMeridian||require('./meridian.js');
 const legacy={Ovela:['Loombridge Athletic','Mill End','Claybank','Willow Vale'],Nerava:['Lantern Quay','East Pier','Saltworks','Ferry Town'],Istren:['Cairn Bell','Stonebridge','Summit Vale','High Tor']};
 const meridian=Object.fromEntries(atlas.countries.map(c=>[c.name,c.places.map(p=>p.club.name)]));
@@ -34,7 +35,7 @@ const table=(n,day)=>district(n,day).rows;
 function act(old,cmd,v){const s=JSON.parse(JSON.stringify(old)),p=s.profile,mail=(from,text)=>s.mail.unshift({day:s.day,from,text}),queue=(kind,id,days)=>s.plans.push({kind,id,due:s.day+days}),require=(ok,msg)=>{if(!ok)throw Error(msg);};
  if(s.worldVersion)activeCareer=s;
  const install=(name,owner)=>{s.club={name,owner,nick:owner?s.draft.nick:'The first team',emblem:owner?s.draft.emblem:'◆',board:owner?'Founding members':'Elected directors'};};
- switch(cmd){case 'groundMotion':case 'directorOffer':Board.apply(s,cmd,v);break;case 'advance':require(!s.leagueSession,'Finish the match before advancing.');require(!(s.practice&&Y.season(s.day)!==Y.season(s.day+1)),'Finish your district practice before season turnover.');s.day++;break;
+ switch(cmd){case 'districtTravel':case 'districtMeet':case 'districtJob':case 'districtRest':case 'districtPractice':District.act(s,cmd,v);break;case 'groundMotion':case 'directorOffer':Board.apply(s,cmd,v);break;case 'advance':require(!s.leagueSession,'Finish the match before advancing.');require(!(s.practice&&Y.season(s.day)!==Y.season(s.day+1)),'Finish your district practice before season turnover.');s.day++;District.morning(s);break;
  case 'bookDiary':case 'shift':case 'family':case 'date':{const task=cmd==='bookDiary'?v.task:cmd,due=cmd==='bookDiary'?v.day:s.day+1;require(['shift','family','date'].includes(task)&&Number.isInteger(due)&&due>s.day,'Choose a future day.');require(!s.plans.some(x=>x.kind==='diary'&&x.due===due),'You already have plans that day.');if(task==='date'){require(s.cash>=20,'A night out costs ₥20.');s.cash-=20;}queue('diary',task,due-s.day);break;}
  case 'deposit':{const amount=Number(v||100);require(Number.isSafeInteger(amount)&&amount>0&&s.cash>=amount,'Choose a contribution within your personal balance.');s.cash-=amount;s.fund+=amount;break;}
  case 'apply':require(!s.club&&!s.draft&&!s.interview&&!s.plans.some(x=>['application','decision'].includes(x.kind))&&Object.entries(nations).some(([n,xs])=>xs.includes(v)&&(s.worldVersion?!B.office(s,v,n,xs).coach:xs[0]===v))&&(!s.applications[v]||s.applications[v]<=s.day),'This vacancy is not open to you right now.');s.applications[v]=s.day+14;queue('application',v,2);break;
