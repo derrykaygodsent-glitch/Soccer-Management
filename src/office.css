@@ -197,3 +197,5 @@
 #homeClock{white-space:nowrap;font-variant-numeric:tabular-nums}#homeDay{display:block}#homeClock strong{display:block}@media(max-width:520px){#homeDay{font-size:10px}#homeDate{font-size:12px}}
 .house-cover{min-height:210px;background:linear-gradient(100deg,#111c29ae,transparent),url(data:image/jpeg;base64,{{HOUSEHOLD}}) center 55%/cover}.house-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(265px,100%),1fr));gap:12px}.household button{margin:3px}.household details{margin-top:10px}
 .household .family-street{margin-top:15px;background:linear-gradient(100deg,#10212bd9,transparent),url(data:image/jpeg;base64,{{FAMILY_STREET}}) center 57%/cover;min-height:155px}
+
+.award-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:.85rem}.award-entry{display:grid;gap:.25rem;padding:.7rem;border-left:3px solid #cda961;background:#16383b;color:#fff}.award-entry small{color:#f1d093}.award-entry span{font-size:.85rem}
