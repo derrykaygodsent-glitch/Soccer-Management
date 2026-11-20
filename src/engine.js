@@ -92,6 +92,7 @@
         const players = opts.squads?.[i] ? JSON.parse(JSON.stringify(opts.squads[i])) : D.genSquad(club, D.seedFor(club.id));
         const tactics = (i === 0 ? opts.homeTactics : opts.awayTactics) || D.defaultTactics(club.style);
         let { xi, bench } = D.bestXI(players, tactics.formation);
+        if(opts.selectStarters){const chosen=opts.selectStarters(club.name,players,xi);if(chosen!==xi){const incoming=chosen.find(v=>!xi.some(o=>o.player.id===v.player.id)).player,outgoing=xi.find(v=>!chosen.some(o=>o.player.id===v.player.id)).player;bench=bench.map(p=>p.id===incoming.id?outgoing:p);xi=chosen;}}
         const lineup = opts.lineups?.[i];
         if (lineup) {
           const by = Object.fromEntries(players.map(p => [p.id, p]));
@@ -104,7 +105,7 @@
           }
         }
         const team = {
-          idx: i, club, players, tactics: { ...tactics }, bench,
+          starterIds:xi.map(slot=>slot.player.id), idx: i, club, players, tactics: { ...tactics }, bench,
           // Seat numbers stay put when the incoming player swaps with the outgoing one.
           dugout: bench.map(p => ({ id: p.id, used: false })),
           listed: lineup ? new Set(bench.map(p=>p.id)) : null, assignments: lineup?.set || null,
