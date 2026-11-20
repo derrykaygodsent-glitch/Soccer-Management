@@ -16,8 +16,11 @@ const makePool=nations=>Object.keys(nations).flatMap(nation=>[true,false].flatMa
 let pool=makePool(nations);
 function activate(s){const next=!s.worldVersion&&Object.hasOwn(legacy,s.profile.nation)?legacy:meridian;if(nations!==next){nations=next;pool=makePool(next);}}
 const firstClub=n=>nations[n][0];
-function table(n,day){const rows=nations[n].map(name=>({name,p:0,pts:0,gd:0})),round=3+Math.floor(day/7),pairs=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];if(rows.length===5){pairs.length=0;let ring=[0,1,2,3,4,-1];for(let k=0;k<5;k++){pairs.push([0,1,2].map(j=>[ring[j],ring[5-j]]).filter(pair=>!pair.includes(-1)));ring.splice(1,0,ring.pop());}}
-for(let i=round-round%(pairs.length*2);i<round;i++)for(const [a,b] of pairs[i%pairs.length]){const r=D.mulberry32(D.seedFor(n+i+a)),diff=Math.floor(r()*4)-Math.floor(r()*4);for(const [j,d] of [[a,diff],[b,-diff]]){rows[j].p++;rows[j].gd+=d;rows[j].pts+=d>0?3:d===0?1:0;}}return rows.sort((a,b)=>b.pts-a.pts||b.gd-a.gd);}
+function district(n,day,withPlayers=false){const rows=nations[n].map(name=>({name,p:0,w:0,d:0,l:0,gs:0,gc:0,pts:0,gd:0,form:[]})),round=3+Math.floor(day/7),pairs=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];if(rows.length===5){pairs.length=0;let ring=[0,1,2,3,4,-1];for(let k=0;k<5;k++){pairs.push([0,1,2].map(j=>[ring[j],ring[5-j]]).filter(pair=>!pair.includes(-1)));ring.splice(1,0,ring.pop());}}
+const squads=withPlayers?rows.map(row=>{const id=n+':'+row.name;return D.genSquad({id,rep:54},D.seedFor(id)).map(p=>({name:p.name,club:row.name,pos:p.pos,goals:0,assists:0,sheets:0}));}):[];
+for(let i=round-round%(pairs.length*2);i<round;i++)for(const [a,b] of pairs[i%pairs.length]){const r=D.mulberry32(D.seedFor(n+i+a)),ag=Math.floor(r()*4),bg=Math.floor(r()*4);for(const [j,gf,ga] of [[a,ag,bg],[b,bg,ag]]){const t=rows[j],result=gf>ga?'W':gf<ga?'L':'D';t.p++;t[result.toLowerCase()]++;t.gs+=gf;t.gc+=ga;t.gd+=gf-ga;t.pts+=gf>ga?3:gf===ga?1:0;t.form.push(result);
+if(withPlayers){const keeper=squads[j].find(p=>p.pos==='GK'),out=squads[j].filter(p=>p.pos!=='GK');if(!ga)keeper.sheets++;for(let k=0;k<gf;k++){const scorer=out[Math.floor(r()*out.length)];scorer.goals++;const others=out.filter(p=>p!==scorer);if(r()<.8)others[Math.floor(r()*others.length)].assists++;}}}}return {rows:rows.sort((a,b)=>b.pts-a.pts||b.gd-a.gd),players:squads.flat()};}
+const table=(n,day)=>district(n,day).rows;
 function act(old,cmd,v){const s=JSON.parse(JSON.stringify(old)),p=s.profile,mail=(from,text)=>s.mail.unshift({day:s.day,from,text}),queue=(kind,id,days)=>s.plans.push({kind,id,due:s.day+days}),require=(ok,msg)=>{if(!ok)throw Error(msg);};
  const install=(name,owner)=>{s.club={name,owner,nick:owner?s.draft.nick:'The first team',emblem:owner?s.draft.emblem:'◆',board:owner?'Founding members':'Elected directors'};};
  switch(cmd){case 'advance':s.day++;break;
@@ -42,5 +45,5 @@ function act(old,cmd,v){const s=JSON.parse(JSON.stringify(old)),p=s.profile,mail
  if(e.kind==='licence'){if(Object.values(nations).flat().some(n=>n.toLowerCase()===s.draft.name.toLowerCase())){mail('National FA','That name is already registered. Your fee was refunded.');s.fund+=200;}else{install(s.draft.name,true);mail('National FA','Registration approved. You are recorded as the founder.');}s.draft=null;}
  if(e.kind==='reply'){const x=pool.find(x=>x.id===e.id);if(roll<65){s.roster.push(x.id);mail(x.name,'I accept your invitation. Count me in.');}else mail(x.name,'Thank you, but I will not join at this time.');}}
  s.plans=s.plans.filter(e=>e.due>s.day);}return s;}
-const api={styles,mentalities,create,act,date,get nations(){return nations;},careers,get pool(){return pool;},activate,atlas,table,faces,skins,emblems,jobs};g.TLManagerLife=api;if(typeof module!=='undefined')module.exports=api;
+const api={styles,mentalities,create,act,date,get nations(){return nations;},careers,get pool(){return pool;},activate,atlas,table,district,faces,skins,emblems,jobs};g.TLManagerLife=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);
