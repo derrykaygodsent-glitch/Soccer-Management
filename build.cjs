@@ -19,6 +19,7 @@ const url = process.env.TOUCHLINE_SUPABASE_URL ?? 'https://dainetwhnjeucsyezlgf.
 if ((url || key) && (!/^https:\/\/[a-z0-9.-]+$/i.test(url) || !/^sb_publishable_[A-Za-z0-9_-]+$/.test(key))) throw Error('Expected HTTPS project origin and sb_publishable_ key');
 const engine = require('node:crypto').createHash('sha256').update(files.slice(0,files.indexOf('ui.js')).map(read).join('\n')).digest('hex');
 const js = files.map(name => `/* ===== ${name} ===== */\n${read(name)}`).join('\n;\n')
+  .replace('/* @WORLD_PLAYERS@ */ null', () => read('world-players.json'))
   .replace('/* @CLOUD@ */ {}', () => JSON.stringify({url,key,engine}))
   .replace('/* @HOME_PORTRAITS@ */ {}', () => JSON.stringify(portraits))
   .replace('/* @CLUB_MEDIA@ */ {}', () => JSON.stringify(clubMedia));
