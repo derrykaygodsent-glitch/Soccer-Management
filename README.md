@@ -104,3 +104,7 @@ The original uploads are unchanged. The clubhouse art, fonts and icons are bundl
 ### Meridian Football Universe
 
 New profiles choose a home nation from the Meridian foundation. In the clubhouse, open **Competitions → Explore the Meridian atlas** to browse the continents, capitals, club homes and derbies. See [foundation scope and roadmap](docs/meridian-foundation.md) for the distinction between the 100 founding clubs and the eventual 960-club pyramid. Existing pre-Meridian careers keep their original world when loaded.
+
+### Open Ground: Meridian's district practice
+
+On Home choose **Walk to the ground**. The local host supplies trialists for missing positions; a practice appearance is not a signing. Kick off manually, watch the Classic 2D pitch, or open **Team sheet → Scout player** to meet a trialist through recruitment. You can leave the pitch and resume the same session. After six simulated minutes the actual score and shot totals enter Schedule, and the local coach sends the result to Inbox. This is a practice session, not a league fixture.

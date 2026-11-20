@@ -88,7 +88,8 @@
       this.reviewTime = [0, 0];
       this.lastPass = null;
       this.teams = [homeClub, awayClub].map((club, i) => {
-        const players = D.genSquad(club, D.seedFor(club.id));
+        // Supplied career players are copied: match fatigue and cards must not mutate the world database.
+        const players = opts.squads?.[i] ? JSON.parse(JSON.stringify(opts.squads[i])) : D.genSquad(club, D.seedFor(club.id));
         const tactics = (i === 0 ? opts.homeTactics : opts.awayTactics) || D.defaultTactics(club.style);
         let { xi, bench } = D.bestXI(players, tactics.formation);
         const lineup = opts.lineups?.[i];
