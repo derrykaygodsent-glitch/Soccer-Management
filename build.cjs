@@ -7,6 +7,9 @@ const read = name => readFileSync(join(src, name), 'utf8');
 const base64 = name => readFileSync(join(src, name)).toString('base64');
 const css = [read('style.css'), read('home.css'), read('club.css'), read('matchday.css'), read('season.css'), read('office.css')].join('\n')
   .replace('{{FAMILY_STREET}}', () => base64('media/family-street.jpg'))
+  .replace('{{LOCAL_REPORTER}}', () => base64('media/local-reporter.webp'))
+  .replace('{{LOCAL_FOUNDER}}', () => base64('media/local-founder.webp'))
+  .replace('{{COMMUNITY_EVENT}}', () => base64('media/community-event.webp'))
   .replace('{{HOUSEHOLD}}', () => base64('media/household.jpg'))
   .replace('{{OPEN_GROUND}}', () => base64('media/open-ground.jpg'))
   .replace('{{ENTRY_ROOM}}', () => base64('media/entry-room.jpg'))
