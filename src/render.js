@@ -60,9 +60,11 @@
         this.observer = new global.ResizeObserver(() => this.resize());
         this.observer.observe(canvas.parentElement);
       }
-      global.addEventListener('resize', () => this.resize(), { passive: true });
+      this.onResize = () => this.resize();
+      global.addEventListener('resize', this.onResize, { passive: true });
     }
 
+    dispose() { this.observer?.disconnect(); global.removeEventListener('resize', this.onResize); }
     resize() {
       const rect = this.canvas.parentElement.getBoundingClientRect();
       const width = Math.max(1, Math.round(rect.width)), height = Math.max(1, Math.round(rect.height));
