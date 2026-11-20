@@ -3,12 +3,12 @@
   'use strict';
   const X=global.TLMatchdayUI, {M,U}=X, {H,C}=U, P=global.TLMatchPrep, R=global.TLMatchReview, K=global.TLSeasonCalendar, Q=global.TLSeasonMatch;
   const stages={
-    meeting:['TACTICAL MEETING','Team Selection','selection','01 / PREPARATION'],
-    selection:['TEAM SELECTION','Submit Team',null,'02 / SELECTION'],
-    briefing:['BRIEFING','Go to Match','news','03 / BRIEFING'],
-    news:['TEAM NEWS','Dressing Room','preTalk','04 / OFFICIAL LINEUPS'],
-    preTalk:['DRESSING ROOM','Match Preview','preview','05 / TEAM TALK'],
-    preview:['MATCH PREVIEW','Go to Pitch','live','06 / BROADCAST'],
+    meeting:['TACTICAL MEETING','Team Selection','selection','PREPARATION'],
+    selection:['TEAM SELECTION','Submit Team',null,'SELECTION'],
+    briefing:['BRIEFING','Go to Match','news','BRIEFING'],
+    news:['TEAM NEWS','Dressing Room','preTalk','OFFICIAL LINEUPS'],
+    preTalk:['DRESSING ROOM','Match Preview','preview','TEAM TALK'],
+    preview:['MATCH PREVIEW','Go to Pitch','live','BROADCAST'],
     half:['HALF TIME','Dressing Room','halfTalk','INTERVAL / ANALYSIS'],
     halfTalk:['HALF-TIME TEAM TALK','Start Second Half',null,'INTERVAL / DRESSING ROOM'],
     full:['FULL TIME','Dressing Room','fullTalk','FULL TIME / ANALYSIS'],
@@ -32,7 +32,7 @@
     }
     function showLive(interval=false,resume=false){
       const c=ctx();screens('live');global.scrollTo(0,0);
-      document.title=`Touchline 26 — ${interval?'Half-time instructions':'Classic 2D'}`;
+      document.title=`Touchline 26 · ${interval?'Half-time instructions':'Classic 2D'}`;
       view().openClub(liveOpts(c),()=>{
         if(resume)view().startSecondHalf();
         else if(interval)view().intervalDesk(()=>render(false));
@@ -50,7 +50,7 @@
       shell.dataset.stage=stage;
       if(moved){
         const active=tunnel.findIndex(([key])=>key===({halfTalk:'half',fullTalk:'full'})[stage]||key===stage);
-        $('seasonMatchRoute').innerHTML=tunnel.map(([,name,short],i)=>`<li${i===active?' aria-current="step"':i<active?' data-complete="true"':''}><span>${String(i+1).padStart(2,'0')}</span><b>${name}</b><small>${short}</small></li>`).join('');
+        $('seasonMatchRoute').innerHTML=tunnel.map(([,name,short],i)=>`<li${i===active?' aria-current="step"':i<active?' data-complete="true"':''}><span>${i+1}</span><b>${name}</b><small>${short}</small></li>`).join('');
       }
       $('seasonMatchTitle').textContent=title;
       $('seasonMatchKicker').textContent=kicker;
@@ -61,7 +61,7 @@
       $('seasonMatchBack').setAttribute('aria-label',stage==='meeting'?'Back to clubhouse':'Back to tactical meeting');
       const advance=$('seasonMatchAdvance');advance.querySelector('span').textContent=label;
       advance.disabled=stage==='selection'&&c.s.plan.xi.filter(Boolean).length!==11;
-      document.title=`Touchline 26 — ${title}`;
+      document.title=`Touchline 26 · ${title}`;
       const html=({meeting:P.advice,selection:P.picker,briefing:P.briefing,news:P.teamNews,preTalk:c=>R.room(c,'pre'),preview:P.preview,half:c=>R.report(c,c.a.half,false),halfTalk:c=>R.room(c,'half'),full:c=>R.report(c,c.s.results[c.a.id],true),fullTalk:c=>R.room(c,'full')})[stage](c);
       body.innerHTML=html;
       if(reset&&moved&&!global.matchMedia('(prefers-reduced-motion: reduce)').matches)body.animate([{opacity:.74,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'cubic-bezier(.2,.7,.25,1)'});

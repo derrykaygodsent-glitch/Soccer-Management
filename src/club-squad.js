@@ -149,7 +149,7 @@
     const {sort,direction}=sortState(c);
     return {sort:key===sort?(direction==='desc'?'descending':'ascending'):null,html:btn(label,'sort-squad',key,{kind:'sort'})};
   }
-  const slotSelect = (c,p) => S.availability(c.season.value,p.id).out?tag('Out','bad'):p.injury?.status==='Out'?tag('Tactics','info'):select(`sheet:${p.id}`,`Lineup slot for ${p.name}`,[[-1,'—'],...slotNames.map((name,i)=>[i,name])],c.s.sheet.indexOf(p.id));
+  const slotSelect = (c,p) => S.availability(c.season.value,p.id).out?tag('Out','bad'):p.injury?.status==='Out'?tag('Tactics','info'):select(`sheet:${p.id}`,`Lineup slot for ${p.name}`,[[-1,'–'],...slotNames.map((name,i)=>[i,name])],c.s.sheet.indexOf(p.id));
   function positionChips(c){
     return `<div class="cc-slot-bar" aria-label="Lineup slots"><span>${btn('All','slot','',{pressed:!c.ui.slot})}</span>${slotNames.map((n,i)=>`<span data-sub="${i>=11}" data-filled="${!!c.s.sheet[i]}">${btn(n,'slot',i,{pressed:c.ui.slot===String(i),label:c.s.sheet[i]?`${n}: ${C.players[c.s.sheet[i]].name}`:`${n}: unassigned`})}</span>`).join('')}</div>`;
   }
