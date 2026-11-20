@@ -1,7 +1,7 @@
 /* Public football coverage derived from the active career, not private mail. */
 (function(g){'use strict';
 const W=g.TLManagerLife,{esc:e,art,icon}=g.TLClubUI;
-const link=(page,label)=>`<button data-life="go" data-v="${page}">${label} →</button>`;
+const link=(page,label)=>`<button data-life="go" data-v="${page}">${label} </button>`;
 function render(s,tab){const n=s.profile.nation,world=Object.keys(W.nations),foreign=world.filter(x=>x!==n),week=Math.floor(s.day/7),home=W.nations[n]?n:world[0],places=[home,...Array.from({length:Math.min(3,foreign.length)},(_,i)=>foreign[(week+i)%foreign.length])],v=g.TLDistrict.visit(s),r=s.practices?.at(-1),date=W.date(s.day);
 const by=(mark,name,desk,stamp=date)=>`<header class="pulse-by"><b aria-hidden="true">${mark}</b><div><strong>${e(name)}</strong><small>${e(desk)} · ${e(stamp)}</small></div></header>`;
 function story(id,body,action){const liked=(s.pulseLikes||[]).includes(id);return `<article class="pulse-post">${body}<footer><button data-pulse-like="${e(id)}" aria-pressed="${liked}">${icon('heart')} ${liked?'Liked':'Like'}</button>${action}</footer></article>`;}

@@ -1,4 +1,4 @@
-/* Touchline 26 — Classic 2D match simulation. Positions in metres, time in seconds. */
+/* Touchline 26 · Classic 2D match simulation. Positions in metres, time in seconds. */
 (function (global) {
   'use strict';
   const D = (typeof require !== 'undefined' && typeof window === 'undefined') ? require('./data.js') : global.TLData;
@@ -29,10 +29,10 @@
       'Clinical from {p}! {team} have their goal! {a}'
     ],
     og: ['Disaster! {p} turns it into his own net! {team} lead!'],
-    save: ['{p} lets fly — but what a save by {k}!', 'Brilliant stop! {k} denies {p}.', '{p} strikes it well, {k} gets down smartly.'],
-    catch: ['{p} shoots, {k} gathers it comfortably.', 'Straight at {k} — {p} will be disappointed.'],
+    save: ['{p} lets fly · but what a save by {k}!', 'Brilliant stop! {k} denies {p}.', '{p} strikes it well, {k} gets down smartly.'],
+    catch: ['{p} shoots, {k} gathers it comfortably.', 'Straight at {k} · {p} will be disappointed.'],
     miss: ['{p} drags it wide! Should have done better.', 'Over the bar from {p}! That was a chance.', '{p} blazes it over! The keeper watches it sail past.'],
-    block: ['{p} shoots — blocked! {d} throws himself in the way.', 'A vital block from {d} as {p} pulls the trigger!'],
+    block: ['{p} shoots · blocked! {d} throws himself in the way.', 'A vital block from {d} as {p} pulls the trigger!'],
     post: ['OFF THE POST! {p} is inches away!', 'The woodwork rescues {opp}! {p} rattles the frame!'],
     chance: ['Big chance for {team}! {p} is through...'],
     foul: ['Foul by {p} on {v}. Free kick to {opp}.', '{p} brings down {v}. Free kick to {opp}.'],
@@ -41,8 +41,8 @@
     pen: ['PENALTY! {p} brings down {v} in the box! Huge moment!'],
     penscore: ['GOAL from the spot! {p} keeps his cool!'],
     penmiss: ['SAVED! {k} guesses right and denies {p} from twelve yards!'],
-    offside: ['Flag\'s up — {p} is offside. Indirect free kick to {opp}.'],
-    corner: ['Corner to {team}.', '{team} win a corner — bodies forward.'],
+    offside: ['Flag\'s up · {p} is offside. Indirect free kick to {opp}.'],
+    corner: ['Corner to {team}.', '{team} win a corner · bodies forward.'],
     throwin: ['Throw-in for {team}.'],
     goalkick: ['Goal kick to {team}.'],
     freekick: ['Free kick to {team} in a promising area.'],
@@ -53,7 +53,7 @@
     stoppage: ['{n} minutes of added time.'],
     tackle: ['{p} wins it back with a strong challenge.'],
     cross: ['{p} whips a dangerous ball into the box!'],
-    header: ['{p} rises highest — header!'],
+    header: ['{p} rises highest · header!'],
     clear: ['{p} hooks it clear.'],
     longshot: ['{p} tries his luck from distance!']
   };

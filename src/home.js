@@ -1,4 +1,4 @@
-/* Touchline 26 — clubhouse navigation and calendar handover. */
+/* Touchline 26 · clubhouse navigation and calendar handover. */
 (function(global){
   'use strict';
   const M=global.TLHomeData, K=global.TLSeasonCalendar, S=global.TLSeasonState, P=global.TLCalendarProgress;
@@ -113,7 +113,7 @@
       if(b.dataset.hcOpen===page)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
     }
     $('homeBack').disabled=!history.back;$('homeForward').disabled=!history.forward;
-    document.title=`Touchline 26 — ${r.page==='home'?'Manager’s Office':title}`;
+    document.title=`Touchline 26 · ${r.page==='home'?'Manager’s Office':title}`;
     syncClub();
   }
   function action(){
