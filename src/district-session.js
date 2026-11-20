@@ -6,7 +6,7 @@ const officials=['Ama Soro','Ivo Larne','Mara Vico','Tari Fen','Nico Arven','Rin
 function visit(s){const country=W.atlas.countries.find(c=>c.name===s.profile.nation);if(!country)return null;
  const place=country.places[Math.floor(s.day/7)%country.places.length],seed=D.seedFor(place.id);
  return {place:place.name,ground:place.name+' Community Ground',host:place.club.name,hostId:place.club.id,coach:officials[seed%8],official:officials[(seed+3)%8]};}
-function fixture(s){const venue=visit(s),signed=W.pool.filter(p=>s.roster.includes(p.id)),locals=W.pool.filter(p=>p.nation===s.profile.nation&&p.local&&!s.roster.includes(p.id));
+function fixture(s){const venue=visit(s),signed=W.pool.filter(p=>s.roster.includes(p.id)),locals=W.pool.filter(p=>p.nation===s.profile.nation&&p.local&&!(s.people?.[p.id]?.until>s.day)&&!s.roster.includes(p.id));
  const players=signed.slice();for(const pos of ['GK',...D.FORMATIONS[s.tactic].map(x=>x.role)]){const need=pos==='GK'?1:D.FORMATIONS[s.tactic].filter(x=>x.role===pos).length;while(players.filter(p=>p.pos===pos).length<need){const i=locals.findIndex(p=>p.pos===pos);if(i<0)break;players.push(locals.splice(i,1)[0]);}}
  while(players.length<11&&locals.length)players.push(locals.shift());
  const staff=(g.TLTechnical||require('./technical-area')).office(s,venue.host,s.profile.nation,W.nations[s.profile.nation]);return {...venue,awayStyle:staff.coach?.style||'direct',catalogue:1,seed:D.seedFor(`${s.id}:${s.day}:district`),day:s.day,team:s.club?.name||`${s.profile.name.split(' ')[0]}'s XI`,ids:players.map(p=>p.id),signed:s.roster.slice(),formation:s.tactic,mentality:s.mentality||'Balanced',style:s.style||'Balanced shape',ticks:0};}
