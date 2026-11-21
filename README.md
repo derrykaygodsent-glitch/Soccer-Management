@@ -108,3 +108,9 @@ New profiles choose a home nation from the Meridian foundation. In the clubhouse
 ### Open Ground: Meridian's district practice
 
 On Home choose **Walk to the ground**. The local host supplies trialists for missing positions; a practice appearance is not a signing. Kick off manually, watch the Classic 2D pitch, or open **Team sheet → Scout player** to meet a trialist through recruitment. You can leave the pitch and resume the same session. After six simulated minutes the actual score and shot totals enter Schedule, and the local coach sends the result to Inbox. This is a practice session, not a league fixture.
+
+### Playtest updates and final releases
+
+Use GitHub Pages for ongoing playtests. A repository administrator enables **Settings → Pages → Deploy from a branch → main → / (root)** once. Run `npm run build` and include `index.html` and `offline-worker.js` in each game update before merging. The checked-in `.nojekyll` lets Pages serve the built game directly. Test locally with `npm run preview`.
+
+Vercel Git auto-deployments are disabled. For an approved release only, use the Vercel CLI from a clean checkout of the exact tested revision, linked to the existing Touchline project, and run `vercel --prod`. Check the production deployment before announcing it. Local careers are per site; to switch sites, upload a cloud slot first and open it on the destination. Use a separate slot when playtesting.
