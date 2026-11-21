@@ -38,4 +38,4 @@ const html = read('template.html')
 writeFileSync(join(__dirname, 'index.html'), html);
 const revision=require('node:crypto').createHash('sha256').update(html).digest('hex').slice(0,20);
 writeFileSync(join(__dirname,'offline-worker.js'),read('offline-worker.js').replace('__BUILD__',revision));
-console.log(`Built Touchline 26 — Riverside Clubhouse and Classic 2D (${(Buffer.byteLength(html) / 1024).toFixed(1)} KiB)`);
+console.log(`Built Touchline 26 (${(Buffer.byteLength(html) / 1024).toFixed(1)} KiB)`);
