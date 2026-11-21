@@ -1,13 +1,14 @@
 /* Read receipts belong to a career. Opening a desk acknowledges its updates, not its mail or decisions. */
 (function (g) {
   "use strict";
+const showMoney=n=>(g.TLLuma||require('./luma')).format(n);
   function describe(s, desk, r) {
     const name=id=>g.TLManagerLife.pool?.find(p=>p.id===id)?.name||String(id);
     if(Array.isArray(r)){const [id,v]=r;if(desk==='scouting')return `${name(v)} · scouting report from ${id}`;if(desk==='kitOffice')return `${v} · filed ${g.TLManagerLife.date(id)}`;if(desk==='medical')return `${name(id)} · recovery until ${g.TLManagerLife.date(v)}`;if(desk==='development')return `${name(id)} · ${v.sessions} training sessions, ${v.minutes} match minutes`;return `${name(id)} · contact updated`;}
     if(typeof r==='string')return ['squad','tactics','planner'].includes(desk)?name(r):r;
     if(typeof r==='number')return `Season review · ${r}`;
     if(r.kind&&r.due!=null)return `${String(r.kind).replace(/([A-Z])/g,' $1')} · ${name(r.id)} · ${g.TLManagerLife.date(r.due)}`;
-    if(r.label&&r.personal!=null)return `${r.label} · wallet ₥${r.personal}, club ₥${r.club}`;
+    if(r.label&&r.personal!=null)return `${r.label} · wallet ${showMoney(r.personal)}, club ${showMoney(r.club)}`;
     if(r.approved)return 'FA hearing · '+r.approved.join(', ');
     if(desk==='bids')return `${r.name} · ${r.to} · ${r.status}`;
     if(desk==='fixtures')return `${r.team} ${r.result?.join('–')||'v'} ${r.host}`;

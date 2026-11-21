@@ -30,7 +30,7 @@
   const avatar = (c, name, id, extra = '') => `<span class="cc-avatar ${extra}" aria-hidden="true">${c.portrait(id)?`<img src="${c.portrait(id)}" alt="" width="45" height="52">`:esc(initials(name))}</span>`;
   const rank = rating => `<span class="cc-rating ${rating>=7.15?'cc-good':rating>=6.8?'cc-info':'cc-warn'}">${Number(rating).toFixed(2)}</span>`;
   const num = n => new Intl.NumberFormat('en-GB').format(n);
-  const compact = n => n >= 1e6 ? H.millions(n) : n >= 1e3 ? `£${+(n/1000).toFixed(1)}K` : H.money(n);
+  const compact = H.money;
   const stamp = date => H.calendar(date).day.slice(4);
   const month = date => new Intl.DateTimeFormat('en-GB',{month:'long',year:'numeric',timeZone:'UTC'}).format(date);
   const week = date => H.calendar(date).day.slice(0,3);
@@ -56,7 +56,7 @@
     const width=630, high=83, plot=v=>+(1+(max-v)/(max-min)*high).toFixed(2);
     const x=i=>+(2+i*(width-4)/(values.length-1)).toFixed(2), base=plot(0);
     const coords=values.map((v,i)=>`${x(i)} ${plot(v)}`), xMarks=Array.from({length:26},(_,i)=>`M${2+i*(width-4)/25} ${base}v4`).join('');
-    return `<div class="cc-chart" role="img" aria-label="${esc(label)}, from September 2024 to October 2026"><div class="cc-chart-scale" aria-hidden="true">${ticks.map(t=>`<span style="top:${plot(t)/.87}%">${esc(t<0?`(£${-t}M)`:t?`£${t}M`:'£0')}</span>`).join('')}</div><div class="cc-chart-plot"><svg viewBox="0 0 ${width} 87" preserveAspectRatio="none" aria-hidden="true"><path d="M2 ${base} L${coords.join(' L')} L${width-2} ${base}Z" fill="${color}"/><path d="M2 1v83M2 ${base}h${width-4}${xMarks}" stroke="#9298a9" stroke-width=".8" vector-effect="non-scaling-stroke" fill="none"/></svg><div class="cc-chart-dates"><span>Sep 2024</span><span>Oct 2025</span><span>Oct 2026</span></div></div></div>`;
+    return `<div class="cc-chart" role="img" aria-label="${esc(label)}, from September 2024 to October 2026"><div class="cc-chart-scale" aria-hidden="true">${ticks.map(t=>`<span style="top:${plot(t)/.87}%">${esc(t<0?`(${H.money(-t*1e6)})`:H.money(t*1e6))}</span>`).join('')}</div><div class="cc-chart-plot"><svg viewBox="0 0 ${width} 87" preserveAspectRatio="none" aria-hidden="true"><path d="M2 ${base} L${coords.join(' L')} L${width-2} ${base}Z" fill="${color}"/><path d="M2 1v83M2 ${base}h${width-4}${xMarks}" stroke="#9298a9" stroke-width=".8" vector-effect="non-scaling-stroke" fill="none"/></svg><div class="cc-chart-dates"><span>Sep 2024</span><span>Oct 2025</span><span>Oct 2026</span></div></div></div>`;
   }
   const lookup = (rows,id) => rows.find(x=>x.id===id);
   const textMatch = (q,...values) => !q||values.some(v=>String(v||'').toLocaleLowerCase('en-GB').includes(q.trim().toLocaleLowerCase('en-GB')));
