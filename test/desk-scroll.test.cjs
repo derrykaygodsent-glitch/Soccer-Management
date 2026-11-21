@@ -1,0 +1,4 @@
+const test=require('node:test'),assert=require('node:assert/strict'),{remember}=require('../src/desk-scroll');
+function desk(){return {scrollTop:800,pitchStart:740,getBoundingClientRect:()=>({top:0,bottom:550}),querySelector(){const top=this.pitchStart-this.scrollTop;return {getBoundingClientRect:()=>({top,bottom:top+420})};}};}
+test('a redraw that resets scroll and adds a notice leaves the visible pitch in place',()=>{const d=desk(),restore=remember(d,'.shape-field');d.scrollTop=0;d.pitchStart+=36;restore();assert.equal(d.scrollTop,836);});
+test('other edits and offscreen pitches keep the reading offset',()=>{for(const anchor of [null,'.shape-field']){const d=desk();d.pitchStart=1600;const restore=remember(d,anchor);d.scrollTop=0;d.pitchStart+=80;restore();assert.equal(d.scrollTop,800);}});
