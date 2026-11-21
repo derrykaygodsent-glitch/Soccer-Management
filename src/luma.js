@@ -3,7 +3,7 @@
 function format(n){if(!Number.isSafeInteger(n))return '–';return (n<0?'−':'')+'₥'+number.format(Math.abs(n));}
 // Cost basis for property and stall; the car has an explicit resale price.
 function personalWealth(s){const cost=n=>(g.TLFASeason||require('./fa-season')).salary(s.profile.nation,n),home=s.familyLife;
- const rows=[['Personal wallet',s.cash??0],['Household reserve',s.household?.reserve??0],['Fixed-term deposit',s.enterprise?.deposit?.principal??0],['Home or construction',home?.owned||home?.building!=null?cost(home.owned==='Townhouse'?95000:72000):0],['Kit-printing stall',s.enterprise?.stall?cost(5000):0],['Car resale value',s.neighbourhood?.car?cost(2800):0],['Outstanding personal loan',-(s.support?.loan?.balance||0)]];
+ const rows=[['Personal wallet',s.cash??0],['Household reserve',s.household?.reserve??0],['Fixed-term deposit',s.enterprise?.deposit?.principal??0],['Home or construction',home?.owned||home?.building!=null?(home.propertyCost??cost(home.owned==='Townhouse'?95000:72000)):0],['Kit-printing stall',s.enterprise?.stall?(s.enterprise.stall.setupCost??cost(5000)):0],['Car resale value',s.neighbourhood?.car?(g.TLFASeason||require('./fa-season')).rate(s,s.profile.nation,2800):0],['Outstanding personal loan',-(s.support?.loan?.balance||0)]];
  return {rows,total:rows.reduce((sum,[,v])=>sum+v,0)};}
 // Older saves contain already-written reports. Group currency tokens at display time only.
 function inText(value){return String(value??'').replace(/([₥£])(-?)(\d{4,})(?!\d)/g,(_,unit,sign,digits)=>sign+unit+digits.replace(/\B(?=(\d{3})+(?!\d))/g,','));}

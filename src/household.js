@@ -4,7 +4,7 @@ const showMoney=n=>(g.TLLuma||require('./luma')).format(n);const D=g.TLData||req
 const names=['Amara','Luca','Mika','Imani','Noa','Ari','Inés','Remi','Elia','Sena','Tari','Mara'],last=['Soro','Bell','Keita','Marin','Ito','Varela','Mensah','Novak','Rivas','Neri','Arden','Costa'];
 function person(s,i){const r=D.mulberry32(D.seedFor(s.id+':household:'+i));return {id:'h'+i,name:names[Math.floor(r()*names.length)]+' '+last[Math.floor(r()*last.length)],age:Math.max(18,Math.min(90,s.profile.age-4+Math.floor(r()*9))),work:['Schoolteacher','Market trader','Physiotherapist','Illustrator'][Math.floor(r()*4)],ready:3+Math.floor(r()*3)};}
 function initial(s){const married=s.profile.marital==='Married';return {partner:married?person(s,0):null,stage:married?'Married':'Single',trust:married?5:0,dates:0,index:married?1:0,lastTogether:s.day,reserve:0,log:[],former:[]};}
-const read=s=>s.household||initial(s),get=s=>s.household||=initial(s),weekly=s=>F.salary(s.profile.nation,25+5*s.profile.children.length);
+const read=s=>s.household||initial(s),get=s=>s.household||=initial(s),weekly=s=>F.rate(s,s.profile.nation,25+5*s.profile.children.length);
 function remember(s,h,text){h.log.unshift({day:s.day,text});h.log.length=Math.min(80,h.log.length);s.activity=text;}
 function mail(s,from,text){s.mail.unshift({day:s.day,from,text,topic:'household'});}
 function end(s,h){h.former.push({...h.partner,ended:s.day,stage:h.stage});remember(s,h,'Parted ways with '+h.partner.name+'.');const cancelled=s.plans.filter(p=>p.partnerId===h.partner.id&&p.kind==='diary'&&p.id==='date');s.cash+=20*cancelled.length;s.plans=s.plans.filter(p=>p.partnerId!==h.partner.id);h.partner=null;h.stage=s.profile.marital='Single';h.trust=0;h.dates=0;}
