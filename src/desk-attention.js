@@ -1,17 +1,31 @@
 /* Read receipts belong to a career. Opening a desk acknowledges its updates, not its mail or decisions. */
 (function (g) {
   "use strict";
-  function updates(s) {
+  function describe(s, desk, r) {
+    const name=id=>g.TLManagerLife.pool?.find(p=>p.id===id)?.name||String(id);
+    if(Array.isArray(r)){const [id,v]=r;if(desk==='scouting')return `${name(v)} · scouting report from ${id}`;if(desk==='kitOffice')return `${v} · filed ${g.TLManagerLife.date(id)}`;if(desk==='medical')return `${name(id)} · recovery until ${g.TLManagerLife.date(v)}`;if(desk==='development')return `${name(id)} · ${v.sessions} training sessions, ${v.minutes} match minutes`;return `${name(id)} · contact updated`;}
+    if(typeof r==='string')return ['squad','tactics','planner'].includes(desk)?name(r):r;
+    if(typeof r==='number')return `Season review · ${r}`;
+    if(r.kind&&r.due!=null)return `${String(r.kind).replace(/([A-Z])/g,' $1')} · ${name(r.id)} · ${g.TLManagerLife.date(r.due)}`;
+    if(r.label&&r.personal!=null)return `${r.label} · wallet ₥${r.personal}, club ₥${r.club}`;
+    if(r.approved)return 'FA hearing · '+r.approved.join(', ');
+    if(desk==='bids')return `${r.name} · ${r.to} · ${r.status}`;
+    if(desk==='fixtures')return `${r.team} ${r.result?.join('–')||'v'} ${r.host}`;
+    if(desk==='transfers')return `${name(r.id)} · ${r.from||'Free agent'} → ${r.to||'Released'}`;
+    return r.title||r.text||r.name||r.club||r.opponent||r.label||`Record dated ${g.TLManagerLife.date(r.day??s.day)}`;
+  }
+  function updates(s,details,page) {
     const groups = {},
-      add = (desk, id) => {
+      add = (desk, id, item) => {
+        if(desk===page) details.set(String(id),item);
         (groups[desk] ||= new Set()).add(String(id));
       };
     s.mail.forEach((m, i) =>
-      add(g.TLOfficeOrganiser.classify(m)[3], "post:" + (s.mail.length - i)),
+      add(g.TLOfficeOrganiser.classify(m)[3], "post:" + (s.mail.length - i),{label:m.report?.title||m.text,mail:s.mail.length-1-i}),
     );
     function recent(desk, rows) {
       for (const r of rows || [])
-        add(desk, g.TLData.seedFor(JSON.stringify(r)));
+        add(desk, g.TLData.seedFor(JSON.stringify(r)),desk===page?{label:describe(s,desk,r),record:r}:null);
     }
     recent("finance", s.lumaJournal);
     recent("household", s.household?.history);
@@ -51,7 +65,7 @@
     recent("day", s.plans);
     recent("fixtures", s.friendlyHistory?.slice(-5));
     recent("transfers", s.moves?.slice(-5));
-    recent("scouting", Object.entries(s.fieldNotes || {}));
+    recent("scouting", Object.entries(s.fieldNotes || {}).flatMap(([nation,ids])=>ids.map(id=>[nation,id])));
     recent("development", s.seasonYears?.slice(-3));
     recent("squad", s.roster);
     recent(
@@ -62,14 +76,15 @@
     );
     if (s.worldVersion)
       for (const p of g.TLWorldService.editions(s, "For you").slice(0, 4))
-        if (g.TLWorldService.visible(s, p.id, p.topic)) add("social", p.id);
+        if (g.TLWorldService.visible(s, p.id, p.topic)) add("social", p.id,{label:p.title,story:p.id});
     return groups;
   }
   function badges(s, page) {
-    const groups = updates(s),
+    const details=new Map(),groups = updates(s,details,page),
       seen = s.deskSeen || {},
       counts = {},
       actions = {};
+    const fresh=[...details.entries()].filter(([id])=>!(seen[page]||[]).includes(id));
     let dirty = false;
     if (page !== "inbox" && groups[page]) {
       const keys = [...groups[page]];
@@ -99,7 +114,18 @@
     actions.neighbourhood = Number(
       !!s.neighbourhood?.invite && !s.neighbourhood.invite.choice,
     );
-    return { counts, actions, dirty };
+    return { counts, actions, dirty, fresh, details };
   }
-  g.TLDeskAttention = { badges };
+  // Keep the arrival snapshot for this visit, including while filtering or sorting the desk.
+  function digest(items){if(!items.length)return '';const e=g.TLClubUI.esc,row=x=>`<li><small class="attention-tag">New</small> ${x.mail!=null?`<button data-update-mail="${x.mail}">${e(x.label)} →</button>`:e(x.label)}</li>`;return `<section class="arrival-brief"><small>DESK BRIEFING</small><h3>New since your last visit · ${items.length}</h3><ul>${items.slice(0,3).map(row).join('')}</ul>${items.length>3?`<details><summary>Show ${items.length-3} more</summary><ul>${items.slice(3).map(row).join('')}</ul></details>`:''}</section>`;}
+  function mark(root,s,page,items){const tags=new WeakMap();function tag(node,text){if(!node)return;const used=tags.get(node)||[];if(used.includes(text))return;tags.set(node,[...used,text]);const chip=document.createElement('small');chip.className='attention-tag'+(text==='Needs response'?' due':'');chip.textContent=text;node.append(' ',chip);}
+    const find=(attr,val)=>[...root.querySelectorAll('['+attr+']')].find(el=>el.getAttribute(attr)===String(val));
+    for(const x of items){const r=x.record;if(page==='scouting'&&Array.isArray(r)){const cell=[...root.querySelectorAll('[data-life=recOpen]')].find(el=>el.dataset.v===r[1]);tag(cell?.closest('th'),'New');}if(page==='squad'&&typeof r==='string')tag(find('data-squad-player',r)?.closest('th'),'New');if(page==='bids'&&r)tag(find('data-bid-id',r.id)?.querySelector('h3'),'New');if(page==='kitOffice'&&Array.isArray(r))tag(find('data-kit-list',r[1])?.closest('details')?.querySelector('summary'),'New');if(page==='social'){const story=x.story||(r&&(s.kitWire?.includes(r)?'register:'+r.id:s.transferWire?.includes(r)?'transfer:'+r.id+':'+r.day:'district:'+r.day+r.title));if(story)tag(find('data-pulse-like',story)?.closest('article')?.querySelector('header'),'New');}}
+    if(page==='bids')for(const b of Object.values(s.bids||{}))if(b.status==='open')tag(find('data-bid-id',b.id)?.querySelector('h3'),'Needs response');
+    if(page==='kitOffice')for(const m of s.mail)if(m.kit&&g.TLOfficeOrganiser.pending(s,m))tag(find('data-kit-list',m.kit)?.closest('details')?.querySelector('summary'),'Needs response');
+    if(page==='neighbourhood'&&s.neighbourhood?.invite&&!s.neighbourhood.invite.choice)tag(root.querySelector('[data-life=neighbourChoice][data-v=share]')?.closest('article')?.querySelector('h3'),'Needs response');
+    if(page==='interviewDesk'&&s.interview)tag(root.querySelector('[data-life=answer]')?.parentElement,'Needs response');
+    if(page==='create'&&s.mail.some(m=>m.entry&&g.TLOfficeOrganiser.pending(s,m)))tag(find('data-life','fileEntry'),'Needs response');
+  }
+  g.TLDeskAttention = { badges,digest,mark };
 })(window);
