@@ -212,6 +212,7 @@
             : s.draft
               ? "Licence applicant"
               : "Independent manager";
+    const wealth = g.TLLuma.personalWealth(s);
     const factsList = (items) =>
         `<dl class="mp-facts">${items.map(([k, v]) => `<div><dt>${e(k)}</dt><dd>${e(v)}</dd></div>`).join("")}</dl>`,
       button = (id, label) =>
@@ -249,7 +250,7 @@
     return `<section class="manager-passport">${header}${
       ui.tab === "history"
         ? timeline
-        : `<div class="mp-grid"><article class="mp-card"><small>IDENTITY</small><h3>Personal file</h3>${factsList(
+        : `<article class="mp-card mp-wealth"><small>PERSONAL FINANCES</small><h3>Estimated net worth · ${W.money(wealth.total)}</h3><p>Available in your wallet: <b>${W.money(s.cash)}</b></p><details><summary>How this is calculated</summary>${factsList(wealth.rows.filter(([,v],i)=>!i||v).map(([label,v])=>[label,W.money(v)]))}<p>Property and business equipment are valued at cost. Club funds and future income are excluded.</p></details></article><div class="mp-grid"><article class="mp-card"><small>IDENTITY</small><h3>Personal file</h3>${factsList(
             [
               ["Home nation", p.nation],
               ["Age", age],
