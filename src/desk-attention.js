@@ -44,9 +44,10 @@
       s.dressing?.workload ? Object.entries(s.dressing.workload) : [],
     );
     recent("dynamics", s.dressing?.diary);
-    recent("social", s.kitWire);
-    recent("social", s.transferWire);
-    recent("social", s.neighbourhood?.posts);
+    const currentNews=rows=>(rows||[]).filter(r=>s.day>=r.day&&s.day-r.day<7);
+    recent("social", currentNews(s.kitWire));
+    recent("social", currentNews(s.transferWire));
+    recent("social", currentNews(s.neighbourhood?.posts));
     recent("day", s.plans);
     recent("fixtures", s.friendlyHistory?.slice(-5));
     recent("transfers", s.moves?.slice(-5));
