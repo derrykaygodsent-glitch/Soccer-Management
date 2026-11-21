@@ -119,6 +119,7 @@
         };
         players.forEach(p => {
           if(opts.playerIntelligence){p.mind=Mind.match(p,this.seed);p.iq=p.mind.ratings;}
+          p.readiness=lineup?.readiness?.players?.[p.id];if(p.readiness){p.careerSeconds=0;p.chemistry={};for(const [k,v] of Object.entries(lineup.readiness.ties||{})){const [a,b]=k.split('|');if(a===p.id)p.chemistry[b]=v;else if(b===p.id)p.chemistry[a]=v;}}
           p.team = i; p.onPitch = false;
           p.x = 0; p.y = 0; p.vx = 0; p.vy = 0; p.tx = 0; p.ty = 0;
           p.decisionT = 0; p.tackleT = 0; p.stunT = 0; p.contactT = 0; p.runT = 2 + this.rnd() * 6; p.runUntil = 0; p.running = 0;
@@ -887,7 +888,7 @@
     speed(p) {
       let v = (5.97 + p.attrs.pace * .107) * (.79 + .21 * p.cond);
       if (p.stunT > 0) v *= .46;
-      if (p.injury) v *= .68;
+      if(p.readiness?.knock)v*=.90;if (p.injury) v *= .68;
       if (this.ball.owner === p) v *= .69 + p.attrs.dribbling * .0045 - clamp((4.1 - (p.pressure ?? 5)) * .046, 0, .18);
       return v;
     }
@@ -1094,6 +1095,7 @@
       const players = this.playersCache, sp = locked ? this.setpiece : null;
       for (const p of players) { p.prevX = p.x; p.prevY = p.y; }
       for (const p of players) {
+        if(p.readiness&&!locked)p.careerSeconds+=h;
         p.stunT = Math.max(0, p.stunT - h); p.tackleT = Math.max(0, p.tackleT - h); p.contactT = Math.max(0, (p.contactT || 0) - h);
         if (sp?.stage === 'windup' && p === sp.taker) { p.vx = p.vy = 0; continue; } // planted feet
         const dx = p.tx - p.x, dy = p.ty - p.y, distance = Math.hypot(dx, dy);
@@ -1604,7 +1606,7 @@
       const team = this.teams[p.team], b = this.ball, read = this.readPlay(p, pressure);
       const leader=team.tactics.captains&&team.score<this.teams[1-p.team].score&&(globalThis.TLMatchBoard||require('./match-board')).captain(team);
       const stakes=this.minute()>70&&Math.abs(team.score-this.teams[1-p.team].score)<=1?1:0;
-      const margin = clamp(.175-(delta(p,'concentration')+secret(p,'pressure')*read.rush+secret(p,'importantMatches')*stakes)*.0013-(p.mind?.form||0)*.018 - (p.iq?(p.iq.decisions-10)*.002+(p.reps||0)*.0007:0) - (leader?Math.max(0,leader.attrs.composure-10+delta(leader,'leadership')*.6)*.002:0) + read.rush * .067 + (13 - p.attrs.composure) * .006, .125, .28);
+      const margin = clamp(.175+(p.readiness?((72-p.readiness.sharp)*.00045+(65-p.readiness.mood)*.0003+(80-p.readiness.settled)*.00015):0)-(delta(p,'concentration')+secret(p,'pressure')*read.rush+secret(p,'importantMatches')*stakes)*.0013-(p.mind?.form||0)*.018 - (p.iq?(p.iq.decisions-10)*.002+(p.reps||0)*.0007:0) - (leader?Math.max(0,leader.attrs.composure-10+delta(leader,'leadership')*.6)*.002:0) + read.rush * .067 + (13 - p.attrs.composure) * .006, .125, .28);
       const action = AI.pick(this.decisionOptions(p, read), this.choiceRnd, margin);
       // Choice RNG is separate from the ball, contact and finishing RNG.
       p.decisionT = (1.62 + this.choiceRnd() * .77) * (TEMPO_HOLD[team.tactics.tempo]*(1+((team.tactics.tempo)-(team.tactics.fine?.tempo??team.tactics.tempo))*.20));
@@ -1709,7 +1711,7 @@
           const air = !['ground', 'through', 'cutback'].includes(technique);
           if (air) risk = this.laneRisk(b.x, b.y, ax, ay, p.team, 1.66, true);
           const entry = gain > 3.4 && depth + gain > 76 && Math.abs(q.y - CY) < 14.7;
-          let score = .426 + clamp(gain / 34, -.40, .86) * [.32, .395, .475][style] + clamp(opening / 8.8, 0, 1) * .43;
+          let score = .426+(p.chemistry?.[q.id]||0)*.009 + clamp(gain / 34, -.40, .86) * [.32, .395, .475][style] + clamp(opening / 8.8, 0, 1) * .43;
           score -= doubt * .26 + risk * .71 + Math.max(0, (entry ? 4.95 : 3.95) - opening) * (entry ? .083 : .064)
             + Math.max(0, dd - 22) * (style === 0 ? .014 : .0072);
           if (through) score += opening > 5.1 ? .136 : .065;
@@ -1793,7 +1795,7 @@
       const technique = option.technique || (option.through ? 'through' : 'ground');
       const air = !['ground', 'through', 'cutback'].includes(technique);
       const dd = dist(b.x, b.y, option.lead.x, option.lead.y);
-      const variance = (1-delta(p,'technique')*.02-(p.mind?.form||0)*.08)*(1+.36*this.footCost(p,pressure))*(1+(1-(p.assignment?.footFit??1))*(pressure<3?2:1))*(.24 + dd * .024) * (1.54 - p.attrs.passing * .054) * (pressure < 2.25 ? 1.37 : 1) * (air ? 1.16 : 1);
+      const variance = (p.readiness?1+(72-p.readiness.sharp)*.004:1)*(1-delta(p,'technique')*.02-(p.mind?.form||0)*.08)*(1+.36*this.footCost(p,pressure))*(1+(1-(p.assignment?.footFit??1))*(pressure<3?2:1))*(.24 + dd * .024) * (1.54 - p.attrs.passing * .054) * (pressure < 2.25 ? 1.37 : 1) * (air ? 1.16 : 1);
       const tx = clamp(option.lead.x + (this.rnd() * 2 - 1) * variance, .72, L - .72);
       const ty = clamp(option.lead.y + (this.rnd() * 2 - 1) * variance, .72, W - .72);
       const k = air ? {
