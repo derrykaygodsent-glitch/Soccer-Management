@@ -1,0 +1,9 @@
+/* Device-only career files. Keep one undo slot; never touch a hosted save. */
+(function(g){'use strict';
+const files='touchline.careers.v2',trash='touchline.careers.removed.v1',recent='touchline.recent.v2';
+const removed=store=>JSON.parse(store.getItem(trash)||'null');
+function remove(store,id){const slots=JSON.parse(store.getItem(files)||'[]'),c=slots.find(x=>x.id===id);if(!c)throw Error('This career is no longer on this device.');store.setItem(trash,JSON.stringify(c));store.setItem(files,JSON.stringify(slots.filter(x=>x.id!==id)));if(store.getItem(recent)===id)store.removeItem(recent);}
+function restore(store,id){const c=removed(store),slots=JSON.parse(store.getItem(files)||'[]');if(!c||c.id!==id||slots.some(x=>x.id===id))throw Error('Cannot restore over another local copy. Your current careers are unchanged.');store.setItem(files,JSON.stringify([...slots,c]));store.removeItem(trash);store.setItem(recent,id);}
+function confirmAction(message,title='Manager decision',accept='Confirm'){return new Promise(resolve=>{const d=document.createElement('dialog');d.className='cc-dialog career-confirm';d.setAttribute('aria-label',title);d.innerHTML='<header class="locker-hero"><div><small>TOUCHLINE　 /　 CAREER OFFICE</small><h2></h2></div></header><main class="locker-body"><p></p><div><button type="button" autofocus>Cancel</button> <button type="button" class="locker-primary"></button></div></main>';d.querySelector('h2').textContent=title;d.querySelector('p').textContent=message;const [no,yes]=d.querySelectorAll('button');yes.textContent=accept;yes.onclick=()=>d.close('yes');no.onclick=()=>d.close();d.onclose=()=>{d.remove();resolve(d.returnValue==='yes');};d.onkeydown=e=>e.stopPropagation();document.body.append(d);d.showModal();no.focus();});}
+const api={removed,remove,restore,confirm:confirmAction};g.TLCareerFiles=api;if(typeof module!=='undefined')module.exports=api;
+})(typeof window==='undefined'?globalThis:window);
