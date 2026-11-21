@@ -1,9 +1,150 @@
 /* Federation handbook. The common July archive is not a common league opening date. */
 (function(g){'use strict';const A=g.TLMeridian||require('./meridian'),Y=g.TLTurnover||require('./season-turnover');
 // Opening month/day, weeks between district rounds, domestic cup offset, local income index, identity.
-const profiles={Valdoria:[8,16,3,0,100,'Rail towns and association football'],Estavelle:[8,23,3,4,112,'Cathedral cities and members’ clubs'],Caldria:[9,6,3,8,96,'Harbour trade and evening football'],Monteluce:[9,13,3,12,118,'Hillside workshops and municipal grounds'],Zandora:[11,7,3,3,76,'Market districts and community pitches'],Nembala:[10,10,3,7,82,'River trading towns and youth festivals'],Kordane:[11,14,3,11,88,'Port unions and works teams'],Tavira:[10,24,3,15,79,'Agricultural cooperatives and district grounds'],Norvaska:[1,9,2,5,141,'Winter halls and a short outdoor campaign'],Westmark:[8,9,4,9,128,'Mill towns and terrace football'],Dravonia:[9,20,3,13,93,'Industrial estates and rail derbies'],Ravensk:[1,16,2,17,121,'Cold-water ports and spring football'],Azmara:[10,3,3,2,132,'Metropolitan academies and transit corridors'],Veloria:[2,6,2,6,136,'Coastal manufacturing and school football'],Sorelia:[1,23,2,10,108,'University towns and technical academies'],Kintaro:[10,17,3,14,101,'Island ferries and port-side pitches'],Meridia:[9,27,3,1,91,'River valleys and neighbourhood terraces'],Solmera:[1,30,2,5,85,'Fruit-growing valleys and summer football'],Bellvaria:[9,5,4,9,89,'Mountain markets and steep-sided grounds'],Orvessa:[10,31,3,13,97,'Fishing harbours and coastal rivalries']};
+const profiles={Valdoria:[8,16,3,0,100,'Many towns grew around train stations. Local football clubs are part of town life.'],Estavelle:[8,23,3,4,112,'These cities have old cathedrals. Many football clubs are run by their members.'],Caldria:[9,6,3,8,96,'Ships bring goods into the ports. Many people play football in the evening.'],Monteluce:[9,13,3,12,118,'People work in small shops on the hillsides. Town councils provide football grounds.'],Zandora:[11,7,3,3,76,'Markets are busy meeting places. People play football on shared fields.'],Nembala:[10,10,3,7,82,'People trade goods along the river. Towns hold festivals where young players meet and play.'],Kordane:[11,14,3,11,88,'Many people work at the ports. Workers have unions and some workplaces have their own football teams.'],Tavira:[10,24,3,15,79,'Farmers work together to grow and sell food. Local districts have their own football grounds.'],Norvaska:[1,9,2,5,141,'People play indoors during winter. The outdoor football season is short.'],Westmark:[8,9,4,9,128,'Many towns grew around mills. Fans often stand together to watch matches.'],Dravonia:[9,20,3,13,93,'Many people work in factories. Clubs from towns along the railway play big local matches against each other.'],Ravensk:[1,16,2,17,121,'People work in ports where the water is cold. The football season starts in spring.'],Azmara:[10,3,3,2,132,'Large cities have football schools for young players. Busy train and bus routes connect the districts.'],Veloria:[2,6,2,6,136,'People make goods in factories near the coast. Many young players first play for their school.'],Sorelia:[1,23,2,10,108,'Several towns have universities. Football schools help young players practise their skills.'],Kintaro:[10,17,3,14,101,'Ferries connect the islands. Some football fields are close to the ports.'],Meridia:[9,27,3,1,91,'People live in valleys along the rivers. Local fans stand close together to watch their teams.'],Solmera:[1,30,2,5,85,'Farmers grow fruit in the valleys. People play football through the summer.'],Bellvaria:[9,5,4,9,89,'People trade in mountain markets. Some football grounds have steep banks on either side.'],Orvessa:[10,31,3,13,97,'Many people fish for a living. Matches between nearby coastal towns are a big part of local life.']};
 // Settlement entries follow the canonical atlas order (capital then four district grounds).
-const districts=[['Rail exchange','Northern ferry','Ironworks','Mill market','Brickworks terraces'],['Cathedral quarter','Civic gardens','Sports college','Western commons','Royal workshops'],['Festival square','Harbour exchange','Hillside market','Textile lanes','Eastern railway'],['Coastal promenade','Orchard valley','Parish grounds','Lake crossing','Citadel terrace'],['Capital market','Coaching colleges','River landing','Hauliers’ quarter','Eastern workshops'],['Festival ground','River port','Weavers’ market','Training fields','Cattle exchange'],['Merchants’ square','Rail sheds','Teachers’ college','Warehouse lanes','Deepwater docks'],['Produce exchange','Cooperative farms','School pitches','Grain mills','Transport depot'],['Indoor sports halls','Fishing fleet','Ferry terminal','Forest workshops','Winter academy'],['Traders’ district','Canal mills','Market common','Railway terraces','Port warehouses'],['Steelworks quarter','Engine yards','Mining college','Workers’ estates','Freight terminal'],['Spring fairground','Shipyard','River mills','Academy hill','Market square'],['Metro academy','Harbour yards','Industrial school','University pitches','Container terminal'],['Rail junction','Machine shops','School district','Civic park','Eastern factories'],['University quarter','River tramway','Sports college','Technology park','Ferry stop'],['Ferry exchange','Boatbuilders','Training island','Market harbour','Dockers’ ground'],['Valley capital','River mills','Craft workshops','Mountain station','Palm market'],['Growers’ exchange','Fruit port','Citrus valley','School square','Lookout terrace'],['Hill capital','Traders’ steps','Mountain farms','Parish leagues','Quarry district'],['Old port','Craft quarter','Northern estates','Fishing quay','Coastal market']];
+const districts=[
+  [
+    "People change trains here. Workers also move goods from one train to another.",
+    "People take a ferry north from here.",
+    "Workers make iron here.",
+    "People sell goods near the mill.",
+    "Families live in rows of houses near the brick factory."
+  ],
+  [
+    "The old cathedral stands here.",
+    "People come here to walk in the public gardens.",
+    "Students learn to play and coach sports here.",
+    "People share an open field on the west side of town.",
+    "Workers make and repair things for the royal family here."
+  ],
+  [
+    "People gather in the square for festivals.",
+    "Traders buy and sell goods brought in by ship.",
+    "People shop at a market on the hill.",
+    "People make and sell cloth along these streets.",
+    "Trains run through the east side of town."
+  ],
+  [
+    "People walk along a path by the sea.",
+    "Farmers grow fruit trees in this valley.",
+    "Local teams play on fields near the church.",
+    "Boats take people across the lake.",
+    "People gather on the open ground by the old fort."
+  ],
+  [
+    "People come to the capital to buy and sell goods at the market.",
+    "People train to become coaches here.",
+    "Boats stop here to let people and goods on and off.",
+    "Many people here drive trucks that carry goods.",
+    "People work in small workshops on the east side of town."
+  ],
+  [
+    "People hold festivals on this open ground.",
+    "Boats bring goods to this town on the river.",
+    "People sell cloth they have woven at the market.",
+    "Local players practise on these fields.",
+    "Farmers buy and sell cattle here."
+  ],
+  [
+    "Traders set up stalls in the town square.",
+    "Workers keep and repair trains here.",
+    "Students come here to train as teachers.",
+    "These streets are lined with buildings where goods are stored.",
+    "Large ships can come close to shore here to load goods."
+  ],
+  [
+    "Farmers bring food here to sell.",
+    "Farmers work together and share equipment.",
+    "School teams play football here.",
+    "Workers turn grain into flour here.",
+    "Vehicles stop here between trips."
+  ],
+  [
+    "People play sports indoors here when it is cold.",
+    "Fishing boats leave from this town.",
+    "People catch a ferry here.",
+    "People make things from wood near the forest.",
+    "Young players can train here during winter."
+  ],
+  [
+    "Many people run shops and market stalls here.",
+    "The old mills stand beside the canal.",
+    "People use this open space for market days.",
+    "Rows of houses stand beside the railway.",
+    "Traders store goods in large buildings by the port."
+  ],
+  [
+    "Many people here work in the steel factory.",
+    "Workers keep and repair train engines here.",
+    "Students learn how to work in mines.",
+    "Families live in homes built near the factories.",
+    "Goods are loaded here before they travel by train or truck."
+  ],
+  [
+    "The town holds a fair here in spring.",
+    "Workers build and repair ships here.",
+    "Several mills stand along the river.",
+    "Young players train on the hill.",
+    "People meet and shop in the town square."
+  ],
+  [
+    "Young footballers train at a big city academy.",
+    "Workers load boats and repair equipment by the harbour.",
+    "Students learn the skills they need for factory work.",
+    "Students play on the university football fields.",
+    "Workers load large metal boxes of goods onto ships here."
+  ],
+  [
+    "Several train lines meet here.",
+    "Workers make and repair machine parts here.",
+    "Many of the town’s schools are here.",
+    "People meet in this public park.",
+    "Factories stand on the east side of town."
+  ],
+  [
+    "Many students live near the university here.",
+    "Trams run beside the river.",
+    "Students study sport and train here.",
+    "Several technology companies have offices here.",
+    "People wait here for the ferry."
+  ],
+  [
+    "People change ferries here to reach other islands.",
+    "People build boats here.",
+    "Players travel to this island to train.",
+    "Traders sell goods close to the harbour.",
+    "Port workers play football on this field."
+  ],
+  [
+    "The capital city sits in a valley.",
+    "Mills stand beside the river.",
+    "People make things by hand in small workshops.",
+    "Trains stop at a station in the mountains.",
+    "People buy and sell goods in a market near the palm trees."
+  ],
+  [
+    "Farmers bring their crops here to sell.",
+    "Boats carry fruit from this port.",
+    "Farmers grow oranges and other citrus fruit in this valley.",
+    "Families gather in the square near the school.",
+    "People come to this raised spot to look out over the town."
+  ],
+  [
+    "The capital city stands on a hill.",
+    "Traders set up stalls along the steps.",
+    "Farmers grow crops on the mountain slopes.",
+    "Teams from nearby churches play each other here.",
+    "Workers cut stone from the ground here."
+  ],
+  [
+    "Fishing boats still use the old port.",
+    "People make and sell things by hand here.",
+    "Families live in housing areas on the north side of town.",
+    "Fishing boats stop here to unload their catch.",
+    "People shop at a market by the sea."
+  ]
+];
 function identity(n,town){const i=A.countries.findIndex(c=>c.name===n),j=A.countries[i]?.places.findIndex(t=>t.name===town);return districts[i]?.[j]||'';}
 function modern(s,y){return !!s?.faCalendarFrom&&y>=s.faCalendarFrom;}
 function dates(s,n,y){const p=profiles[n];if(!p||!modern(s,y))return Array.from({length:10},(_,i)=>y===2026?(i-2)*7:Y.dayOf(y,7,1)+i*21);const start=Y.dayOf(y+(p[0]<7?1:0),p[0]-1,p[1]);return Array.from({length:10},(_,i)=>start+i*p[2]*7);}
