@@ -45,7 +45,7 @@
         restore(r.payload,{owner:user.id,id,revision:r.revision});return;
       }
       const fresh=a==='create',label=el('[maxlength]').value.trim();if(fresh&&!label)throw Error('Name the new slot.');
-      if(!fresh&&link?.owner!==user.id)throw Error('Open or create a slot first.');
+      if(!fresh&&link?.owner!==user.id)throw Error('Open a cloud career or upload this career first.');
       const snapshot=capture();check(snapshot);
       const [saved]=await api('/rest/v1/rpc/touchline_save',{slot:fresh?null:link.id,expected:fresh?0:link.revision,label,snapshot});
       if(!saved)throw Error('A newer save exists. Upload this device as a new slot, or open the cloud version. Neither was overwritten.');

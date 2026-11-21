@@ -1,11 +1,11 @@
 /* Meridian Football Universe, foundation 1.0. IDs are scoped by country, never by city name alone. */
 (function(g){'use strict';
 const continents=[
- ['Europa','Technical football, historic clubs, wealthy ownership and strong domestic rivalries.','Europa Champions Cup'],
- ['Afrania','Athletic football, passionate supporters, strong academies and emerging international stars.','Afrania Champions League'],
- ['Nordica','Physical football, disciplined defending, historic stadiums and intense rivalries.','Nordica Elite Cup'],
- ['Pacifica','Tactical football, technical development, commercial investment and growing leagues.','Pacifica Champions Trophy'],
- ['Sudamerica','Creative attacking football, passionate derbies, legendary number 10s and famous youth academies.','Sudamerica Libertadores']
+ ['Europa','Many clubs have a long history and rich owners. Players are known for their skill on the ball. Matches against local rivals matter to fans.','Europa Champions Cup'],
+ ['Afrania','Fans cheer loudly. Football schools help strong young players develop. Some go on to play for their country.','Afrania Champions League'],
+ ['Nordica','Teams play hard and defend well. Fans fill old stadiums when local rivals meet.','Nordica Elite Cup'],
+ ['Pacifica','Coaches spend time on team plans and ball skills. Businesses put money into the growing leagues.','Pacifica Champions Trophy'],
+ ['Sudamerica','Teams like to attack. Fans remember players who create goals, especially in matches between local rivals. Many young players train at football schools.','Sudamerica Libertadores']
 ].map(([name,identity,competition])=>({name,identity,competition}));
 // Each place is paired explicitly with its home club. The capital is first.
 const rows=[
