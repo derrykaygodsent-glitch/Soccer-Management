@@ -1,0 +1,150 @@
+/* A deal room, not a squad directory. Read registration history, not current valuations. */
+(function (g) {
+  "use strict";
+  function deals(s) {
+    const club = s.club?.name,
+      wire = s.transferWire || [];
+    const rows = (s.moves || [])
+      .map((m) => {
+        const line = wire.find(
+          (w) =>
+            w.id === m.id &&
+            w.day === m.day &&
+            m.from &&
+            m.to &&
+            w.text.includes(m.from) &&
+            w.text.includes(m.to),
+        );
+        const quoted = line?.text.match(/₥([\d,]+)\.$/);
+        return {
+          ...m,
+          price:
+            m.price ?? (quoted ? Number(quoted[1].replaceAll(",", "")) : null),
+          status: "Registered",
+          type:
+            m.type ||
+            (line?.text.includes("after the loan")
+              ? "Loan return"
+              : line?.text.includes("18-week loan")
+                ? "Loan"
+                : !m.to
+                  ? "Released"
+                  : !m.from
+                    ? "Free signing"
+                    : "Club move"),
+        };
+      })
+      .reverse();
+    for (const [id, a] of Object.entries(s.amateurOrigins || {})) {
+      rows.push({
+        id,
+        day: a.day,
+        from: null,
+        to: a.club || null,
+        personal: true,
+        type: "Amateur invitation",
+        price: 0,
+        status: "Accepted",
+      });
+    }
+    for (const p of s.plans || [])
+      if (p.kind === "marketDeal")
+        rows.push({
+          ...p,
+          day: p.due,
+          status: "Awaiting registration",
+          type: p.type === "loan" ? "Loan" : "Permanent transfer",
+          pending: true,
+        });
+    for (const b of Object.values(s.bids || {}))
+      if (b.status === "open")
+        rows.push({
+          ...b,
+          day: b.opened,
+          status: "In negotiation",
+          type: "Transfer offer",
+          offer: true,
+        });
+    rows.sort(
+      (a, b) =>
+        Number(!!b.offer) - Number(!!a.offer) ||
+        Number(!!b.pending) - Number(!!a.pending) ||
+        b.day - a.day,
+    );
+    return {
+      in: rows.filter(
+        (r) => (club && r.to === club) || (r.personal && (!club || !r.to)),
+      ),
+      out: rows.filter((r) => club && r.from === club),
+      world: rows.filter((r) => !r.personal && !r.offer && !r.pending),
+    };
+  }
+  function render(s, ui, updates = []) {
+    const W = g.TLManagerLife,
+      U = g.TLClubUI,
+      e = U.esc,
+      m = W.money,
+      club = s.club?.name,
+      sets = deals(s),
+      tab = Object.hasOwn(sets, ui.tab)
+        ? ui.tab
+        : sets.out[0]?.offer
+          ? "out"
+          : sets.in.length
+            ? "in"
+            : sets.out.length
+              ? "out"
+              : "world",
+      rows = sets[tab],
+      i = Math.min(Math.max(0, ui.index || 0), Math.max(0, rows.length - 1)),
+      r = rows[i];
+    const n =
+        Object.keys(W.nations).find((k) => W.nations[k].includes(club)) ||
+        s.profile.nation,
+      w = g.TLMarket.windowAt(s, n),
+      open = Object.values(s.bids || {}).filter(
+        (b) => b.status === "open",
+      ).length;
+    const go = (dest, t) =>
+        `<button data-life="go" data-v="${dest}">${t}</button>`,
+      badge = (club, label) => {
+        const letters = (club || "")
+          .split(/\s+/)
+          .slice(0, 2)
+          .map((s) => s[0])
+          .join("");
+        return `<div class="tc-club"><i style="--tc-h:${g.TLData.seedFor(club || label) % 360}">${e(letters || "—")}</i><div><small>${label}</small><strong>${e(club || "Unattached")}</strong></div></div>`;
+      };
+    const hero = `<header class="tc-hero">${U.art("dressing")}<div><small>FOOTBALL OPERATIONS　/　${e(n)}</small><h2>Transfer centre</h2><p>${e(club || "Independent manager")} · ${W.date(s.day)}</p></div></header><div class="tc-pulse"><div><small>Registration window</small><strong>${w.active ? "Open" : "Closed"}</strong><span>${w.active ? "Closes" : "Opens"} ${W.date(w.active ? w.close : w.open)}</span></div><div><small>Club treasury</small><strong>${club ? m(s.fund) : "No club"}</strong></div><button data-life="go" data-v="bids"><small>Negotiations</small><strong>${open} open ↗</strong></button></div>`;
+    const tabs = `<nav class="tc-tabs" aria-label="Transfer activity">${Object.entries(
+      { in: "Arrivals", out: "Departures", world: "Around the leagues" },
+    )
+      .map(
+        ([k, t]) =>
+          `<button data-transfer-tab="${k}" aria-pressed="${k === tab}">${t} <b>${sets[k].length}</b></button>`,
+      )
+      .join("")}</nav>`;
+    let story = "";
+    if (r) {
+      const p = W.pool.find((p) => p.id === r.id),
+        name = r.name || p?.name || "Former player",
+        fresh = updates.some(
+          (x) => x.record?.id === r.id && x.record.day === r.day,
+        ),
+        amount =
+          r.price == null
+            ? "Undisclosed"
+            : r.price === 0
+              ? "No fee"
+              : m(r.price),
+        nav = (j, title) =>
+          `<button aria-label="${j < i ? "Previous deal" : "Next deal"}" data-transfer-index="${j}" ${j < 0 || j >= rows.length ? "disabled" : ""}>${title}</button>`;
+      story = `<article class="tc-story"><header><small>${tab === "world" ? "MARKET WIRE" : "CLUB DEAL ROOM"}　/　${W.date(r.day)}</small><b>${fresh ? "New · " : ""}${e(r.status)}</b></header><div class="tc-signing"><div class="tc-face">${g.TLScoutCentre.face({ id: r.id })}</div><div><small>${e(r.type)}</small><h3>${e(name)}</h3>${p ? `<span>${e(p.pos)}　·　${e(p.nation)}</span>` : ""}</div></div><div class="tc-route">${badge(r.from, "From")}<b aria-hidden="true">→</b>${badge(r.to || (r.personal ? "Manager’s project" : null), "To")}</div><div class="tc-terms"><div><small>${r.offer ? "Offer on table" : r.type === "Loan" ? "Loan fee" : "Transfer fee"}</small><strong>${amount}</strong></div>${r.wage != null ? `<div><small>Weekly wage</small><strong>${m(r.wage)}</strong></div>` : ""}${r.pending || r.offer ? `<div><small>${r.offer ? "Reply by" : "Registration due"}</small><strong>${W.date(r.deadline ?? r.due)}</strong></div>` : ""}</div><footer>${r.offer ? go("bids", "Review offer →") : p ? `<button ${s.roster.includes(p.id) ? "data-squad-player" : "data-league-player"}="${e(p.id)}">Player file ↗</button>` : ""}<nav aria-label="Browse deals">${nav(i - 1, "←")}<span>${i + 1} / ${rows.length}</span>${nav(i + 1, "→")}</nav></footer></article>`;
+    } else
+      story = `<article class="tc-empty"><small>DEAL ROOM</small><h3>${tab === "out" ? "No departures yet" : tab === "in" ? "No arrivals yet" : "The wire is quiet"}</h3><p>${tab === "in" ? "Scout a player or make an approach. Agreed deals will appear here before registration." : tab === "out" ? "Offers for your players, sales and loan returns appear here." : "Confirmed moves will appear as clubs do business."}</p>${go(tab === "out" ? "squad" : "scouting", tab === "out" ? "View squad →" : "Open scouting →")}</article>`;
+    return `<section class="tc-centre">${hero}${tabs}${story}<div class="tc-links">${go("scouting", "Scout players ↗")} ${go("squad", "Manage squad ↗")}</div></section>`;
+  }
+  const api = { deals, render };
+  g.TLTransferCentre = api;
+  if (typeof module !== "undefined") module.exports = api;
+})(typeof window === "undefined" ? globalThis : window);
