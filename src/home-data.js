@@ -109,7 +109,7 @@
   };
   const currency = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 });
   const money = amount => currency.format(amount);
-  const millions = amount => `£${+(amount / 1000000).toFixed(2)}M`;
+  const millions = money;
   const api = { start, homeId, manager, division, clubs, fixtures, homeFixtures, form, next, competition, fixtureCompetition, matchConfig, standings, positionHistory, opponentManager,
     squad, portraitFor, leaders, finance, shortDate, calendar, leadTime, ordinal, money, millions };
   global.TLHomeData = api;
