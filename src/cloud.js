@@ -19,8 +19,8 @@
     try{const cached=JSON.parse(sessionStorage.getItem(sessionKey));if(cached?.until>Date.now()&&cached.user?.id){token=cached.token;user=cached.user;}}catch{}
     const capture=()=>({format:2,kind:'touchline-manager',engine:config.engine,career:game.current()});
     function check(snapshot){const c=snapshot?.career;if(snapshot?.format!==2||snapshot.kind!=='touchline-manager'||typeof c?.id!=='string'||!c.id||!c.profile?.name||!Array.isArray(c.profile.children)||!Number.isInteger(c.day)||!['roster','plans','mail','staff'].every(k=>Array.isArray(c[k]))||!Number.isFinite(c.fund)||!Number.isFinite(c.cash))throw Error('Not a compatible manager save. Local careers are unchanged.');if((c.practice||c.leagueSession)&&snapshot.engine!==config.engine&&!(snapshot.engine==='48901715bcbc1fee8351ba939179662e241a24e47e7aa8d3ef1262c2f1ea03e9'&&config.engine==='1f1009c60e5c323acc9aa3db0d88837e4e8fd1dfbfc8647c38c4859161021fca'))throw Error('This match checkpoint uses another engine version. Finish the match on its original device and upload again.');return c;}
-    function restore(snapshot,next){const c=check(snapshot),old=game.find(c.id);if(!confirm(`Load ${c.profile.name}, game day ${c.day}? ${old?'The existing local copy of this career will be backed up.':'Other local careers will be kept.'}`))return;if(old)localStorage.setItem(backupKey,JSON.stringify({snapshot:{...snapshot,career:old,engine:config.engine},link:JSON.parse(localStorage.getItem(linkKey)||'{}')[c.id]||null}));game.import(c);bind(c.id,next);try{sessionStorage.setItem('touchline.cloud.resumeOnce',c.id);}catch{}location.reload();}
-    el('[data-import]').onchange=async ev=>{try{const f=ev.target.files[0];if(f){if(f.size>12000000)throw Error('File is too large.');restore(JSON.parse(await f.text()),null);}}catch(err){status(err.message);}finally{ev.target.value='';}};
+    async function restore(snapshot,next){const c=check(snapshot),old=game.find(c.id);if(!await global.TLCareerFiles.confirm(`Load ${c.profile.name}, game day ${c.day}? ${old?'The existing local copy of this career will be backed up.':'Other local careers will be kept.'}`,'Load career','Load career'))return;if(old)localStorage.setItem(backupKey,JSON.stringify({snapshot:{...snapshot,career:old,engine:config.engine},link:JSON.parse(localStorage.getItem(linkKey)||'{}')[c.id]||null}));game.import(c);bind(c.id,next);try{sessionStorage.setItem('touchline.cloud.resumeOnce',c.id);}catch{}location.reload();}
+    el('[data-import]').onchange=async ev=>{try{const f=ev.target.files[0];if(f){if(f.size>12000000)throw Error('File is too large.');await restore(JSON.parse(await f.text()),null);}}catch(err){status(err.message);}finally{ev.target.value='';}};
     async function api(path,body){
       const r=await fetch(config.url+path,{method:body?'POST':'GET',headers:{apikey:config.key,...(token?{Authorization:'Bearer '+token}:{}),'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined,cache:'no-store'});
       const text=await r.text(),data=text?JSON.parse(text):{};if(!r.ok){if(r.status===401){token=user=null;rows=[];try{sessionStorage.removeItem(sessionKey);}catch{}account();}throw Error(data.msg||data.message||data.error_description||'Request failed.');}return data;
@@ -29,7 +29,7 @@
     async function act(a){
       if(a==='close')return dialog.close();if(a==='authMode'){signup=!signup;el('[data-auth-title]').textContent=signup?'Create your locker':'Welcome back';el('[data-auth-submit]').textContent=signup?'Create account':'Sign in';el('[type=password]').autocomplete=signup?'new-password':'current-password';el('[data-action=authMode]').textContent=signup?'Already registered? Sign in':'New here? Create an account';status('');return;}if(a==='upload'){a=currentLink()?.owner===user?.id?'save':'create';el('[maxlength]').value=game.current()?.profile.name||'Manager career';}
       if(a==='export'){const snap=capture(),c=check(snap),u=URL.createObjectURL(new Blob([JSON.stringify(snap)],{type:'application/json'})),a=document.createElement('a');a.href=u;a.download='Touchline-day-'+c.day+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);return status('Career file exported. Keep it private.');}
-      if(a==='recover'){const b=JSON.parse(localStorage.getItem(backupKey));if(!b)throw Error('No previous local backup.');if(confirm('Swap this career with your previous local backup?'))restore(b.snapshot,b.link);return;}
+      if(a==='recover'){const b=JSON.parse(localStorage.getItem(backupKey));if(!b)throw Error('No previous local backup.');await restore(b.snapshot,b.link);return;}
       if(!config.url)throw Error('Cloud saves are not configured for this build. Local saves still work.');
       if(a==='login'||a==='signup'){
         const password=el('[type=password]'),body={email:el('[type=email]').value.trim(),password:password.value};password.value='';
@@ -42,11 +42,12 @@
       if(a==='load'){
         const id=el('select').value;if(!id)throw Error('Select a slot first.');
         const [r]=await api('/rest/v1/touchline_careers?select=id,name,revision,payload&id=eq.'+encodeURIComponent(id));check(r?.payload);
-        restore(r.payload,{owner:user.id,id,revision:r.revision});return;
+        await restore(r.payload,{owner:user.id,id,revision:r.revision});return;
       }
       const fresh=a==='create',label=el('[maxlength]').value.trim();if(fresh&&!label)throw Error('Name the new slot.');
       if(!fresh&&link?.owner!==user.id)throw Error('Open a cloud career or upload this career first.');
       const snapshot=capture();check(snapshot);
+      if(!fresh&&!await global.TLCareerFiles.confirm('Replace your linked cloud save with this device’s progress? Other careers stay unchanged.','Update cloud save','Update save'))return;
       const [saved]=await api('/rest/v1/rpc/touchline_save',{slot:fresh?null:link.id,expected:fresh?0:link.revision,label,snapshot});
       if(!saved)throw Error('A newer save exists. Upload this device as a new slot, or open the cloud version. Neither was overwritten.');
       link={owner:user.id,id:saved.slot_id,revision:saved.saved_revision};bind(snapshot.career.id,link);account();status('Saved to cloud · revision '+link.revision);try{await list();}catch{status('Saved to cloud · revision '+link.revision+'. Refresh the slot list to see it.');}
