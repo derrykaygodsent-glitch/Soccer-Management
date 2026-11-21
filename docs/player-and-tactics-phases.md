@@ -22,3 +22,5 @@
 - Send registration mail several days before each filing deadline and again on the day, with a link to the correct competition and an actionable review.
 - Add persistent unread/needs-response banners and counts to the inbox and every tab receiving new information. Keep read state separate from whether a decision is resolved.
 - Audit every list, including mail, news, fixtures, recruitment, registrations and player records; add applicable filters, sorting and a clear reset in the game's visual style.
+
+Desk delivery: messages arrive on the morning three days before a filing closes and on the final playable day (league entry, competition squads and league amendments). The inbox keeps per-message read receipts; desk badges acknowledge visits independently, and outstanding decisions use career state rather than read state. Search, ordering and reset controls act on list rows, not the underlying roster or standings. Filtering a registration list never removes an off-screen player from a filing.
