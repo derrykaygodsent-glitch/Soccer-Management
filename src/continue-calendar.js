@@ -2,6 +2,7 @@
 (function(g){'use strict';
 const names={training:'Team training',licence:'FA licence hearing',interview:'Board interview',application:'Application review',decision:'Board decision',contractTalk:'Contract reply',marketDeal:'Transfer registration',friendlyReply:'Friendly reply',flightHome:'Return flight',foundersMeeting:'Founders’ meeting',footballReview:'Playing-time review'};
 function events(s){const out=(s.plans||[]).map(p=>({day:p.due,type:'diary',title:names[p.kind]||(p.kind==='diary'?p.id:p.kind.replace(/([A-Z])/g,' $1')),detail:'Scheduled activity'})),club=s.club?.name;
+ for(const p of s.appointments||[])out.push({day:p.day,type:'diary',title:g.TLOfficePlanner.option(p.id).label,detail:g.TLOfficePlanner.time(p.hour)});
  function match(f,competition){if(!club||!f||f.result||f.day<s.day||!f.team||!f.host||![f.team,f.host].includes(club))return;out.push({day:f.day,type:'fixture',title:`${f.team} v ${f.host}`,detail:competition+(f.kickoff?' · '+f.kickoff:'')});}
  if(club&&!s.legacy?.exit){const n=s.club.owner?s.profile.nation:Object.keys(g.TLManagerLife.nations).find(n=>g.TLManagerLife.nations[n].includes(club));if(n){const year=g.TLTurnover.season(s.day);for(const y of [year,year+1])for(const f of g.TLFASeason.fixtures(s,n,y))if(!s.leagueScores?.[f.key])match(f,'District league');}for(const c of g.TLCups.circuit(s,g.TLManagerLife.pool))if(!c.national)for(const round of c.rounds)for(const f of round)match(f,c.title);match(s.friendly,'Preseason friendly');}
  return out.filter(x=>x.day>=s.day).sort((a,b)=>a.day-b.day);}

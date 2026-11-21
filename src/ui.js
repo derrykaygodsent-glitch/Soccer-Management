@@ -872,6 +872,7 @@
   }
 
   function wire() {
+    const preferences=$('matchOptions');document.addEventListener('pointerdown',event=>{if(preferences.open&&!preferences.contains(event.target))preferences.open=false;},true);document.addEventListener('keydown',event=>{if(event.key==='Escape'&&preferences.open){preferences.open=false;preferences.querySelector('summary').focus();}});
     const head=$('matchScreen').querySelector('.broadcast-head');head.append($('matchHome'),$('matchOptions'),$('btnPlay'));$('matchOptions').querySelector('.controls').append($('btnSetup'),$('btnStats'));$('btnSquad').onclick=()=>openDesk('squad');$('focusTactics').onclick=()=>openDesk('tactics');$('focusSub').onclick=()=>{state.replaceId=state.selected;openDesk('squad');};
     $('btnPlay').addEventListener('click', togglePlay);
     $('btnSkip').addEventListener('click', toggleSkip);
