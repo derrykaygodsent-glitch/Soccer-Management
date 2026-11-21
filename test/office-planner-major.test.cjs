@@ -2,7 +2,7 @@ const test = require("node:test"),
   a = require("node:assert/strict"),
   P = require("../src/office-planner"),
   L = require("../src/district-life"),
-  M = require("../src/major-leagues"),
+  F = require("../src/fa-season"),
   Y = require("../src/season-turnover"),
   W = require("../src/manager-life");
 test("booked shifts stop the daily reducer; travel, wage and subsequent appointment survive reload", () => {
@@ -43,25 +43,8 @@ test("booked shifts stop the daily reducer; travel, wage and subsequent appointm
   a.equal(P.today(s), undefined);
   a.equal(W.act(s, "advance").day, 3);
 });
-test("four 20-team professional leagues have 19 home and away fixtures per club; seeded cup qualifies 16 and crowns one winner", () => {
-  const s = { id: "world", day: Y.dayOf(2027, 5, 20) };
-  for (const n of M.names) {
-    const { games, rows } = M.league(s, n, 2026);
-    a.equal(games.length, 380);
-    a.equal(new Set(games.map((f) => f.a + "|" + f.b)).size, 380);
-    a.equal(rows.length, 20);
-    for (const r of rows) {
-      a.equal(r.p, 38);
-      a.equal(games.filter((x) => x.a === r.name).length, 19);
-    }
-  }
-  const c = M.cup(s, 2026);
-  a.equal(new Set(c.groups.flatMap((q) => q.rows.map((x) => x.name))).size, 16);
-  a.deepEqual(
-    c.knockouts.map((r) => r.length),
-    [4, 2, 1],
-  );
-  a.equal(c.winner, c.knockouts[2][0].winner);
-  a.deepEqual(c, M.cup({ ...s }, 2026));
-  a.equal(M.cup({ ...s, day: Y.dayOf(2026, 8, 1) }, 2026).winner, null);
+test('Atlas associations use real club squads and playable domestic draws; published old saves keep their season',()=>{
+ const s={id:'atlas',worldVersion:1,atlasLeagueFrom:2026,day:0,profile:{nation:'Zandora'},plans:[],roster:[],tactic:'4-4-2'};W.activate(s);
+ for(const [n,count] of [['Zandora',19],['Westmark',19],['Azmara',19]]){const clubs=F.clubs(s,n,2026),games=F.fixtures(s,n,2026);a.equal(clubs.length,count);a.equal(new Set(games.map(f=>f.team+'|'+f.host)).size,count*(count-1));a.ok(games.every(f=>f.day<Y.dayOf(2027,6,1)));const name=clubs.at(-1),ps=W.pool.filter(p=>p.club===name);a.ok(ps.length>=11&&ps.every(p=>p.nation===n));a.ok(W.nations[n].includes(name));const career={...s,club:{name},day:F.dates(s,n,2026)[0],roster:ps.map(p=>p.id)},L=require('../src/league-matchday'),f=L.fixture(career);a.ok(f.own>=0);a.equal(L.replay(f,career).teams[f.own].slots.length,11);}
+ const c=require('../src/cup-circuit').circuit({...s,day:Y.dayOf(2027,5,30)},W.pool).find(x=>x.title==='World Club Championship');a.equal(c.groups.length,8);a.ok(c.groups.flat().every(r=>r.p===3));a.ok(c.entries.includes(c.winner));const old={...s};delete old.atlasLeagueFrom;W.activate(old);a.equal(F.clubs(old,'Zandora',2026).length,5);a.equal(F.clubs(old,'Zandora',2027).length,19);
 });
