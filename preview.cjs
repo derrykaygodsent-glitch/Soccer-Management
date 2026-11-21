@@ -22,13 +22,14 @@ const server = createServer((request, response) => {
     response.writeHead(204).end();
     return;
   }
-  if (path !== '/' && path !== '/index.html') {
+  if (path !== '/' && path !== '/index.html' && path !== '/offline-worker.js') {
     response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     response.end('Not found');
     return;
   }
 
-  readFile(index, (error, page) => {
+  const worker = path === '/offline-worker.js';
+  readFile(worker ? join(__dirname,'offline-worker.js') : index, (error, page) => {
     if (error) {
       console.error(error.message);
       response.writeHead(503, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -36,7 +37,7 @@ const server = createServer((request, response) => {
       return;
     }
     response.writeHead(200, {
-      'Content-Type': 'text/html; charset=utf-8',
+      'Content-Type': worker ? 'application/javascript' : 'text/html; charset=utf-8',
       'Content-Length': page.length,
       'X-Content-Type-Options': 'nosniff'
     });
