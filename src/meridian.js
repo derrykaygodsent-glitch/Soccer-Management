@@ -32,7 +32,13 @@ const rows=[
 ];
 const slug=s=>s.toLowerCase().replaceAll(' ','-');
 const countries=rows.map(([continent,code,name,...pairs])=>{const places=pairs.map((v,i)=>{const [city,club]=v.split('|'),id=code+'-'+slug(city);return {id,name:city,capital:i===0,club:{id:code+'-'+slug(club),name:club,home:id}};});return {code,name,continent,capital:places[0].name,places,association:name+' Football Association'};});
+// Additional senior clubs share existing Atlas settlements, rather than inventing a second map.
+const majorAssociations={Zandora:['Market Stars','Railway','Teachers'],Westmark:['Albion','Wanderers','County'],Azmara:['Academy','Harbour','Olympic']};
+for(const c of countries){const suffixes=majorAssociations[c.name]||[],limit={Zandora:14,Westmark:14,Azmara:14}[c.name]||0;
+  c.members=c.places.map(t=>t.club);
+  for(let i=0;i<limit;i++){const town=c.places[i%c.places.length],name=town.name+' '+suffixes[Math.floor(i/c.places.length)];c.members.push({id:c.code+'-'+slug(name),name,home:town.id});}
+}
 const rivalries=[['Grandessa','Historic','VLD',2],['Castavelle','City','EST',1],['Kintaba','National','ZAN',1],['Asenga','Regional','NEM',1],['Alverton','Traditional','WES',1],['Novigrad','Industrial','DRA',1],['Kaishen','Commercial','AZM',1],['Santa Espera','Fierce','MER',1]].map(([name,nature,code,b])=>{const c=countries.find(x=>x.code===code);return {name:name+' Derby',nature,clubs:[c.places[0].club.id,c.places[b].club.id]};});
-const universe={version:'1.0',continents,countries,rivalries,divisionSize:16,divisions:['Premier League','Championship','Regional League'],domestic:['National Cup','League Cup','Super Cup','Reserve League','Under-21 League','Under-18 League'],global:['World Club Championship','International Nations Cup','Global Super Cup','Intercontinental Cup']};
+const universe={version:'1.0',majorAssociations,continents,countries,rivalries,divisionSize:16,divisions:['Premier League','Championship','Regional League'],domestic:['National Cup','League Cup','Super Cup','Reserve League','Under-21 League','Under-18 League'],global:['World Club Championship','International Nations Cup','Global Super Cup','Intercontinental Cup']};
 g.TLMeridian=universe;if(typeof module!=='undefined')module.exports=universe;
 })(typeof window==='undefined'?globalThis:window);
