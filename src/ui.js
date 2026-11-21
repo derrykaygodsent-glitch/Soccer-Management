@@ -49,6 +49,7 @@
   const team = () => state.match.teams[managed()];
   const seasonMatch = () => global.TLSeasonMatch;
   function checkpoint(command, started=!state.ready){
+    if(state.community) state.community.save(command,started);
     if(state.club&&!state.loading)state.club.store.checkpoint(seasonMatch().ticks(state.match),command,started);
   }
   const chosenMode = () => V.modeFor(state.config.highlights);
@@ -109,7 +110,7 @@
     $('goalBanner').hidden = $('playerFocus').hidden = $('toast').hidden = true;
     clearTimeout(state.goalTimer); clearTimeout(state.toastTimer);
     const club = state.club, K = global.TLSeasonCalendar;
-    const [home, away] = club ? [K.club(club.fixture.home),K.club(club.fixture.away)] : [D.CLUBS[config.home],D.CLUBS[config.away]];
+    const [home, away] = state.community ? restored.teams.map(t=>t.club) : club ? [K.club(club.fixture.home),K.club(club.fixture.away)] : [D.CLUBS[config.home],D.CLUBS[config.away]];
     const homeTactics = { ...D.defaultTactics(home.style) };
     if (config.formation) homeTactics.formation = config.formation;
     if (config.mentality != null) homeTactics.mentality = config.mentality;
@@ -123,8 +124,9 @@
       state.ready=!club.session.checkpoint.started;
       if(!state.ready) state.events=state.match.events.filter(e=>e.text&&e.type!=='preview').slice(-245);
       if(V.atBreak(state.match))state.breakQueued=state.match.phase==='halftime'?'ht':'ft';
-    }else state.match = new E.Match(home, away, { seed: Date.now() % 1000000007, homeTactics, onEvent, onSnapshot });
-    state.managers = state.match.teams.map(t => K.manager(t.club.id));
+    }else if(state.community){state.match=restored;Object.assign(restored,{onEvent,onSnapshot});state.ready=!state.community.fixture.started&&!state.community.fixture.ticks;if(!state.ready)state.events=restored.events.filter(e=>e.text).slice(-245);if(V.atBreak(restored))state.breakQueued=restored.phase==='fulltime'?'ft':'ht';}
+    else state.match = new E.Match(home, away, { seed: Date.now() % 1000000007, homeTactics, onEvent, onSnapshot });
+    state.managers = state.community?[state.community.manager,state.community.fixture.coach]:state.match.teams.map(t => K.manager(t.club.id));
     state.scout = new V.Scout(state.match);
     syncSpeed(); syncWatchMode();
     state.meta = Object.fromEntries(state.match.teams.flatMap(t => t.players.map(p => [p.id, p])));
@@ -609,9 +611,10 @@
   }
   function updateFocus(p) {
     if (!p) return;
+    $('groundScout').hidden=!state.community?.canScout(p.id);
     text('focusMeta', `#${p.num} · ${p.role || p.pos} · ${state.match.teams[p.team].club.short}`);
     text('focusName', p.name);
-    text('focusStats', `${condition(p)}% condition${state.ready ? '' : ` · ${p.rating.toFixed(1)} rating`}`);
+    text('focusStats', `${condition(p)}% condition${state.ready ? '' : ` · ${p.rating.toFixed(1)} rating${state.community?' · '+p.stats.goals+' goals · '+p.stats.shots+' shots · '+p.stats.passWon+'/'+p.stats.passes+' passes':''}`}`);
   }
   function selectPlayer(p) {
     state.technical = null;
@@ -629,6 +632,7 @@
   }
 
   function technicalFocus(person) {
+    $('groundScout').hidden=!state.community?.canScout(person?.id);
     const card = $('playerFocus');
     card.hidden = !person;
     if (!person) { delete card.dataset.technical; return; }
@@ -780,9 +784,10 @@
     }
     const [h, a] = state.match.teams;
     text('breakTitle', type === 'ht' ? 'Half time' : 'Full time');
-    $('breakScore').innerHTML = `<span>${h.club.short}</span><strong>${h.score} – ${a.score}</strong><span>${a.club.short}</span>`;
+    $('breakScore').innerHTML = `<span>${html(h.club.short)}</span><strong>${h.score} – ${a.score}</strong><span>${html(a.club.short)}</span>`;
     $('breakStats').innerHTML = statsMarkup(true);
-    text('btnBreakContinue', type === 'ht' ? 'Second half' : 'Rematch');
+    if(state.community&&type==='ft')state.community.finish();
+    text('btnBreakContinue', type === 'ht' ? 'Second half' : state.community?'Return to office':'Rematch');
     if (!$('breakDialog').open) $('breakDialog').showModal();
     updateHUD();
   }
@@ -852,7 +857,7 @@
     if (state.club && state.injuryQueued && !activeDialog() && !filmView() && !state.replay && !V.atBreak(state.match) && state.match.phase!=='review') {
       const name=state.injuryQueued;state.injuryQueued=null;state.paused=true;checkpoint();openDesk('squad');notify(`${name} has taken a knock. Replace him or close this panel to review the situation.`);
     }
-    if(state.club&&!state.ready&&!V.atBreak(state.match)&&t-state.checkpoint>8000){state.checkpoint=t;checkpoint();}
+    if((state.club||state.community)&&!state.ready&&!V.atBreak(state.match)&&t-state.checkpoint>8000){state.checkpoint=t;checkpoint();}
     let changed = false;
     if (!document.hidden && !activeDialog()) {
       const seconds = B.matchSeconds(dt, state.speed);
@@ -873,8 +878,8 @@
     $('highlightMode').innerHTML = $('preHighlights').innerHTML = modeOptions;
     $('highlightMode').addEventListener('change', e => setWatchMode(e.target.value));
     $('preHighlights').addEventListener('change', e => updateWatchGuide(V.modeFor(e.target.value)));
-    document.addEventListener('visibilitychange',()=>{if(document.hidden&&state.club&&state.match&&!state.ready)checkpoint();else queueScan();});
-    global.addEventListener('pagehide',()=>{if(state.club&&state.match&&!state.ready)checkpoint();});
+    document.addEventListener('visibilitychange',()=>{if(document.hidden&&(state.club||state.community)&&state.match&&!state.ready)checkpoint();else queueScan();});
+    global.addEventListener('pagehide',()=>{if((state.club||state.community)&&state.match&&!state.ready)checkpoint();});
     for (const id of ['setupDialog', 'deskDialog', 'breakDialog']) $(id).addEventListener('close', queueScan);
     const speedPicker = $('playbackSpeed');
     speedPicker.innerHTML = B.SPEEDS.map(speed => `<option value="${speed}"${speed === B.NORMAL_SPEED ? ' aria-label="1×, normal speed"' : ''}>${speed}×</option>`).join('');
@@ -882,6 +887,8 @@
     $('btnNames').addEventListener('click', () => { state.names = !state.names; attr($('btnNames'), 'aria-pressed', state.names); draw(); });
     $('btnSound').addEventListener('click', () => { setSound(!state.sound, true); state.config.sound = state.sound; });
     $('btnReplay').addEventListener('click', () => state.replay ? endReplay() : startReplay());
+    $('matchHome').addEventListener('click',e=>{if(state.community){e.preventDefault();e.stopPropagation();leaveCommunity();}});
+    $('groundScout').onclick=()=>{const id=state.selected||state.technical;if(state.community?.canScout(id))leaveCommunity(id);};
     $('btnClearPlayer').addEventListener('click', () => selectPlayer(null));
     $('technicalAreas').addEventListener('click', e => {
       const key = e.target.closest('[data-technical]')?.dataset.technical;
@@ -890,7 +897,7 @@
     });
     $('pitch').addEventListener('click', e => {
       const b = $('pitch').getBoundingClientRect();
-      selectPlayer(state.renderer.pickPlayer(e.clientX - b.left, e.clientY - b.top));
+      const x=e.clientX-b.left,y=e.clientY-b.top,r=state.renderer,p=r.pickPlayer(x,y);if(state.community&&!p){const ref=(state.replay?.frame||state.scene?.frame||state.scan?.still)?.referee||state.match.referee.pose(state.match);if(Math.hypot(x-r.ox-ref.x*r.scale,y-r.oy-ref.y*r.scale)<Math.max(13,r.radius*1.8)){selectPlayer(null);technicalFocus({kind:'Referee',name:state.community.fixture.official,x,club:{short:'Match official',name:state.community.fixture.ground}});return;}}selectPlayer(p);
     });
     $('lineup').addEventListener('click', e => {
       const b = e.target.closest('[data-player]');
@@ -975,7 +982,7 @@
       if (state.match.phase === 'halftime') {
         state.paused = false; state.acc = 0; state.match.continueSecondHalf();
         startOpening(); renderLineup(); updateHUD();
-      } else prepare({ ...state.config, formation: state.match.teams[0].tactics.formation, mentality: state.match.teams[0].tactics.mentality });
+      } else if(state.community)leaveCommunity();else prepare({ ...state.config, formation: state.match.teams[0].tactics.formation, mentality: state.match.teams[0].tactics.mentality });
     });
     document.addEventListener('keydown', e => {
       if (!viewingMatch() || state.loading || activeDialog() || e.altKey || e.ctrlKey || e.metaKey || e.repeat || e.target.matches('input, select, textarea, [contenteditable]')) return;
@@ -1014,6 +1021,12 @@
     A.setMuted(true);
     if ($('breakDialog').open) $('breakDialog').close();
   }
+  function openCommunity(context){
+    suspend();state.club=null;state.clubId=null;state.community=context;state.names=false;state.loading=false;
+    $('homeScreen').hidden=true;const screen=$('matchScreen');screen.hidden=false;delete screen.dataset.season;$('clubRestore').hidden=true;screen.querySelector('main').inert=false;$('matchHome').hidden=false;$('btnSetup').hidden=true;$('groundScout').hidden=true;attr($('btnNames'),'aria-pressed',false);
+    if(!state.renderer){state.renderer=new global.TLRender.Renderer($('pitch'));wire();}state.renderer.resize();prepare({home:1,away:0,auto:true,sound:false,highlights:'extended',competition:'Community ground · trial match'},context.match);checkpoint();state.lastFrame=null;state.frameJob=requestAnimationFrame(loop);$('btnPlay').focus();
+  }
+  function leaveCommunity(player){const c=state.community;if(!c)return;if(state.match.phase==='fulltime')c.finish();else checkpoint();suspend();for(const id of ['setupDialog','deskDialog'])if($(id).open)$(id).close();state.community=null;state.match=null;$('groundScout').hidden=true;$('matchScreen').hidden=true;$('homeScreen').hidden=false;c.onReturn(player);}
   function openClub(club,onReady=()=>{}){
     if(!viewingMatch())return;
     const was=state.clubId;state.club=club;state.clubId=club.fixture.id;
@@ -1065,5 +1078,5 @@
     startOpening();renderLineup();updateHUD();draw();$('btnPlay').focus({preventScroll:true});
   }
   function unloadClub(){suspend();state.club=null;state.clubId=null;state.match=null;}
-  global.TLMatchView = { cloudPause(){if(state.club && state.match && !state.loading && viewingMatch()){state.paused=true;checkpoint();updateHUD();}}, open, suspend, openClub, intervalDesk, startSecondHalf, unloadClub };
+  global.TLMatchView = { cloudPause(){if(state.club && state.match && !state.loading && viewingMatch()){state.paused=true;checkpoint();updateHUD();}}, open, suspend, openCommunity, openClub, intervalDesk, startSecondHalf, unloadClub };
 })(typeof window !== 'undefined' ? window : globalThis);
