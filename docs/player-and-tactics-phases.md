@@ -14,5 +14,5 @@
 ## Phase 5 delivery order
 
 - **5A · Founder recruitment and preseason:** local unattached players first, personal introductions and repeat approaches, paid scouting stays with saved discoveries, professional ambition, a longer founder calendar and requested, playable preseason friendlies. Keep existing saves on their dates.
-- **5B · Competition registration and shirt numbers:** implement the competition-specific lists, eligibility checks, player discussions, supporter reactions and history described above. An FA entry application in 5A is not a substitute for this system.
+- **5B · Competition registration and shirt numbers:** Football → Registration & numbers. File 11–25 league players or 11–23 per qualified cup, including a goalkeeper and ten outfield players. League lists reopen between rounds five and six; cup lists are separate and lock before the competition starts. The office can file a default list; explicit revisions retain dates, names and shirts. Omissions and number changes affect the dressing room and supporter coverage. Friendlies remain unrestricted. Filing a player list does not admit a new club to a league.
 - **5C · Development and career record:** test and connect coaching, facilities, minutes, injuries, player progression and the historical player dossier.
