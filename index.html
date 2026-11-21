@@ -1510,6 +1510,7 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
 .mail-shield,.mail-face,.mail-photo{display:inline-grid;place-items:center;width:36px;height:40px;flex:none;overflow:hidden}.mail-face,.mail-photo{border-radius:5px;background:#314353}.mail-face svg{width:42px;height:57px;margin-top:-8px}.mail-photo .cc-art{width:100%;height:100%;object-fit:cover}.dispatch-photo{margin:0 0 .8rem}.dispatch-photo .cc-art{display:block;width:100%;height:clamp(90px,13vw,180px);object-fit:cover}.report-score .mail-shield{display:block;margin:auto}.appointment-book form,.major-board nav{display:flex;gap:.6rem;align-items:end;flex-wrap:wrap}.appointment-book label{display:grid;gap:.3rem}.appointment-book select{max-width:100%}.major-board table{width:100%;border-collapse:collapse}.major-board td,.major-board th{padding:.35rem;border-bottom:1px solid #364959;text-align:left}.major-board summary{cursor:pointer;padding:.6rem}.major-board nav{margin-block:1rem}
 
 .encounter-person{display:flex;align-items:center;gap:1rem;margin-top:.6rem}.encounter-person>span{display:grid;place-items:center;width:4rem;height:4.5rem;overflow:hidden;background:#294852;border-radius:.5rem}.encounter-person svg{width:4.6rem;height:6.3rem;margin-top:-.6rem}dialog[data-encounter] button{margin:.25rem}dialog[data-encounter]{max-height:85dvh;overflow:auto}
+.manager-passport{max-width:72rem;margin:auto;color:#e2eaf0}.mp-hero{isolation:isolate;position:relative;overflow:hidden;border-radius:12px;background:#162e38;border:1px solid #405563}.mp-hero>.cc-art{position:absolute;z-index:-2;inset:0;width:100%;height:100%;object-fit:cover;opacity:.48}.mp-hero:before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(85deg,#13242af2,#192f36bf 55%,transparent)}.mp-identity{display:flex;align-items:center;gap:clamp(.7rem,3vw,2rem);padding:clamp(.8rem,3vw,2rem)}.mp-identity small,.mp-card>small{font-size:.69rem;letter-spacing:.13em;color:#a4d9cc;font-weight:750}.mp-identity h2{font-size:clamp(1.45rem,4vw,3rem);line-height:1.1;margin:.4rem 0}.mp-identity strong{color:#daf39d}.mp-identity p{margin:.25rem 0}.mp-portrait{flex:none;width:clamp(4.6rem,14vw,8rem);aspect-ratio:4/5;overflow:hidden;border-radius:8px;background:#263e46;border-bottom:3px solid #badc78}.mp-portrait svg{width:100%;height:100%}.mp-tabs,.mp-filters{display:flex;flex-wrap:wrap;gap:.4rem;margin:.7rem 0}.manager-passport button{background:#273847;border:1px solid #495e68;color:#dbe7e8;padding:.5rem .8rem;border-radius:6px;cursor:pointer;font-weight:650}.manager-passport button[aria-pressed=true]{background:#304b46;color:#e2f79f;border-color:#8ab69b}.manager-passport button:active{transform:translateY(1px)}.mp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:.7rem}.mp-card{background:#1a2634;border:1px solid #344658;border-radius:9px;padding:clamp(.85rem,2vw,1.4rem);margin-bottom:.7rem;min-width:0;overflow-wrap:anywhere}.mp-card h3{margin:.3rem 0 .7rem;font-size:1.16rem}.mp-card p{margin:.5rem 0;line-height:1.5}.mp-card summary{cursor:pointer}.mp-facts{margin:0}.mp-facts div{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid #33404e;padding:.45rem 0}.mp-facts dt,.mp-entry small{color:#adbfce}.mp-facts dd{text-align:right;margin:0;font-weight:600}.mp-entry{border-left:3px solid #6a9ead;padding:.4rem .8rem;margin:.6rem 0;background:#202e3d}.mp-entry.social{border-color:#cb95b2}.mp-entry.football{border-color:#adca74}.mp-entry strong,.mp-story p>b{display:block}.mp-card h4{color:#d0e99b;margin:.8rem 0}.mp-story{border-top:3px solid #6ebaa9}
 </style>
 </head>
 <body>
@@ -10643,6 +10644,301 @@ function render(s){const e=g.TLClubUI.esc,n=s.network,posts=topics(s);return `<s
 const api={fresh,topics,act,left,morning,render};g.TLNetwork=api;if(typeof module!=='undefined')module.exports=api;})(typeof window==='undefined'?globalThis:window);
 
 ;
+/* ===== manager-profile.js ===== */
+/* Private manager dossier. Archive facts, never rendered HTML or inferred relationships. */
+(function (g) {
+  "use strict";
+  const labels = {
+    football: "Football",
+    social: "Social life",
+    life: "Personal life",
+  };
+  function facts(s, since = -Infinity) {
+    const out = [],
+      add = (day, kind, title, text) => {
+        if (Number.isInteger(day) && day >= since && text)
+          out.push({ day, kind, title, text });
+      };
+    const p = s.profile || {},
+      start = s.startDay ?? 0;
+    add(
+      start,
+      "life",
+      "Opening chapter",
+      `${p.name || "The manager"} began in ${p.nation}, aged ${p.age}, ${p.path === "found" ? "setting out to build a club from scratch" : "seeking a first appointment with an existing club"}.`,
+    );
+    for (const r of [...(s.household?.log || [])].reverse())
+      add(r.day, "social", "Relationships", r.text);
+    for (const r of [...(s.familyLife?.news || [])].reverse())
+      add(r.day, "life", "Family & home", r.text);
+    for (const r of [...(s.legacy?.history || [])].reverse())
+      add(r.day, "life", "Personal milestone", r.text);
+    for (const r of [...(s.districtLife?.history || [])].reverse())
+      if (!/^(Arrived at|Waited until|Rested at home)/.test(r.text))
+        add(r.day, "life", "In the district", r.text);
+    for (const r of Object.values(s.people || {}))
+      for (const [day, text] of r.log || [])
+        add(day, "social", `${r.name} · ${r.town}`, text);
+    for (const r of [...(s.neighbourhood?.posts || [])].reverse())
+      add(r.day, 'social', r.title, r.text);
+    // Attribute a season only to a club the manager actually led at the whistle.
+    const spells = [...(s.careerSpells || [])];
+    if(s.club) spells.push({club:s.club.name,from:s.club.appointed,until:s.legacy?.exit?.day??s.day});
+    for(const season of s.seasonBook||[]){
+      const day=(Date.UTC(season.year+1,5,30)-Date.UTC(2026,9,26))/86400000;
+      if(day<since)continue;
+      const spell=spells.find(c=>c.from<=day&&day<=c.until);
+      if(!spell)continue;
+      for(const [nation,book] of Object.entries(season.nations||{})){
+        const row=book.table?.find(r=>r[0]===spell.club);if(!row)continue;
+        add(day,'football','Season review',`${spell.club} closed the ${season.year}/${String(season.year+1).slice(-2)} league season in ${nation} with ${row[3]} points from ${row[1]} games.`);
+      }
+      for(const award of season.cupAwards||[])if(award.club===spell.club)add(day,'football','Silverware',`${spell.club} won the ${award.title}.`);
+    }
+    if (s.network) {
+      add(
+        s.network.joined,
+        "social",
+        "Supporters’ Network",
+        `Joined the supporters’ conversation as @${s.network.handle}.`,
+      );
+      for (const t of s.network.threads || [])
+        for (const r of t.posts)
+          add(
+            r.day,
+            "social",
+            "From the touchline",
+            `“${r.text}” — @${s.network.handle}. ${r.fan} replied: “${r.response}”`,
+          );
+    }
+    for (const c of [...(s.careerSpells || []), ...(s.club ? [s.club] : [])]) {
+      const name = c.club || c.name,
+        found = c.founder ?? c.owner;
+      add(
+        c.from ?? c.appointed,
+        "football",
+        found ? "Club founded" : "Appointment",
+        found ? `Founded ${name}.` : `Took charge of ${name}.`,
+      );
+      add(
+        c.until,
+        "football",
+        "End of a spell",
+        `The spell at ${name} came to an end.`,
+      );
+    }
+    for (const r of s.practices || [])
+      add(
+        r.day,
+        "football",
+        "Community ground",
+        `${r.home} ${r.goals.join("–")} ${r.away} at ${r.ground}.`,
+      );
+    for (const m of s.mail || []) {
+      if (m.day < since) continue;
+      if (
+        m.report?.score ||
+        (["League office", "Cup office", "Preseason"].includes(m.from) &&
+          m.report &&
+          !m.preview)
+      )
+        add(m.day, "football", m.from, m.text);
+      else if (
+        [
+          "Club directors",
+          "Founding members",
+          "Club secretary",
+          "Training ground",
+          "Transfer desk",
+          "Player representative",
+        ].includes(m.from) ||
+        /Interview invitation|Your application was unsuccessful|board appointed another candidate|Count me in as an amateur/.test(
+          m.text,
+        )
+      )
+        add(m.day, "football", m.from, m.text);
+      else if (m.from === "Supporters Network" && /verified/.test(m.text))
+        add(m.day, "social", "Supporters’ Network", m.text);
+    }
+    return out;
+  }
+  const key = (r) => JSON.stringify([r.day, r.kind, r.title, r.text]);
+  function unique(rows) {
+    const seen = new Set();
+    return rows.filter((r) => {
+      const k = key(r);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }
+  function capture(old, s, cmd, v) {
+    if (!s.profile?.name) return;
+    if (s.managerHistory && s.managerHistory === old.managerHistory)
+      s.managerHistory = s.managerHistory.slice();
+    const archive = (s.managerHistory ||= unique(facts(old)));
+    const rows = facts(s, old.day);
+    const add = (kind, title, text) =>
+      rows.push({ day: s.day, kind, title, text });
+    if (cmd === "apply")
+      add("football", "Application", `Applied for the manager’s job at ${v}.`);
+    if (cmd === "answer")
+      add(
+        "football",
+        "Board interview",
+        `At ${old.interview}, made ${{ academy: "youth development", promotion: "promotion", budget: "financial discipline" }[v]} the first priority.`,
+      );
+    if (cmd === "bookFlight" && s.trip)
+      add(
+        "football",
+        "Scouting abroad",
+        `Booked a scouting visit to ${s.trip.n}.`,
+      );
+    if (cmd === "funding" && s.activity !== old.activity)
+      add("life", "Making a living", s.activity);
+    if (cmd === "neighbourChoice" && s.activity !== old.activity)
+      add("social", "Community life", s.activity);
+    if (cmd === "personalInvest" && s.activity !== old.activity)
+      add("life", "Personal enterprise", s.activity);
+    if (old.network?.verified !== s.network?.verified && s.network?.verified)
+      add(
+        "social",
+        "Verified manager",
+        `The supporters’ network verified @${s.network.handle}.`,
+      );
+    if (old.club?.name && s.club?.name === old.club.name) {
+      const before = new Set(old.roster || []),
+        joined = (s.roster || []).filter((id) => !before.has(id));
+      if (joined.length) {
+        const names = new Map(
+          (g.TLManagerLife?.pool || []).map((p) => [p.id, p.name]),
+        );
+        for (const id of joined)
+          if (names.has(id))
+            add(
+              "football",
+              "Squad arrival",
+              `${names.get(id)} joined the squad at ${s.club.name}.`,
+            );
+      }
+    }
+    const seen = new Set(archive.filter((r) => r.day >= old.day).map(key));
+    for (const r of rows) {
+      const k = key(r);
+      if (!seen.has(k)) {
+        archive.push(r);
+        seen.add(k);
+      }
+    }
+  }
+  function history(s) {
+    return unique([...(s.managerHistory || []), ...facts(s)])
+      .reverse()
+      .sort((a, b) => b.day - a.day);
+  }
+  function render(s, ui = {}) {
+    const W = g.TLManagerLife,
+      { esc: e, art } = g.TLClubUI,
+      p = s.profile,
+      f = g.TLFamilyPaths.read(s),
+      h = g.TLHousehold.read(s),
+      l = g.TLLegacy.read(s),
+      age = g.TLLegacy.age(s),
+      start = s.startDay ?? 0,
+      rows = history(s),
+      club = s.club,
+      active = club && !l.exit,
+      status = l.exit
+        ? l.status
+        : active
+          ? club.owner
+            ? "Founder & manager"
+            : "First-team manager"
+          : s.interview
+            ? "In interview"
+            : s.draft
+              ? "Licence applicant"
+              : "Independent manager";
+    const factsList = (items) =>
+        `<dl class="mp-facts">${items.map(([k, v]) => `<div><dt>${e(k)}</dt><dd>${e(v)}</dd></div>`).join("")}</dl>`,
+      button = (id, label) =>
+        `<button type="button" data-profile-view="${id}" aria-pressed="${(ui.tab || "overview") === id}">${label}</button>`;
+    const first = rows.find((r) => r.kind === "football"),
+      social = rows.find((r) => r.kind === "social"),
+      kind = ui.kind || "all",
+      filtered = rows.filter((r) => kind === "all" || r.kind === kind),
+      shown = filtered.slice(0, ui.limit || 30);
+    const family = h.partner ? `${h.stage} · ${h.partner.name}` : p.marital;
+    const header = `<header class="mp-hero">${art("terrace")}<div class="mp-identity"><div class="mp-portrait">${g.TLCareerEntry.portrait(p)}</div><div><small>TOUCHLINE　/　 MANAGER DOSSIER</small><h2>${e(p.name)}</h2><strong>${e(status)}</strong><p>${e(active ? club.name : p.nation)} · Age ${age}</p></div></div></header><nav class="mp-tabs" aria-label="Profile sections">${button("overview", "Profile")}${button("history", "Biography & history")}</nav>`;
+    const name = p.name.split(" ")[0],
+      spells = s.careerSpells || [],
+      careerText = spells.length
+        ? `${name} previously managed ${spells.map((c) => c.club).join(", ")}.`
+        : "",
+      partner = h.partner,
+      homeText = partner?.met
+        ? `${name} met ${partner.name} at ${partner.met.place} on ${W.date(partner.met.day)}. ${h.stage === "Acquaintances" ? "They exchanged numbers and are getting to know each other." : h.stage === "Married" ? "They are now married." : "They are now dating."}`
+        : partner
+          ? `${partner.name} is part of ${name}’s life (${h.stage.toLowerCase()}).`
+          : "";
+    const origin = `${p.name} began this career in ${p.nation} on ${W.date(start)}, ${p.path === "found" ? "with plans to found a club" : "looking for a club to manage"}.`,
+      chapter = `<article class="mp-card mp-story"><small>THE STORY SO FAR</small><h3>Biography</h3><p>${e(origin)} ${e(careerText)} ${e(l.exit ? "That managerial career has since ended." : active ? `Today, ${p.name.split(" ")[0]} manages ${club.name}.` : s.interview ? `An interview with ${s.interview} is the next step.` : s.careerSpells?.length ? "The last club spell has ended." : "No club is currently under management.")}</p>${homeText ? `<p>${e(homeText)}</p>` : ""}${first ? `<p><b>In football · ${W.date(first.day)}</b> ${e(first.text)}</p>` : ""}${social ? `<p><b>Off the pitch · ${W.date(social.day)}</b> ${e(social.text)}</p>` : ""}</article>`;
+    const timeline = `${chapter}<section class="mp-card"><small>FROM THE PRIVATE ARCHIVE</small><h3>Life history</h3><nav class="mp-filters" aria-label="History category">${Object.entries(
+      { all: "All chapters", ...labels },
+    )
+      .map(
+        ([k, v]) =>
+          `<button data-profile-kind="${k}" aria-pressed="${kind === k}">${v}</button>`,
+      )
+      .join(
+        "",
+      )}</nav><p>${filtered.length} recorded ${filtered.length === 1 ? "moment" : "moments"} · newest dates first</p>${shown.map((r, i) => `${!i || W.date(r.day).slice(0, 4) !== W.date(shown[i - 1].day).slice(0, 4) ? `<h4>${W.date(r.day).slice(0, 4)}</h4>` : ""}<article class="mp-entry ${r.kind}"><small><time>${W.date(r.day)}</time> · ${labels[r.kind]}</small><strong>${e(r.title)}</strong><p>${e(r.text)}</p></article>`).join("") || "<p>No moments in this chapter yet.</p>"}${shown.length < filtered.length ? "<button data-profile-more>Show older moments</button>" : ""}</section>`;
+    return `<section class="manager-passport">${header}${
+      ui.tab === "history"
+        ? timeline
+        : `<div class="mp-grid"><article class="mp-card"><small>01　/　 IDENTITY</small><h3>Personal file</h3>${factsList(
+            [
+              ["Home nation", p.nation],
+              ["Age", age],
+              ["Gender", p.gender],
+              ["Career background", p.job],
+              ["Home", g.TLFamilyPaths.titles[f.home] || f.home],
+              ["Relationship", family],
+              [
+                "Children",
+                f.kids
+                  .map((k) => `${k.name} (${g.TLFamilyPaths.age(k, s.day)})`)
+                  .join(", ") || "None",
+              ],
+              ["Wellbeing", l.status],
+            ],
+          )}</article><article class="mp-card"><small>02　/　 THE DUGOUT</small><h3>Managerial record</h3>${factsList(
+            [
+              ["Career started", W.date(start)],
+              [
+                "Career route",
+                p.path === "found" ? "Found a club" : "Apply to a team",
+              ],
+              ["Current role", status],
+              ["Club", active ? club.name : "No current club"],
+              ["Previous spells", (s.careerSpells || []).length],
+              ...(active
+                ? [
+                    ["Formation", s.tactic],
+                    ["Mentality", s.mentality || "Balanced"],
+                    ["First-team squad", s.roster.length],
+                  ]
+                : []),
+            ],
+          )}</article></div><article class="mp-card"><small>03　/　 PRIVATE JOURNAL</small><h3>Your life in football</h3><p>${e(origin)}</p><button data-profile-view="history">Read biography & history →</button></article><details class="mp-card"><summary>Save management</summary><p>This affects the local copy of this manager’s career.</p><button class="cc-btn" data-remove-current>Delete local profile &amp; save</button></details>`
+    }</section>`;
+  }
+  const api = { capture, history, render };
+  g.TLManagerProfile = api;
+  if (typeof module !== "undefined") module.exports = api;
+})(typeof window === "undefined" ? globalThis : window);
+
+;
 /* ===== manager-life.js ===== */
 /* Personal career ledger: decisions are resolved by the manager's calendar, not by opening a tab. */
 (function(g){'use strict';
@@ -10656,6 +10952,7 @@ const B=g.TLTechnical||require('./technical-area');let activeCareer=null;const F
 const Board=g.TLBoardroom||require('./boardroom');
 const L=g.TLLuma||require('./luma');
 const F=g.TLFASeason||require('./fa-season');
+const Profile=g.TLManagerProfile||require('./manager-profile');
 const Planner=g.TLOfficePlanner||require('./office-planner');
 const District=g.TLDistrictLife||require('./district-life');
 const People=g.TLPeople||require('./district-people');
@@ -10739,7 +11036,7 @@ function act(old,cmd,v){const s=JSON.parse(JSON.stringify(old)),p=s.profile,mail
  if(['homeRent','homeBuild','familyArrival'].includes(e.kind))Family.settle(s,e);if(e.kind==='marketDeal'){Market.settle(s,e,pool.find(x=>x.id===e.id),pool);refresh(s);}if(e.kind==='footballReview')Memory.review(s,e.id);if(e.kind==='loanReturn'){Memory.loan(s,e.id);Market.back(s,e.id,pool.find(x=>x.id===e.id));refresh(s);}if(e.kind==='contractTalk'){const x=pool.find(x=>x.id===e.id);Contracts.decision(s,e,x);if(x&&!x.club&&s.contracts?.[e.id]){Market.move(s,x,null,s.club.name);refresh(s);}}if(e.kind==='houseBill')House.settle(s);if(e.kind==='diary'&&e.id!=='shift')House.together(s,e);
  if(e.kind==='contactReview')People.review(s,e.id);
  if(e.kind==='reply'){const x=pool.find(x=>x.id===e.id);if(x?.club){mail(x.name,'I am now registered with a club and cannot join as an amateur.');continue;}if(!x){mail('District office','The player you approached has left playing football.');continue;}if(roll<(x.nation===p.nation?70:40+Mind.personality(x).adaptability+(e.relocation?20:0))+5*(s.people?.[e.id]?.trust||0)){if(x.age<18&&D.seedFor(s.id+':guardian:'+x.id)%5===0){(s.revisit||={})[e.id]=s.day+28;mail(x.name,'I would like to play, but my family cannot agree to the arrangement right now.');continue;}if(!s.roster.includes(x.id))s.roster.push(x.id);(s.amateurOrigins||={})[x.id]={day:s.day,guardian:x.age<18,source:s.districtLife?.street?.ids.includes(x.id)?'Neighbourhood game':'Personal invitation'};mail(x.name,x.age<18?'My family and I agree. Count me in as an amateur.':'I believe in the project. Count me in as an amateur · no wages agreed.');}else{(s.revisit||={})[e.id]=s.day+21;mail(x.name,Field.delay(s,x)+' You may check back on '+date(s.revisit[e.id])+'.');}}}
- s.plans=s.plans.filter(e=>e.due>s.day);const expiring=Object.keys(s.contracts||{}).filter(id=>s.contracts[id].end<=s.day&&pool.find(p=>p.id===id)?.club===s.club?.name);Contracts.morning(s);Estate.upkeep(s);for(const id of expiring)Market.move(s,{id},s.club.name,null);if(expiring.length)refresh(s);if(Succ.step(s,pool,table))refresh(s);const count=s.moves?.length;Market.rivals(s,pool);if(s.moves?.length!==count)refresh(s);Neighbour.morning(s);Market.scoutBids(s,pool);Press.transfers(s);if(s.worldVersion){F.update(s,pool,mail);Kit.remind(s,pool);if(s.club&&!s.legacy?.exit){const n=s.club.owner?s.profile.nation:Object.keys(nations).find(k=>nations[k].includes(s.club.name));if(n){const f=F.fixtures(s,n,Y.season(s.day+1)).find(f=>f.day===s.day+1&&[f.team,f.host].includes(s.club.name));if(f)(g.TLOfficeReports||reports()).preview(s,f,table(n,s.day),pool);}}}}Room.sync(old,s,pool);L.record(old,s,cmd);return s;}
+ s.plans=s.plans.filter(e=>e.due>s.day);const expiring=Object.keys(s.contracts||{}).filter(id=>s.contracts[id].end<=s.day&&pool.find(p=>p.id===id)?.club===s.club?.name);Contracts.morning(s);Estate.upkeep(s);for(const id of expiring)Market.move(s,{id},s.club.name,null);if(expiring.length)refresh(s);if(Succ.step(s,pool,table))refresh(s);const count=s.moves?.length;Market.rivals(s,pool);if(s.moves?.length!==count)refresh(s);Neighbour.morning(s);Market.scoutBids(s,pool);Press.transfers(s);if(s.worldVersion){F.update(s,pool,mail);Kit.remind(s,pool);if(s.club&&!s.legacy?.exit){const n=s.club.owner?s.profile.nation:Object.keys(nations).find(k=>nations[k].includes(s.club.name));if(n){const f=F.fixtures(s,n,Y.season(s.day+1)).find(f=>f.day===s.day+1&&[f.team,f.host].includes(s.club.name));if(f)(g.TLOfficeReports||reports()).preview(s,f,table(n,s.day),pool);}}}}Room.sync(old,s,pool);L.record(old,s,cmd);Profile.capture(old,s,cmd,v);return s;}
 function closeSeason(old,s,mail){if(activeKey!==s.id)activate(old);const year=Y.season(s.day),archive={year:year-1,nations:{}},tracked=new Set([...old.roster,...Object.keys(old.dressing?.workload||{})]),stats={};for(const n of Object.keys(nations)){const {rows,players,results}=district(n,old.day,true),top=players.sort((a,b)=>b.goals-a.goals)[0];for(const p of players)if(tracked.has(p.id))stats[p.id]=[p.goals,p.assists,p.sheets];archive.nations[n]={clubs:F.clubs(old,n,year-1),results,table:rows.map(r=>[r.name,r.p,r.gd,r.pts]),honours:Honours.ballot(rows,players,pool,n),boot:top&&[top.name,top.club,top.goals]};Honours.coaches(old,n,archive.nations[n].honours,old.day,nations[n]);if(s.profile.name){F.seal(s,n,year,rows,archive.nations[n],mail);Memory.redraw(s,year,n);}}
 const blank=()=>({minutes:0,appearances:0,sessions:0,coached:0,ground:0,injuryDays:0});archive.development={...Object.fromEntries(old.roster.map(id=>[id,blank()])),...JSON.parse(JSON.stringify(old.dressing?.workload||{}))};if(s.dressing)delete s.dressing.workload;
 const oldBase=base.filter(p=>p.id.startsWith('m1:')||p.id.startsWith('y1:')),other=pool.filter(p=>!p.id.startsWith('m1:')&&!p.id.startsWith('y1:')),result=Y.evolve(oldBase,s.id,year,archive.development);const after=new Map(result.next.map(p=>[p.id,p]));for(const p of pool){const row=archive.development[p.id];if(!row)continue;row.stats=stats[p.id]||[0,0,0];row.club=p.club||(old.roster.includes(p.id)?old.club?.name:null);row.change=after.get(p.id)?.change||{};const deal=old.contracts?.[p.id];if(deal)row.contractEnd=deal.end;}Family.intake(s,result,year);const gone=new Set(result.retired.map(p=>p.id));s.roster=s.roster.filter(id=>!gone.has(id));s.shortlist=(s.shortlist||[]).filter(id=>!gone.has(id));for(const p of result.intake)if(p.club&&p.club===s.club?.name)s.roster.push(p.id);archive.departures=result.retired.map(p=>[p.name,p.club||'',p.nation,p.pos,p.age]);archive.intake=result.intake.length;const completedCups=(g.TLCups||require('./cup-circuit')).circuit(old,pool);archive.worldAwards=Honours.globalAwards(archive);archive.cupAwards=Honours.cups(completedCups);Honours.settle(s,archive);Press.close(s,archive,result.retired);archive.cupHonours=completedCups.filter(c=>c.winner).map(c=>[c.scope,c.title,c.winner]);(s.seasonBook||=[]).push(archive);(s.seasonYears||=[]).push(year);base=result.next.concat(other);if(year===s.atlasLeagueFrom){nations=senior;base=base.concat(additions);mail('National FA','Zandora, Westmark and Azmara now run major domestic leagues. See Competitions for clubs and fixtures.');}refresh(s);mail('Season office',`${year-1}/${String(year).slice(-2)} is complete. ${result.retired.length} players retired and ${result.intake.length} youngsters entered district football. Open the season book in Competitions.`);}
@@ -11154,7 +11451,7 @@ const api={events,render};g.TLContinueCalendar=api;if(typeof module!=='undefined
 (function(g){'use strict';
 const W=g.TLManagerLife,U=g.TLClubUI,{esc,card}=U,key='touchline.careers.v2';
 const $=id=>document.getElementById(id),opt=xs=>xs.map(x=>`<option>${esc(x)}</option>`).join(''),input=(n,label,type='text',extra='')=>`<label>${label}<input required name="${n}" type="${type}" ${extra}></label>`,select=(n,label,xs)=>`<label>${label}<select name="${n}">${opt(xs)}</select></label>`;
-let slots=[],s,page='home',notice='',panel,deskConfig,atlasCode,atlasTown;
+let profileView={};let slots=[],s,page='home',notice='',panel,deskConfig,atlasCode,atlasTown;
 // Discard the retired local game ledgers, never other applications' storage or remote data.
 try {
   const retired=['touchline.manager.2026.v1','touchline.manager.2026.v1.active','touchline.world.founders.v1','touchline.world.founders.v1.recent'];
@@ -11172,7 +11469,7 @@ let squadId,rivalRead;
 let feedTab='For you';
 const recruitment={},competition={},organiser={};
 const save=()=>localStorage.setItem(key,JSON.stringify(slots));
-function enter(career){page=career.boardIntroductions&&!career.club?'interviewDesk':'home';W.activate(career);s=career;$('careerStart').hidden=true;$('homeScreen').hidden=false;start(deskConfig);$('homeTitle').focus();}
+function enter(career){profileView={};page=career.boardIntroductions&&!career.club?'interviewDesk':'home';W.activate(career);s=career;$('careerStart').hidden=true;$('homeScreen').hidden=false;start(deskConfig);$('homeTitle').focus();}
 function install(config){deskConfig=config;g.TLCloud.init({current:()=>s||slots.find(x=>x.id===localStorage.getItem('touchline.recent.v2'))||slots.at(-1),find:id=>slots.find(x=>x.id===id),import(c){const next=slots.filter(x=>x.id!==c.id).concat(c);localStorage.setItem(key,JSON.stringify(next));slots=next;localStorage.setItem('touchline.recent.v2',c.id);}});panel=$('careerEntry');$('newManager').onclick=()=>location.reload();let resumeId;try{resumeId=sessionStorage.getItem('touchline.cloud.resumeOnce');sessionStorage.removeItem('touchline.cloud.resumeOnce');}catch{}const restored=slots.find(x=>x.id===resumeId);if(restored){enter(restored);return;}g.TLCareerEntry.open({panel,slots,enter,create(p){const n=g.TLFieldwork.startDate(W.create(p,crypto.randomUUID?.()||String(Date.now())));slots.push(n);try{save();localStorage.setItem('touchline.recent.v2',n.id);}catch{notice='Storage unavailable. Keep this session open.';}enter(n);}});}
 const profile=()=>`${esc(s.profile.name)} · ${g.TLLegacy.age(s.legacy?.endDay?{...s,day:s.legacy.endDay}:s)} · ${s.profile.nation} · ${s.profile.job}`;
 function avatar(){const p=s.profile,t=['#f1c6a3','#c79467','#94623e','#61402d'][W.skins.indexOf(p.skin)],r={Round:'50%',Oval:'45% 45% 50% 50%',Square:'25%'}[p.face];return `<span class="life-face" style="background:${t};border-radius:${r}" aria-label="${p.face} face, ${p.skin} complexion">••</span>`;}
@@ -11180,7 +11477,7 @@ const schedule=()=>s.plans.map(e=>`<p><b>${W.date(e.due)}</b> · ${esc(({familyA
 function careerDesk(){const c=s.club,found=c?c.owner:!!s.draft||(!s.interview&&!s.plans.some(e=>['application','decision'].includes(e.kind))&&s.profile.path==='found');const go=(label,page)=>btn('go',label,page),vacancies=()=>Object.entries(W.nations).flatMap(([nation,xs])=>xs.filter(x=>s.worldVersion?!g.TLTechnical.office(s,x,nation,xs).coach:x===xs[0]).map(x=>btn('apply',x+' · '+nation,x))).join('')||'No vacancies today.';let body='';if(c){const m=c.promise;body=found?`<p>${s.roster.length} players · ${s.staff.length} staff · ${W.money(s.fund)} club funds</p>${go('Recruit players','scouting')} ${go('Club account','finance')}`:`<p>${m?({budget:'Keep at least '+W.money(m.reserve)+' in the club account.',academy:'Have an under-22 player in your squad and complete team training.',promotion:'Aim for a top '+m.target+' league position.'}[m.answer]):'Set up your inherited squad for the next match.'}</p>${go('First team','squad')} ${go('Training','training')}`;body+=go('Enter boardroom','vision');body+=`<p>${esc(c.report||'')}</p>`;}else if(s.interview){body=`<p>${esc(s.interview)}: What will your first priority be?</p>${['budget','academy','promotion'].map(x=>btn('answer','Focus on '+x,x)).join('')}`;}else{const founding=`<p>${s.draft?'FA hearing pending':W.money(Math.min(25000,s.fund))+' / ₥25,000 launch capital'} · ${s.roster.length} players</p>${go('FA registration','create')} ${go('Club account','finance')}`,jobs=`<details class="vacancy-list"><summary>Browse club vacancies</summary>${vacancies()}</details>`;const invites=W.invited(s);body=invites.length?`<small>BOARD INVITATIONS</small><h3>Clubs that want to meet you</h3><p>These boards have shortlisted you. Choose an interview now. No club licence or fundraising is needed.</p>${invites.map(c=>`<article class="org-agenda"><small>${esc(c.nation)} · Manager vacancy</small><h3>${esc(c.name)}</h3><p>“We want a manager who can take charge of our squad. How would you approach a top-${c.target} target?”</p>${btn('boardVisit','Attend interview',c.name)}</article>`).join('')}${jobs}`:found?founding+jobs:`<p>${s.plans.some(e=>['application','decision'].includes(e.kind))?'Board response pending.':'Apply to an existing club and take charge of its players.'}</p>${jobs}${go('Found a club instead','create')}`;}return `<article class="org"><header class="org-cover">${U.art(found?'quayside':'briefing')}<div><small>${found?'FOUNDERS’ OFFICE':'MANAGER EMPLOYMENT'}</small><h2>${found?(c?'Your club':'Build a club'):(c?'What the board expects':'The job market')}</h2></div></header><section class="org-agenda">${body}</section></article>`;}
 function views(){const p=s.profile,roster=s.roster.map(id=>W.pool.find(x=>x.id===id)).filter(Boolean),club=s.club,players=roster.map(player).join(''),clubName=club?esc(club.name):'No registered club';
  if(s.legacy?.exit&&page==='home')return g.TLLegacy.render(s)+btn('go','Career history','succession');switch(page){case 'help':return g.TLGuide.tips(s);case 'jobs':return g.TLGuide.work(s);case 'interviewDesk':return careerDesk();case 'neighbourhood':return g.TLNeighbour.render(s);case 'rivalryBook':return g.TLPress.book(s,rivalRead);case 'succession':return g.TLSuccession.render(s);case 'clubPromises':return g.TLFootballMemory.render(s);case 'bids':return g.TLMarket.desk(s);case 'legacy':return g.TLLegacy.render(s);case 'household':return g.TLHousehold.render(s);case 'people':return g.TLPeople.render(s,'people');case 'district':return g.TLDistrictLife.render(s);case 'home':return `<section class="guide-hub"><header class="org-cover">${U.art(club?'briefing':'quayside')}<div><small>YOUR NEXT STEP</small><h2>${esc(p.name)}</h2><p>${club?clubName:p.path==='found'?'Build your club at your own pace.':'Find your first manager job.'}</p></div></header>${card('Your office diary',`<p>Set shift times and reserve time for football and personal business. Leave days free to move past them.</p>`+btn('go','Plan the week','day'))}${g.TLGuide.tips(s)}${!club&&p.path==='found'?card('Start here',`<p>You have ${W.money(s.cash)} in your wallet and ${W.money(s.fund)} saved for the club. You need ${W.money(Math.max(0,25000-s.fund))} more in club savings before you can apply. Players are needed for the league, not for the licence hearing.</p>`+btn('go',s.fund>=25000?'Apply for a licence':'Earn money or ask for help',s.fund>=25000?'create':'jobs')+btn('go','Move savings','finance')):''}<div class="guide-paths">${photoLink('jobs','quayside','Work & money','money')}${photoLink(club?'squad':'scouting','training','Football','ball')}${photoLink('district','supporters','Life in town','home')}</div>${g.TLLeagueMatchday.card(s)}${card('Coming up',schedule())}${btn('go','Career history & handover','succession')}</section>`;
- case 'profile':return card('Manager profile',`<div class="manager-portrait">${g.TLCareerEntry.portrait(p)}</div> ${profile()}<p>${p.gender} · ${p.marital} · ${p.children.length} children ${esc(p.children.join(', '))}</p><button class="cc-btn" data-remove-current>Delete local profile &amp; save</button>`);
+ case 'profile':return g.TLManagerProfile.render(s,profileView);
  case 'inbox':return g.TLOfficeOrganiser.inbox(s,organiser);
  case 'social':case 'news':return g.TLMeridianFeed.render(s,feedTab);
  case 'kitOffice':return g.TLKit.render(s,W.pool);case 'squad':case 'squadPlayer':return g.TLSquadRoom.render(s,roster,page==='squadPlayer'?squadId:null);
@@ -11215,7 +11512,7 @@ function start({navigation,toggleDrawer}){if(!s)return false;navigation();const 
  function chooseCountry(code){atlasCode=code;atlasTown=null;draw();}
  root.addEventListener('keydown',e=>{const item=e.target.closest('[data-atlas-code]');if(item&&[' ','Enter'].includes(e.key)){e.preventDefault();chooseCountry(item.dataset.atlasCode);root.querySelector(`[data-atlas-code="${atlasCode}"]`).focus();}});
  root.addEventListener('click',e=>{const item=e.target.closest('[data-atlas-code]');if(item)chooseCountry(item.dataset.atlasCode);});
- g.TLBoardRoom.bind(root,change,draw);root.addEventListener('change',e=>{if(e.target.matches('[data-appointment] [name=id]')){e.target.form.elements.hour.innerHTML=g.TLOfficePlanner.hours(s,organiser.day??s.day,e.target.value);}else if(e.target.dataset.post){organiser[e.target.dataset.post]=e.target.value;organiser.mail=null;draw();}else if(e.target.matches('[data-comp-country]')){competition.nation=e.target.value;draw();}else if(e.target.dataset.recFilter){recruitment[e.target.dataset.recFilter]=e.target.value;if(e.target.closest('.directory-filters'))recruitment.filtersOpen=true;draw();root.querySelector(`[data-rec-filter="${e.target.dataset.recFilter}"]`)?.focus();}else if(e.target.matches('[data-atlas-country]')){chooseCountry(e.target.value);root.querySelector('[data-atlas-country]').focus();}else if(e.target.matches('[data-atlas-town]')){atlasCode=e.target.closest('section').querySelector('[data-atlas-country]').value;atlasTown=e.target.value;draw();root.querySelector('[data-atlas-town]').focus();}else if(e.target.dataset.plan)change(e.target.dataset.plan,e.target.value);});root.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.life==='personalInvest'&&!await g.TLCareerFiles.confirm(b.closest('article').querySelector('p').textContent,'Personal investment',b.textContent.trim()))return;if(b.dataset.life==='sponsorSign'){if(await g.TLCareerFiles.confirm(b.closest('article').textContent+' Production costs are non-refundable.', 'Sign exclusive partnership','Sign agreement'))change('sponsorSign',b.dataset.v);return;}if(b.hasAttribute('data-post-reset')){Object.assign(organiser,{query:'',filter:'All mail',order:'Newest first',mail:null});draw();return;}if(b.dataset.kitJump){page='kitOffice';draw();const el=[...root.querySelectorAll('[data-kit-list]')].find(x=>x.dataset.kitList===b.dataset.kitJump);if(el){el.closest('details').open=true;el.scrollIntoView({block:'start'});}return;}if(b.hasAttribute('data-file-kit')){const el=b.closest('[data-kit-list]'),title=el.dataset.kitList,numbers=Object.fromEntries([...el.querySelectorAll('input[data-kit-id]')].filter(i=>i.value&&!i.disabled).map(i=>[i.dataset.kitId,Number(i.value)])),prev=g.TLKit.at(s,s.club.name,g.TLTurnover.season(s.day),title,s.day),rows=W.pool.filter(p=>s.roster.includes(p.id)),omitted=rows.filter(p=>!numbers[p.id]).map(p=>p.name),changed=rows.filter(p=>prev?.numbers[p.id]&&numbers[p.id]&&prev.numbers[p.id]!==numbers[p.id]).map(p=>p.name+' #'+prev.numbers[p.id]+' to #'+numbers[p.id]);if(await g.TLCareerFiles.confirm(`${Object.keys(numbers).length} players for ${title}. Omitted: ${omitted.join(', ')||'none'}. Changed shirts: ${changed.join(', ')||'none'}. This becomes the match eligibility list.`, 'File competition list','Confirm filing'))change('kitFile',{title,numbers});return;}if(b.hasAttribute('data-remove-current')){if(await g.TLCareerFiles.confirm(`Remove ${s.profile.name} and this career from this device? Cloud saves and other careers stay untouched. This replaces the last deleted career in the recovery slot.`,'Delete local career','Delete career')){try{g.TLCareerFiles.remove(localStorage,s.id);location.reload();}catch(err){notice=err.message;draw();}}return;}if(b.dataset.guideCountry){atlasCode=b.dataset.guideCountry;atlasTown=b.dataset.guidePlace||null;page='atlas';draw();$('clubPage').scrollTop=0;return;}if(b.hasAttribute('data-season-break')){if(s.interview||s.practice||s.leagueSession){notice='Finish the interview or practice before going on holiday.';draw();return;}if(!await g.TLCareerFiles.confirm('Advance your career to 1 July? A scheduled decision or booking will end the holiday early.'))return;const start=g.TLTurnover.season(s.day),target=Math.min(g.TLTurnover.dayOf(start+1,6,1),...s.plans.map(x=>x.due),...g.TLOfficePlanner.entries(s).filter(p=>p.day>=s.day&&!s.legacy?.exit).map(x=>x.day));let next=s;while(next.day<target&&!next.interview){next=W.act(next,'advance');if(next.legacy?.history?.[0]?.day===next.day)break;}slots=slots.map(x=>x.id===s.id?next:x);s=next;notice='Back from holiday · '+W.date(s.day);try{save();}catch{notice='Storage unavailable. Keep this session open.';}draw();return;}if(b.dataset.bidCounter){const row=b.closest('article');change('bidReply',['counter',b.dataset.bidCounter,row.querySelector('[data-bid-fee]').value,row.querySelector('[data-bid-share]').value].join('|'));return;}if(b.dataset.life==='neighbourChoice'&&['buyCar','sellCar','share','pledge'].includes(b.dataset.v)&&!await g.TLCareerFiles.confirm(b.textContent.trim()+'?'))return;if(b.dataset.life==='relocateInvite'&&!await g.TLCareerFiles.confirm('Pay travel and relocation support from your wallet now? The player and family can still decline.','Fund an invitation',b.textContent.trim()))return;if(b.dataset.life==='bookFlight'&&!await g.TLCareerFiles.confirm('Pay for the return flight and the full stay from your wallet? Local work and matches will be unavailable during the trip.','Book scouting trip',b.textContent.trim()))return;if(b.dataset.life==='funding'&&['borrow','theft'].includes(b.dataset.v)&&!await g.TLCareerFiles.confirm(b.textContent.trim()+'?'))return;if(b.dataset.life==='estateMotion'&&!await g.TLCareerFiles.confirm('Put this proposal to a vote? If approved, the club pays the displayed cost immediately.'))return;if(b.dataset.life==='marketOrder'&&!await g.TLCareerFiles.confirm(b.textContent.trim()+'? If the clubs can complete registration tomorrow, the fee will be paid automatically.'))return;if(b.dataset.life==='clubResign'&&!await g.TLCareerFiles.confirm('Resign now? Club funds, contracts and property stay behind. This is not retirement.'))return;if(b.dataset.life==='careerRetire'&&!await g.TLCareerFiles.confirm('Permanently retire from management in this save? Your world and family will continue.'))return;if(b.dataset.life==='legacyMortality'&&b.dataset.v==='on'&&!await g.TLCareerFiles.confirm('Enable an optional later-life death and memorial? You can disable it before the farewell ends.'))return;if(['homeProperty','homeMove','familyGrow'].includes(b.dataset.life)&&!await g.TLCareerFiles.confirm(b.textContent.trim()+'?'))return;if(b.dataset.life==='houseEnd'&&!await g.TLCareerFiles.confirm('End this relationship? This will be remembered in your career.'))return;if(b.dataset.leaguePlayer){page='scouting';recruitment.id=b.dataset.leaguePlayer;recruitment.tab='Report';draw();$('clubPage').scrollTop=0;return;}if(b.dataset.squadPlayer){squadId=b.dataset.squadPlayer;page='squadPlayer';notice='';draw();$('clubPage').scrollTop=0;return;}if(b.hasAttribute('data-cal')){organiser.day=b.dataset.cal==='today'?undefined:Number(b.dataset.cal);draw();return;}if(b.hasAttribute('data-mail')||b.hasAttribute('data-update-mail')){if(b.hasAttribute('data-update-mail')){page='inbox';Object.assign(organiser,{filter:'All mail',query:''});}organiser.mail=b.dataset.mail==='list'?undefined:Number(b.dataset.updateMail??b.dataset.mail);if(organiser.mail!=null){s.mail[s.mail.length-1-organiser.mail].opened=true;try{save();}catch{notice='Read status could not be saved.';}}draw();return;}if(b.dataset.unbook){change('cancelTime',{day:organiser.day??s.day,hour:+b.dataset.unbook});return;}if(b.dataset.attend){const a=g.TLOfficePlanner.today(s);if(!a)return;change('attendTime',+b.dataset.attend);if(!s.appointments?.some(x=>x.day===a.day&&x.hour===a.hour)){page=a.id.startsWith('shift:')?'jobs':a.id;draw();}return;}if(b.dataset.book){change('bookDiary',{task:b.dataset.book,day:organiser.day});return;}if(b.id==='homeBack'||b.hasAttribute('data-manager-back')){if(depth)history.back();return;}if(b.id==='homeForward'){if(depth<furthest)history.forward();return;}if(b.dataset.compTab||b.dataset.compMetric){competition[b.dataset.compTab?'tab':'metric']=b.dataset.compTab||b.dataset.compMetric;draw();return;}if(b.dataset.rivalRead){rivalRead=b.dataset.rivalRead;draw();return;}if(b.dataset.newsTopic||b.dataset.hideStory||b.dataset.showStory){g.TLWorldService.adjust(s,b.dataset.newsTopic?'topic':b.dataset.hideStory?'hide':'show',b.dataset.newsTopic||b.dataset.hideStory||b.dataset.showStory,b.dataset.storyLabel);try{save();}catch{notice='Feed settings not saved on this device.';}draw();return;}if(b.dataset.networkStory){feedTab='Discussions';s.networkFocus=b.dataset.networkStory;draw();return;}if(b.dataset.pulseTab){feedTab=b.dataset.pulseTab;draw();return;}if(b.dataset.pulseLike){const id=b.dataset.pulseLike,likes=s.pulseLikes||[];s.pulseLikes=likes.includes(id)?likes.filter(x=>x!==id):[...likes,id];try{save();}catch{notice='Reaction not saved to this device.';}draw();return;}if((s.legacy?.exit||s.legacy?.until>s.day)&&['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){notice='Your management duties are paused or ended.';draw();return;}if(s.trip&&['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){notice='You are scouting abroad until '+W.date(s.trip.end)+'.';draw();return;}if(b.dataset.life==='visitGround'&&!s.practice&&g.TLDistrict.visit(s)&&s.practices?.at(-1)?.day!==s.day){if(g.TLDistrictLife.state(s).place!=='ground'){page='district';notice='Choose Community ground to travel to practice.';draw();return;}if(!g.TLDistrictLife.state(s).done.includes('practice')){try{const next=W.act(s,'districtPractice');slots=slots.map(x=>x.id===s.id?next:x);s=next;save();}catch(err){notice=err.message;draw();return;}}}if(b.dataset.cupMatch||['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){g.TLDistrictView.open({career:s,friendly:b.dataset.life==='friendlyMatch',cupKey:b.dataset.cupMatch,league:!!b.dataset.cupMatch||['leagueMatch','friendlyMatch'].includes(b.dataset.life),commit(next){if(b.dataset.life==='leagueMatch'&&!next.leagueSession)W.activate(next);slots=slots.map(x=>x.id===s.id?next:x);s=next;try{save();}catch{notice='Storage unavailable. Keep this session open.';}},onReturn(id){if(id){page='scouting';recruitment.id=id;recruitment.tab='Report';}draw();}});return;}if(b.dataset.life?.startsWith('rec')){const cmd=b.dataset.life;if(cmd==='recReset')for(const k of ['nation','age','source','query','pos','order','category'])delete recruitment[k];if(cmd==='recOpen'){recruitment.id=b.dataset.v;recruitment.tab='Report';}if(cmd==='recBack')recruitment.id=null;if(cmd==='recTab')recruitment.tab=b.dataset.v;if(cmd==='recList')recruitment.only=b.dataset.v==='1';notice='';draw();$('clubPage').scrollTop=0;return;}if(b.id==='homeMenu'||b.id==='homeScrim'){toggleDrawer(b.id==='homeMenu',true);return;}const dest=b.dataset.hcOpen||(b.dataset.life==='go'?b.dataset.v:b.id==='homeCalendarLink'?'day':null);if(dest){page=dest;notice='';toggleDrawer(false);draw();$('clubPage').scrollTop=0;}else if(b.id==='homeContinue')continueCareer();else if(b.dataset.life)change(b.dataset.life,b.dataset.v);});function worksheet(form){const v=Object.fromEntries(new FormData(form));s.faWorksheet=v;const issues=g.TLFAHearing.blockers(s,v,W.emblems);form.querySelector('#faStatus').textContent=issues.join(' ')||'Ready to submit.';try{save();}catch{form.querySelector('#faStatus').textContent+=' Draft kept in this session only.';}return issues;}
+ g.TLBoardRoom.bind(root,change,draw);root.addEventListener('change',e=>{if(e.target.matches('[data-appointment] [name=id]')){e.target.form.elements.hour.innerHTML=g.TLOfficePlanner.hours(s,organiser.day??s.day,e.target.value);}else if(e.target.dataset.post){organiser[e.target.dataset.post]=e.target.value;organiser.mail=null;draw();}else if(e.target.matches('[data-comp-country]')){competition.nation=e.target.value;draw();}else if(e.target.dataset.recFilter){recruitment[e.target.dataset.recFilter]=e.target.value;if(e.target.closest('.directory-filters'))recruitment.filtersOpen=true;draw();root.querySelector(`[data-rec-filter="${e.target.dataset.recFilter}"]`)?.focus();}else if(e.target.matches('[data-atlas-country]')){chooseCountry(e.target.value);root.querySelector('[data-atlas-country]').focus();}else if(e.target.matches('[data-atlas-town]')){atlasCode=e.target.closest('section').querySelector('[data-atlas-country]').value;atlasTown=e.target.value;draw();root.querySelector('[data-atlas-town]').focus();}else if(e.target.dataset.plan)change(e.target.dataset.plan,e.target.value);});root.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.life==='personalInvest'&&!await g.TLCareerFiles.confirm(b.closest('article').querySelector('p').textContent,'Personal investment',b.textContent.trim()))return;if(b.dataset.life==='sponsorSign'){if(await g.TLCareerFiles.confirm(b.closest('article').textContent+' Production costs are non-refundable.', 'Sign exclusive partnership','Sign agreement'))change('sponsorSign',b.dataset.v);return;}if(b.hasAttribute('data-post-reset')){Object.assign(organiser,{query:'',filter:'All mail',order:'Newest first',mail:null});draw();return;}if(b.dataset.kitJump){page='kitOffice';draw();const el=[...root.querySelectorAll('[data-kit-list]')].find(x=>x.dataset.kitList===b.dataset.kitJump);if(el){el.closest('details').open=true;el.scrollIntoView({block:'start'});}return;}if(b.hasAttribute('data-file-kit')){const el=b.closest('[data-kit-list]'),title=el.dataset.kitList,numbers=Object.fromEntries([...el.querySelectorAll('input[data-kit-id]')].filter(i=>i.value&&!i.disabled).map(i=>[i.dataset.kitId,Number(i.value)])),prev=g.TLKit.at(s,s.club.name,g.TLTurnover.season(s.day),title,s.day),rows=W.pool.filter(p=>s.roster.includes(p.id)),omitted=rows.filter(p=>!numbers[p.id]).map(p=>p.name),changed=rows.filter(p=>prev?.numbers[p.id]&&numbers[p.id]&&prev.numbers[p.id]!==numbers[p.id]).map(p=>p.name+' #'+prev.numbers[p.id]+' to #'+numbers[p.id]);if(await g.TLCareerFiles.confirm(`${Object.keys(numbers).length} players for ${title}. Omitted: ${omitted.join(', ')||'none'}. Changed shirts: ${changed.join(', ')||'none'}. This becomes the match eligibility list.`, 'File competition list','Confirm filing'))change('kitFile',{title,numbers});return;}if(b.hasAttribute('data-remove-current')){if(await g.TLCareerFiles.confirm(`Remove ${s.profile.name} and this career from this device? Cloud saves and other careers stay untouched. This replaces the last deleted career in the recovery slot.`,'Delete local career','Delete career')){try{g.TLCareerFiles.remove(localStorage,s.id);location.reload();}catch(err){notice=err.message;draw();}}return;}if(b.dataset.guideCountry){atlasCode=b.dataset.guideCountry;atlasTown=b.dataset.guidePlace||null;page='atlas';draw();$('clubPage').scrollTop=0;return;}if(b.hasAttribute('data-season-break')){if(s.interview||s.practice||s.leagueSession){notice='Finish the interview or practice before going on holiday.';draw();return;}if(!await g.TLCareerFiles.confirm('Advance your career to 1 July? A scheduled decision or booking will end the holiday early.'))return;const start=g.TLTurnover.season(s.day),target=Math.min(g.TLTurnover.dayOf(start+1,6,1),...s.plans.map(x=>x.due),...g.TLOfficePlanner.entries(s).filter(p=>p.day>=s.day&&!s.legacy?.exit).map(x=>x.day));let next=s;while(next.day<target&&!next.interview){next=W.act(next,'advance');if(next.legacy?.history?.[0]?.day===next.day)break;}slots=slots.map(x=>x.id===s.id?next:x);s=next;notice='Back from holiday · '+W.date(s.day);try{save();}catch{notice='Storage unavailable. Keep this session open.';}draw();return;}if(b.dataset.bidCounter){const row=b.closest('article');change('bidReply',['counter',b.dataset.bidCounter,row.querySelector('[data-bid-fee]').value,row.querySelector('[data-bid-share]').value].join('|'));return;}if(b.dataset.life==='neighbourChoice'&&['buyCar','sellCar','share','pledge'].includes(b.dataset.v)&&!await g.TLCareerFiles.confirm(b.textContent.trim()+'?'))return;if(b.dataset.life==='relocateInvite'&&!await g.TLCareerFiles.confirm('Pay travel and relocation support from your wallet now? The player and family can still decline.','Fund an invitation',b.textContent.trim()))return;if(b.dataset.life==='bookFlight'&&!await g.TLCareerFiles.confirm('Pay for the return flight and the full stay from your wallet? Local work and matches will be unavailable during the trip.','Book scouting trip',b.textContent.trim()))return;if(b.dataset.life==='funding'&&['borrow','theft'].includes(b.dataset.v)&&!await g.TLCareerFiles.confirm(b.textContent.trim()+'?'))return;if(b.dataset.life==='estateMotion'&&!await g.TLCareerFiles.confirm('Put this proposal to a vote? If approved, the club pays the displayed cost immediately.'))return;if(b.dataset.life==='marketOrder'&&!await g.TLCareerFiles.confirm(b.textContent.trim()+'? If the clubs can complete registration tomorrow, the fee will be paid automatically.'))return;if(b.dataset.life==='clubResign'&&!await g.TLCareerFiles.confirm('Resign now? Club funds, contracts and property stay behind. This is not retirement.'))return;if(b.dataset.life==='careerRetire'&&!await g.TLCareerFiles.confirm('Permanently retire from management in this save? Your world and family will continue.'))return;if(b.dataset.life==='legacyMortality'&&b.dataset.v==='on'&&!await g.TLCareerFiles.confirm('Enable an optional later-life death and memorial? You can disable it before the farewell ends.'))return;if(['homeProperty','homeMove','familyGrow'].includes(b.dataset.life)&&!await g.TLCareerFiles.confirm(b.textContent.trim()+'?'))return;if(b.dataset.life==='houseEnd'&&!await g.TLCareerFiles.confirm('End this relationship? This will be remembered in your career.'))return;if(b.dataset.leaguePlayer){page='scouting';recruitment.id=b.dataset.leaguePlayer;recruitment.tab='Report';draw();$('clubPage').scrollTop=0;return;}if(b.dataset.squadPlayer){squadId=b.dataset.squadPlayer;page='squadPlayer';notice='';draw();$('clubPage').scrollTop=0;return;}if(b.hasAttribute('data-cal')){organiser.day=b.dataset.cal==='today'?undefined:Number(b.dataset.cal);draw();return;}if(b.hasAttribute('data-mail')||b.hasAttribute('data-update-mail')){if(b.hasAttribute('data-update-mail')){page='inbox';Object.assign(organiser,{filter:'All mail',query:''});}organiser.mail=b.dataset.mail==='list'?undefined:Number(b.dataset.updateMail??b.dataset.mail);if(organiser.mail!=null){s.mail[s.mail.length-1-organiser.mail].opened=true;try{save();}catch{notice='Read status could not be saved.';}}draw();return;}if(b.dataset.unbook){change('cancelTime',{day:organiser.day??s.day,hour:+b.dataset.unbook});return;}if(b.dataset.attend){const a=g.TLOfficePlanner.today(s);if(!a)return;change('attendTime',+b.dataset.attend);if(!s.appointments?.some(x=>x.day===a.day&&x.hour===a.hour)){page=a.id.startsWith('shift:')?'jobs':a.id;draw();}return;}if(b.dataset.book){change('bookDiary',{task:b.dataset.book,day:organiser.day});return;}if(b.id==='homeBack'||b.hasAttribute('data-manager-back')){if(depth)history.back();return;}if(b.id==='homeForward'){if(depth<furthest)history.forward();return;}if(b.dataset.profileView||b.dataset.profileKind||b.hasAttribute('data-profile-more')){if(b.dataset.profileView)profileView.tab=b.dataset.profileView;if(b.dataset.profileKind){profileView.kind=b.dataset.profileKind;profileView.limit=30;}if(b.hasAttribute('data-profile-more'))profileView.limit=(profileView.limit||30)+30;draw();return;}if(b.dataset.compTab||b.dataset.compMetric){competition[b.dataset.compTab?'tab':'metric']=b.dataset.compTab||b.dataset.compMetric;draw();return;}if(b.dataset.rivalRead){rivalRead=b.dataset.rivalRead;draw();return;}if(b.dataset.newsTopic||b.dataset.hideStory||b.dataset.showStory){g.TLWorldService.adjust(s,b.dataset.newsTopic?'topic':b.dataset.hideStory?'hide':'show',b.dataset.newsTopic||b.dataset.hideStory||b.dataset.showStory,b.dataset.storyLabel);try{save();}catch{notice='Feed settings not saved on this device.';}draw();return;}if(b.dataset.networkStory){feedTab='Discussions';s.networkFocus=b.dataset.networkStory;draw();return;}if(b.dataset.pulseTab){feedTab=b.dataset.pulseTab;draw();return;}if(b.dataset.pulseLike){const id=b.dataset.pulseLike,likes=s.pulseLikes||[];s.pulseLikes=likes.includes(id)?likes.filter(x=>x!==id):[...likes,id];try{save();}catch{notice='Reaction not saved to this device.';}draw();return;}if((s.legacy?.exit||s.legacy?.until>s.day)&&['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){notice='Your management duties are paused or ended.';draw();return;}if(s.trip&&['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){notice='You are scouting abroad until '+W.date(s.trip.end)+'.';draw();return;}if(b.dataset.life==='visitGround'&&!s.practice&&g.TLDistrict.visit(s)&&s.practices?.at(-1)?.day!==s.day){if(g.TLDistrictLife.state(s).place!=='ground'){page='district';notice='Choose Community ground to travel to practice.';draw();return;}if(!g.TLDistrictLife.state(s).done.includes('practice')){try{const next=W.act(s,'districtPractice');slots=slots.map(x=>x.id===s.id?next:x);s=next;save();}catch(err){notice=err.message;draw();return;}}}if(b.dataset.cupMatch||['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){g.TLDistrictView.open({career:s,friendly:b.dataset.life==='friendlyMatch',cupKey:b.dataset.cupMatch,league:!!b.dataset.cupMatch||['leagueMatch','friendlyMatch'].includes(b.dataset.life),commit(next){if(next.mail?.[0]!==s.mail?.[0]&&next.mail?.[0]?.report)g.TLManagerProfile.capture(s,next,'match');if(b.dataset.life==='leagueMatch'&&!next.leagueSession)W.activate(next);slots=slots.map(x=>x.id===s.id?next:x);s=next;try{save();}catch{notice='Storage unavailable. Keep this session open.';}},onReturn(id){if(id){page='scouting';recruitment.id=id;recruitment.tab='Report';}draw();}});return;}if(b.dataset.life?.startsWith('rec')){const cmd=b.dataset.life;if(cmd==='recReset')for(const k of ['nation','age','source','query','pos','order','category'])delete recruitment[k];if(cmd==='recOpen'){recruitment.id=b.dataset.v;recruitment.tab='Report';}if(cmd==='recBack')recruitment.id=null;if(cmd==='recTab')recruitment.tab=b.dataset.v;if(cmd==='recList')recruitment.only=b.dataset.v==='1';notice='';draw();$('clubPage').scrollTop=0;return;}if(b.id==='homeMenu'||b.id==='homeScrim'){toggleDrawer(b.id==='homeMenu',true);return;}const dest=b.dataset.hcOpen||(b.dataset.life==='go'?b.dataset.v:b.id==='homeCalendarLink'?'day':null);if(dest){page=dest;notice='';toggleDrawer(false);draw();$('clubPage').scrollTop=0;}else if(b.id==='homeContinue')continueCareer();else if(b.dataset.life)change(b.dataset.life,b.dataset.v);});function worksheet(form){const v=Object.fromEntries(new FormData(form));s.faWorksheet=v;const issues=g.TLFAHearing.blockers(s,v,W.emblems);form.querySelector('#faStatus').textContent=issues.join(' ')||'Ready to submit.';try{save();}catch{form.querySelector('#faStatus').textContent+=' Draft kept in this session only.';}return issues;}
  root.addEventListener('input',e=>{if(e.target.form?.id==='faForm')worksheet(e.target.form);});root.addEventListener('submit',e=>{if(e.target.matches('[data-appointment]')){e.preventDefault();const f=new FormData(e.target);change('bookTime',{day:organiser.day??s.day,hour:+f.get('hour'),id:f.get('id')});return;}if(e.target.matches('[data-network-join],[data-network-reply]')){e.preventDefault();const f=e.target,v=new FormData(f);if(f.hasAttribute('data-network-join'))change('networkJoin',v.get('handle'));else change('networkReply',{id:f.dataset.networkReply,text:v.get('text')});return;}if(e.target.id==='faForm'){e.preventDefault();if(worksheet(e.target).length){e.target.querySelector('#faStatus').focus();return;}change('register',s.faWorksheet);}});draw();showEncounter();return true;}
 g.TLManagerDesk={install,start};})(window);
 
