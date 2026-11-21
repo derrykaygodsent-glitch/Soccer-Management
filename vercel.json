@@ -2,6 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "echo 'No runtime dependencies'",
-  "buildCommand": "npm run build && mkdir -p dist && cp index.html dist/index.html",
+  "buildCommand": "npm run build && mkdir -p dist && cp index.html offline-worker.js dist/",
   "outputDirectory": "dist"
 }
