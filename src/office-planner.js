@@ -74,7 +74,7 @@
     let place = current ? now.place : "home", free = current ? now.hour : 5;
     return [...rows].filter(p=>p.day===day).sort((a,b)=>a.hour-b.hour).map(p=>{
       const o=option(p.id), trip=o.place && o.place!==place
-        ? L.route({...s,districtLife:{...now,place}},o.place) : {hours:0,fare:0,energy:0};
+        ? L.route({...s,day,districtLife:{...now,place}},o.place) : {hours:0,fare:0,energy:0};
       const depart=p.hour-trip.hours, reachable=depart>=free;
       free=p.hour+o.duration;place=o.place||place;
       return {...p,depart,trip,reachable,end:free};
