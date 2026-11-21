@@ -63,7 +63,7 @@ function act(old,cmd,v){const s=JSON.parse(JSON.stringify(old)),p=s.profile,mail
  case 'train':require(s.roster.length&&!s.plans.some(x=>x.kind==='training'),'Recruit someone first, or finish the planned session.');queue('training','Team practice',1);break;
  case 'style':require(Object.hasOwn(styles,v),'Unknown style.');s.style=v;break;
  case 'mentality':require(Object.hasOwn(mentalities,v),'Unknown mentality.');s.mentality=v;break;
- case 'tactic':require(Object.hasOwn(D.FORMATIONS,v),'Unknown formation.');if(s.tactic!==v&&s.boards?.[s.boardIndex||0])Object.assign(s.boards[s.boardIndex||0],{ids:[],moves:{},duties:{},attack:{},jobs:{}});s.tactic=v;break;
+ case 'tactic':require(Object.hasOwn(D.FORMATIONS,v),'Unknown formation.');if(s.tactic!==v&&s.boards?.[s.boardIndex||0])Object.assign(s.boards[s.boardIndex||0],{ids:[],moves:{},duties:{},attack:{},jobs:{},responses:{}});s.tactic=v;break;
  default:throw Error('Unknown action.');}
  if(cmd==='advance'){if(s.worldVersion&&Y.season(s.day)!==Y.season(old.day)){closeSeason(old,s,mail);}if(s.worldVersion){s.faCalendarFrom??=Y.season(old.day)+1;}if(s.worldVersion)B.tick(s,Succ.countries(s,nations),table,mail);if(s.day%7===0){const lead=table(p.nation,s.day)[0];mail('Meridian Wire',lead.name+' sit first in the '+p.nation+' district table on '+lead.pts+' points.');}for(const e of s.plans.filter(e=>e.due<=s.day)){(s.planHistory||=[]).push({...e});const roll=D.seedFor(s.id+e.kind+e.id+s.day)%100;
  if(e.kind==='diary'){s.activity={shift:'Completed a paid shift (+'+L.format(F.salary(p.nation,100))+')',family:'Spent time with family and friends',date:'Went out on a date'}[e.id];if(e.id==='shift')s.cash+=F.salary(p.nation,100);}
