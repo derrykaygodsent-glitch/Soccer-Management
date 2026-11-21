@@ -129,6 +129,11 @@
     ]
   };
 
+  // Templates seed the board; custom positions and possession shapes live in the career plan.
+  for(const [name,lines] of Object.entries({'3-4-3':['DC DC DC','WB CM CM WB','W ST W'],'4-1-4-1':['FB DC DC FB','DM','W CM CM W','ST'],'4-3-2-1':['FB DC DC FB','CM DM CM','AM AM','ST'],'4-2-2-2':['FB DC DC FB','DM DM','AM AM','ST ST'],'3-4-2-1':['DC DC DC','WB CM CM WB','AM AM','ST'],'4-5-1':['FB DC DC FB','W CM DM CM W','ST'],'4-3-1-2':['FB DC DC FB','CM DM CM','AM','ST ST'],'4-2-4':['FB DC DC FB','CM CM','W ST ST W'],'5-4-1':['WB DC DC DC WB','W CM CM W','ST'],'5-2-3':['WB DC DC DC WB','CM CM','W ST W'],'3-6-1':['DC DC DC','DM DM','W CM CM W','ST'],'3-3-3-1':['DC DC DC','WB DM WB','AM AM AM','ST'],'4-6-0':['FB DC DC FB','DM DM','W AM AM W']})){
+    FORMATIONS[name]=lines.flatMap((line,j)=>{const roles=line.split(' ');return roles.map((role,i)=>({role,x:({DC:.12,FB:.16,WB:j?.34:.18,DM:.32,CM:.45,AM:.59,W:j===lines.length-1?.69:.47,ST:.75})[role],y:(i+.5)/roles.length}));});
+  }
+  FORMATIONS['4-1-2-1-2']=FORMATIONS['4-4-2 Diamond'];
   const ROLE_FIT = {
     GK: { GK: 1 }, DC: { DC: 1, FB: 0.72, DM: 0.6 }, FB: { FB: 1, WB: 0.92, DC: 0.75, W: 0.72 },
     WB: { FB: 0.9, W: 0.85, FB2: 0 }, DM: { DM: 1, CM: 0.9, DC: 0.62 }, CM: { CM: 1, DM: 0.9, AM: 0.88 },

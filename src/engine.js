@@ -3,6 +3,7 @@
   'use strict';
   const D = (typeof require !== 'undefined' && typeof window === 'undefined') ? require('./data.js') : global.TLData;
 
+  const Z=global.TLZones||(typeof require==='function'?require('./tactical-zones'):null);
   const P = typeof window === 'undefined' ? require('./physics.js') : global.TLPhysics;
   const AI = typeof window === 'undefined' ? require('./decisions.js') : global.TLDecisions;
 
@@ -138,7 +139,7 @@
     }
 
     assignSlot(p, slot, team) {
-      p.onPitch = true; p.role = slot.role; p.slotX = slot.x; p.slotY = slot.y; p.teamRef = team;
+      p.onPitch = true; p.role = slot.role; p.slotX = slot.x; p.slotY = slot.y; p.teamRef = team;p.attackSlot=slot.attack;p.reps=slot.experience||0;if(Z?.profiles[slot.job?.[0]])p.iq=Z.intelligence(p);
       if (team.listed) { p.appeared = true; p.job = slot.job?.[0]; p.duty = slot.job?.[2]; }
       const h = this.homePos(p, team);
       p.x = h.x; p.y = h.y; p.tx = h.x; p.ty = h.y;
@@ -147,7 +148,7 @@
     homePos(p, team) {
       const d = team.attackDir;
       const x = d > 0 ? p.slotX * L : L - p.slotX * L;
-      const widthF = [0.78, 1, 1.2][team.tactics.width];
+      const widthF = team.tactics.fine?.width!=null?.79+.21*team.tactics.fine.width:[0.78,1,1.2][team.tactics.width];
       const y = CY + (p.slotY * W - CY) * widthF;
       return { x: clamp(x, 2, L - 2), y: clamp(y, 2, W - 2) };
     }
@@ -271,7 +272,7 @@
       if (team.listed) { np.appeared = true; np.job = slot.job?.[0]; np.duty = slot.job?.[2]; }
       np.x = np.prevX = old.x; np.y = np.prevY = old.y; np.vx = old.vx; np.vy = old.vy;
       np.tx = old.tx; np.ty = old.ty; np.dir = old.dir; np.spRole = old.spRole; np.kickoffHold = old.kickoffHold;
-      np.role = slot.role; np.slotX = slot.x; np.slotY = slot.y; np.teamRef = team;
+      np.attackSlot=slot.attack;np.reps=0;if(Z?.profiles[slot.job?.[0]])np.iq=Z.intelligence(np);np.role = slot.role; np.slotX = slot.x; np.slotY = slot.y; np.teamRef = team;
       np.decisionT = 0; np.tackleT = 0; np.stunT = 0; np.runT = 3; np.running = 0; np.contactT = 0; np.runUntil = 0; np.offsideFlag = false; np.holding = false;
       np.ballPlan = np.releasePlan = null; np.runSince = np.receivedAt = -Infinity; np.quickControl = false;
       np.offsideFlag = old.offsideFlag; np.offsideGap = old.offsideGap;
@@ -811,7 +812,7 @@
         let first = null, second = null, best = Infinity, next = Infinity;
         const ownDepth = d > 0 ? b.x : L - b.x;
         const club = team.tactics.club, transition = this.elapsed - this.possessionTurn < 6;
-        const radius = [15.4, 22.8, 31.5][team.tactics.press] + (ownDepth < 37 ? 9.6 : 0)
+        const radius = (team.tactics.fine?.press!=null?15.4+8.05*team.tactics.fine.press:[15.4,22.8,31.5][team.tactics.press]) + (ownDepth < 37 ? 9.6 : 0)
           + (club?.block==='High press'?4:club?.block==='Low block'?-4:0) + (transition ? (club?.lost==='Counter-press'?6:club?.lost==='Regroup'?-3:0) : 0);
         for (const q of ps) {
           if (q.team !== idx || q.role === 'GK' || q.stunT > .1) continue;
@@ -819,7 +820,7 @@
           if (b.owner && b.owner.team !== idx && gap > radius) continue;
           const caughtBehind = b.owner && b.owner.team !== idx && (q.x - marker.x) * d > 1.8;
           const screen = b.owner && b.owner.team !== idx && ownDepth < 33 && q.role === 'DC' && gap > 5.8;
-          const time = gap / this.speed(q) + (caughtBehind ? (ownDepth < 39 ? .49 : .31) : 0)
+          const time = (q.iq?(12-q.iq.anticipation)*.016:0)+gap / this.speed(q) + (caughtBehind ? (ownDepth < 39 ? .49 : .31) : 0)
             + (screen ? .38 : 0) - (q === intended ? 1.12 : 0) - (q === this.chasers[idx] ? .085 : 0);
           if (time < best) { second = first; next = best; first = q; best = time; }
           else if (time < next) { second = q; next = time; }
@@ -978,6 +979,12 @@
           }
           if (progress < 31 && !back && role !== 'ST') tx = lerp(tx, b.x + d * (role === 'DM' ? 5.2 : 10), .16);
         }
+        const behaviour=Z?.profiles[p.job];
+        if(behaviour){const quality=(p.roleSkill??=.45+Z.fit(p,team.slots.find(s=>s.player===p)?.position||'CM',p.job)/150);
+          if(atk){tx+=d*behaviour[1]*quality;ty+=(p.slotY<.5?-1:1)*behaviour[2]*quality;}
+          else if(behaviour[3]==='tackle'){tx=lerp(tx,b.x,.12*quality);ty=lerp(ty,b.y,.12*quality);}}
+        const orders=team.tactics.club;if(!atk&&back)tx+=d*((team.tactics.fine?.line??line)-line)*4;if(!atk&&back)tx+=d*(orders?.step==='Step up more'?2.5:orders?.step==='Drop off more'?-2.5:0);if(atk&&['FB','WB'].includes(role)&&['Overlap','Underlap'].includes(orders?.build)){tx+=d*4;ty=lerp(ty,orders.build==='Underlap'?CY:p.slotY<.5?2:W-2,.23);}
+        if(atk&&p.attackSlot){tx+=d*(p.attackSlot.x-p.slotX)*L;ty+=(p.attackSlot.y-p.slotY)*W;}
         if (atk && p.duty && !cb) tx += d * (p.duty==='Attack'?3.3:p.duty==='Defend'?-3.3:0);
         if (atk && !back && this.elapsed-this.possessionTurn<6 && team.tactics.club?.won==='Counter') tx += d*3;
         if (atk && p.job==='W') ty = lerp(ty,p.slotY<.5?3.7:W-3.7,.24);
@@ -1052,7 +1059,7 @@
         const aim = P.forecast(b, Math.min(.65, Math.max(.21, P.landingTime(b.z, b.vz))));
         p.tx = clamp(aim.x, .55, L - .55); p.ty = clamp(aim.y, 1, W - 1); p.sprint = true; return;
       }
-      const offset = clamp(1.85 + depth * .047, 1.85, 5.65) + (team.possession ? 1.65 : 0) + (p.job==='SK'&&depth>25?1.8:0);
+      const offset = clamp(1.85 + depth * .047, 1.85, 5.65) + (team.possession ? 1.65 : 0) + ((p.job==='SK'||p.job==='Sweeper Keeper')&&depth>25?1.8:0);
       p.tx = own + d * offset;
       p.ty = CY + clamp((b.y - CY) * Math.min(.295, offset / Math.max(6, depth) + .085), -6.65, 6.65);
     }
@@ -1084,7 +1091,7 @@
           }
         }
         const dvx = vx - p.vx, dvy = vy - p.vy, change = Math.hypot(dvx, dvy);
-        const maxChange = h * (distance < 2.2 ? 8.9 : 5.8 + p.attrs.pace * .072);
+        const maxChange = (p.iq?.acceleration?(.83+p.iq.acceleration*.015):1)*h * (distance < 2.2 ? 8.9 : 5.8 + p.attrs.pace * .072);
         const k = change > maxChange ? maxChange / change : 1;
         p.vx += dvx * k; p.vy += dvy * k;
         p.x = clamp(p.x + p.vx * h, -1.35, L + 1.35); p.y = clamp(p.y + p.vy * h, -1.35, W + 1.35);
@@ -1224,7 +1231,7 @@
         q.tackleT = 2.1 + this.rnd() * 1.41;
         const team = this.teams[q.team], inside = this.canHandle(q, b);
         const behind = Math.cos(o.dir) * (q.x - o.x) + Math.sin(o.dir) * (q.y - o.y) < -.26;
-        const commit = (inside ? .455 : [.39, .46, .54][team.tactics.press]) - (behind ? .17 : 0) + (team.tactics.club?.duels==='Get stuck in'?.056:0);
+        const commit = (inside ? .455 : [.39, .46, .54][team.tactics.press]) - (behind ? .17 : 0) + (team.tactics.club?.duels==='Get stuck in'?.056:team.tactics.club?.duels==='Stay on feet'?-.048:0);
         if (this.rnd() > commit) continue;
         const foul = (.007 + q.attrs.aggression * .00275 + (behind ? .030 : 0)) * (inside ? .38 : 1) * (team.tactics.club?.duels==='Get stuck in'?1.25:1);
         const wins = clamp((inside ? .61 : .50) + (q.attrs.tackling - o.attrs.dribbling) * .027 - (behind ? .13 : 0), .16, .84);
@@ -1261,7 +1268,7 @@
         if (o.decisionT <= 0) {
           const team = this.teams[o.team], pressure = this.nearestOppDist(o);
           const delivery=team.tactics.club?.delivery;
-          if (delivery&&pressure>=3.65) {
+          if(!delivery&&pressure>4&&(o.job==='Ball-Playing Goalkeeper'||o.iq?.trait==='Looks for a short outlet'))this.doPass(o,{maxDist:28});else if (delivery&&pressure>=3.65) {
             if (delivery==='Take long kicks'||delivery==='Throw it long') this.doLongBall(o);
             else this.doPass(o,{maxDist:delivery==='Roll it out'?22:32});
           } else if (pressure < 4.2 || team.tactics.passing === 2 || this.rnd() < (team.tactics.passing === 0 ? .23 : .42)) this.doLongBall(o);
@@ -1316,7 +1323,7 @@
         if (f && f.team !== p.team) { p.stats.interceptions++; this.adjust(p, .064); }
         this.lastPass = null;
       }
-      if(this.season&&this.controlTeam!==p.team) this.possessionTurn=this.elapsed;
+      if((this.season||this.teams.some(t=>t.tactics.captains))&&this.controlTeam!==p.team) this.possessionTurn=this.elapsed;
       this.controlTeam = p.team; this.brainIn = 0;
       if (this.attackCheck?.team !== p.team) this.attackCheck = null;
       for (const q of this.playersCache) { q.offsideFlag = false; q.offsideGap = null; }
@@ -1325,7 +1332,7 @@
       const bodyRoom = this.nearestOppDist(p);
       const openTime = clamp((bodyRoom - 2.35) * .16, 0, 1.06);
       const base = p.role === 'GK' ? 2.58 + this.rnd() * 1.48 : (depth > 74 ? .82 : 1.64) + this.choiceRnd() * .72 + openTime;
-      p.decisionT = base * TEMPO_HOLD[team.tactics.tempo] + Math.max(0, ballSpeed - 11) * .029 + Math.max(0, b.z - .36) * .16;
+      p.decisionT = base * (TEMPO_HOLD[team.tactics.tempo]*(1+((team.tactics.tempo)-(team.tactics.fine?.tempo??team.tactics.tempo))*.20)) + Math.max(0, ballSpeed - 11) * .029 + Math.max(0, b.z - .36) * .16;
       if(p.role==='GK'&&team.tactics.club) p.decisionT*=team.tactics.club.gk==='Distribute quickly'?.65:1.13;
       p.receivedAt = this.elapsed;
       p.ballPlan = p.releasePlan = null;
@@ -1470,7 +1477,7 @@
       if (gain < 5 || gain > 34 || Math.abs(dy) > 22 || runner.x * team.attackDir > Math.max(team.offsideLine * team.attackDir, CX * team.attackDir) + .25) return;
       const look = AI.facing(p, dx, dy), squeeze = clamp((3.9 - this.nearestOppDist(p)) / 2.8, 0, 1);
       if (look < -.30 || this.nearestOppDist(runner) < 2.6) return;
-      const delay = AI.readDelay(p, look, squeeze) * TEMPO_HOLD[team.tactics.tempo];
+      const delay = AI.readDelay(p, look, squeeze) * (TEMPO_HOLD[team.tactics.tempo]*(1+((team.tactics.tempo)-(team.tactics.fine?.tempo??team.tactics.tempo))*.20));
       p.decisionT = Math.min(p.decisionT, delay + .21);
     }
 
@@ -1559,16 +1566,18 @@
         const score = .68 + (2.68 - pressure) * .155 + rush * .073 - need * .047 - clamp((safeOutlet - .58) * .42, 0, .20);
         opts.push({ kind: 'clear', score });
       }
+      if(p.iq)for(const o of opts){const trait=p.iq.trait,build=team.tactics.club?.build;if(o.kind==='pass'){o.score+=((team.tactics.fine?.passing??team.tactics.passing)-team.tactics.passing)*(o.purpose==='progress'||o.purpose==='through'?.09:-.09)+(p.iq.vision-10)*.004+(trait==='Tries killer balls'&&o.purpose==='through'?.08:trait==='Plays short combinations'?.035:0);}if(o.kind==='carry'&&trait==='Runs with the ball')o.score+=.07;if(o.kind==='shot')o.score+=(trait==='Shoots early'?.06:0)+(build==='Shoot on sight'?.1:build==='Work ball into box'&&dd>15?-.12:0);}
+      const preference=Z?.profiles[p.job]?.[3];if(preference)for(const o of opts)if(o.kind===preference)o.score+=.06*(p.roleSkill||1);
       return opts;
     }
 
     decide(p, pressure) {
       const team = this.teams[p.team], b = this.ball, read = this.readPlay(p, pressure);
       const leader=team.tactics.captains&&team.score<this.teams[1-p.team].score&&(globalThis.TLMatchBoard||require('./match-board')).captain(team);
-      const margin = clamp(.175 - (leader?Math.max(0,leader.attrs.composure-10)*.002:0) + read.rush * .067 + (13 - p.attrs.composure) * .006, .125, .28);
+      const margin = clamp(.175 - (p.iq?(p.iq.decisions-10)*.002+(p.reps||0)*.0007:0) - (leader?Math.max(0,leader.attrs.composure-10)*.002:0) + read.rush * .067 + (13 - p.attrs.composure) * .006, .125, .28);
       const action = AI.pick(this.decisionOptions(p, read), this.choiceRnd, margin);
       // Choice RNG is separate from the ball, contact and finishing RNG.
-      p.decisionT = (1.62 + this.choiceRnd() * .77) * TEMPO_HOLD[team.tactics.tempo];
+      p.decisionT = (1.62 + this.choiceRnd() * .77) * (TEMPO_HOLD[team.tactics.tempo]*(1+((team.tactics.tempo)-(team.tactics.fine?.tempo??team.tactics.tempo))*.20));
       p.ballPlan = p.releasePlan = null;
       if (action.kind === 'shot') this.doShot(p, { firstTime: action.first });
       else if (action.kind === 'pass') {
@@ -1584,7 +1593,7 @@
       else if (action.kind === 'clear') this.doLongBall(p, false, true);
       else if (action.style === 'inside') {
         p.ballPlan = { kind: 'inside', x: action.x, y: action.y, until: this.elapsed + .89 };
-        p.decisionT = (.86 + this.choiceRnd() * .33) * TEMPO_HOLD[team.tactics.tempo];
+        p.decisionT = (.86 + this.choiceRnd() * .33) * (TEMPO_HOLD[team.tactics.tempo]*(1+((team.tactics.tempo)-(team.tactics.fine?.tempo??team.tactics.tempo))*.20));
         this.brainIn = 0;
       } else if (action.style === 'settle') {
         // Let a closed body open up or a teammate become available. The ball
@@ -1815,7 +1824,7 @@
       const ty = clamp(q ? q.y + q.vy * .60 + (this.rnd() - .5) * 1.7 : CY + (this.rnd() - .5) * 11, CY - 14, CY + 14);
       const distance = dist(b.x, b.y, tx, ty);
       const bent = (b.y < CY ? 1 : -1) * d * (.92 + this.rnd() * .85);
-      const f = this.kick(p, tx, ty, { kind: 'cross', technique: 'cross', intended: q, offsideCheck: !corner }, { seconds: clamp(.77 + distance * .042, 1.23, 2.77), startZ: .11, bend: bent });
+      const f = this.kick(p, tx, ty, { kind: 'cross', technique: 'cross', intended: q, offsideCheck: !corner }, { seconds: clamp(.77 + distance * .042, 1.23, 2.77)*({'Low crosses':.65,'Whipped crosses':.85,'Floated crosses':1.2}[team.tactics.club?.deliveryCross]||1), startZ: .11, bend: bent*(team.tactics.club?.deliveryCross==='Whipped crosses'?1.4:1) });
       this.deliveryReleased(p, f);
       if (!corner && !this.setpiece) this.say('cross', { p: p.name }, { team: p.team });
     }
