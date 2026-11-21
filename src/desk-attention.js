@@ -112,7 +112,7 @@
     }
     group(
       root.querySelectorAll(
-        ".pulse-stream > article,.sq-unit > [data-squad-player],[data-kit-list] > label,.dyn-players > article,.work-list > article,.rec-board > button,.org-agenda > details,.comp-board > .comp-player,.org > article.org-agenda,.org > details.org-agenda,.org-agenda > p:not(:has(button,input,select)),.depth-layout .sq-unit > p",
+        ".pulse-stream > article,.sq-unit > [data-squad-player],[data-kit-list] > label,.dyn-players > article,.work-list > article,.org-agenda > details,.comp-board > .comp-player,.org > article.org-agenda,.org > details.org-agenda,.org-agenda > p:not(:has(button,input,select)),.depth-layout .sq-unit > p",
       ),
     );
     for (const body of root.querySelectorAll("tbody"))
