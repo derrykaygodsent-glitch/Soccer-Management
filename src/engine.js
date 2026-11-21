@@ -80,6 +80,7 @@
       this.momentum = [];
       this.momT = 0;
       this.possTime = [0, 0];
+      this.practiceSeconds = opts.practiceSeconds || 0;
       this.t = 0; this.half = 1; this.elapsed = 0; this.controlTeam = 0; this.brainIn = 0;
       this.added = [0, 0]; this.addedAnnounced = [false, false];
       this.phase = 'pre';
@@ -731,6 +732,10 @@
       const b = this.ball;
       b.prevX = b.x; b.prevY = b.y; b.prevZ = b.z;
       this.t += h; this.elapsed += h;
+      if (this.practiceSeconds && this.elapsed >= this.practiceSeconds - 1e-7) {
+        this.t = this.elapsed = this.practiceSeconds; this.phase = 'fulltime';
+        this.say('ft', { h:this.shortName(0), a:this.shortName(1), hs:this.teams[0].score, as:this.teams[1].score }, {key:true}); return;
+      }
       const period = this.half - 1;
       if (!this.addedAnnounced[period] && this.t >= 2700) {
         this.addedAnnounced[period] = true;
