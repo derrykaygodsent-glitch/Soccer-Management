@@ -249,7 +249,7 @@
     return `<section class="manager-passport">${header}${
       ui.tab === "history"
         ? timeline
-        : `<div class="mp-grid"><article class="mp-card"><small>01　/　 IDENTITY</small><h3>Personal file</h3>${factsList(
+        : `<div class="mp-grid"><article class="mp-card"><small>IDENTITY</small><h3>Personal file</h3>${factsList(
             [
               ["Home nation", p.nation],
               ["Age", age],
@@ -265,7 +265,7 @@
               ],
               ["Wellbeing", l.status],
             ],
-          )}</article><article class="mp-card"><small>02　/　 THE DUGOUT</small><h3>Managerial record</h3>${factsList(
+          )}</article><article class="mp-card"><small>THE DUGOUT</small><h3>Managerial record</h3>${factsList(
             [
               ["Career started", W.date(start)],
               [
@@ -283,7 +283,7 @@
                   ]
                 : []),
             ],
-          )}</article></div><article class="mp-card"><small>03　/　 PRIVATE JOURNAL</small><h3>Your life in football</h3><p>${e(origin)}</p><button data-profile-view="history">Read biography & history →</button></article><details class="mp-card"><summary>Save management</summary><p>This affects the local copy of this manager’s career.</p><button class="cc-btn" data-remove-current>Delete local profile &amp; save</button></details>`
+          )}</article></div><article class="mp-card"><small>PRIVATE JOURNAL</small><h3>Your life in football</h3><p>${e(origin)}</p><button data-profile-view="history">Read biography & history →</button></article><details class="mp-card"><summary>Save management</summary><p>This affects the local copy of this manager’s career.</p><button class="cc-btn" data-remove-current>Delete local profile &amp; save</button></details>`
     }</section>`;
   }
   const api = { capture, history, render };
