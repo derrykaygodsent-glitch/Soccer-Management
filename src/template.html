@@ -81,7 +81,7 @@
         </div>
         <div class="player-focus" id="playerFocus" hidden>
           <div><div class="focus-meta" id="focusMeta"></div><strong id="focusName" aria-live="polite"></strong><span class="focus-stats" id="focusStats"></span></div>
-          <button class="button" id="groundScout" type="button" hidden>Scout player</button>
+          <button class="button" id="focusTactics" hidden>Tactics</button><button class="button" id="focusSub" hidden>Substitute off</button><button class="button" id="groundScout" type="button" hidden>Scout player</button>
           <button class="icon-button mini" id="btnClearPlayer" type="button" aria-label="Clear selection"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
         </div>
       </div>
@@ -93,7 +93,7 @@
         <button class="icon-button feed-button" id="btnEvents" type="button" aria-label="Open match events" title="Match events"><svg class="icon" aria-hidden="true"><use href="#i-events"/></svg></button>
       </div>
 
-      <div class="controls" aria-label="Match controls">
+      <details class="match-options" id="matchOptions"><summary aria-label="Match preferences">⚙ <span>Preferences</span></summary><div class="controls" aria-label="Match controls">
         <div class="playback">
           <button class="button primary play-button" id="btnPlay" type="button" title="Kick off (Space)"><svg class="icon" aria-hidden="true"><use id="playIcon" href="#i-play"/></svg><span id="playLabel">Kick off</span></button>
           <label class="speed-mode"><span>Speed</span><select id="playbackSpeed" aria-label="Playback speed"></select></label>
@@ -106,7 +106,7 @@
           <button class="button view-button sound-button" id="btnSound" type="button" aria-pressed="false" aria-label="Stadium sound" title="Stadium sound"><svg class="icon" aria-hidden="true"><use id="soundIcon" href="#i-mute"/></svg><span>Sound</span></button>
         </div>
       </div>
-    </section>
+    </details></section>
 
     <section class="team-deck" aria-labelledby="teamTitle">
       <div class="team-head">
@@ -115,8 +115,8 @@
           <div><div class="team-kicker"><span id="clubLineupLabel">Starting XI</span><span class="team-shape" id="formationLabel">4–3–3</span></div><h2 id="teamTitle">Riverside FC</h2></div>
         </div>
         <div class="team-actions">
-          <button class="button team-button" id="btnTactics" type="button"><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg><span>Tactics <span class="and-subs">&amp; subs</span></span></button>
-          <button class="button team-button" id="btnStats" type="button"><svg class="icon" aria-hidden="true"><use href="#i-bars"/></svg><span>Stats</span></button>
+          <button class="button team-button" id="btnTactics" type="button"><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg><span>Quick tactics</span></button>
+          <button class="button team-button" id="btnSquad" type="button">Squad</button><button class="button team-button" id="btnStats" type="button"><svg class="icon" aria-hidden="true"><use href="#i-bars"/></svg><span>Stats</span></button>
         </div>
       </div>
       <div id="lineup" class="lineup" aria-label="Your club’s players"></div>

@@ -97,7 +97,7 @@
   }
 
   function prepare(config,restored) {
-    state.config = { ...config, highlights: V.modeFor(config.highlights).id };
+    $('matchOptions').open=false;state.config = { ...config, highlights: V.modeFor(config.highlights).id };
     state.ready = state.paused = true;
     state.speed = B.NORMAL_SPEED; state.acc = 0; state.replay = null;
     stopScanWork();
@@ -170,7 +170,7 @@
     $('added').hidden = !(time >= half * 2700 && added);
     if (!$('added').hidden) {
       const n=Math.floor(added/60);
-      text('added', '+'+n);
+      text('added', clockAt(Math.max(0,time-half*2700))+' +'+n);
       const beyond=state.club?' · '+clockAt(Math.max(0,time-half*2700))+' elapsed':'';
       attr($('added'),'title',`${n} minutes of added time${beyond}`);
     }
@@ -223,7 +223,7 @@
           state.paused ? 'Playback paused' : policy.rank ? `${policy.label} highlights` : 'Returning to live play');
       }
     }
-    if(state.club) updateWaiting();
+    updateWaiting();
   }
   function updateWaiting(){
     const el=$('clubWaiting'), scan=state.scan;
@@ -234,7 +234,7 @@
     const frame=scan.view, Q=seasonMatch(), last=state.events.filter(e=>Q.notables.has(e.type)).slice(-3).reverse();
     const report={goals:frame.score,stats:frame.stats}, advice=Q.analyst(report,managed());
     const heading=state.paused?'Highlight search paused':'Waiting for next highlight';
-    const scores=Q.teamStats(frame.stats,frame.poss).slice(0,4);
+    const scores=Q.teamStats(frame.stats,frame.poss).slice(0,6);
     el.innerHTML=`<section class="live-tablet"><header><i></i><div><b>${heading}</b><small>TOUCHLINE TABLET</small></div></header><div class="live-tablet-stats">${scores.map(([l,a,b])=>statLine(l,a,b)).join('')}</div><div class="live-dugout"><b>THE DUGOUT</b><strong>${html(advice.title)}</strong><p>${html(frame.stats[0].shots+frame.stats[1].shots?advice.copy:'The analysts are tracking the opening exchanges.')}</p>${last.length?`<ul>${last.map(e=>`<li><time>${e.t!=null?Q.eventTime(e):clockMinute(e.minute)}</time>${html(e.text)}</li>`).join('')}</ul>`:''}</div></section>`;
   }
   function textReplayButton(message) {
@@ -569,7 +569,7 @@
     if (result.type === 'break') { closeCut(); return; }
     updateScanView(scan, result.rank);
     if(result.type==='moment') {
-      if(state.club&&performance.now()-scan.since<370)scan.pending=result;
+      if(performance.now()-scan.since<370)scan.pending=result;
       else showBuffered(scan,scan.policy,V.tailFor(scan.policy,result.rank),result.rank);
     }
   }
@@ -596,7 +596,7 @@
     const lineup = $('lineup'), from = lineup.scrollLeft;
     text('formationLabel', shapeLabel(home.tactics.formation));
     const captain = [home.assignments?.captain,home.assignments?.vice].find(id=>home.slots.some(s=>s.player.id===id)) || (home.assignments&&home.slots.find(s=>s.role!=='GK')?.player.id);
-    lineup.innerHTML = home.slots.map(({ player: p, role }) => `<button type="button" class="player-tile" data-player="${html(p.id)}" aria-label="${html(p.name)}, number ${p.num}, ${role}" aria-pressed="${state.selected === p.id}" title="${html(p.name)}" style="--kit:${portraitKit(role === 'GK' ? home.club.gk : home.club.primary)};--condition:${condition(p)}%;--condition-color:${colorCond(p)}"><span class="tile-head"><span>${role}${p.id===captain?' · C':''}${p.yellow ? ' · YC' : ''}${p.injury ? ' · +' : ''}</span><span class="tile-no">${p.num}</span></span><span class="tile-main">${icon('shirt')}<span class="tile-name">${html(p.name.split(' ').pop())}</span></span><span class="tile-cond" aria-hidden="true"><i></i></span></button>`).join('');
+    lineup.innerHTML = home.slots.map(({ player: p, role }) => `<button type="button" class="player-tile" data-player="${html(p.id)}" aria-label="${html(p.name)}, number ${p.num}, ${role}" aria-pressed="${state.selected === p.id}" title="${html(p.name)}" style="--kit:${portraitKit(role === 'GK' ? home.club.gk : home.club.primary)};--condition:${condition(p)}%;--condition-color:${colorCond(p)}"><span class="tile-head"><span>${role}${p.id===captain?' · C':''}${p.yellow ? ' · YC' : ''}${p.injury ? ' · +' : ''}</span><span class="tile-no">${p.num}</span></span><span class="tile-main">${icon('shirt')}<span class="tile-name">${html(p.name.split(' ').pop())}</span></span><span class="tile-rating">${state.ready?'—':p.rating.toFixed(1)}</span><span class="tile-cond" aria-hidden="true"><i></i></span></button>`).join('');
     lineup.scrollLeft = from;
     if (state.selected && !state.match.onPitchPlayers().some(p => p.id === state.selected)) selectPlayer(null);
   }
@@ -604,14 +604,14 @@
     for (const button of $('lineup').querySelectorAll('[data-player]')) {
       const p = state.meta[button.dataset.player];
       if (!p) continue;
-      button.style.setProperty('--condition', condition(p) + '%');
+      button.querySelector('.tile-rating').textContent=state.ready?'—':p.rating.toFixed(1);button.style.setProperty('--condition', condition(p) + '%');
       button.style.setProperty('--condition-color', colorCond(p));
     }
     if (state.selected) updateFocus(state.meta[state.selected]);
   }
   function updateFocus(p) {
     if (!p) return;
-    $('groundScout').hidden=!state.community?.canScout(p.id);
+    $('focusTactics').hidden=p.team!==managed();$('focusSub').hidden=p.team!==managed()||!p.onPitch||state.ready||state.match.phase==='fulltime';$('groundScout').hidden=!state.community?.canScout(p.id);
     text('focusMeta', `#${p.num} · ${p.role || p.pos} · ${state.match.teams[p.team].club.short}`);
     text('focusName', p.name);
     text('focusStats', `${condition(p)}% condition${state.ready ? '' : ` · ${p.rating.toFixed(1)} rating${state.community?' · '+p.stats.goals+' goals · '+p.stats.shots+' shots · '+p.stats.passWon+'/'+p.stats.passes+' passes':''}`}`);
@@ -632,7 +632,7 @@
   }
 
   function technicalFocus(person) {
-    $('groundScout').hidden=!state.community?.canScout(person?.id);
+    $('focusTactics').hidden=$('focusSub').hidden=true;$('groundScout').hidden=!state.community?.canScout(person?.id);
     const card = $('playerFocus');
     card.hidden = !person;
     if (!person) { delete card.dataset.technical; return; }
@@ -722,7 +722,7 @@
     const inPlayer = t.players.find(p => p.id === state.subMode);
     const row = (p, role, bench) => `<div class="squad-row"${p.injury?' data-knock="true"':''}><span>${p.num}</span><span>${html(p.name)}</span><span class="row-role">${role}${p.injury?' · Knock':''}</span><span class="row-cond">${condition(p)}%</span>${bench ? `<button type="button" class="button" data-bench="${html(p.id)}" ${!available || t.subsUsed >= 5 ? 'disabled' : ''}>Bring on</button>` : inPlayer ? `<button type="button" class="button" data-out="${html(p.id)}" ${!available || (role === 'GK') !== (inPlayer.pos === 'GK') ? 'disabled' : ''}>Replace</button>` : '<span></span>'}</div>`;
     const timing = filmView() ? ` · changes take effect at ${state.match.clockStr()}` : '';
-    $('tab-squad').innerHTML = `<p class="help-text${state.club?'':' desk-feedback'}"${state.club?'':' role="status"'}>${state.ready ? 'Substitutions are available after kick-off.' : pendingReview ? 'Wait for the VAR decision before substituting.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining${timing}.`}</p>${state.club?'<p class="help-text desk-feedback" role="status" hidden></p>':''}${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${t.bench.map(p => row(p, p.pos, true)).join('')}`;
+    $('tab-squad').innerHTML = `<p class="help-text${state.club?'':' desk-feedback'}"${state.club?'':' role="status"'}>${state.ready ? 'Substitutions are available after kick-off.' : pendingReview ? 'Wait for the VAR decision before substituting.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining${timing}.`}</p>${state.club?'<p class="help-text desk-feedback" role="status" hidden></p>':''}${state.replaceId?`<p class="sub-note">Choose a replacement for ${html(state.meta[state.replaceId].name)}.</p>`:''}${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${t.bench.map(p => row(p, p.pos, true)).join('')}`;
   }
 
   const statLine = (title, a, b) => `<div class="stat-line"><strong>${a}</strong><span>${title}</span><strong>${b}</strong></div>`;
@@ -872,6 +872,7 @@
   }
 
   function wire() {
+    const head=$('matchScreen').querySelector('.broadcast-head');head.append($('matchHome'),$('matchOptions'),$('btnPlay'));$('matchOptions').querySelector('.controls').append($('btnSetup'),$('btnStats'));$('btnSquad').onclick=()=>openDesk('squad');$('focusTactics').onclick=()=>openDesk('tactics');$('focusSub').onclick=()=>{state.replaceId=state.selected;openDesk('squad');};
     $('btnPlay').addEventListener('click', togglePlay);
     $('btnSkip').addEventListener('click', toggleSkip);
     const modeOptions = Object.values(V.MODES).map(mode => `<option value="${mode.id}">${mode.label}</option>`).join('');
@@ -897,7 +898,7 @@
     });
     $('pitch').addEventListener('click', e => {
       const b = $('pitch').getBoundingClientRect();
-      const x=e.clientX-b.left,y=e.clientY-b.top,r=state.renderer,p=r.pickPlayer(x,y);if(state.community&&!p){const ref=(state.replay?.frame||state.scene?.frame||state.scan?.still)?.referee||state.match.referee.pose(state.match);if(Math.hypot(x-r.ox-ref.x*r.scale,y-r.oy-ref.y*r.scale)<Math.max(13,r.radius*1.8)){selectPlayer(null);technicalFocus({kind:'Referee',name:state.community.fixture.official,x,club:{short:'Match official',name:state.community.fixture.ground}});return;}}selectPlayer(p);
+      const x=e.clientX-b.left,y=e.clientY-b.top,r=state.renderer,p=r.pickPlayer(x,y);if(state.community&&!p){const ref=(state.replay?.frame||state.scene?.frame||state.scan?.still)?.referee||state.match.referee.pose(state.match);if(Math.hypot(x-r.ox-ref.x*r.scale,y-r.oy-ref.y*r.scale)<Math.max(13,r.radius*1.8)){selectPlayer(null);technicalFocus({kind:'Referee',name:state.community.fixture.official||'Match referee',x,club:{short:'Match official',name:state.community.fixture.ground||state.match.teams[0].club.stadium}});return;}}selectPlayer(p);
     });
     $('lineup').addEventListener('click', e => {
       const b = e.target.closest('[data-player]');
@@ -955,6 +956,7 @@
     $('tab-squad').addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b || b.disabled) return;
       if (b.hasAttribute('data-cancel-sub')) { state.subMode = null; renderSquad(); }
+      else if(b.dataset.bench&&state.replaceId){const cmd={type:'sub',out:state.replaceId,in:b.dataset.bench};const buffered=touchlineChange(),r=state.match.substitute(managed(),cmd.out,cmd.in);if(r.ok){checkpoint(cmd);state.replaceId=null;selectPlayer(null);if(!buffered)renderLineup();}renderSquad();notify(r.ok?'Substitution made.':r.msg);updateHUD();draw();}
       else if (b.dataset.bench) { state.subMode = b.dataset.bench; renderSquad(); }
       else if (b.dataset.out && state.subMode && !state.ready) {
         const buffered = touchlineChange(), m = state.match;
@@ -968,7 +970,7 @@
       }
     });
     $('deskDialog').addEventListener('close', () => {
-      state.subMode = null; state.saveConfirm=false;
+      state.replaceId=null;state.subMode = null; state.saveConfirm=false;
       if(state.intervalReturn){const back=state.intervalReturn;state.intervalReturn=null;back();return;}
       if (state.returnBreak) { state.returnBreak = false; showBreak(state.match.phase === 'halftime' ? 'ht' : 'ft'); }
     });
