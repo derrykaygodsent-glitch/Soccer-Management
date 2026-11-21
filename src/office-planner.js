@@ -67,52 +67,34 @@
   function option(id) {
     return choices().find((x) => x.id === id);
   }
-  function book(s, { day, hour, id }) {
-    const opt = option(id),
-      now = L.state(s);
-    if (
-      !opt ||
-      !Number.isInteger(day) ||
-      day < s.day ||
-      !Number.isInteger(hour) ||
-      hour < Math.max(8, opt.start) ||
-      hour > opt.end ||
-      (day === s.day && hour < now.hour)
-    )
-      throw Error("Choose an available start time.");
-    if (
-      entries(s).some(
-        (p) =>
-          p.day === day &&
-          hour < p.hour + option(p.id).duration &&
-          p.hour < hour + opt.duration,
-      )
-    )
-      throw Error("Another appointment uses that time.");
-    if (opt.place) {
-      const other = entries(s)
-          .filter((p) => p.day === day && p.hour < hour)
-          .sort((a, b) => b.hour - a.hour)[0],
-        place = other
-          ? option(other.id).place || (day === s.day ? now.place : "home")
-          : day === s.day
-            ? now.place
-            : "home",
-        from = other
-          ? other.hour + option(other.id).duration
-          : day === s.day
-            ? now.hour
-            : 8;
-      if (
-        place !== opt.place &&
-        from +
-          L.route({ ...s, districtLife: { ...now, place } }, opt.place).hours >
-          hour
-      )
-        throw Error("Leave enough time to travel before the shift.");
-    }
-    (s.appointments ||= []).push({ day, hour, id });
+  // Desks can be used where you are. Carry the last physical location through
+  // them, so inserting a personal appointment cannot erase a later commute.
+  function itinerary(s, day, rows, planning=true) {
+    const current = planning && day === s.day, now = L.state(s);
+    let place = current ? now.place : "home", free = current ? now.hour : 5;
+    return [...rows].filter(p=>p.day===day).sort((a,b)=>a.hour-b.hour).map(p=>{
+      const o=option(p.id), trip=o.place && o.place!==place
+        ? L.route({...s,districtLife:{...now,place}},o.place) : {hours:0,fare:0,energy:0};
+      const depart=p.hour-trip.hours, reachable=depart>=free;
+      free=p.hour+o.duration;place=o.place||place;
+      return {...p,depart,trip,reachable,end:free};
+    });
   }
+  function book(s,{day,hour,id}) {
+    const opt=option(id);
+    if(hour==null && opt)hour=slots(s,day,id)[0]?.hour;
+    if(!opt||!Number.isInteger(day)||day<s.day||!Number.isInteger(hour)||hour<opt.start||hour>opt.end)
+      throw Error("No available start time on this date.");
+    if(entries(s).some(p=>p.day===day&&hour<p.hour+option(p.id).duration&&p.hour<hour+opt.duration))throw Error("Another appointment uses that time.");
+    const p={day,hour,id}, plan=itinerary(s,day,[...entries(s),p]);
+    if(plan.some(r=>!r.reachable))throw Error("Leave enough time for travel between bookings.");
+    (s.appointments||=[]).push(p);
+  }
+  function slots(s,day,id){const o=option(id),result=[];if(!o||day<s.day)return result;
+    for(let hour=o.start;hour<=o.end;hour++){const copy={...s,appointments:[...entries(s)]};try{book(copy,{day,hour,id});result.push(itinerary(s,day,copy.appointments).find(p=>p.hour===hour));}catch{}}
+    return result;
+  }
+  function wake(s){const first=itinerary(s,s.day,entries(s),false)[0];if(first&&first.depart<8)(s.districtLife||={...L.state(s)}).hour=first.depart;}
   function cancel(s, p) {
     s.appointments = entries(s).filter(
       (a) => a.day !== p.day || a.hour !== p.hour,
@@ -123,17 +105,15 @@
     if (!p) return;
     const o = option(p.id),
       d = L.state(s);
-    if (
-      o.place &&
-      d.place !== o.place &&
-      !s.trip &&
-      d.hour + L.route(s, o.place).hours <= p.hour
-    ) {
-      try {
-        L.act(s, "districtTravel", o.place);
-      } catch {
-        /* Fare or energy unavailable: leave the choice to the manager. */
-      }
+    if(o.place && d.place!==o.place){
+      if(s.trip)throw Error("You are away on a scouting trip. Remove or rebook this shift.");
+      const depart=p.hour-L.route(s,o.place).hours;
+      if(d.hour>depart)throw Error("Too late for this commute. Remove this booking and choose another available shift.");
+      // Check the fare before waiting; a failed journey must never burn the time slot.
+      const trip=L.route(s,o.place);
+      if(s.cash<trip.fare||d.energy<trip.energy)throw Error("Cannot travel yet: this journey needs "+g.TLLuma.format(trip.fare)+" and "+trip.energy+" energy. Fund the trip or rebook.");
+      if(d.hour<depart)L.act(s,"districtWait",depart);
+      L.act(s,"districtTravel",o.place);
     }
     if (L.state(s).hour < p.hour) {
       if (s.trip) {
@@ -142,20 +122,8 @@
     }
   }
   function hours(s, day, id) {
-    const opt = option(id),
-      start = Math.max(8, opt.start, day === s.day ? L.state(s).hour : 8),
-      options = [];
-    for (let hour = start; hour <= opt.end; hour++) {
-      try {
-        book({ ...s, appointments: [...entries(s)] }, { day, hour, id });
-        options.push(hour);
-      } catch {
-        /* Overlaps and impossible journeys are not offered. */
-      }
-    }
-    return options.length
-      ? options.map((h) => `<option value="${h}">${time(h)}</option>`).join("")
-      : '<option value="" disabled selected>No available times</option>';
+    const available=slots(s,day,id),label=p=>(p.trip.hours?"Leave "+time(p.depart)+" · ":"")+time(p.hour)+"–"+time(p.end);
+    return available.length?available.map((p,i)=>`<option value="${p.hour}">${i?'':'Auto · '}${label(p)}</option>`).join(''):'<option value="" disabled selected>No reachable slot on this date</option>';
   }
   function render(s, day) {
     const e = g.TLClubUI.esc,
@@ -163,26 +131,26 @@
         .filter((p) => p.day === day)
         .sort((a, b) => a.hour - b.hour),
       now = L.state(s).hour;
-    return `<section class="org-agenda appointment-book"><small>OFFICE PLANNER</small><h3>${day === s.day ? "Today · " + time(now) : "Appointments"}</h3>${ps
+    return `<section class="org-agenda appointment-book"><small>OFFICE PLANNER</small><h3>${day === s.day ? "Today · " + time(now) : g.TLManagerLife.date(day)}</h3>${ps
       .map((p) => {
         const o = option(p.id);
-        return `<p><b>${time(p.hour)}–${time(p.hour + o.duration)}</b>　${e(o.label)} ${day === s.day && now >= p.hour ? `<button data-attend="${p.hour}">${o.place ? "Take shift" : "Open desk"}</button>` : ""} <button data-unbook="${p.hour}">Remove</button></p>`;
+        return `<p><b>${time(p.hour)}–${time(p.hour + o.duration)}</b>　${e(o.label)} ${(()=>{const r=itinerary(s,day,entries(s),day===s.day).find(r=>r.hour===p.hour);return r.trip.hours?`<small>Leave ${time(r.depart)} · ${r.trip.hours}h travel · ${g.TLLuma.format(r.trip.fare)}</small>`:""})()} ${day === s.day && now >= p.hour ? `<button data-attend="${p.hour}">${o.place ? "Take shift" : "Open desk"}</button>` : ""} <button data-unbook="${p.hour}">Remove</button></p>`;
       })
       .join("")}${
       day >= s.day
         ? `<form data-appointment><label>Activity <select name="id">${choices()
             .map(
               (o) =>
-                `<option value="${o.id}">${e(o.label)} · ${o.duration}h${o.place ? " · " + time(o.start) + "–" + time(o.end) + " starts" : ""}</option>`,
+                `<option value="${o.id}">${e(o.label)} · ${o.duration}h${o.place ? " · " + time(o.start) + "–" + time(o.end) + " start window" : ""}</option>`,
             )
             .join(
               "",
-            )}</select></label> <label>Start <select name="hour" required>${hours(s, day, choices()[0].id)}</select></label> <button>Book time</button></form><p>Continue stops at each appointment. Shifts include the usual journey, fare and energy cost. You decide whether to work when you arrive.</p>`
+            )}</select></label> <label>Suggested slot <select name="hour" required>${hours(s, day, choices()[0].id)}</select></label> <button>Book time</button></form><p>The earliest reachable slot is selected for you. Book it as shown or choose a later one. Continue handles the journey before work, including an early start on future days. Bring the fare and energy; you decide whether to take the shift.</p>`
         : ""
     }</section>`;
   }
   const api = {
-    hours,
+    wake, slots, hours,
     choices,
     option,
     time,

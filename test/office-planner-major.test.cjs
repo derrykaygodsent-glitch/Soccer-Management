@@ -48,3 +48,9 @@ test('Atlas associations use real club squads and playable domestic draws; publi
  for(const [n,count] of [['Zandora',19],['Westmark',19],['Azmara',19]]){const clubs=F.clubs(s,n,2026),games=F.fixtures(s,n,2026);a.equal(clubs.length,count);a.equal(new Set(games.map(f=>f.team+'|'+f.host)).size,count*(count-1));a.ok(games.every(f=>f.day<Y.dayOf(2027,6,1)));const name=clubs.at(-1),ps=W.pool.filter(p=>p.club===name);a.ok(ps.length>=11&&ps.every(p=>p.nation===n));a.ok(W.nations[n].includes(name));const career={...s,club:{name},day:F.dates(s,n,2026)[0],roster:ps.map(p=>p.id)},L=require('../src/league-matchday'),f=L.fixture(career);a.ok(f.own>=0);a.equal(L.replay(f,career).teams[f.own].slots.length,11);}
  const c=require('../src/cup-circuit').circuit({...s,day:Y.dayOf(2027,5,30)},W.pool).find(x=>x.title==='World Club Championship');a.equal(c.groups.length,8);a.ok(c.groups.flat().every(r=>r.p===3));a.ok(c.entries.includes(c.winner));const old={...s};delete old.atlasLeagueFrom;W.activate(old);a.equal(F.clubs(old,'Zandora',2026).length,5);a.equal(F.clubs(old,'Zandora',2027).length,19);
 });
+test('future 08:00 crew books 06:00 travel even when planning late at night',()=>{
+ const s={day:0,cash:100,profile:{nation:'Valdoria'},districtLife:{...L.state({}),hour:21}};
+ P.book(s,{day:1,id:'shift:crew'});a.equal(s.appointments[0].hour,8);
+ a.throws(()=>P.book(s,{day:1,id:'scouting',hour:9}));s.day++;L.morning(s);P.wake(s);a.equal(L.state(s).hour,6);P.arrive(s);a.equal(L.state(s).place,'ground');a.equal(L.state(s).hour,8);L.act(s,'districtJob','crew');a.equal(L.state(s).hour,12);
+});
+test('inserting a desk booking cannot steal travel time from a later shift',()=>{const s={day:0,profile:{nation:'Valdoria'}};P.book(s,{day:1,id:'shift:crew',hour:10});a.throws(()=>P.book(s,{day:1,id:'scouting',hour:8}),/travel/);});
