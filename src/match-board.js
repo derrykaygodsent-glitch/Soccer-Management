@@ -13,15 +13,16 @@ function sheet(f,plan,players){const rehearsal=scheme(f,plan),base=spots(f),auto
 const score=(p,r)=>D.ROLE_WEIGHTS[r](p.attrs)*D.roleFit(p.pos,r);
 // Maximum-weight assignment over the eleven pitch slots. Each player can enter
 // only once; a versatile player cannot steal a specialist's only viable slot.
-function quickXI(s,slots,players,mode){const current=new Set(slots.map(v=>v.player?.id)),ready=(g.TLDynamics||require('./team-dynamics')).snapshot(s,players).players;
+function quickXI(s,slots,players,mode,squad){const stars=mode==='bestXI'?(g.TLDynamics||require('./team-dynamics')).squadStars(squad):null,current=new Set(slots.map(v=>v.player?.id)),ready=(g.TLDynamics||require('./team-dynamics')).snapshot(s,players).players;
  const pool=players.filter(p=>!p.red&&!ready[p.id].knock),size=1<<slots.length,dp=new Float64Array(size).fill(-Infinity),steps=[];dp[0]=0;
  for(const p of pool){const log=new Int8Array(size),r=ready[p.id],weights=slots.map((v,i)=>{if((p.pos==='GK')!==(i===0))return -Infinity;
  const fit=Z.fit(p,v.position,v.job[0],s.boardReps?.[p.id]),quality=score(p,v.role),bench=mode==='rotate'&&!current.has(p.id)?32:0;
- return 1000+fit+.35*quality+(mode==='rotate'?.4:.12)*r.fitness+.05*r.sharp+bench;});
+ const ability=stars?18*stars[p.id]*D.roleFit(p.pos,v.role):0;
+ return 1000+ability+fit+.35*quality+(mode==='rotate'?.4:.12)*r.fitness+.05*r.sharp+bench;});
  for(let mask=size-1;mask>=0;mask--){if(!Number.isFinite(dp[mask]))continue;for(let i=0;i<slots.length;i++){const bit=1<<i;if(mask&bit)continue;const next=mask|bit,w=dp[mask]+weights[i];if(w>dp[next]){dp[next]=w;log[next]=i+1;}}}steps.push(log);}
  let best=0;for(let i=1;i<size;i++)if(dp[i]>dp[best])best=i;const ids=slots.map(()=>null);for(let j=pool.length-1;j>=0;j--){const i=steps[j][best]-1;if(i>=0){ids[i]=pool[j].id;best^=1<<i;}}return ids;}
-function update(s,raw,players){const [cmd,a,b,c]=raw.split('|'),i=Number(a);s.boards||={};const plan=s.boards[s.boardIndex||0]||={};const slots=sheet(s.tactic,plan,players).slots;
- if(cmd==='bestXI'||cmd==='rotate'){const ids=quickXI(s,slots,players,cmd);plan.previousXI={shape:s.tactic,scope:s.kitScope||'',ids:slots.map(v=>v.player?.id||null)};plan.ids=ids;plan.quickShape=s.tactic;return;}
+function update(s,raw,players,squad=players){const [cmd,a,b,c]=raw.split('|'),i=Number(a);s.boards||={};const plan=s.boards[s.boardIndex||0]||={};const slots=sheet(s.tactic,plan,players).slots;
+ if(cmd==='bestXI'||cmd==='rotate'){const ids=quickXI(s,slots,players,cmd,squad);plan.previousXI={shape:s.tactic,scope:s.kitScope||'',ids:slots.map(v=>v.player?.id||null)};plan.ids=ids;plan.quickShape=s.tactic;return;}
  if(cmd==='undoXI'){const last=plan.previousXI;if(!last||last.shape!==s.tactic||last.scope!==(s.kitScope||''))throw Error('No selection to restore for this squad.');plan.ids=last.ids;plan.quickShape=s.tactic;delete plan.previousXI;return;}
  if(['pick','swap','move'].includes(cmd))delete plan.previousXI;
  if(cmd==='preset'&&[0,1,2].includes(i)){Object.assign(plan,{formation:s.tactic,style:s.style,mentality:s.mentality});s.boardIndex=i;const next=active(s);s.tactic=next.formation||['4-4-2','4-3-3','4-4-2'][i];s.style=next.style||['Balanced shape','Win it high','Break into space'][i];s.mentality=next.mentality||['Balanced','Positive','Cautious'][i];return;}
