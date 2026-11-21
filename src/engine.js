@@ -1564,7 +1564,8 @@
 
     decide(p, pressure) {
       const team = this.teams[p.team], b = this.ball, read = this.readPlay(p, pressure);
-      const margin = clamp(.175 + read.rush * .067 + (13 - p.attrs.composure) * .006, .125, .28);
+      const leader=team.tactics.captains&&team.score<this.teams[1-p.team].score&&(globalThis.TLMatchBoard||require('./match-board')).captain(team);
+      const margin = clamp(.175 - (leader?Math.max(0,leader.attrs.composure-10)*.002:0) + read.rush * .067 + (13 - p.attrs.composure) * .006, .125, .28);
       const action = AI.pick(this.decisionOptions(p, read), this.choiceRnd, margin);
       // Choice RNG is separate from the ball, contact and finishing RNG.
       p.decisionT = (1.62 + this.choiceRnd() * .77) * TEMPO_HOLD[team.tactics.tempo];
