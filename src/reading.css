@@ -190,3 +190,9 @@
 .staff-rail-card p{margin:.15rem 0;font-size:.82rem;line-height:1.4;color:#c6d8de}
 .staff-rail-card small{color:#9fb8c2;font-size:.74rem}
 .mp-split{display:flex;flex-wrap:wrap;gap:6px;margin-top:.4rem}
+
+/* One-tap switch between the club dossier and the manager dossier */
+.profile-switch{display:flex;gap:4px;margin-bottom:9px;padding:3px;background:#152330;border:1px solid #33465a;border-radius:9px;width:fit-content;max-width:100%}
+.profile-switch button{background:transparent;border:1px solid transparent;border-radius:7px;color:#b9cdd8;font:inherit;font-size:.8rem;font-weight:650;padding:.34rem .7rem;cursor:pointer}
+.profile-switch button[aria-pressed=true]{background:#27453f;border-color:#7fa98f;color:#e4f8a6}
+.profile-switch button:not([aria-pressed=true]):hover{background:#1d3140;color:#e2eef1}
