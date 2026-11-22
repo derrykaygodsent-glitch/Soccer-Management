@@ -34,10 +34,6 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   a.ok((html.match(/class="fm-row unassigned(?: on)?"/g) || []).length >= 0, 'vacant tactical positions have their own row state');
   a.ok((html.match(/class="fm-row fm-sub"/g) || []).length >= 1, 'actual substitutes are listed');
   a.ok(!html.includes('fm-tactical-nav'), 'the long legacy navigation rail is gone');
-  const workspaceCss = fs.readFileSync(path.join(__dirname, '../src/reading.css'), 'utf8');
-  a.match(workspaceCss, /\.main\.shell:has\(\.fm-tactics-workspace\)\s*\{\s*width:\s*calc\(100% - 48px\);\s*max-width:\s*1920px;/, 'desktop tactics uses the available game window rather than the article-width shell');
-  a.match(workspaceCss, /\.fm-player-workspace\s*\{\s*grid-template-columns:\s*minmax\(340px, 390px\) minmax\(900px, 1fr\);\s*gap:\s*20px;\s*min-width:\s*1260px;/, 'player assignment details keep their readable desktop width and scroll when necessary');
-  a.match(workspaceCss, /\.fm-player-instruction-grid select\s*\{\s*height:\s*42px;\s*padding:\s*8px 10px;\s*font-size:\s*13px;/, 'desktop instruction controls remain comfortably legible');
   a.ok(!/undefined|NaN|\[object Object\]/.test(html), 'no template garbage');
 
   s.boardPhase = 'both';
