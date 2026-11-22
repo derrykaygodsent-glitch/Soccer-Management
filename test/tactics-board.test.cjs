@@ -30,7 +30,8 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   const s = career(), html = TLBoardRoom.render(s, pool);
   for (const needle of ['fm-workspace-header', 'fm-workspace-nav', 'Team Shape', 'Team Instructions', 'Player Instructions', 'fm-shape-workspace', 'fm-primary-pitch', 'fm-squad-panel', 'Out of Possession', 'In Possession', 'Combined', 'Both', 'Save tactic', 'Familiarity', 'Intensity', 'data-slot="0"', 'data-board="bestXI"'])
     a.ok(html.includes(needle), 'missing ' + needle);
-  a.equal((html.match(/class="fm-row(?: on)?"/g) || []).length, 11, 'eleven starters share selection rows');
+  a.equal((html.match(/class="fm-row assigned(?: on)?"/g) || []).length, 11, 'eleven real assigned starters are shown distinctly from vacancies');
+  a.ok((html.match(/class="fm-row unassigned(?: on)?"/g) || []).length >= 0, 'vacant tactical positions have their own row state');
   a.ok((html.match(/class="fm-row fm-sub"/g) || []).length >= 1, 'actual substitutes are listed');
   a.ok(!html.includes('fm-tactical-nav'), 'the long legacy navigation rail is gone');
   a.ok(!/undefined|NaN|\[object Object\]/.test(html), 'no template garbage');
@@ -86,6 +87,40 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   const instruction = { value: TLZones.individualInstructions.pressing[0], dataset: { playerInstruction: `defense|${playerId}|pressing` }, hasAttribute: name => name === 'data-player-instruction' };
   handlers.change({ target: instruction });
   a.equal(plan.playerInstructions[playerId].defense.pressing, instruction.value, 'phase-specific instruction updates the engine plan');
+
+  const playersTab = { dataset: { workspaceTab: 'players' }, hasAttribute: () => false };
+  handlers.click({ target: { closest: selector => selector === 'button' ? playersTab : null } });
+  const workstation = TLBoardRoom.render(s, pool);
+  a.match(workstation, /data-workspace="players"/);
+  a.match(workstation, /fm-player-choice-list/);
+  a.match(workstation, /fm-player-position-map/);
+  a.match(workstation, /Role-relevant attributes/);
+  a.match(workstation, /positional familiarity/);
+  a.match(workstation, /In Possession/);
+  a.match(workstation, /Out of Possession/);
+  a.match(workstation, /data-player-instruction="attack\|p/);
+  a.match(workstation, /data-player-instruction="defense\|p/);
+  a.match(workstation, /class="fm-player-choice selected" data-slot="3"/, 'selection carries from the tactical board into Player Instructions');
+  a.equal((workstation.match(/class="fm-player-choice(?: selected)?"/g) || []).length, 11, 'only real starting players appear in the instruction selector');
+});
+
+test('player instructions explain missing roster data without inventing players', () => {
+  const s = career();
+  s.roster = ['missing-player-a', 'missing-player-b'];
+  const handlers = {}, root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, querySelector: () => null };
+  TLBoardRoom.bind(root, () => {}, () => {});
+  handlers.click({ target: { closest: selector => selector === 'button' ? { dataset: { workspaceTab: 'players' }, hasAttribute: () => false } : null } });
+  const html = TLBoardRoom.render(s, []);
+  a.match(html, /No player available to configure/);
+  a.match(html, /Saved roster entries exist, but their player records are not loaded/);
+  a.match(html, /no demonstration players will be substituted/i);
+  a.doesNotMatch(html, /Amar Neri|Haru Vale|Luca Novak/);
+  a.match(html, /TACTICS · Kay FC/, 'the actual club identity remains visible even when player records are missing');
+  s.club = null;
+  s.roster = [];
+  const unattached = TLBoardRoom.render(s, []);
+  a.match(unattached, /No club or squad is assigned to this manager yet/);
+  a.match(unattached, /TACTICS · NO CLUB \/ SQUAD/);
 });
 
 test('the swap panel offers replacements and clearing a slot empties it', () => {
