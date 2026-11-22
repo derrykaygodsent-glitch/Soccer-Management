@@ -1,4 +1,4 @@
-/* TOUCHLINE 26 — procedural WebAudio (crowd / whistle / kick). No assets. */
+/* TOUCHLINE 26 - procedural WebAudio (crowd / whistle / kick). No assets. */
 (function (global) {
   'use strict';
   const Audio = {

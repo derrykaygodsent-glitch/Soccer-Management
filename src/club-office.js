@@ -4,7 +4,7 @@
   const U=global.TLClubUI, S=global.TLSeasonState, K=global.TLSeasonCalendar;
   const {H,C,esc,icon,art,link,btn,tag,stamp}=U;
   const {longDate,condition}=global.TLMatchdayUI;
-  const action=(label,id,kind='outline',glyph='')=>`<button class="cc-btn cc-btn-${kind}" type="button" data-hc-open="${id}">${glyph?icon(glyph):''}${esc(label)}${icon('i-arrow')}</button>`;
+  const action=(label,id,kind='outline',glyph='')=>`<button class="cc-btn cc-btn-${kind}" type="button" data-hc-open="${id}">${glyph?icon(glyph):''}${esc(label)}</button>`;
   const panelHead=(title,small,extra='')=>`<header class="tl-panel-head"><div>${small?`<p class="tl-label">${esc(small)}</p>`:''}<h2>${esc(title)}</h2></div>${extra}</header>`;
   const comp=f=>H.fixtureCompetition(f);
   const home=H.clubs[H.homeId];
@@ -32,23 +32,23 @@
   function todaysDesk(c){
     const s=c.season.value, pending=S.pending(s), due=K.due(s), available=S.activities(s,s.now);
     const slate=K.onDate(s,s.now);
-    const items=pending.length?pending.slice(0,3).map(m=>taskRow(c,{label:m.subject,detail:`${m.from} · Response required`,glyph:'mail',tone:'alert',control:`<button type="button" class="tl-row-arrow" data-hc-mail="${esc(m.id)}" aria-label="Respond: ${esc(m.subject)}">${icon('i-arrow')}</button>`})).join(''):
+    const items=pending.length?pending.slice(0,3).map(m=>taskRow(c,{label:m.subject,detail:`${m.from} · Response required`,glyph:'mail',tone:'alert',control:`<button type="button" class="tl-row-action" data-hc-mail="${esc(m.id)}" aria-label="Respond: ${esc(m.subject)}">Respond</button>`})).join(''):
       available.slice(0,3).map(a=>{
         const f=a.kind==='fixture'?slate.find(f=>f.id===a.id):null;
-        const control=f?`<button class="tl-row-arrow" type="button" data-hc-fixture="${esc(f.id)}" aria-label="Open ${esc(a.label)} fixture details">${icon('i-arrow')}</button>`:'';
+        const control=f?`<button class="tl-row-action" type="button" data-hc-fixture="${esc(f.id)}" aria-label="Open ${esc(a.label)} fixture details">Open</button>`:'';
         const detail=f?.result?`${a.desc} · FT ${f.result.goals.join('–')}`:a.desc;
         return taskRow(c,{label:a.label,detail,glyph:kinds[a.kind]||'calendar',right:stamp(a.time),tone:f?'match':'',control});
       }).join('');
     return `<section class="tl-panel tl-agenda" aria-label="Today’s desk">${panelHead('Today’s desk',new Intl.DateTimeFormat('en-GB',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'}).format(s.now),`<button type="button" class="tl-icon" data-hc-open="day" aria-label="Open club calendar">${icon('calendar')}</button>`)}
       <div class="tl-agenda-status"><span></span><b>${pending.length?`${pending.length} ${pending.length===1?'decision':'decisions'} due`:due?'Matchday · Preparation ready':'No outstanding decisions'}</b></div><ul>${items||'<li class="tl-task-empty">No activities scheduled.</li>'}</ul>
-      <footer>${due&&!pending.length?`<button type="button" class="cc-btn cc-btn-primary" data-hc-progress>Open tactical meeting ${icon('i-arrow')}</button>`:action('Open calendar','day','plain')}${pending.length?'':`<span class="tl-clock-hint">${icon('check')} Club time</span>`}</footer></section>`;
+      <footer>${due&&!pending.length?`<button type="button" class="cc-btn cc-btn-primary" data-hc-progress>Open tactical meeting </button>`:action('Open calendar','day','plain')}${pending.length?'':`<span class="tl-clock-hint">${icon('check')} Club time</span>`}</footer></section>`;
   }
   function metrics(c,rows){
     const s=c.season.value, pos=rows.findIndex(r=>r.id===H.homeId), row=rows[pos], f=c.fiscal;
     const out=C.roster.filter(p=>S.availability(s,p.id).out).length;
     const unread=c.unread().length;
     const list=[['League position',H.ordinal(pos+1),`${row.pts} points · ${row.played} played`,'cup','league','mint'],['Squad available',`${C.roster.length-out}/${C.roster.length}`,out?`${out} out of selection`:'All clear for selection','i-shirt','medical','blue'],['Inbox',`${unread} unread`,unread?'Review club updates':'You’re up to date','mail','inbox','amber'],['Transfer budget',H.millions(f.transfer),'Current allocation','money','finance','mint']];
-    return `<div class="tl-kpis" aria-label="Club at a glance">${list.map(([label,v,copy,glyph,id,tone])=>`<button type="button" class="tl-kpi" data-hc-open="${id}"><span class="tl-kpi-top">${icon(glyph)}<span>${esc(label)}</span>${icon('i-arrow')}</span><strong data-tone="${tone}">${esc(v)}</strong><small>${esc(copy)}</small></button>`).join('')}</div>`;
+    return `<div class="tl-kpis" aria-label="Club at a glance">${list.map(([label,v,copy,glyph,id,tone])=>`<button type="button" class="tl-kpi" data-hc-open="${id}"><span class="tl-kpi-top">${icon(glyph)}<span>${esc(label)}</span></span><strong data-tone="${tone}">${esc(v)}</strong><small>${esc(copy)}</small></button>`).join('')}</div>`;
   }
   function fixtures(c,next){
     const upcoming=c.fixtures().filter(f=>!f.score).slice(0,4), played=c.fixtures().filter(f=>f.score).slice(-2).reverse();
@@ -65,7 +65,7 @@
   function leaders(c){
     const list=S.leaders(c.season.value);
     const people=list.map(({player,label,value})=>`<button type="button" class="tl-leader" data-c-do="player" data-c-val="${player.id}"><span class="tl-player-photo">${U.avatar(c,player.name,player.id)}</span><span><small>${esc(label)}</small><b>${esc(player.name)}</b></span><strong><span aria-hidden="true">${esc(value.split(' ')[0])}</span><span class="hc-sr">${esc(value)}</span></strong></button>`);
-    return `<section class="tl-panel tl-leaders" aria-label="Player stats">${panelHead('Player leaders','Performance',`<button type="button" class="tl-icon" data-hc-collapse="homeLeaders" aria-controls="homeLeaders" aria-expanded="true" aria-label="Toggle player stats">${icon('down')}</button>`)}<div id="homeLeaders">${people.slice(0,4).join('')}<details class="tl-more-stats"><summary>More leaders</summary>${people.slice(4).join('')}</details><footer>${action('Player stats','leaders','plain')}</footer></div></section>`;
+    return `<section class="tl-panel tl-leaders" aria-label="Player stats">${panelHead('Player leaders','Performance',`<button type="button" class="tl-icon" data-hc-collapse="homeLeaders" aria-controls="homeLeaders" aria-expanded="true" aria-label="Toggle player stats">${icon('down')}</button>`)}<div id="homeLeaders">${people.slice(0,4).join('')}<details open class="tl-more-stats"><summary>More leaders</summary>${people.slice(4).join('')}</details><footer>${action('Player stats','leaders','plain')}</footer></div></section>`;
   }
   function finance(c){
     const f=c.fiscal, points=f.history.map((v,i)=>`${10+i*15},${47-v/14}`);
@@ -73,7 +73,7 @@
   }
   function clubhouse(c){
     const rows=c.standings(), next=K.next(c.season.value), m=c.mail().find(m=>m.id.startsWith('result-'));
-    return `<div class="tl-office"><header class="tl-office-head"><div><p class="tl-label">RIVERSIDE FC <span></span> CLUBHOUSE</p><h2>Manager’s Office</h2><p>Your first-team briefing, fixtures and club priorities.</p></div><button type="button" class="tl-office-note" data-hc-open="notebook">${icon('pencil')} Notebook ${icon('i-arrow')}</button></header>
+    return `<div class="tl-office"><header class="tl-office-head"><div><p class="tl-label">RIVERSIDE FC <span></span> CLUBHOUSE</p><h2>Manager’s Office</h2><p>Your first-team briefing, fixtures and club priorities.</p></div><button type="button" class="tl-office-note" data-hc-open="notebook">${icon('pencil')} Notebook </button></header>
       <div class="tl-hero-grid">${matchHero(c,next)}${todaysDesk(c)}</div>${metrics(c,rows)}
       <div class="tl-office-board">${fixtures(c,next)}${league(c,rows)}${leaders(c)}</div>
       <div class="tl-office-bottom">${finance(c)}<section class="tl-panel tl-terrace" aria-label="The Terrace">${art('supporters')}<div><p class="tl-label">RIVERSIDE SOCIAL</p><h2>The Terrace</h2><p>${esc(m?m.subject:'The cup build-up is under way. See what supporters and the local press are saying.')}</p>${action('Open Social Feed','social','outline','social')}</div></section></div>
@@ -102,7 +102,7 @@
     const p=c.calendar?.();
     if(!p?.last||p.last.now!==c.now)return '';
     const {reason,days,messages}=p.last, [title,copy,glyph]=pauseCopy[reason]||pauseCopy.unchanged;
-    return `<section class="tl-handover" data-reason="${reason}"><span>${icon(glyph)}</span><div><p class="tl-label">CALENDAR PAUSED · ${days} ${days===1?'DAY':'DAYS'} PROCESSED</p><h2>${esc(title)}</h2><p>${esc(copy)}</p></div>${reason==='decision'&&messages?.[0]?`<button class="cc-btn cc-btn-outline" type="button" data-hc-mail="${esc(messages[0])}">Review decision ${icon('i-arrow')}</button>`:reason==='fixture'?`<button class="cc-btn cc-btn-primary" type="button" data-hc-progress>Tactical Meeting ${icon('i-arrow')}</button>`:''}</section>`;
+    return `<section class="tl-handover" data-reason="${reason}"><span>${icon(glyph)}</span><div><p class="tl-label">CALENDAR PAUSED · ${days} ${days===1?'DAY':'DAYS'} PROCESSED</p><h2>${esc(title)}</h2><p>${esc(copy)}</p></div>${reason==='decision'&&messages?.[0]?`<button class="cc-btn cc-btn-outline" type="button" data-hc-mail="${esc(messages[0])}">Review decision </button>`:reason==='fixture'?`<button class="cc-btn cc-btn-primary" type="button" data-hc-progress>Tactical Meeting </button>`:''}</section>`;
   }
 
   const units=[['GK','Keepers',['GK']],['DEF','Defence',['DC','FB']],['MID','Midfield',['DM','CM','AM']],['ATT','Attack',['W','ST']]];

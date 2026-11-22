@@ -1,4 +1,4 @@
-/* Touchline 26 — Classic 2D match controls and replay playback. */
+/* Touchline 26 - Classic 2D match controls and replay playback. */
 (function (global) {
   'use strict';
   const D = global.TLData, E = global.TLEngine, A = global.TLAudio, V = global.TLHighlights, O = global.TLReferee, B = global.TLBroadcast;
@@ -12,9 +12,9 @@
   const GOALS = V.GOALS, BREAKS = V.BREAKS;
   const LINEUP_EVENTS = new Set(['sub', 'dismissed', 'yellow']);
   const TACTICS = [
-    ['formation', 'Formation', Object.keys(D.FORMATIONS)], ['mentality', 'Mentality', D.MENTALITIES],
-    ['passing', 'Passing', D.PASSING], ['tempo', 'Tempo', D.TEMPO], ['press', 'Pressing', D.PRESS],
-    ['width', 'Width', D.WIDTH], ['line', 'Defensive line', D.LINE]
+    ['formation', 'Out-of-possession formation', Object.keys(D.FORMATIONS)], ['attackFormation','In-possession shape',global.TLMatchdayData.phaseFormationOptions], ['mentality', 'Mentality', D.MENTALITIES],
+    ['passing', 'Passing', D.PASSING], ['tempo', 'Tempo', D.TEMPO], ['press', 'Pressing intensity', D.PRESS],
+    ['trigger','Press trigger',global.TLMatchdayData.choices.trigger],['width', 'Width', D.WIDTH], ['line', 'Defensive line', D.LINE]
   ];
   const marks = {
     nbu: '<path d="M7 15v-5l3 1.5V8l3 2V7l4 3v5Z" fill="currentColor"/><path d="M8 16h8"/>',
@@ -610,7 +610,7 @@
     const lineup = $('lineup'), from = lineup.scrollLeft;
     text('formationLabel', shapeLabel(home.tactics.formation));
     const captain = [home.assignments?.captain,home.assignments?.vice].find(id=>home.slots.some(s=>s.player.id===id)) || (home.assignments&&home.slots.find(s=>s.role!=='GK')?.player.id);
-    lineup.innerHTML = home.slots.map(({ player: p, role }) => `<button type="button" class="player-tile" data-player="${html(p.id)}" aria-label="${html(p.name)}, number ${p.num}, ${role}" aria-pressed="${state.selected === p.id}" title="${html(p.name)}" style="--kit:${portraitKit(role === 'GK' ? home.club.gk : home.club.primary)};--condition:${condition(p)}%;--condition-color:${colorCond(p)}"><span class="tile-head"><span>${role}${p.id===captain?' · C':''}${p.yellow ? ' · YC' : ''}${p.injury ? ' · +' : ''}</span><span class="tile-no">${p.num}</span></span><span class="tile-main">${icon('shirt')}<span class="tile-name">${html(p.name.split(' ').pop())}</span></span><span class="tile-rating">${state.ready?'—':p.rating.toFixed(1)}</span><span class="tile-cond" aria-hidden="true"><i></i></span></button>`).join('');
+    lineup.innerHTML = home.slots.map(({ player: p, role }) => `<button type="button" class="player-tile" data-player="${html(p.id)}" aria-label="${html(p.name)}, number ${p.num}, ${role}" aria-pressed="${state.selected === p.id}" title="${html(p.name)}" style="--kit:${portraitKit(role === 'GK' ? home.club.gk : home.club.primary)};--condition:${condition(p)}%;--condition-color:${colorCond(p)}"><span class="tile-head"><span>${role}${p.id===captain?' · C':''}${p.yellow ? ' · YC' : ''}${p.injury ? ' · +' : ''}</span><span class="tile-no">${p.num}</span></span><span class="tile-main">${icon('shirt')}<span class="tile-name">${html(p.name.split(' ').pop())}</span></span><span class="tile-rating">${state.ready?'N/A':p.rating.toFixed(1)}</span><span class="tile-cond" aria-hidden="true"><i></i></span></button>`).join('');
     lineup.scrollLeft = from;
     if (state.selected && !state.match.onPitchPlayers().some(p => p.id === state.selected)) selectPlayer(null);
   }
@@ -618,7 +618,7 @@
     for (const button of $('lineup').querySelectorAll('[data-player]')) {
       const p = state.meta[button.dataset.player];
       if (!p) continue;
-      button.querySelector('.tile-rating').textContent=state.ready?'—':p.rating.toFixed(1);button.style.setProperty('--condition', condition(p) + '%');
+      button.querySelector('.tile-rating').textContent=state.ready?'N/A':p.rating.toFixed(1);button.style.setProperty('--condition', condition(p) + '%');
       button.style.setProperty('--condition-color', colorCond(p));
     }
     if (state.selected) updateFocus(state.meta[state.selected]);
@@ -743,12 +743,14 @@
   }
 
   function renderTactics() {
-    const m = state.match, t = team().tactics, away = m.teams[1-managed()];
+    const m = state.match, t = team().tactics, own=team(),away = m.teams[1-managed()], Z=global.TLZones;
     const locked=spectator()||!!state.club&&(state.ready||m.phase==='fulltime');
     const timing = spectator()?'Watching as a spectator. Neither side is under your control.':locked?'The team sheet is locked. Instructions can change once play starts.':(filmView() ? `Changes take effect at ${m.clockStr()}, when the current footage ends.` : 'Set how your side plays. Changes apply when play resumes.')+(state.club?' These instructions are for this match only unless saved.':'');
-    $('tab-tactics').innerHTML = `<p class="help-text desk-feedback" role="status">${timing}</p><div class="desk-grid">${TACTICS.map(([key, title, values]) => `<label class="tactic-control">${title}<select data-tactic="${key}"${locked?' disabled':''}>${options(values, key !== 'formation')}</select></label>`).join('')}</div><div class="opposition"><strong>${html(away.club.name)} · Opposition setup</strong>${shapeLabel(away.tactics.formation)} · ${html(D.MENTALITIES[away.tactics.mentality])} · ${html(D.PRESS[away.tactics.press])} press</div>`;
-    if(state.club&&!locked)$('tab-tactics').insertAdjacentHTML('beforeend',state.saveConfirm?`<div class="live-save-confirm"><p>Save the current formation and instructions to club tactics? Substitutions stay in this match.</p><button type="button" class="button" data-cancel-live-save>Cancel</button> <button type="button" class="button primary" data-confirm-live-save>Save to club</button></div>`:`<div class="live-save-confirm"><button type="button" class="button" data-live-save>Save tactics to club</button></div>`);
-    for (const select of $('tab-tactics').querySelectorAll('[data-tactic]')) select.value = t[select.dataset.tactic];
+    const players=own.slots.map(s=>s.player).filter(Boolean),playerId=players.some(p=>p.id===state.tacticPlayer)?state.tacticPlayer:players[0]?.id;state.tacticPlayer=playerId;state.tacticPhase=state.tacticPhase||'attack';const slot=own.slots.find(s=>s.player?.id===playerId),phase=state.tacticPhase||'attack',position=phase==='attack'?(slot?.attackPosition||slot?.position):slot?.position,job=phase==='attack'?slot?.attackJob?.[0]:slot?.engineJob?.[0]||slot?.job?.[0],roleChoices=Z.choices(position)||[],duty=phase==='attack'?slot?.attackJob?.[2]:slot?.engineJob?.[2]||slot?.job?.[2],roleOptions=roleChoices.flatMap(name=>(Z.jobs[name]?.duties||['Support']).map(d=>[`${name}|${d}`,`${name} · ${d}`])),selectedRole=`${job||''}|${duty||(job&&Z.jobs[job]?Z.duty(job,'Support'):'Support')}`,instructions=slot?.instructions?.[phase]||{};
+    const individual=state.club?`<section class="live-tactical-individual"><h3>Player-specific adjustment</h3><div class="desk-grid"><label class="tactic-control">Player<select data-tactical-player>${players.map(p=>`<option value="${html(p.id)}"${p.id===playerId?' selected':''}>${html(p.name)}</option>`).join('')}</select></label><label class="tactic-control">Phase<select data-tactical-phase><option value="attack"${phase==='attack'?' selected':''}>In possession</option><option value="defense"${phase==='defense'?' selected':''}>Out of possession</option></select></label><label class="tactic-control">Role and duty<select data-tactical-role${locked?' disabled':''}>${roleOptions.map(([v,n])=>`<option value="${html(v)}"${v===selectedRole?' selected':''}>${html(n)}</option>`).join('')}</select></label>${Object.entries(Z.individualInstructions).map(([group,values])=>`<label class="tactic-control">${html(({position:'Positioning',risk:'Passing risk',shooting:'Shooting',dribbling:'Dribbling',pressing:'Pressing'})[group])}<select data-tactical-instruction="${group}"${locked?' disabled':''}>${values.map(v=>`<option value="${html(v)}"${(instructions[group]||'Team default')===v?' selected':''}>${html(v)}</option>`).join('')}</select></label>`).join('')}</div></section>`:'';
+    $('tab-tactics').innerHTML = `<p class="help-text desk-feedback" role="status">${timing}</p><div class="desk-grid">${TACTICS.map(([key, title, values]) => `<label class="tactic-control">${title}<select data-tactic="${key}"${locked?' disabled':''}>${options(values, key !== 'formation'&&key!=='attackFormation'&&key!=='trigger')}</select></label>`).join('')}</div>${individual}<div class="opposition"><strong>${html(away.club.name)} · Opposition setup</strong>${shapeLabel(away.tactics.formation)} · ${html(D.MENTALITIES[away.tactics.mentality])} · ${html(D.PRESS[away.tactics.press])} press</div>`;
+    for (const select of $('tab-tactics').querySelectorAll('[data-tactic]')) select.value = select.dataset.tactic==='trigger'?(t.club?.trigger||'Always available'):t[select.dataset.tactic];
+    if(state.club&&!locked)$('tab-tactics').insertAdjacentHTML('beforeend',state.saveConfirm?`<div class="live-save-confirm"><p>Save the current shape and instructions to your next Club Season team sheet? Changes apply to this match immediately.</p><button type="button" class="button" data-cancel-live-save>Cancel</button> <button type="button" class="button primary" data-confirm-live-save>Save to club</button></div>`:`<div class="live-save-confirm"><button type="button" class="button" data-live-save>Save tactics to club</button></div>`);
   }
   function renderSquad() {
     const t = team();
@@ -788,7 +790,7 @@
     const poss = view ? view.poss : m.possTime;
     const total = poss[0] + poss[1];
     const possession = total ? Math.round(poss[0] / total * 100) : 50;
-    const passPct = s => s.passes ? Math.round(s.passWon / s.passes * 100) + '%' : '–';
+    const passPct = s => s.passes ? Math.round(s.passWon / s.passes * 100) + '%' : 'N/A';
     return statLine('Possession', possession + '%', (100 - possession) + '%') +
       statLine('Shots', a.shots, b.shots) + statLine('On target', a.onTarget, b.onTarget) +
       statLine('Expected goals', a.xG.toFixed(2), b.xG.toFixed(2)) + statLine('Passes completed', a.passWon, b.passWon) +
@@ -987,17 +989,17 @@
       setDesk(next.dataset.tab); next.focus();
     });
     $('tab-tactics').addEventListener('change', e => {
-      const key = e.target.dataset.tactic;
-      if (!key || spectator() || state.club&&(state.ready||state.match.phase==='fulltime')) return;
-      const m = state.match, buffered = touchlineChange(), change = { [key]: key === 'formation' ? e.target.value : +e.target.value };
+      const m=state.match,blocked=spectator()||state.club&&(state.ready||m.phase==='fulltime');
+      if(e.target.hasAttribute('data-tactical-player')){state.tacticPlayer=e.target.value;return renderTactics();}
+      if(e.target.hasAttribute('data-tactical-phase')){state.tacticPhase=e.target.value;return renderTactics();}
+      if(blocked)return;
+      if(e.target.hasAttribute('data-tactical-role')){const [job,duty]=e.target.value.split('|'),change={id:state.tacticPlayer,phase:state.tacticPhase||'attack',job,duty},result=m.setPlayerRole(managed(),change);if(!result.ok)return notify(result.msg);checkpoint({type:'tactic-role',change});renderTactics();notify(`${html(state.meta[change.id]?.name||'Player')} assigned ${job} · ${duty}.`);updateHUD();draw();return;}
+      if(e.target.hasAttribute('data-tactical-instruction')){const change={id:state.tacticPlayer,phase:state.tacticPhase||'attack',group:e.target.dataset.tacticalInstruction,value:e.target.value},result=m.setPlayerInstruction(managed(),change);if(!result.ok)return notify(result.msg);checkpoint({type:'tactic-instruction',change});renderTactics();notify('Player instruction updated.');updateHUD();draw();return;}
+      const key=e.target.dataset.tactic;if(!key)return;
+      const buffered=touchlineChange(),change={ [key]:key==='formation'||key==='attackFormation'||key==='trigger'?e.target.value:+e.target.value };
       m.setTactics(managed(),change);checkpoint({type:'tactic',change});
-      if (key === 'formation' || key === 'width') {
-        if (state.ready) m.setupKickoff(0);
-        if (buffered) state.lineupDirty = true;
-        else renderLineup();
-      }
-      notify(buffered ? `Instruction set for ${m.clockStr()}, after the current footage.` : 'Instruction updated.');
-      updateHUD(); draw();
+      if(key==='formation'||key==='width'||key==='attackFormation'){if(state.ready)m.setupKickoff(0);if(buffered)state.lineupDirty=true;else renderLineup();}
+      notify(buffered?`Instruction set for ${m.clockStr()}, after the current footage.`:'Instruction updated.');renderTactics();updateHUD();draw();
     });
     $('tab-tactics').addEventListener('click', e => {
       if(!state.club||state.ready||state.match.phase==='fulltime')return;

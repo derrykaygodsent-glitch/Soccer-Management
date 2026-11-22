@@ -37,7 +37,7 @@
       const target=c.calendar?.().target;
       const stops=`<div class="tl-calendar-policy"><span>Stops for required decisions and Riverside matchday.</span>${target!=null?`<span>${tag('Pause: '+H.calendar(target).date,'warn')} ${btn('Clear pause','pause-clear','',{kind:'text'})}</span>`:''}${K.day(d)>K.day(now)&&K.day(d)<=K.end&&K.day(d)!==target?btn('Pause on this date','pause-set',K.day(d),{kind:'outline',icon:'calendar'}):''}</div>`;
       const rows=K.onDate(s,d), focus=c.r.tab==='fixtures'||rows.some(f=>K.isClub(f)&&!f.result);
-      const switcher=`<div class="season-date-actions"><span>${longDate(d)} ${K.day(d)===K.day(now)?tag('Current date','teal'):''}</span><div>${btn('‹','day-open',K.day(d)-dayMs,{label:'Previous calendar date'})}${btn('Today','day-now','',{kind:'solid'})}${btn('›','day-open',K.day(d)+dayMs,{label:'Next calendar date'})}</div></div>`;
+      const switcher=`<div class="season-date-actions"><span>${longDate(d)} ${K.day(d)===K.day(now)?tag('Current date','teal'):''}</span><div>${btn('Previous','day-open',K.day(d)-dayMs,{label:'Previous calendar date'})}${btn('Today','day-now','',{kind:'solid'})}${btn('Next','day-open',K.day(d)+dayMs,{label:'Next calendar date'})}</div></div>`;
       return `<div class="season-calendar">${global.TLClubOffice.handover(c)}${banner}${strips(c,s,d)}${switcher}${stops}${focus?fixtures(c,s,d)+agenda(c,s,d):agenda(c,s,d)+(rows.length?fixtures(c,s,d):'')}</div>`;
     },
     action(c,key,v){

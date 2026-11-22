@@ -77,7 +77,9 @@
     }
     shell.addEventListener('change',e=>{
       const key=e.target.dataset.msField;
-      if(a()?.stage==='selection'&&key)change(key,e.target.value);
+      if(a()?.stage==='selection'&&key==='tactical-player'){ui.tacticalPlayer=e.target.value;render();}
+      else if(a()?.stage==='selection'&&key==='instruction-phase'){ui.instructionPhase=e.target.value;render();}
+      else if(a()?.stage==='selection'&&key)change(key,e.target.value);
       else if(['preTalk','halfTalk','fullTalk'].includes(a()?.stage)&&key==='talk-player'){ui.talk={...ui.talk,id:e.target.value};render();}
     });
     shell.addEventListener('click',e=>{
@@ -103,7 +105,7 @@
       }
       if(stage==='selection'){
         if(key==='pick')return change('pick','');
-        if(key==='select-tab')ui.tab=v;else if(key==='layout')ui.layout=v;else return;
+        if(key==='select-tab')ui.tab=v;else if(key==='layout')ui.layout=v;else if(key==='select-phase')ui.phase=v;else return;
         return render();
       }
       if(stage==='half'||stage==='full'){

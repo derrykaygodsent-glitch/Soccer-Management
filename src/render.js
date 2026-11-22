@@ -1,4 +1,4 @@
-/* Touchline 26 — original, fixed-overhead presentation for the Classic 2D view. */
+/* Touchline 26 - original, fixed-overhead presentation for the Classic 2D view. */
 (function (global) {
   'use strict';
   const { L, W, CX, CY, GOAL_HALF, BOX_L, BOX_HALF, SIX_L, SIX_HALF, PEN } = global.TLEngine;

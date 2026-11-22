@@ -23,7 +23,6 @@
     <symbol id="i-events" viewBox="0 0 24 24"><path d="M8.5 6.5h11m-11 5.5h11m-11 5.5h11M4.5 6.5h.2m-.2 5.5h.2m-.2 5.5h.2"/></symbol>
     <symbol id="i-pin" viewBox="0 0 24 24"><path d="M19 10c0 5-7 10-7 10s-7-5-7-10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.2"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
-    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
     <symbol id="i-swap" viewBox="0 0 24 24"><path d="M4 8h15m-4-4 4 4-4 4m5 4H5m4-4-4 4 4 4"/></symbol>
     <symbol id="i-shirt" viewBox="0 0 24 24"><path d="m8 3-6 3.5 2.3 5L7 10.2V21h10V10.2l2.7 1.3L22 6.5 16 3h-1a3 3 0 0 1-6 0Z" fill="currentColor" stroke="none"/><path d="M8 3h1a3 3 0 0 0 6 0h1m1 7.2V21H7V10.2" fill="none" stroke="rgba(255,255,255,.34)" stroke-width=".8"/></symbol>
     {{HOME_ICONS}}
@@ -41,7 +40,7 @@
       <div class="identity" aria-label="Touchline 26"><span class="brandmark"><svg class="icon" aria-hidden="true"><use href="#i-pitch"/></svg></span><span class="wordmark">TOUCHLINE<span>26</span></span></div>
       <span class="site-path">Match centre</span>
     <button type="button" data-cloud class="cc-btn cc-btn-outline">Cloud saves</button>
-      <button class="button match-home" id="matchHome" type="button" data-return-home><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg><span>Home</span></button>
+      <button class="button match-home" id="matchHome" type="button" data-return-home><span>Home</span></button>
       <div class="view-label"><svg class="icon" aria-hidden="true"><use href="#i-pitch"/></svg><span>Classic 2D</span></div>
     </div>
   </header>
@@ -95,7 +94,7 @@
         <button class="icon-button feed-button" id="btnEvents" type="button" aria-label="Open match events" title="Match events"><svg class="icon" aria-hidden="true"><use href="#i-events"/></svg></button>
       </div>
 
-      <details class="match-options" id="matchOptions"><summary aria-label="Match preferences">⚙ <span>Preferences</span></summary><div class="controls" aria-label="Match controls">
+      <details open class="match-options" id="matchOptions"><summary aria-label="Match preferences">⚙ <span>Preferences</span></summary><div class="controls" aria-label="Match controls">
         <div class="playback">
           <button class="button primary play-button" id="btnPlay" type="button" title="Kick off (Space)"><svg class="icon" aria-hidden="true"><use id="playIcon" href="#i-play"/></svg><span id="playLabel">Kick off</span></button>
           <label class="speed-mode"><span>Speed</span><select id="playbackSpeed" aria-label="Playback speed"></select></label>
@@ -146,7 +145,7 @@
       <p class="help-text watch-note" id="watchNote">1× is real time. Highlights skip quiet play; footage keeps your chosen speed. Estimates exclude pauses and replays.</p>
       <div class="setup-checks"><label><input type="checkbox" id="preReplay" checked> Auto goal replays</label><label><input type="checkbox" id="preSound"> Stadium sound</label></div>
       <p class="help-text" id="setupNote">Set your fixture and starting instructions.</p>
-      <div class="dialog-actions"><button class="button" data-close="setupDialog" type="button">Cancel</button><button class="button primary" type="submit">Load fixture <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
+      <div class="dialog-actions"><button class="button" data-close="setupDialog" type="button">Cancel</button><button class="button primary" type="submit">Load fixture </button></div>
     </form>
   </dialog>
 
@@ -169,7 +168,7 @@
 
   <dialog id="breakDialog" class="dialog break-dialog" aria-labelledby="breakTitle">
     <div class="dialog-head"><div><div class="eyebrow"><i></i> Match summary</div><h2 id="breakTitle">Half time</h2></div></div>
-    <div class="dialog-body"><div id="breakScore" class="break-score"></div><div id="breakStats"></div><div class="dialog-actions"><button class="button break-home" type="button" data-return-home><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg>Home</button><button class="button" id="btnBreakDesk" type="button"><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg> Touchline desk</button><button class="button primary" id="btnBreakContinue" type="button">Second half</button></div></div>
+    <div class="dialog-body"><div id="breakScore" class="break-score"></div><div id="breakStats"></div><div class="dialog-actions"><button class="button break-home" type="button" data-return-home>Home</button><button class="button" id="btnBreakDesk" type="button"><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg> Touchline desk</button><button class="button primary" id="btnBreakContinue" type="button">Second half</button></div></div>
   </dialog>
   <div id="toast" class="toast" role="status" hidden></div>
   </div>

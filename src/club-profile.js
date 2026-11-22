@@ -8,11 +8,11 @@
   const money = n => W().money(Number(n) || 0);
   const day = d => W().date(Number(d) || 0);
   const D = () => g.TLData;
-  const unit = new Proxy({}, { get: () => 1 });
+  const maximum = new Proxy({}, { get: () => 20 });
   function ability(p) {
-    const w = D().ROLE_WEIGHTS?.[p.pos];
+    const w = D().ROLE_WEIGHTS?.[p.pos === 'CB' ? 'DC' : p.pos];
     if (!w) return 0;
-    return Math.round(100 * w(p.attrs || {}) / w(unit));
+    return Math.max(0, Math.min(100, Math.round(100 * w(p.attrs || {}) / w(maximum))));
   }
   function clubNation(s) {
     const club = s.club;
@@ -117,6 +117,7 @@
       </div>
     </section>`;
   }
-  g.TLClubProfile = { render, ability, clubNation, roster };
+  function renderWorld(s,name){const Wm=W(),e=esc,nation=Object.keys(Wm.nations||{}).find(n=>(Wm.nations[n]||[]).includes(name)),clubs=nation?Wm.nations[nation]:[],pool=Wm.pool||[];if(!nation){const place=g.TLWorldGuide?.search(name).find(x=>x.type==='Football club'),location=place?`${place.t.name}, ${place.c.name}`:'No current league registry is available for this club.';return `<section class="org club-file world-club-file"><header class="org-cover club-file-cover">${art('quayside')}<div><small>WORLD CLUB DOSSIER</small><h2>${e(name)}</h2><p>${e(location)}</p></div></header><article class="org-agenda"><h3>Club record</h3><p>This founding club is listed in the world guide, but does not currently have an active league-table record in this career.</p>${place?`<button data-guide-country="${e(place.c.code)}" data-guide-place="${e(place.t.id)}">Open ${e(place.t.name)} atlas entry</button>`:''}</article></section>`;}const row=(Wm.table(nation,s.day)||[]).find(x=>x.name===name),team=pool.filter(p=>p.club===name).sort((a,b)=>a.pos.localeCompare(b.pos)||a.age-b.age),coach=g.TLTechnical.office(s,name,nation,clubs).coach,owner=s.clubOwnership?.[name],history=(s.benches?.[name]||[]).slice().reverse(),status=owner?`${owner.consortium} · ${owner.shares}% control`:'Independent club ownership';return `<section class="org club-file world-club-file"><header class="org-cover club-file-cover">${art('quayside')}<div><small>WORLD CLUB DOSSIER · ${e(nation).toUpperCase()}</small><h2>${e(name)}</h2><p>${e(status)} · ${row?.rank?`#${row.rank} in ${e(nation)}`:'League campaign not started'}</p></div></header><div class="cp-kpis"><div><small>Nation</small><b>${e(nation)}</b><em>${e(g.TLFASeason.profiles[nation]?.[5]||'Meridian association')}</em></div><div><small>League record</small><b>${row?`${row.w}-${row.d}-${row.l}`:'–'}</b><em>${row?`${row.pts} points · ${row.p} played`:'No fixtures played'}</em></div><div><small>First-team pool</small><b>${team.length}</b><em>${team.length?`Average age ${(team.reduce((n,p)=>n+p.age,0)/team.length).toFixed(1)}`:'No active player records'}</em></div><div><small>Board target</small><b>Top ${g.TLTechnical.office(s,name,nation,clubs).target}</b><em>Appointment budget ${money(g.TLTechnical.office(s,name,nation,clubs).budget)}</em></div></div><div class="cp-grid"><article class="org-agenda"><h3>In the dugout</h3>${coach?`<p><button class="world-entity-link" data-world-manager="${e(coach.id)}" data-world-manager-club="${e(name)}">${e(coach.name)}</button> · ${e(g.TLTechnical.labels[coach.style]||coach.style)}</p>`:'<p>Interim management.</p>'}${history.length?`<details open><summary>Managerial changes</summary>${history.slice(0,8).map(x=>`<p>${e(Wm.date(x.day))} · ${e(x.reason)} · ${x.former?`<button class="world-entity-link" data-world-manager="${e(x.former.id)}" data-world-manager-club="${e(name)}">${e(x.former.name)}</button>`:e(x.coach?.name||'')}</p>`).join('')}</details>`:''}</article><article class="org-agenda"><h3>Ownership &amp; investment</h3>${owner?`<p>${e(owner.consortium)} acquired ${owner.shares}% on ${e(Wm.date(owner.acquired))}.</p><p>Capital committed: ${money(owner.capital)} · board target: top ${owner.target}.</p>`:'<p>No consortium acquisition is recorded for this club in this career.</p>'}<button data-world-league="${e(nation)}">Open ${e(nation)} competition</button></article><article class="org-agenda"><h3>First-team players</h3>${team.length?`<div class="directory-scroll"><table class="player-directory"><thead><tr><th>Player</th><th>Position</th><th>Age</th><th>Nation</th></tr></thead><tbody>${team.map(p=>`<tr><th scope="row"><button data-league-player="${e(p.id)}">${e(p.name)}</button></th><td>${e(p.pos)}</td><td>${p.age}</td><td>${e(p.nation)}</td></tr>`).join('')}</tbody></table></div>`:'<p>No roster records are available.</p>'}</article></div></section>`;}
+  g.TLClubProfile = { render, renderWorld, ability, clubNation, roster };
   if (typeof module !== 'undefined') module.exports = g.TLClubProfile;
 })(typeof window === 'undefined' ? globalThis : window);

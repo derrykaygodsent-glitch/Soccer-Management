@@ -114,11 +114,12 @@
   const announcedDate=d=>base.some(f=>iso(f.date)===d);
   const style=['direct','defend','counter','press','possession'];
   function club(id){const c=clubs[id];if(c.stadium)return c;const i=H.standings.findIndex(r=>r.id===id);return {...c,city:c.name.split(' ')[0],stadium:`${c.name.split(' ')[0]} Ground`,style:style[i%5],rep:Math.max(54,74-i*.7),gk:'#d2a743',away:'#e0e9e6'};}
+  const refereeRegistry=['Rowan Bell','Amelia Brooks','Isaac Reid','Tariq Evans','Maya Sutton','Ellis Cole','Robin Grant','Asha Foster','Daniel Webb'].map((name,index)=>({id:`official-${index+1}`,name}));
   const officials=f=>{
-    const pool=['Rowan Bell','Amelia Brooks','Isaac Reid','Tariq Evans','Maya Sutton','Ellis Cole','Robin Grant','Asha Foster','Daniel Webb'];
+    const pool=refereeRegistry.map(x=>x.name);
     const i=D.seedFor(f.id)%pool.length;return [pool[i],pool[(i+2)%pool.length],pool[(i+4)%pool.length],pool[(i+6)%pool.length]];
   };
   const manager=id=>id===R?H.manager:id==='hpt'?H.opponentManager:['Rory Haines','Amir Bennett','Tessa Cole','Jonas Pike','Nia Grant'][D.seedFor(id)%5];
-  const api={DAY,HOUR,end,day,date,iso,finish,isClub,slate,clubFixtures,next,due,countdown,onDate,standings,continentalStandings,positions,fixtureId,announcedDate,club,officials,manager,outcome,winner};
+  const api={DAY,HOUR,end,day,date,iso,finish,isClub,slate,clubFixtures,next,due,countdown,onDate,standings,continentalStandings,positions,fixtureId,announcedDate,club,officials,referees:refereeRegistry,manager,outcome,winner};
   global.TLSeasonCalendar=api;if(node)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

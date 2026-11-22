@@ -23,7 +23,7 @@
     const list=periods(c);
     const selected=(calendar?c.ui.calendar:c.ui.period)||(calendar?iso(c.now).slice(0,7):'all');
     const idx=list.indexOf(selected);
-    return `<div class="cc-period-controls">${select(calendar?'calendar':'period','Fixture month',[...(calendar?[]:[['all','All months']]),...list.map(id=>[id,readableMonth(id)])],selected)}${btn('‹',calendar?'calendar-step':'period-step','-1',{label:'Previous month',disabled:idx===0})}${btn('›',calendar?'calendar-step':'period-step','1',{label:'Next month',disabled:idx===list.length-1})}</div>`;
+    return `<div class="cc-period-controls">${select(calendar?'calendar':'period','Fixture month',[...(calendar?[]:[['all','All months']]),...list.map(id=>[id,readableMonth(id)])],selected)}${btn('Previous',calendar?'calendar-step':'period-step','-1',{label:'Previous month',disabled:idx===0})}${btn('Next',calendar?'calendar-step':'period-step','1',{label:'Next month',disabled:idx===list.length-1})}</div>`;
   }
   function fixturesTable(c,rows,selected) {
     const groups = rows.reduce((acc,f)=>{(acc[month(f.date)]??=[]).push(f);return acc;},{});
@@ -161,7 +161,7 @@
     ${positionChips(c)}<div class="cc-toolbar cc-squad-filters">${search('q',c.ui.q,'Find a player')}${select('position','Filter positions',[['all','All positions'],...Object.keys(posGroup)],c.ui.position||'all')}${U.check('available','Available only',c.ui.available)}<span class="cc-spacer"></span>${btn('New advice','squad-advice','',{kind:'text',arrow:true})}</div>
     <p class="cc-mobile-table-hint cc-muted">Swipe the table to see all columns.</p>
     ${rows.length?table('Riverside senior squad',col,rows,'squad',`cc-squad-table${attrs?' cc-attributes':''}`):empty('No players match this selection','Check the lineup slot, availability and position filters.')}
-    <div class="cc-squad-rules"><details><summary>Selection and cup fixture rules</summary><p>This is a draft team sheet. Use Club tactics or Team Selection on the fixture date to choose your competitive XI.</p></details><span class="cc-muted">4-3-3 · ${c.s.sheet.slice(0,11).filter(Boolean).length}/11 picked · ${all.length} shown</span>${link('tactics','Club tactics','overview')}</div></div>`;
+    <div class="cc-squad-rules"><details open><summary>Selection and cup fixture rules</summary><p>This is a draft team sheet. Use Club tactics or Team Selection on the fixture date to choose your competitive XI.</p></details><span class="cc-muted">4-3-3 · ${c.s.sheet.slice(0,11).filter(Boolean).length}/11 picked · ${all.length} shown</span>${link('tactics','Club tactics','overview')}</div></div>`;
   }
   function international(c){
     const group=C.roster.reduce((acc,p)=>{(acc[p.nation]??=[]).push(p);return acc;},{});
