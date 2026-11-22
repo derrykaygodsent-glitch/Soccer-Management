@@ -32,6 +32,7 @@ function update(s,raw,players,squad=players){const [cmd,a,b,c]=raw.split('|'),i=
  if(cmd==='system'&&(!b||Object.hasOwn(Z.systems,b))){plan.system=b;plan.instructions={};return;}
  if(cmd==='order'&&Z.choicesTeam[b]?.includes(c)){(plan.orders||={})[b]=c;return;}
  if(cmd==='axis'&&Z.axes.includes(b)&&['0','0.5','1','1.5','2'].includes(c)){(plan.instructions||={})[b]=+c;return;}
+ if(cmd==='clear'&&i>0&&slots[i]){plan.ids=slots.map(v=>v.player?.id||null);plan.ids[i]=null;plan.quickShape=s.tactic;delete plan.previousXI;return;}
  if(cmd==='focus'){s.sheetFocus=!s.sheetFocus;return;}
  if(cmd==='skipper'&&[0,1,2].includes(i)&&(!b||players.some(p=>p.id===b))){s.armband=Array.from({length:3},(_,j)=>j===i?b:s.armband?.[j]===b?'':s.armband?.[j]||'');return;}
  if(!Number.isInteger(i)||!slots[i])throw Error('Choose a pitch position.');
