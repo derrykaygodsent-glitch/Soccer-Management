@@ -4,6 +4,7 @@ const { Match } = require('../src/engine.js');
 const D = require('../src/data.js');
 
 const N = parseInt(process.argv[2] || '3', 10);
+// stats.passes counts every released delivery (ordinary passes, crosses, throws and clearances), not completed passes only; compare it against a total-attempt range.
 const verbose = process.argv.includes('-v');
 let tot = { goals: 0, shots: [0, 0], onT: [0, 0], passes: [0, 0], passPct: [0, 0], poss: [0, 0], fouls: [0, 0], corners: [0, 0], off: [0, 0], yellow: 0, red: 0, pens: 0, xG: [0, 0], saves: [0, 0] };
 let errors = 0;
@@ -76,7 +77,7 @@ console.log('goals/match      ', avg(tot.goals), ' (target ~2.7)');
 console.log('shots/team       ', avg(tot.shots[0]), avg(tot.shots[1]), ' (target 9-15)');
 console.log('onTarget/team    ', avg(tot.onT[0]), avg(tot.onT[1]));
 console.log('xG/team          ', avg(tot.xG[0]), avg(tot.xG[1]));
-console.log('passes/team      ', avg(tot.passes[0]), avg(tot.passes[1]), ' (target 280-520)');
+console.log('passes/team      ', avg(tot.passes[0]), avg(tot.passes[1]), ' (reference ~600-750 attempts)');
 console.log('pass%            ', avg(tot.passPct[0] * 100), avg(tot.passPct[1] * 100), ' (target 72-86)');
 console.log('possession%      ', avg(tot.poss[0] * 100), avg(tot.poss[1] * 100));
 console.log('fouls/team       ', avg(tot.fouls[0]), avg(tot.fouls[1]), ' (target 8-13)');

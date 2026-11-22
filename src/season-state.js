@@ -104,7 +104,7 @@
   }
   function validManifest(a){
     const p=a?.sheet;
-    if(!p||!a.fitness||!M.formationOptions.includes(p.tactics?.form)||!Array.isArray(p.xi)||p.xi.length!==11||!Array.isArray(p.bench)||p.bench.length>6||!Array.isArray(p.roles)||p.roles.length!==11||!p.set||!p.numbers)return false;
+    if(!p||!a.fitness||!M.formationOptions.includes(p.tactics?.form)||!Array.isArray(p.xi)||p.xi.length!==11||!Array.isArray(p.bench)||p.bench.length>6||!p.set||!p.numbers)return false;
     const list=p.xi.concat(p.bench);
     return new Set(list).size===list.length&&list.every(id=>typeof id==='string'&&M.byPlayer(id)&&Number.isInteger(p.numbers[id])&&Number.isFinite(a.fitness[id]));
   }

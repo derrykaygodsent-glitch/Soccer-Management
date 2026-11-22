@@ -16,13 +16,14 @@ const showMoney=n=>(g.TLLuma||require('./luma')).format(n);
     return r.title||r.text||r.name||r.club||r.opponent||r.label||`Record dated ${g.TLManagerLife.date(r.day??s.day)}`;
   }
   function updates(s,details,page) {
+    g.TLOfficeOrganiser.ensureMailIds?.(s);
     const groups = {},
       add = (desk, id, item) => {
         if(desk===page) details.set(String(id),item);
         (groups[desk] ||= new Set()).add(String(id));
       };
-    s.mail.forEach((m, i) =>
-      add(g.TLOfficeOrganiser.classify(m)[3], "post:" + (s.mail.length - i),{label:m.report?.title||m.text,mail:s.mail.length-1-i}),
+    s.mail.forEach((m) =>
+      add(g.TLOfficeOrganiser.classify(m)[3], "post:" + m.mailId,{label:m.report?.title||m.text,mail:m.mailId}),
     );
     function recent(desk, rows) {
       for (const r of rows || [])
@@ -118,7 +119,7 @@ const showMoney=n=>(g.TLLuma||require('./luma')).format(n);
     return { counts, actions, dirty, fresh, details };
   }
   // Keep the arrival snapshot for this visit, including while filtering or sorting the desk.
-  function digest(items){if(!items.length)return '';const e=g.TLClubUI.esc,row=x=>`<li><small class="attention-tag">New</small> ${x.mail!=null?`<button data-update-mail="${x.mail}">Open ${e(x.label)}</button>`:e(x.label)}</li>`;return `<section class="arrival-brief"><small>DESK BRIEFING</small><h3>New since your last visit · ${items.length}</h3><ul>${items.slice(0,3).map(row).join('')}</ul>${items.length>3?`<details><summary>Show ${items.length-3} more</summary><ul>${items.slice(3).map(row).join('')}</ul></details>`:''}</section>`;}
+  function digest(items){if(!items.length)return '';const e=g.TLClubUI.esc,row=x=>`<li><small class="attention-tag">New</small> ${x.mail!=null?`<button data-update-mail="${e(x.mail)}">Open ${e(x.label)}</button>`:e(x.label)}</li>`;return `<section class="arrival-brief"><small>DESK BRIEFING</small><h3>New since your last visit · ${items.length}</h3><ul>${items.slice(0,3).map(row).join('')}</ul>${items.length>3?`<details open><summary>Show ${items.length-3} more</summary><ul>${items.slice(3).map(row).join('')}</ul></details>`:''}</section>`;}
   function mark(root,s,page,items){const tags=new WeakMap();function tag(node,text){if(!node)return;const used=tags.get(node)||[];if(used.includes(text))return;tags.set(node,[...used,text]);const chip=document.createElement('small');chip.className='attention-tag'+(text==='Needs response'?' due':'');chip.textContent=text;node.append(' ',chip);}
     const find=(attr,val)=>[...root.querySelectorAll('['+attr+']')].find(el=>el.getAttribute(attr)===String(val));
     for(const x of items){const r=x.record;if(page==='scouting'&&Array.isArray(r)){const cell=[...root.querySelectorAll('[data-life=recOpen]')].find(el=>el.dataset.v===r[1]);tag(cell?.closest('th'),'New');}if(page==='squad'&&typeof r==='string')tag(find('data-squad-player',r)?.closest('th'),'New');if(page==='bids'&&r)tag(find('data-bid-id',r.id)?.querySelector('h3'),'New');if(page==='kitOffice'&&Array.isArray(r))tag(find('data-kit-list',r[1])?.closest('details')?.querySelector('summary'),'New');if(page==='social'){const story=x.story||(r&&(s.kitWire?.includes(r)?'register:'+r.id:s.transferWire?.includes(r)?'transfer:'+r.id+':'+r.day:'district:'+r.day+r.title));if(story)tag(find('data-pulse-like',story)?.closest('article')?.querySelector('header'),'New');}}

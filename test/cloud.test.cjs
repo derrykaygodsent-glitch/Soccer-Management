@@ -33,3 +33,20 @@ test('private slot round trip, replay, RLS and stale revision rejection',async t
   await assert.rejects(db.exec('update touchline_careers set revision=3'),/permission denied/);
   await db.exec('reset role;set role anon');await assert.rejects(write(null,0),/permission denied/);await assert.rejects(db.query('select * from touchline_careers'),/permission denied/);
 });
+
+test('cloud slots are capped per account and owners can delete only the current revision',async t=>{
+  const db=new PGlite();t.after(()=>db.close());
+  const alice='00000000-0000-4000-8000-000000000011',bob='00000000-0000-4000-8000-000000000012';
+  await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key);insert into auth.users values ('${alice}'),('${bob}');create function auth.uid() returns uuid language sql stable as $$ select current_setting('app.uid',true)::uuid $$;grant usage on schema auth to authenticated;`);
+  await db.exec(fs.readFileSync('supabase/migrations/202611190001_careers.sql','utf8'));
+  await db.exec(fs.readFileSync('supabase/migrations/202611190003_cloud_slot_limits_and_delete.sql','utf8'));
+  const save=(label)=>db.query('select * from public.touchline_save($1,$2,$3,$4)',[null,0,label,JSON.stringify({career:{label}})]),remove=(id,rev)=>db.query('select * from public.touchline_delete($1,$2)',[id,rev]);
+  await db.exec(`set role authenticated;set app.uid='${alice}'`);
+  const ids=[];for(let i=0;i<10;i++)ids.push((await save('slot '+i)).rows[0].slot_id);
+  await assert.rejects(save('eleventh'),/Cloud save limit reached/);
+  assert.deepEqual((await remove(ids[0],99)).rows,[],'stale delete cannot remove a newer revision');
+  await db.exec(`set app.uid='${bob}'`);assert.deepEqual((await remove(ids[0],1)).rows,[],'another account cannot delete the save');
+  await db.exec(`set app.uid='${alice}'`);assert.equal((await remove(ids[0],1)).rows[0].deleted_id,ids[0]);
+  assert.equal((await save('replacement')).rows.length,1,'a freed slot can be reused');
+  await assert.rejects(db.exec('delete from public.touchline_careers'),/permission denied/);
+});

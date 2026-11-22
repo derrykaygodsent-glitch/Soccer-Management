@@ -76,7 +76,7 @@
   function search(){
     const input=$('homeSearchInput'), q=input.value.trim().toLowerCase(), entries=[...Object.entries(routes).map(([id,[label]])=>[id,label]),['profile',modalTitles.profile],['notebook',modalTitles.notebook]];
     const results=entries.filter(([id,label])=>!q||`${id} ${label} ${id==='club'?'Riverside FC':''}`.toLowerCase().includes(q));
-    $('homeSearchResults').innerHTML=results.length?results.map(([id,label])=>`<button class="hc-dialog-link" type="button" data-hc-open="${id}">${esc(label)}${icon('i-arrow')}</button>`).join(''):'<p class="cc-empty">No matching sections.</p>';
+    $('homeSearchResults').innerHTML=results.length?results.map(([id,label])=>`<button class="hc-dialog-link" type="button" data-hc-open="${id}">${esc(label)}</button>`).join(''):'<p class="cc-empty">No matching sections.</p>';
   }
   function showPanel(title,body){
     toggleDrawer(false);
@@ -124,7 +124,7 @@
     if(g?.reason==='decision')return ['Inbox','required',`${g.messages.length} ${g.messages.length===1?'decision requires':'decisions require'} your attention`,'mail'];
     if(g?.reason==='fixture')return ['Tactical Meeting','meeting','Prepare for today’s fixture','tactics'];
     if(g?.reason==='end')return ['Season complete','end','All published calendar dates have passed','check'];
-    return ['Continue','day','Process the club calendar (Space)','i-arrow'];
+    return ['Continue','day','Process the club calendar (Space)','calendar'];
   }
   function clock(now){
     const date=M.calendar(now);

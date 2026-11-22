@@ -5,7 +5,7 @@
   const desks = {
     scouting: "Scout players",
     interviewDesk: "Review vacancies & interviews",
-    create: "Club licence",
+    create: "Club founding application",
     jobs: "Job market",
     district: "Visit the district",
     people: "Meet contacts",

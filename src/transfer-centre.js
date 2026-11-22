@@ -113,7 +113,7 @@
           .slice(0, 2)
           .map((s) => s[0])
           .join("");
-        return `<div class="tc-club"><i style="--tc-h:${g.TLData.seedFor(club || label) % 360}">${e(letters || "FC")}</i><div><small>${label}</small><strong>${e(club || "Unattached")}</strong></div></div>`;
+        const known=club&&(Object.values(W.nations||{}).some(list=>list.includes(club))||g.TLWorldGuide?.search(club).some(x=>x.type==='Football club')),name=known?`<button data-world-club="${e(club)}">${e(club)}</button>`:`<strong>${e(club||"Unattached")}</strong>`;return `<div class="tc-club"><i style="--tc-h:${g.TLData.seedFor(club || label) % 360}">${e(letters || "FC")}</i><div><small>${label}</small>${name}</div></div>`;
       };
     const hero = `<header class="tc-hero">${U.art("dressing")}<div><small>FOOTBALL OPERATIONS　/　${e(n)}</small><h2>Transfer centre</h2><p>${e(club || "Independent manager")} · ${W.date(s.day)}</p></div></header><div class="tc-pulse"><div><small>Registration window</small><strong>${w.active ? "Open" : "Closed"}</strong><span>${w.active ? "Closes" : "Opens"} ${W.date(w.active ? w.close : w.open)}</span></div><div><small>Club treasury</small><strong>${club ? m(s.fund) : "No club"}</strong></div><button data-life="go" data-v="bids"><small>Negotiations</small><strong>${open} open</strong></button></div>`;
     const tabs = `<nav class="tc-tabs" aria-label="Transfer activity">${Object.entries(

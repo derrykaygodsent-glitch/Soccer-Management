@@ -34,6 +34,9 @@
         add(day, "social", `${r.name} · ${r.town}`, text);
     for (const r of [...(s.neighbourhood?.posts || [])].reverse())
       add(r.day, 'social', r.title, r.text);
+    for (const c of [...(s.pressConferences || [])].reverse())
+      if (['answered', 'delegated', 'ended'].includes(c.status))
+        add(c.answeredDay ?? c.endedDay ?? c.day, 'football', c.title || 'Press conference', `${c.headline || c.title}. ${c.answers?.length || 0} recorded answer(s); ${c.status === 'delegated' ? `handled by ${c.delegatedTo || 'an assistant'}` : c.status === 'ended' ? 'ended before all questions were answered' : 'attended personally'}.`);
     // Attribute a season only to a club the manager actually led at the whistle.
     const spells = [...(s.careerSpells || [])];
     if(s.club) spells.push({club:s.club.name,from:s.club.appointed,until:s.legacy?.exit?.day??s.day});
@@ -278,7 +281,9 @@
       : "";
     const origin = `${p.name} began this career in ${p.nation} on ${W.date(start)}, ${p.path === "found" ? "with plans to found a club" : "looking for a club to manage"}.${founding}`,
       chapter = `<article class="mp-card mp-story"><small>THE STORY SO FAR</small><h3>Biography</h3><p>${e(origin)} ${e(careerText)}</p><p>${e(todayText)}</p>${honoursPara}${homeText ? `<p>${e(homeText)}</p>` : ""}${kidsText ? `<p>${e(kidsText)}</p>` : ""}${seasonLine ? `<p><b>This season</b> ${e(seasonLine)}</p>` : ""}${first ? `<p><b>In football · ${W.date(first.day)}</b> ${e(first.text)}</p>` : ""}${social ? `<p><b>Off the pitch · ${W.date(social.day)}</b> ${e(social.text)}</p>` : ""}<p><b>What’s next</b> · ${e(nextSteps)}</p></article>`;
-    const timeline = `${chapter}${clubStats}<section class="mp-card"><small>FROM THE PRIVATE ARCHIVE</small><h3>Life history</h3><nav class="mp-filters" aria-label="History category">${Object.entries(
+    const pressRows = (s.pressConferences || []).filter(c => ['answered', 'delegated', 'ended'].includes(c.status)).slice().sort((a,b)=>(b.answeredDay||b.endedDay||b.day)-(a.answeredDay||a.endedDay||a.day));
+    const pressHistory = `<section class="mp-card mp-press-history"><small>MEDIA &amp; PUBLIC RECORD</small><h3>Press conference history · ${pressRows.length}</h3>${pressRows.length ? pressRows.map(c => `<article class="mp-entry"><small>${e(W.date(c.answeredDay || c.endedDay || c.day))} · ${e(c.title)} · ${e(c.status)}</small><strong>${e(c.headline || c.title)}</strong><p>${e(c.club || s.club?.name || '')}${c.context?.opponent ? ` v ${e(c.context.opponent)}` : ''}${c.delegatedTo ? ` · handled by ${e(c.delegatedTo)}` : ''}</p>${c.questions.map(q => { const a = c.answers.find(x => x.questionId === q.id), j = g.TLMediaConference.byId[q.journalistId]; return `<details open><summary>${e(j?.name || 'Reporter')} · ${e(j?.publication || '')}: ${e(q.prompt)}</summary><p>${e(a?.quote || 'No answer recorded.')}</p></details>`; }).join('')}</article>`).join('') : '<p>No conference has been completed yet. Major football events may generate a media request.</p>'}</section>`;
+    const timeline = `${pressHistory}${chapter}${clubStats}<section class="mp-card"><small>FROM THE PRIVATE ARCHIVE</small><h3>Life history</h3><nav class="mp-filters" aria-label="History category">${Object.entries(
       { all: "All chapters", ...labels },
     )
       .map(
@@ -292,7 +297,7 @@
     return `<section class="manager-passport">${switcher}${header}${
       ui.tab === "history"
         ? timeline
-        : `<article class="mp-card mp-wealth"><small>PERSONAL FINANCES</small><h3>Estimated net worth · ${W.money(wealth.total)}</h3><p>Available in your wallet: <b>${W.money(s.cash)}</b></p><details><summary>How this is calculated</summary>${factsList(wealth.rows.filter(([,v],i)=>!i||v).map(([label,v])=>[label,W.money(v)]))}<p>Property and business equipment are valued at cost. Club funds and future income are excluded.</p></details></article><div class="mp-grid"><article class="mp-card"><small>IDENTITY</small><h3>Personal file</h3>${factsList(
+        : `<article class="mp-card mp-wealth"><small>PERSONAL FINANCES</small><h3>Estimated net worth · ${W.money(wealth.total)}</h3><p>Available in your wallet: <b>${W.money(s.cash)}</b></p><details open><summary>How this is calculated</summary>${factsList(wealth.rows.filter(([,v],i)=>!i||v).map(([label,v])=>[label,W.money(v)]))}<p>Property and business equipment are valued at cost. Club funds and future income are excluded.</p></details></article><div class="mp-grid"><article class="mp-card"><small>IDENTITY</small><h3>Personal file</h3>${factsList(
             [
               ["Home nation", p.nation],
               ["Age", age],
@@ -326,10 +331,41 @@
                   ]
                 : []),
             ],
-          )}</article></div><article class="mp-card"><small>PRIVATE JOURNAL</small><h3>Your life in football</h3><p>${e(origin)}</p><button data-profile-view="history">Read biography and history</button></article><details class="mp-card"><summary>Save management</summary><p>This affects the local copy of this manager’s career.</p><button class="cc-btn" data-remove-current>Delete local profile &amp; save</button></details>`
+          )}</article></div><article class="mp-card"><small>PRIVATE JOURNAL</small><h3>Your life in football</h3><p>${e(origin)}</p><button data-profile-view="history">Read biography and history</button></article><details open class="mp-card"><summary>Save management</summary><p>This affects the local copy of this manager’s career.</p><button class="cc-btn" data-remove-current>Delete local profile &amp; save</button></details>`
     }</section>`;
   }
-  const api = { capture, history, render };
+  function renderWorld(s, id, clubHint = '') {
+    const W = g.TLManagerLife, T = g.TLTechnical, e = g.TLClubUI.esc;
+    const entries = [];
+    for (const [nation, clubs] of Object.entries(W.nations || {})) {
+      for (const club of clubs) {
+        const office = T.office(s, club, nation, clubs);
+        if (office.coach?.id === id) entries.push({ nation, club, coach: office.coach, day: office.day, current: true });
+        for (const item of s.benches?.[club] || []) {
+          for (const person of [item.coach, item.former]) {
+            if (person?.id === id) entries.push({ nation, club, coach: person, day: item.day, current: office.coach?.id === id });
+          }
+        }
+      }
+    }
+    const found = entries.find(x => x.club === clubHint) || entries.at(-1);
+    if (!found) {
+      const back = clubHint ? `<button data-world-club="${e(clubHint)}">Open ${e(clubHint)}</button>` : '';
+      return `<section class="org mp-profile world-manager-file"><header class="org-cover">${g.TLClubUI.art('briefing')}<div><small>WORLD MANAGER DOSSIER</small><h2>Manager record unavailable</h2></div></header><p>This manager is no longer attached to a recorded dugout in the current world.</p>${back}</section>`;
+    }
+    const all = [...new Map(entries.map(x => [x.club + '|' + x.day + '|' + x.coach.id, x])).values()].sort((a, b) => a.day - b.day);
+    const clubRow = (W.table(found.nation, s.day) || []).find(x => x.name === found.club);
+    const history = (s.benches?.[found.club] || []).filter(x => x.coach?.id === id || x.former?.id === id).slice().reverse();
+    const rank = clubRow?.rank ? '#' + clubRow.rank : 'Not ranked';
+    const points = clubRow ? `${clubRow.pts} points · ${clubRow.p} played` : 'Season not started';
+    const appointments = all.length ? all.map(x => `<p>${e(W.date(x.day))} · <button data-world-club="${e(x.club)}">${e(x.club)}</button> · ${x.current ? 'In post' : 'Recorded appointment'}</p>`).join('') : '<p>No appointment history is recorded.</p>';
+    const events = history.length ? `<article class="mp-card"><small>TOUCHLINE ARCHIVE</small><h3>Decisions and changes</h3>${history.map(x => `<p>${e(W.date(x.day))} · ${e(x.reason)} · ${x.coach?.id === id ? 'Appointed' : 'Left the post'}</p>`).join('')}</article>` : '';
+    const style = T.labels[found.coach.style] || found.coach.style;
+    const formation = g.TLData.defaultTactics(found.coach.style).formation;
+    const target = T.office(s, found.club, found.nation, W.nations[found.nation]).target;
+    return `<section class="org mp-profile world-manager-file"><header class="org-cover">${g.TLClubUI.art('briefing')}<div><small>WORLD MANAGER DOSSIER · ${e(found.nation).toUpperCase()}</small><h2>${e(found.coach.name)}</h2><p>${e(style)} · ${found.current ? 'Currently in the dugout' : 'Managerial record'}</p></div></header><div class="cp-kpis"><div><small>Current club</small><b><button data-world-club="${e(found.club)}">${e(found.club)}</button></b><em>${e(found.nation)}</em></div><div><small>League standing</small><b>${rank}</b><em>${points}</em></div><div><small>Career appointments</small><b>${all.length}</b><em>${all.length > 1 ? 'Recorded world roles' : 'One recorded role'}</em></div><div><small>Approach</small><b>${e(style)}</b><em>${e(formation)} formation</em></div></div><div class="cp-grid"><article class="mp-card"><small>CAREER RECORD</small><h3>Appointments</h3>${appointments}</article><article class="mp-card"><small>CLUB CONTEXT</small><h3>${e(found.club)}</h3><p>${found.current ? 'Currently responsible for the first team.' : 'Last recorded club appointment.'} The club’s board target is a top-${target} finish.</p><button data-world-club="${e(found.club)}">Open club dossier</button></article>${events}</div></section>`;
+  }
+  const api = { capture, history, render, renderWorld };
   g.TLManagerProfile = api;
   if (typeof module !== "undefined") module.exports = api;
 })(typeof window === "undefined" ? globalThis : window);
