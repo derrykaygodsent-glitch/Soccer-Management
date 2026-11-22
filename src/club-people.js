@@ -2,6 +2,7 @@
 (function (global) {
   'use strict';
   const U=global.TLClubUI, {H,C,views,esc,icon,btn,link,card,empty,values,tag,select,search,table,tr,avatar,rank,stars,spark,nation,clubName,meter,lookup,tabs}=U;
+  const S=global.TLSeasonState;
   const playerLink = id => btn(C.players[id].name,'player',id,{kind:'text'});
   const leaders = [C.leaders.captain,C.leaders.vice];
   const social = [ ['Core social group',C.roster.filter(p=>p.age>=22)],['Secondary social group',C.roster.filter(p=>p.age<22)] ];
@@ -50,8 +51,18 @@
     const figures=Array.from({length:max},(_,i)=>`<span class="cc-staff-figure${i>=sum?' cc-vacant':''}" data-shade="${i%6}" aria-hidden="true"><svg viewBox="0 0 12 18"><circle cx="6" cy="3" r="2.2"/><path d="M2.8 6h6.4L10 11H8.2l-.5 5H4.3l-.5-5H2Z"/></svg></span>`).join('');
     return `<div class="cc-staff-group">${card('',`<h2>${btn(g.name,'staff-group',g.id,{kind:'text',arrow:true})}</h2><strong>${sum} ${g.id==='coaching'?'coaching staff':g.id==='recruitment'?'recruitment team members':'medical staff'}</strong><p class="cc-muted">The board have no concerns about the size of the ${g.id} team.</p><div class="cc-staff-figures cc-fig-${g.tone}" aria-label="${sum} of ${max} staff positions filled">${figures}</div><hr><dl class="cc-staff-roles">${g.roles.map(([title,a,b])=>`<div><dt>${a}/${b}</dt><dd>${esc(title)}</dd></div>`).join('')}</dl>`,'cc-staff-card')}${comparison(g)}</div>`;
   }
+  const backroom = () => card('Club leadership',`<div class="cc-backroom">${[['Chairperson',C.club.chair,'Sets the budget and appoints the board.'],['Director of Football',C.namedStaff['Director of Football'],'Owns transfers and contract strategy.'],['Technical Director',C.namedStaff['Technical Director'],'Runs analysis and scouting systems.'],['Head Physio',C.namedStaff['Head Physio'],'Leads medical and return-to-play.']].map(([role,name,work])=>`<div class="cc-backroom-row"><strong>${esc(role)}</strong><span>${esc(name)}</span><p>${esc(work)}</p></div>`).join('')}</div>`);
+
+  function staffAtWork(c){
+    const s=c.season.value, light=(s.answers||{})['load-review']==='light';
+    const fit=S.availability, roster=C.roster;
+    const out=roster.filter(p=>fit(s,p.id).out).length;
+    const backSoon=roster.filter(p=>{const a=fit(s,p.id);return a.out&&a.returnDate<=s.now+7*86400000;}).length;
+    return `<section class="cc-panel cc-staff-work"><h2 class="cc-title">Staff at work this week</h2><div class="cc-work-rail"><div class="cc-work-card"><span class="cc-resource-icon">${icon('cone')}</span><div><strong>Coaching Team</strong><p>${C.namedStaff['Assistant Manager']} · ${light?'Individual recovery':'Standard first-team programme'} · North Quayside</p><div class="cc-work-note">${roster.length} players on the training pitch</div></div></div><div class="cc-work-card"><span class="cc-resource-icon">${icon('radar')}</span><div><strong>Recruitment Team</strong><p>${C.namedStaff['Chief Scout']} · ${(c.s.focus||[]).length} active scouting focuses</p><div class="cc-work-note">${C.prospects.filter(p=>!(c.s.dismissed||[]).includes(p.id)).length} open recommendations</div></div></div><div class="cc-work-card"><span class="cc-resource-icon">${icon('medical')}</span><div><strong>Medical Team</strong><p>${C.namedStaff['Head Physio']} · ${out} player${out===1?'':'s'} receiving treatment</p><div class="cc-work-note">${backSoon} due back within 7 days</div></div></div><div class="cc-work-card"><span class="cc-resource-icon">${icon('team')}</span><div><strong>Backroom staff</strong><p>${((c.s.delegation||{}).transfers)||'Shared'} handles transfers · ${((c.s.delegation||{}).contracts)||'Shared'} handles contracts</p><div class="cc-work-note">Change owners in Staff → Responsibilities</div></div></div></div></section>`;
+  }
+
   function staffOverview(c){
-    return `<div class="cc-staff cc-fill"><div class="cc-grid3">${C.staffGroups.map(g=>staffGroup(c,g)).join('')}</div><footer class="cc-actions cc-actions-start"><span>${btn('Board staff','board-staff','',{kind:'outline',arrow:true})}${link('staff','Riverside U21 staff','search','u21')}${link('staff','Riverside U18 staff','search','u18')}</span>${link('staff','Responsibilities','responsibilities')}</footer></div>`;
+    return `<div class="cc-staff cc-fill"><div class="cc-grid3">${C.staffGroups.map(g=>staffGroup(c,g)).join('')}${backroom()}</div>${staffAtWork(c)}<footer class="cc-actions cc-actions-start"><span>${btn('Board staff','board-staff','',{kind:'outline',arrow:true})}${link('staff','Riverside U21 staff','search','u21')}${link('staff','Riverside U18 staff','search','u18')}</span>${link('staff','Responsibilities','responsibilities')}</footer></div>`;
   }
   function searchStaff(c,short=false){
     const use = short?C.staffPool.filter(s=>c.s.staffList.includes(s.id)):c.ui.staffUnit==='available'?C.staffPool:c.ui.staffUnit==='all'?[...C.staff,...C.staffPool]:C.staff.filter(s=>!c.ui.staffUnit||s.unit===c.ui.staffUnit);
@@ -83,12 +94,16 @@
   const devTeam = id=>id==='u21'?'U21 Squad':'U18 Squad';
   const candidate = id=>lookup(C.youth,id)||lookup(C.loans,id);
   const playerButton=p=>btn(p.name,'dev-player',p.id,{kind:'text'});
+  const growBar=(cur,top)=>{const filled=Math.min(5,Math.round(cur)), total=Math.min(5,Math.round(top)); return `<span class="cc-grow" aria-label="Ability ${cur} of 5, potential ${top} of 5"><span class="cc-grow-track">${Array.from({length:5},(_,i)=>`<i class="${i<filled?'cc-grow-full':i<total?'cc-grow-empty':'cc-grow-gap'}" aria-hidden="true"></i>`).join('')}</span><span class="cc-grow-val">${cur.toFixed(1)} → ${top.toFixed(1)}</span></span>`;};
+  const rateBar=(v)=>{const filled=Math.min(5,Math.max(0,Math.round(v/2))); return `<span class="cc-grow" aria-label="Rating ${v} of 10"><span class="cc-grow-track">${Array.from({length:5},(_,i)=>`<i class="${i<filled?'cc-grow-full':'cc-grow-empty'}" aria-hidden="true"></i>`).join('')}</span><span class="cc-grow-val">${v.toFixed(2)}</span></span>`;};
+  const bigSpark=p=>`<svg class="cc-dev-spark" viewBox="0 0 120 32" role="img" aria-label="Development progress"><polyline points="${p.progress.map((v,i)=>`${2+i*116/(p.progress.length-1)},${28-v*1.55}`).join(' ')}" fill="none" stroke="#4ade80" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   function candidateTable(c,list,short=false,which='candidates'){
-    const columns=short?['Name','Progress','Development advice']:['Rank','Name','Squad','Progress','Ability','Potential','Trn rat','Av rat','Development advice'];
+    const columns=short?['Name','Growth','Development advice']:['Rank','Name','Squad','Growth','Ability → Potential','Training','Rating','Development advice'];
     const advice=p=>`<span class="cc-dev-advice">${btn(p.advice,'dev-player',p.id,{kind:'text'})}</span>`;
+    const stage=p=>p.ability>=4?'Elite prospect':p.ability>=3?'Promising':'Developing';
     const rows=list.map((p,i)=>{
-      const name=`<div class="cc-person">${avatar(c,p.name)}<div>${playerButton(p)}<small>${p.age}-year-old ${esc(C.roles[p.pos][0].toLowerCase())}</small></div></div>`;
-      return tr(short?[name,spark(p.progress),advice(p)]:[`<b class="cc-teal">${i+1}</b>`,name,devTeam(p.unit),spark(p.progress),stars(p.ability),stars(p.potential),rank(p.training),rank(p.rating),advice(p)]);
+      const name=`<div class="cc-person cc-dev-person">${avatar(c,p.name)}<div>${playerButton(p)}<small>${p.age}-year-old ${esc(C.roles[p.pos][0].toLowerCase())}</small><span class="cc-tag cc-${p.ability>=4?'good':p.ability>=3?'teal':'info'}">${stage(p)}</span></div></div>`;
+      return tr(short?[name,bigSpark(p),advice(p)]:[`<b class="cc-teal">${i+1}</b>`,name,devTeam(p.unit),bigSpark(p),growBar(p.ability,p.potential),rateBar(p.training),rateBar(p.rating),advice(p)]);
     });
     return rows.length?table('Development candidates',columns,rows,which,short?'cc-dev-compact':'cc-dev-table'):empty('No players in this view');
   }
@@ -97,6 +112,7 @@
     return `<div class="cc-development cc-fill"><p class="cc-dev-author"><b>REPORT BY:</b> ${esc(C.namedStaff['Head of Youth Development'])} (Head of Youth Development)</p>
       <div class="cc-dev-summary"><div><h2>${link('development','Players out on loan','loans',null,'text')}</h2><strong>${loans.length} players out on loan</strong><p>Most loan players are getting regular minutes. Two could benefit from more competitive experience.</p></div><div><h2>${link('development','U21 squad','u21',null,'text')}</h2><strong>Average squad</strong><p>There are players close to first-team opportunities and some promising prospects still building experience.</p></div><div><h2>${link('development','U18 squad','u18',null,'text')}</h2><strong class="cc-lime">Strong squad</strong><p>The group includes several players with high potential, particularly in defence and midfield.</p></div></div>
       ${card('First-team candidates',candidateTable(c,youth.slice(0,4)), 'cc-first-candidates')}
+      <section class="cc-dev-squad"><h2 class="cc-title">Academy growth chart</h2><p class="cc-muted">Ability vs potential, and each player’s development curve this season.</p><div class="cc-dev-squad-rail">${youth.map(p=>`<article class="cc-dev-squad-card">${avatar(c,p.name,'cc-avatar-sm')}<div><div>${playerButton(p)}<small>${p.age} · ${esc(C.roles[p.pos][0])}</small></div>${growBar(p.ability,p.potential)}<div class="cc-dev-spark-wrap">${bigSpark(p)}</div><p>${esc(p.advice)}</p></div></article>`).join('')}</div></section>
       <div class="cc-dev-floor"><section><h2 class="cc-title">Needs attention</h2>${candidateTable(c,youth.slice(4,6),true,'attention')}</section><section><h2 class="cc-title">Ones to watch</h2>${candidateTable(c,youth.slice(6,9),true,'players-to-watch')}</section></div></div>`;
   }
   function loanReport(c){

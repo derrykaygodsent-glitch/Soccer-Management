@@ -235,8 +235,29 @@
         : partner
           ? `${partner.name} is part of ${name}’s life (${h.stage.toLowerCase()}).`
           : "";
+    const kidsText = f.kids.length ? `They have ${f.kids.map((k)=>`${k.name}, aged ${g.TLFamilyPaths.age(k,s.day)}`).join(" and ")}.` : "";
+    const managed = new Set(spells.map((c) => c.club));
+    if (club) managed.add(club.name);
+    const trophies = [...new Set((s.seasonBook || []).flatMap((season) => season.cupAwards || []).filter((a) => managed.has(a.club)).map((a) => a.title))];
+    const honoursPara = trophies.length
+      ? `<p><b>Achievements</b> · ${trophies.map((t) => `won the ${esc(t)}`).join(", ")}.</p>`
+      : "";
+    const todayText = l.exit
+      ? "That managerial career has since ended."
+      : active
+        ? `Today, ${name} manages ${club.name}.`
+        : s.interview
+          ? `An interview with ${s.interview} is the next step.`
+          : s.careerSpells?.length
+            ? "The last club spell has ended."
+            : "No club is currently under management.";
+    const nextSteps = active
+      ? `Next: keep ${club.name} competitive and build on what is already there.`
+      : s.interview
+        ? `Next: the interview with ${s.interview}.`
+        : "Next: find the next club and start the story again.";
     const origin = `${p.name} began this career in ${p.nation} on ${W.date(start)}, ${p.path === "found" ? "with plans to found a club" : "looking for a club to manage"}.`,
-      chapter = `<article class="mp-card mp-story"><small>THE STORY SO FAR</small><h3>Biography</h3><p>${e(origin)} ${e(careerText)} ${e(l.exit ? "That managerial career has since ended." : active ? `Today, ${p.name.split(" ")[0]} manages ${club.name}.` : s.interview ? `An interview with ${s.interview} is the next step.` : s.careerSpells?.length ? "The last club spell has ended." : "No club is currently under management.")}</p>${homeText ? `<p>${e(homeText)}</p>` : ""}${first ? `<p><b>In football · ${W.date(first.day)}</b> ${e(first.text)}</p>` : ""}${social ? `<p><b>Off the pitch · ${W.date(social.day)}</b> ${e(social.text)}</p>` : ""}</article>`;
+      chapter = `<article class="mp-card mp-story"><small>THE STORY SO FAR</small><h3>Biography</h3><p>${e(origin)} ${e(careerText)}</p><p>${e(todayText)}</p>${honoursPara}${homeText ? `<p>${e(homeText)}</p>` : ""}${kidsText ? `<p>${e(kidsText)}</p>` : ""}${first ? `<p><b>In football · ${W.date(first.day)}</b> ${e(first.text)}</p>` : ""}${social ? `<p><b>Off the pitch · ${W.date(social.day)}</b> ${e(social.text)}</p>` : ""}<p><b>What’s next</b> · ${e(nextSteps)}</p></article>`;
     const timeline = `${chapter}<section class="mp-card"><small>FROM THE PRIVATE ARCHIVE</small><h3>Life history</h3><nav class="mp-filters" aria-label="History category">${Object.entries(
       { all: "All chapters", ...labels },
     )
