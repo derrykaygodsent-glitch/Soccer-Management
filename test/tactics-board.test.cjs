@@ -52,7 +52,12 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   a.match(TLBoardRoom.render(s, pool), /data-workspace="instructions"/);
   a.match(TLBoardRoom.render(s, pool), /fm-instruction-workspace/);
   a.match(TLBoardRoom.render(s, pool), /fm-zone-overlay/);
-  a.match(TLBoardRoom.render(s, pool), /fm-tactical-overview/);
+  const instructionScreen = TLBoardRoom.render(s, pool);
+  a.match(instructionScreen, /fm-tactical-overview/);
+  a.match(instructionScreen, /Match plan/);
+  a.match(instructionScreen, /Central area/);
+  a.match(instructionScreen, /Tactical risks/);
+  a.ok(!instructionScreen.includes('Active team orders'), 'overview prioritizes concise, actionable data');
 
   const zoneButton = { dataset: { board: 'zone|0|attack-left' }, hasAttribute: name => name === 'data-board' };
   handlers.click({ target: { closest: selector => selector === 'button' ? zoneButton : null } });
@@ -63,6 +68,8 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   const orderValue = TLZones.choicesTeam.trigger[0], order = { value: orderValue, dataset: { order: 'trigger' }, hasAttribute: name => name === 'data-order' };
   handlers.change({ target: order });
   a.equal(plan.orders.trigger, orderValue, 'contextual team order updates the existing tactical plan');
+  a.match(TLBoardRoom.render(s, pool), /data-customized="true"/);
+  a.match(TLBoardRoom.render(s, pool), /<i>EDITED<\/i>/, 'custom team instructions receive visible state feedback');
 
   const selectButton = { dataset: { slot: '3' }, hasAttribute: name => name === 'data-slot' };
   handlers.click({ target: { closest: selector => selector === 'button' ? selectButton : null } });
