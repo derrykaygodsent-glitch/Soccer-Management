@@ -189,3 +189,4 @@
 .staff-rail-card b{display:block}
 .staff-rail-card p{margin:.15rem 0;font-size:.82rem;line-height:1.4;color:#c6d8de}
 .staff-rail-card small{color:#9fb8c2;font-size:.74rem}
+.mp-split{display:flex;flex-wrap:wrap;gap:6px;margin-top:.4rem}
