@@ -324,3 +324,84 @@
 }
 @media(max-width:540px){.cc-squad-table td .cc-select{min-height:28px}.cc-fixture-button{font-size:10.75px}}
 .cc-toast{pointer-events:none}
+
+/* Club profile redesign */
+.cc-club-hero{display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;align-items:center;padding:12px 14px;border-radius:8px;border:1px solid var(--cc-edge);background:var(--cc-card);margin-bottom:8px;min-width:0}
+.cc-hero-crest .hc-crest{width:86px;height:86px}
+.cc-hero-name{font-size:17px;line-height:1.15}
+.cc-hero-eyebrow{color:var(--cc-soft);font-size:10.6px;margin-top:2px}
+.cc-hero-eyebrow span{margin:0 4px}
+.cc-profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;min-width:0;margin-bottom:8px}
+.cc-panel{background:var(--cc-card);border:1px solid var(--cc-edge);border-radius:8px;padding:11px;min-width:0}
+.cc-panel-title{color:var(--cc-cyan);font-size:11.4px;text-transform:uppercase;font-weight:830;letter-spacing:.018em;line-height:1.25;margin:0 0 8px}
+.cc-club-meta{display:grid;gap:5px 10px;margin:0;font-size:12.6px}
+.cc-club-meta dt{color:var(--cc-soft);font-size:9.5px;text-transform:uppercase;letter-spacing:.02em;font-weight:740}
+.cc-club-meta dd{margin:0}
+.cc-kit-strip{display:flex;gap:8px;overflow-x:auto;margin-bottom:4px;padding-bottom:6px}
+.cc-kit-card{display:flex;flex-direction:column;align-items:center;gap:6px;border:1px solid var(--cc-edge);border-radius:6px;background:var(--cc-under);padding:8px;min-width:78px}
+.cc-kit-card:hover{background:var(--cc-raise)}
+.cc-kit-card svg{width:60px;height:65px;display:block}
+.cc-kit-card span{font-size:10.6px;font-weight:700;overflow-wrap:anywhere}
+.cc-person{display:flex;gap:8px;align-items:center}
+.cc-person .cc-avatar{flex:none}
+.cc-person>div{min-width:0}
+.cc-person strong{display:block}
+.cc-person p{margin:1px 0 0;font-size:10.3px;color:var(--cc-soft)}
+.cc-legacy-person{display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid #1b1e2c}
+.cc-legacy-person:last-child{border-bottom:0}
+.cc-social-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:6px 0;border-bottom:1px solid #1b1e2c}
+.cc-social-row:last-child{border-bottom:0}
+
+/* Dynamics */
+.cc-dyn-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.cc-dyn-strip-card{border:1px solid var(--cc-edge);border-radius:8px;padding:12px 11px 10px;background:var(--cc-card);display:flex;flex-direction:column}
+.cc-dyn-strip-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.cc-dyn-strip-head .hc-icon{width:18px;height:18px}
+.cc-dyn-strip-foot{margin-top:auto;display:flex;align-items:center;gap:7px}
+.cc-dyn-copy{font-size:11px;line-height:1.45;color:var(--cc-soft);margin:7px 0 4px}
+.cc-dyn-reasons{margin:4px 0 0;padding-left:14px;color:#79e6a8;font-size:10.6px;line-height:1.4}
+.cc-dyn-reasons li{margin:2px 0}
+.cc-dyn-floor{display:grid;grid-template-columns:minmax(230px,27%) minmax(0,1fr);gap:11px;min-height:280px}
+.cc-dyn-side{display:flex;flex-direction:column;gap:11px}
+.cc-dyn-main{display:flex;flex-direction:column;gap:11px}
+.cc-influencer-list{display:flex;gap:10px;flex-wrap:wrap;align-items:start;padding:6px 0 10px}
+.cc-influencer-list .cc-influencer{min-width:unset;width:150px}
+
+/* Training */
+.cc-training-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(250px,1fr);gap:11px;min-width:0}
+.cc-tr-week{display:flex;flex-direction:column;gap:7px}
+.cc-tr-day{display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid var(--cc-edge);border-radius:6px;background:var(--cc-under)}
+.cc-tr-day-head{display:flex;flex-direction:column;min-width:72px}
+.cc-tr-day strong{font-size:12px}
+.cc-tr-day small{color:var(--cc-soft);font-size:9.8px}
+.cc-tr-sessions{flex:1;display:flex;gap:5px;flex-wrap:wrap;align-items:center;min-width:0}
+.cc-tr-session{display:flex;align-items:center;gap:4px;padding:2px 7px;border:1px solid var(--cc-edge);border-radius:10px;background:var(--cc-card);font-size:9.8px;white-space:nowrap}
+.cc-tr-session small{opacity:.75;font-size:8.6px}
+.cc-tr-selected{border-color:var(--cc-cyan);background:#0f2130}
+.cc-tr-fixture{background:#1b2a3a;border-color:#3d5a7a}
+.cc-tr-detail h2{margin:0 0 7px;font-size:13px}
+.cc-tr-list{border-top:1px solid #1b1e2c;margin-top:7px;padding-top:7px}
+.cc-tr-list div{display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid #141823;font-size:10.8px}
+.cc-tr-list time{color:var(--cc-soft);font-size:9.6px}
+.cc-tr-list p{margin:1px 0 0;font-size:9.6px;color:var(--cc-soft)}
+.cc-tr-readiness{margin-top:8px}
+.cc-tr-readiness-row{display:flex;gap:10px}
+
+/* Medical */
+.cc-medical-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(230px,1fr);gap:11px;min-width:0}
+.cc-med-summary{display:flex;gap:10px;margin-bottom:8px}
+.cc-med-metric{display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;background:var(--cc-card)}
+.cc-med-metric strong{display:block;font-size:14px}
+.cc-med-metric p{margin:1px 0 0;font-size:9.8px;color:var(--cc-soft)}
+.cc-injury-ward{display:flex;flex-direction:column;gap:8px}
+.cc-injury-card{display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid var(--cc-edge);border-radius:6px;background:var(--cc-under)}
+.cc-injury-card p{margin:1px 0 0;font-size:10.6px}
+
+/* Narrow overrides */
+@media (max-width:720px){
+  .cc-profile-grid,.cc-dyn-strip,.cc-dyn-floor,.cc-training-grid,.cc-medical-grid{grid-template-columns:minmax(0,1fr)}
+  .cc-club-hero{grid-template-columns:72px minmax(0,1fr)}
+  .cc-hero-crest .hc-crest{width:64px;height:64px}
+  .cc-med-summary{flex-direction:column}
+  .cc-tr-readiness-row{flex-direction:column}
+}
