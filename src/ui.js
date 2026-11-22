@@ -733,19 +733,24 @@
     const t = team();
     const pendingReview = state.match.phase === 'review';
     const available = !spectator() && !state.ready && state.match.phase !== 'fulltime' && !pendingReview;
+    const outPlayer = state.replaceId ? state.meta[state.replaceId] : null;
     const inPlayer = t.players.find(p => p.id === state.subMode);
-    const outId = state.replaceId;
-    const outPlayer = outId ? state.meta[outId] : null;
-    const inSub = outId || inPlayer;
-    const benchOrder = inSub ? [...t.bench].sort((a, b) => replacerScore(b, outPlayer) - replacerScore(a, outPlayer)) : t.bench;
-    const best = inSub ? benchOrder[0] : null;
-    const bestLabel = outId ? 'Best replacer' : 'Best option';
+    const subTarget = outPlayer || inPlayer;
+    const benchOrder = subTarget ? [...t.bench].sort((a, b) => replacerScore(b, outPlayer || inPlayer) - replacerScore(a, outPlayer || inPlayer)) : t.bench;
+    const best = subTarget ? benchOrder[0] : null;
     const row = (p, role, benchRow) => {
-      const badge = benchRow && p.id === best?.id ? ` <span class="sub-badge">${bestLabel}</span>` : '';
-      return `<div class="squad-row"${p.injury?' data-knock="true"':''}><span>${p.num}</span><span>${html(p.name)}${badge}</span><span class="row-role">${role}${p.injury?' · Knock':''}</span><span class="row-cond">${condition(p)}%</span>${benchRow ? `<button type="button" class="button" data-bench="${html(p.id)}" ${!available || t.subsUsed >= 5 ? 'disabled' : ''}>Bring on</button>` : inPlayer ? `<button type="button" class="button" data-out="${html(p.id)}" ${!available || (role === 'GK') !== (inPlayer.pos === 'GK') ? 'disabled' : ''}>Replace</button>` : '<span></span>'}</div>`;
+      const isBest = benchRow && subTarget && p.id === best?.id;
+      const badge = isBest ? ` <span class="sub-badge">Best replacer</span>` : '';
+      const samePos = !outPlayer || (role === 'GK') === (outPlayer.pos === 'GK');
+      if (benchRow) {
+        const direct = outPlayer ? `<button type="button" class="button" data-bench="${html(p.id)}" ${!available || t.subsUsed >= 5 || !samePos || p.id === outPlayer.id ? 'disabled' : ''}>Replace with</button>` : `<button type="button" class="button" data-bench="${html(p.id)}" ${!available || t.subsUsed >= 5 ? 'disabled' : ''}>Bring on</button>`;
+        return `<div class="squad-row"${p.injury?' data-knock="true"':''}><span>${p.num}</span><span>${html(p.name)}${badge}</span><span class="row-role">${role}${p.injury?' · Knock':''}</span><span class="row-cond">${condition(p)}%</span>${direct}</div>`;
+      }
+      if (outPlayer) return `<div class="squad-row"${p.injury?' data-knock="true"':''}><span>${p.num}</span><span>${html(p.name)}</span><span class="row-role">${role}${p.injury?' · Knock':''}</span><span class="row-cond">${condition(p)}%</span><span></span></div>`;
+      return `<div class="squad-row"${p.injury?' data-knock="true"':''}><span>${p.num}</span><span>${html(p.name)}</span><span class="row-role">${role}${p.injury?' · Knock':''}</span><span class="row-cond">${condition(p)}%</span>${inPlayer ? `<button type="button" class="button" data-out="${html(p.id)}" ${!available || (role === 'GK') !== (inPlayer.pos === 'GK') ? 'disabled' : ''}>Replace</button>` : `<button type="button" class="button" data-off="${html(p.id)}" ${!available || p.injury ? 'disabled' : ''}>Sub off</button>`}</div>`;
     };
     const timing = filmView() ? ` · changes take effect at ${state.match.clockStr()}` : '';
-    const outNote = outId ? `<p class="sub-note">Choose a replacement for ${html(outPlayer.name)}.${best?` Best replacer: ${html(best.name)}.`:''}</p>` : '';
+    const outNote = outPlayer ? `<p class="sub-note">Sub off ${html(outPlayer.name)}.${best?` Best replacer: ${html(best.name)}.`:''} <button class="button" type="button" data-cancel-sub>Cancel</button></p>` : '';
     $('tab-squad').innerHTML = `<p class="help-text${state.club?'':' desk-feedback'}"${state.club?'':' role="status"'}>${state.ready ? 'Substitutions are available after kick-off.' : pendingReview ? 'Wait for the VAR decision before substituting.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining${timing}.`}</p>${state.club?'<p class="help-text desk-feedback" role="status" hidden></p>':''}${outNote}${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${benchOrder.map(p => row(p, p.pos, true)).join('')}`;
   }
 
@@ -981,7 +986,8 @@
     $('tab-squad').addEventListener('click', e => {
       if(spectator())return;
       const b = e.target.closest('button'); if (!b || b.disabled) return;
-      if (b.hasAttribute('data-cancel-sub')) { state.subMode = null; renderSquad(); }
+      if (b.hasAttribute('data-cancel-sub')) { state.subMode = null; state.replaceId = null; renderSquad(); }
+      else if (b.dataset.off) { state.replaceId = b.dataset.off; state.subMode = null; renderSquad(); }
       else if(b.dataset.bench&&state.replaceId){const cmd={type:'sub',out:state.replaceId,in:b.dataset.bench};const buffered=touchlineChange(),r=state.match.substitute(managed(),cmd.out,cmd.in);if(r.ok){checkpoint(cmd);state.replaceId=null;selectPlayer(null);if(!buffered)renderLineup();}renderSquad();notify(r.ok?'Substitution made.':r.msg);updateHUD();draw();}
       else if (b.dataset.bench) { state.subMode = b.dataset.bench; renderSquad(); }
       else if (b.dataset.out && state.subMode && !state.ready) {
