@@ -1,4 +1,4 @@
-const test = require('node:test'), a = require('node:assert/strict'), path = require('node:path');
+const test = require('node:test'), a = require('node:assert/strict'), path = require('node:path'), fs = require('node:fs');
 // The tactics board renders the FM-inspired split selection layout and its swap/remove commands work.
 global.window = global;
 const src = n => require(path.join('..', 'src', n));
@@ -51,8 +51,12 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   a.equal(draws, 1);
   a.match(TLBoardRoom.render(s, pool), /data-workspace="instructions"/);
   a.match(TLBoardRoom.render(s, pool), /fm-instruction-workspace/);
-  a.match(TLBoardRoom.render(s, pool), /fm-zone-overlay/);
-  const instructionScreen = TLBoardRoom.render(s, pool);
+  const overlayScreen = TLBoardRoom.render(s, pool);
+  a.equal((overlayScreen.match(/data-board="zone\|0\|/g) || []).length, 9, 'pitch has nine zone hit areas');
+  const zoneRule = fs.readFileSync(path.join(__dirname, '../src/reading.css'), 'utf8').match(/\.fm-zone-overlay button\{([^}]*)\}/)?.[1] || '';
+  a.match(zoneRule, /position:relative/);
+  a.match(zoneRule, /transform:none/);
+  const instructionScreen = overlayScreen;
   a.match(instructionScreen, /fm-tactical-overview/);
   a.match(instructionScreen, /Match plan/);
   a.match(instructionScreen, /Central area/);
