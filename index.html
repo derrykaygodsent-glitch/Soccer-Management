@@ -718,6 +718,52 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   .cc-tr-readiness-row{flex-direction:column}
 }
 
+/* Development - pictorial growth */
+.cc-dev-spark{width:120px;height:32px;display:block;overflow:visible}
+.cc-dev-spark-wrap{height:34px}
+.cc-grow{display:flex;align-items:center;gap:6px}
+.cc-grow-track{display:inline-flex;gap:3px}
+.cc-grow-track i{display:inline-block;width:7px;height:7px;border-radius:2px;background:#171c2a;border:1px solid #3b4050}
+.cc-grow-track .cc-grow-full{background:#4ade80;box-shadow:0 0 6px #4ade804d}
+.cc-grow-track .cc-grow-empty{background:#636e86}
+.cc-grow-track .cc-grow-gap{background:#323747;border-color:#434757}
+.cc-grow-val{font-size:9.5px;color:var(--cc-soft);margin-left:6px;min-width:36px;text-align:right}
+.cc-dev-person .cc-tag{font-size:9px;margin-left:6px}
+.cc-dev-squad{margin-top:8px}
+.cc-dev-squad h2.cc-title{margin:0 0 6px}
+.cc-dev-squad-rail{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.cc-dev-squad-card{display:flex;gap:9px;align-items:center;border:1px solid var(--cc-edge);border-radius:7px;background:var(--cc-card);padding:7px 9px;min-width:210px;flex:none}
+.cc-dev-squad-card .cc-avatar-sm{flex:none;width:34px;height:40px}
+.cc-dev-squad-card .cc-avatar-sm img{width:34px;height:40px}
+.cc-dev-squad-card>div{min-width:0;flex:1}
+.cc-dev-squad-card>div>div{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.cc-dev-squad-card>div>div small{color:var(--cc-soft);font-size:9.6px}
+.cc-dev-squad-card p{margin:4px 0 0;font-size:9.6px;color:#9fb0c8;line-height:1.4}
+.cc-dev-compact td{font-size:10.3px}
+.cc-dev-compact .cc-dev-spark{width:96px;height:24px}
+.cc-dev-compact .cc-dev-spark-wrap{height:24px}
+
+/* Staff */
+.cc-backroom{display:flex;flex-direction:column;gap:6px;padding:8px 10px 6px;min-width:0}
+.cc-backroom-row{display:flex;justify-content:space-between;align-items:start;gap:8px;padding:6px 0;border-bottom:1px solid #1b1e2c}
+.cc-backroom-row:last-child{border-bottom:0}
+.cc-backroom-row strong{font-size:10.6px;color:var(--cc-cyan)}
+.cc-backroom-row span{font-size:11.6px;color:var(--cc-soft)}
+.cc-backroom-row p{margin:2px 0 0;font-size:9.6px;color:#8fa0ba}
+.cc-staff-work{margin-top:10px}
+.cc-work-rail{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.cc-work-card{display:flex;gap:10px;align-items:center;border:1px solid var(--cc-edge);border-radius:7px;background:var(--cc-card);padding:8px 10px;min-width:220px;flex:none}
+.cc-work-card .cc-resource-icon{flex:none;width:32px;height:32px;display:grid;place-items:center;border-radius:6px;background:#1b202c}
+.cc-work-card .cc-resource-icon .hc-icon{width:16px;height:16px}
+.cc-work-card>div{min-width:0}
+.cc-work-card strong{display:block;font-size:11.4px}
+.cc-work-card p{margin:1px 0 4px;font-size:10px;color:var(--cc-soft);line-height:1.35}
+.cc-work-note{font-size:9px;color:#7aa0c8}
+
+/* Transfers full width */
+.cc-clause-rail{grid-auto-columns:minmax(170px,1fr)}
+.cc-transfer-total{display:flex;gap:6px 12px;flex-wrap:wrap;justify-content:flex-end;margin-top:auto;padding:8px;background:var(--cc-card);border-radius:6px;font-size:11px}
+
 /* Shared Riverside tactics, profile, editorial and room components. */
 .hc-leader-player{display:inline;padding:0;border:0;background:none;color:inherit;text-align:left;font:inherit;line-height:inherit}
 .hc-leader-player:hover{text-decoration:underline;text-underline-offset:3px;color:var(--hc-aqua)}
@@ -8571,7 +8617,7 @@ const api={systemSkills,ability,jobs,identity,familiarity,footFactor,duty,mental
   U.responsibilitiesForm=responsibilitiesForm; U.delegationField=delegationField;
   function transferStrip(c){
     const resp=c.s.delegation.transfers;
-    return `<div class="cc-resource-strip cc-resource-three">${resource('Transfer and contract responsibilities',link('transfers',resp,'director',null,'text'),'Manager & backroom staff','team')}${resource('Scouting Centre',link('scouting',`${C.prospects.filter(p=>!c.s.dismissed.includes(p.id)).length} recommendations`,'centre',null,'text'),`${c.s.focus.length} active recruitment focuses`,'search')}<div class="cc-resource-pair">${transferFunds(c)}${wages(c)}</div></div>`;
+    return `<div class="cc-resource-strip cc-resource-three">${resource('Transfer and contract responsibilities',`<span>${esc(resp)}</span> · ${link('staff','Change owner','responsibilities',null,'text',false)}`,'Delegated staff member','team')}${resource('Scouting Centre',link('scouting',`${C.prospects.filter(p=>!c.s.dismissed.includes(p.id)).length} recommendations`,'centre',null,'text'),`${c.s.focus.length} active recruitment focuses`,'search')}<div class="cc-resource-pair">${transferFunds(c)}${wages(c)}</div></div>`;
   }
   function clauses(c,rail=false){
     if(rail)return `<section class="cc-clause-section"><div class="cc-toolbar"><h2>${link('transfers','Clauses','clauses',null,'text')}</h2><span class="cc-eyebrow">${C.clauses.length} available to review</span></div><div class="cc-clause-rail" data-c-scroll="clauses" tabindex="0" role="region" aria-label="Transfer clause cards">${C.clauses.map(x=>`<button type="button" data-c-do="clause" data-c-val="${x.id}"><span class="cc-${x.direction==='Payable'?'bad':'good'}">${icon('swap')}</span><span><strong>${esc(x.name)}</strong><small>${x.percent}% sell-on clause</small></span>${icon('chevron')}</button>`).join('')}</div></section>`;
@@ -9201,6 +9247,7 @@ const api={systemSkills,ability,jobs,identity,familiarity,footFactor,duty,mental
 (function (global) {
   'use strict';
   const U=global.TLClubUI, {H,C,views,esc,icon,btn,link,card,empty,values,tag,select,search,table,tr,avatar,rank,stars,spark,nation,clubName,meter,lookup,tabs}=U;
+  const S=global.TLSeasonState;
   const playerLink = id => btn(C.players[id].name,'player',id,{kind:'text'});
   const leaders = [C.leaders.captain,C.leaders.vice];
   const social = [ ['Core social group',C.roster.filter(p=>p.age>=22)],['Secondary social group',C.roster.filter(p=>p.age<22)] ];
@@ -9249,8 +9296,18 @@ const api={systemSkills,ability,jobs,identity,familiarity,footFactor,duty,mental
     const figures=Array.from({length:max},(_,i)=>`<span class="cc-staff-figure${i>=sum?' cc-vacant':''}" data-shade="${i%6}" aria-hidden="true"><svg viewBox="0 0 12 18"><circle cx="6" cy="3" r="2.2"/><path d="M2.8 6h6.4L10 11H8.2l-.5 5H4.3l-.5-5H2Z"/></svg></span>`).join('');
     return `<div class="cc-staff-group">${card('',`<h2>${btn(g.name,'staff-group',g.id,{kind:'text',arrow:true})}</h2><strong>${sum} ${g.id==='coaching'?'coaching staff':g.id==='recruitment'?'recruitment team members':'medical staff'}</strong><p class="cc-muted">The board have no concerns about the size of the ${g.id} team.</p><div class="cc-staff-figures cc-fig-${g.tone}" aria-label="${sum} of ${max} staff positions filled">${figures}</div><hr><dl class="cc-staff-roles">${g.roles.map(([title,a,b])=>`<div><dt>${a}/${b}</dt><dd>${esc(title)}</dd></div>`).join('')}</dl>`,'cc-staff-card')}${comparison(g)}</div>`;
   }
+  const backroom = () => card('Club leadership',`<div class="cc-backroom">${[['Chairperson',C.club.chair,'Sets the budget and appoints the board.'],['Director of Football',C.namedStaff['Director of Football'],'Owns transfers and contract strategy.'],['Technical Director',C.namedStaff['Technical Director'],'Runs analysis and scouting systems.'],['Head Physio',C.namedStaff['Head Physio'],'Leads medical and return-to-play.']].map(([role,name,work])=>`<div class="cc-backroom-row"><strong>${esc(role)}</strong><span>${esc(name)}</span><p>${esc(work)}</p></div>`).join('')}</div>`);
+
+  function staffAtWork(c){
+    const s=c.season.value, light=(s.answers||{})['load-review']==='light';
+    const fit=S.availability, roster=C.roster;
+    const out=roster.filter(p=>fit(s,p.id).out).length;
+    const backSoon=roster.filter(p=>{const a=fit(s,p.id);return a.out&&a.returnDate<=s.now+7*86400000;}).length;
+    return `<section class="cc-panel cc-staff-work"><h2 class="cc-title">Staff at work this week</h2><div class="cc-work-rail"><div class="cc-work-card"><span class="cc-resource-icon">${icon('cone')}</span><div><strong>Coaching Team</strong><p>${C.namedStaff['Assistant Manager']} · ${light?'Individual recovery':'Standard first-team programme'} · North Quayside</p><div class="cc-work-note">${roster.length} players on the training pitch</div></div></div><div class="cc-work-card"><span class="cc-resource-icon">${icon('radar')}</span><div><strong>Recruitment Team</strong><p>${C.namedStaff['Chief Scout']} · ${(c.s.focus||[]).length} active scouting focuses</p><div class="cc-work-note">${C.prospects.filter(p=>!(c.s.dismissed||[]).includes(p.id)).length} open recommendations</div></div></div><div class="cc-work-card"><span class="cc-resource-icon">${icon('medical')}</span><div><strong>Medical Team</strong><p>${C.namedStaff['Head Physio']} · ${out} player${out===1?'':'s'} receiving treatment</p><div class="cc-work-note">${backSoon} due back within 7 days</div></div></div><div class="cc-work-card"><span class="cc-resource-icon">${icon('team')}</span><div><strong>Backroom staff</strong><p>${((c.s.delegation||{}).transfers)||'Shared'} handles transfers · ${((c.s.delegation||{}).contracts)||'Shared'} handles contracts</p><div class="cc-work-note">Change owners in Staff → Responsibilities</div></div></div></div></section>`;
+  }
+
   function staffOverview(c){
-    return `<div class="cc-staff cc-fill"><div class="cc-grid3">${C.staffGroups.map(g=>staffGroup(c,g)).join('')}</div><footer class="cc-actions cc-actions-start"><span>${btn('Board staff','board-staff','',{kind:'outline',arrow:true})}${link('staff','Riverside U21 staff','search','u21')}${link('staff','Riverside U18 staff','search','u18')}</span>${link('staff','Responsibilities','responsibilities')}</footer></div>`;
+    return `<div class="cc-staff cc-fill"><div class="cc-grid3">${C.staffGroups.map(g=>staffGroup(c,g)).join('')}${backroom()}</div>${staffAtWork(c)}<footer class="cc-actions cc-actions-start"><span>${btn('Board staff','board-staff','',{kind:'outline',arrow:true})}${link('staff','Riverside U21 staff','search','u21')}${link('staff','Riverside U18 staff','search','u18')}</span>${link('staff','Responsibilities','responsibilities')}</footer></div>`;
   }
   function searchStaff(c,short=false){
     const use = short?C.staffPool.filter(s=>c.s.staffList.includes(s.id)):c.ui.staffUnit==='available'?C.staffPool:c.ui.staffUnit==='all'?[...C.staff,...C.staffPool]:C.staff.filter(s=>!c.ui.staffUnit||s.unit===c.ui.staffUnit);
@@ -9282,12 +9339,16 @@ const api={systemSkills,ability,jobs,identity,familiarity,footFactor,duty,mental
   const devTeam = id=>id==='u21'?'U21 Squad':'U18 Squad';
   const candidate = id=>lookup(C.youth,id)||lookup(C.loans,id);
   const playerButton=p=>btn(p.name,'dev-player',p.id,{kind:'text'});
+  const growBar=(cur,top)=>{const filled=Math.min(5,Math.round(cur)), total=Math.min(5,Math.round(top)); return `<span class="cc-grow" aria-label="Ability ${cur} of 5, potential ${top} of 5"><span class="cc-grow-track">${Array.from({length:5},(_,i)=>`<i class="${i<filled?'cc-grow-full':i<total?'cc-grow-empty':'cc-grow-gap'}" aria-hidden="true"></i>`).join('')}</span><span class="cc-grow-val">${cur.toFixed(1)} → ${top.toFixed(1)}</span></span>`;};
+  const rateBar=(v)=>{const filled=Math.min(5,Math.max(0,Math.round(v/2))); return `<span class="cc-grow" aria-label="Rating ${v} of 10"><span class="cc-grow-track">${Array.from({length:5},(_,i)=>`<i class="${i<filled?'cc-grow-full':'cc-grow-empty'}" aria-hidden="true"></i>`).join('')}</span><span class="cc-grow-val">${v.toFixed(2)}</span></span>`;};
+  const bigSpark=p=>`<svg class="cc-dev-spark" viewBox="0 0 120 32" role="img" aria-label="Development progress"><polyline points="${p.progress.map((v,i)=>`${2+i*116/(p.progress.length-1)},${28-v*1.55}`).join(' ')}" fill="none" stroke="#4ade80" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   function candidateTable(c,list,short=false,which='candidates'){
-    const columns=short?['Name','Progress','Development advice']:['Rank','Name','Squad','Progress','Ability','Potential','Trn rat','Av rat','Development advice'];
+    const columns=short?['Name','Growth','Development advice']:['Rank','Name','Squad','Growth','Ability → Potential','Training','Rating','Development advice'];
     const advice=p=>`<span class="cc-dev-advice">${btn(p.advice,'dev-player',p.id,{kind:'text'})}</span>`;
+    const stage=p=>p.ability>=4?'Elite prospect':p.ability>=3?'Promising':'Developing';
     const rows=list.map((p,i)=>{
-      const name=`<div class="cc-person">${avatar(c,p.name)}<div>${playerButton(p)}<small>${p.age}-year-old ${esc(C.roles[p.pos][0].toLowerCase())}</small></div></div>`;
-      return tr(short?[name,spark(p.progress),advice(p)]:[`<b class="cc-teal">${i+1}</b>`,name,devTeam(p.unit),spark(p.progress),stars(p.ability),stars(p.potential),rank(p.training),rank(p.rating),advice(p)]);
+      const name=`<div class="cc-person cc-dev-person">${avatar(c,p.name)}<div>${playerButton(p)}<small>${p.age}-year-old ${esc(C.roles[p.pos][0].toLowerCase())}</small><span class="cc-tag cc-${p.ability>=4?'good':p.ability>=3?'teal':'info'}">${stage(p)}</span></div></div>`;
+      return tr(short?[name,bigSpark(p),advice(p)]:[`<b class="cc-teal">${i+1}</b>`,name,devTeam(p.unit),bigSpark(p),growBar(p.ability,p.potential),rateBar(p.training),rateBar(p.rating),advice(p)]);
     });
     return rows.length?table('Development candidates',columns,rows,which,short?'cc-dev-compact':'cc-dev-table'):empty('No players in this view');
   }
@@ -9296,6 +9357,7 @@ const api={systemSkills,ability,jobs,identity,familiarity,footFactor,duty,mental
     return `<div class="cc-development cc-fill"><p class="cc-dev-author"><b>REPORT BY:</b> ${esc(C.namedStaff['Head of Youth Development'])} (Head of Youth Development)</p>
       <div class="cc-dev-summary"><div><h2>${link('development','Players out on loan','loans',null,'text')}</h2><strong>${loans.length} players out on loan</strong><p>Most loan players are getting regular minutes. Two could benefit from more competitive experience.</p></div><div><h2>${link('development','U21 squad','u21',null,'text')}</h2><strong>Average squad</strong><p>There are players close to first-team opportunities and some promising prospects still building experience.</p></div><div><h2>${link('development','U18 squad','u18',null,'text')}</h2><strong class="cc-lime">Strong squad</strong><p>The group includes several players with high potential, particularly in defence and midfield.</p></div></div>
       ${card('First-team candidates',candidateTable(c,youth.slice(0,4)), 'cc-first-candidates')}
+      <section class="cc-dev-squad"><h2 class="cc-title">Academy growth chart</h2><p class="cc-muted">Ability vs potential, and each player’s development curve this season.</p><div class="cc-dev-squad-rail">${youth.map(p=>`<article class="cc-dev-squad-card">${avatar(c,p.name,'cc-avatar-sm')}<div><div>${playerButton(p)}<small>${p.age} · ${esc(C.roles[p.pos][0])}</small></div>${growBar(p.ability,p.potential)}<div class="cc-dev-spark-wrap">${bigSpark(p)}</div><p>${esc(p.advice)}</p></div></article>`).join('')}</div></section>
       <div class="cc-dev-floor"><section><h2 class="cc-title">Needs attention</h2>${candidateTable(c,youth.slice(4,6),true,'attention')}</section><section><h2 class="cc-title">Ones to watch</h2>${candidateTable(c,youth.slice(6,9),true,'players-to-watch')}</section></div></div>`;
   }
   function loanReport(c){
@@ -10766,13 +10828,36 @@ const api={sign,appear,render};g.TLCommercial=api;if(typeof module!=='undefined'
 
 ;
 /* ===== personal-enterprise.js ===== */
-/* Personal capital only. Settlement is driven by career mornings, never page views. */
+/* Personal capital only. Settlement is driven by career mornings, never page views. Club funds are never used. */
 (function(g){'use strict';
-const showMoney=n=>(g.TLLuma||require('./luma')).format(n);const D=g.TLData||require('./data'),F=g.TLFASeason||require('./fa-season');
-const fee=s=>F.rate(s,s.profile.nation,5000),tiers=[1000,10000,100000];
-function invest(s,v){const p=s.enterprise||={};if(v==='stall'){const cost=fee(s);if(p.stall||s.cash<cost)throw Error('You need the setup cost in your wallet and can own only one stall.');s.cash-=cost;p.stall={setupCost:cost,next:s.day+7,paid:0,weeks:0};s.activity='Your kit-printing stall opens today. First takings arrive in seven days.';}else{const n=Number(v);if(!tiers.includes(n)||p.deposit||s.cash<n)throw Error('Choose an affordable deposit. Only one fixed term can run at a time.');s.cash-=n;p.deposit={principal:n,due:s.day+28};s.activity='Your deposit is locked until maturity.';}}
-function morning(s){const p=s.enterprise;if(!p)return;const d=p.deposit;if(d&&s.day>=d.due){const interest=Math.floor(d.principal*.01);s.cash+=d.principal+interest;p.lastInterest=interest;delete p.deposit;s.mail.unshift({day:s.day,from:'Personal account',text:`Your bank deposit matured. ${showMoney(d.principal)} principal and ${showMoney(interest)} interest returned to your wallet.`});}const t=p.stall;if(t&&s.day>=t.next){const pct=D.seedFor(`${s.id}:kit-stall:${t.next}`)%19,net=Math.floor(fee(s)*pct/100);s.cash+=net;t.paid+=net;t.last=net;t.weeks++;t.next=s.day+7;}}
-function render(s){const W=g.TLManagerLife,m=W.money,p=s.enterprise||{},d=p.deposit,t=p.stall;const button=(v,title,disabled)=>`<button data-life="personalInvest" data-v="${v}" ${disabled?'disabled':''}>${title}</button>`;return `<section class="venture-room"><header><small>OFF THE PITCH / PERSONAL CAPITAL</small><h3>Put your wallet to work</h3><p>Wallet ${m(s.cash)} · Club funds are never used.</p></header><div class="venture-grid"><article><small>BANK</small><h4>Fixed-term deposit</h4>${d?`<p>${m(d.principal)} locked. ${m(d.principal+Math.floor(d.principal*.01))} returns on ${W.date(d.due)}.</p>`:`<p>Lock savings for 28 days. Principal plus 1% interest returns automatically; no early withdrawal.</p>${tiers.map(n=>button(n,'Deposit '+m(n),s.cash<n)).join(' ')}`}${p.lastInterest!=null?`<small>Last interest: ${m(p.lastInterest)}</small>`:''}</article><article><small>LOCAL BUSINESS</small><h4>Kit-printing stall</h4>${t?`<p>Open for business · ${t.weeks} trading weeks. Total net income ${m(t.paid)}. Next payout ${W.date(t.next)}.</p>`:`<p>Pay ${m(fee(s))} once for equipment. A local operator runs the stall. Weekly net takings vary from zero to ${m(Math.floor(fee(s)*.18))}; setup costs are not refunded.</p>${button('stall','Launch stall · '+m(fee(s)),s.cash<fee(s))}`}</article></div></section>`;}
+const U=g.TLClubUI||{}, esc=U.esc||String;
+const showMoney=n=>(g.TLLuma||require('./luma')).format(n);
+const D=g.TLData||require('./data'),F=g.TLFASeason||require('./fa-season');
+const fee=s=>F.rate(s,s.profile.nation,5000);
+const tiers=[1000,10000,100000];
+const PROPERTY=45000, SHARES=20000, VENTURE=15000;
+function invest(s,v){const p=s.enterprise||={};
+  if(v==='stall'){const cost=fee(s);if(p.stall||s.cash<cost)throw Error('You need the setup cost in your wallet and can own only one stall.');s.cash-=cost;p.stall={setupCost:cost,next:s.day+7,paid:0,weeks:0};s.activity='Your kit-printing stall opens today. First takings arrive in seven days.';}
+  else if(v==='property'){if(p.property||s.cash<PROPERTY)throw Error('Buy one home when you can afford it.');s.cash-=PROPERTY;p.property={acquired:s.day};s.activity='You bought a place of your own. It is yours, whatever happens at the club.';}
+  else if(v==='shares'){if(p.shares||s.cash<SHARES)throw Error('Only one investment can run at a time.');s.cash-=SHARES;p.shares={principal:SHARES,due:s.day+28};s.activity='You put money into shares. It locks in for 28 days.';}
+  else if(v==='venture'){if(p.venture||s.cash<VENTURE)throw Error('One local venture at a time.');s.cash-=VENTURE;p.venture={principal:VENTURE,due:s.day+28,paid:0,next:s.day+7};s.activity='You started a local venture, creating jobs in the district.';}
+  else{const n=Number(v);if(!tiers.includes(n)||p.deposit||s.cash<n)throw Error('Choose an affordable deposit. Only one fixed term can run at a time.');s.cash-=n;p.deposit={principal:n,due:s.day+28};s.activity='Your deposit is locked until maturity.';}
+}
+function morning(s){const p=s.enterprise;if(!p)return;
+  const d=p.deposit;if(d&&s.day>=d.due){const interest=Math.floor(d.principal*.01);s.cash+=d.principal+interest;p.lastInterest=interest;delete p.deposit;s.mail.unshift({day:s.day,from:'Personal account',text:`Your bank deposit matured. ${showMoney(d.principal)} principal and ${showMoney(interest)} interest returned to your wallet.`});}
+  const sh=p.shares;if(sh&&s.day>=sh.due){const roll=D.seedFor(`${s.id}:shares:${sh.due}`)%41;const pct=3+roll%12;const interest=Math.floor(sh.principal*pct/100);s.cash+=sh.principal+interest;p.lastShares=interest;delete p.shares;s.mail.unshift({day:s.day,from:'Personal account',text:`Your shares matured. ${showMoney(sh.principal)} returned with ${showMoney(interest)} (about ${pct}%).`});}
+  const t=p.stall;if(t&&s.day>=t.next){const pct=D.seedFor(`${s.id}:kit-stall:${t.next}`)%19,net=Math.floor(fee(s)*pct/100);s.cash+=net;t.paid+=net;t.last=net;t.weeks++;t.next=s.day+7;}
+  const v=p.venture;if(v&&s.day>=v.next){const roll=D.seedFor(`${s.id}:venture:${v.next}`)%13;const net=Math.floor(v.principal*roll/200);s.cash+=net;v.paid+=net;v.last=net;v.next=s.day+7;}
+}
+function render(s){const W=g.TLManagerLife,m=W.money,p=s.enterprise||{},d=p.deposit,sh=p.shares,t=p.stall,v=p.venture;
+  const button=(id,title,disabled)=>`<button data-life=\"personalInvest\" data-v=\"${esc(id)}\" ${disabled?'disabled':''}>${esc(title)}</button>`;
+  return `<section class="venture-room"><header><small>OFF THE PITCH / PERSONAL CAPITAL</small><h3>Put your wallet to work</h3><p>Wallet ${m(s.cash)} · Club funds are never used.</p></header><div class="venture-grid">
+  <article><small>BANK</small><h4>Fixed-term deposit</h4>${d?`<p>${m(d.principal)} locked. ${m(d.principal+Math.floor(d.principal*.01))} returns on ${W.date(d.due)}.</p>`:`<p>Lock savings for 28 days. Principal plus 1% interest returns automatically; no early withdrawal.</p>${tiers.map(n=>button(''+n,'Deposit '+m(n),s.cash<n)).join(' ')}`}${p.lastInterest!=null?`<small>Last interest: ${m(p.lastInterest)}</small>`:''}</article>
+  <article><small>SHARES</small><h4>Investment fund</h4>${sh?`<p>${m(SHARES)} invested. Projected return ${m(sh.principal+Math.floor(sh.principal*(3+((D.seedFor(`${s.id}:shares:${sh.due}`)%41)%12))/100))} on ${W.date(sh.due)}.</p>`:`<p>Invest ${m(SHARES)} for 28 days. Returns vary with the market; principal plus profit comes back automatically.</p>${button('shares','Invest '+m(SHARES),s.cash<SHARES)}`}${p.lastShares!=null?`<small>Last return: ${m(p.lastShares)}</small>`:''}</article>
+  <article><small>PROPERTY</small><h4>Buy a home</h4>${p.property?`<p>You own a place in ${esc(s.profile.nation)}. Bought ${W.date(p.property.acquired)}.</p>`:`<p>Buy your own home for ${m(PROPERTY)}. It adds to your personal net worth and is never touched by club business.</p>${button('property','Buy home · '+m(PROPERTY),s.cash<PROPERTY)}`}</article>
+  <article><small>LOCAL BUSINESS</small><h4>Start a venture</h4>${t?`<p>Open for business · ${t.weeks} trading weeks. Total net income ${m(t.paid)}. Next payout ${W.date(t.next)}.</p>`:`<p>Launch a local venture for ${m(VENTURE)}. It creates jobs in the district and pays you weekly takings.</p>${button('venture','Launch venture · '+m(VENTURE),s.cash<VENTURE)}`}</article>
+  <article><small>STREET STALL</small><h4>Kit-printing stall</h4>${t?`<p>Open for business · ${t.weeks} trading weeks. Total net income ${m(t.paid)}. Next payout ${W.date(t.next)}.</p>`:`<p>Pay ${m(fee(s))} once for equipment. A local operator runs the stall. Weekly net takings vary from zero to ${m(Math.floor(fee(s)*.18))}; setup costs are not refunded.</p>${button('stall','Launch stall · '+m(fee(s)),s.cash<fee(s))}`}</article>
+</div></section>`;}
 const api={invest,morning,render};g.TLPersonalEnterprise=api;if(typeof module!=='undefined')module.exports=api;})(typeof window==='undefined'?globalThis:window);
 
 ;
@@ -11253,8 +11338,29 @@ const api={fresh,topics,act,left,morning,render};g.TLNetwork=api;if(typeof modul
         : partner
           ? `${partner.name} is part of ${name}’s life (${h.stage.toLowerCase()}).`
           : "";
+    const kidsText = f.kids.length ? `They have ${f.kids.map((k)=>`${k.name}, aged ${g.TLFamilyPaths.age(k,s.day)}`).join(" and ")}.` : "";
+    const managed = new Set(spells.map((c) => c.club));
+    if (club) managed.add(club.name);
+    const trophies = [...new Set((s.seasonBook || []).flatMap((season) => season.cupAwards || []).filter((a) => managed.has(a.club)).map((a) => a.title))];
+    const honoursPara = trophies.length
+      ? `<p><b>Achievements</b> · ${trophies.map((t) => `won the ${esc(t)}`).join(", ")}.</p>`
+      : "";
+    const todayText = l.exit
+      ? "That managerial career has since ended."
+      : active
+        ? `Today, ${name} manages ${club.name}.`
+        : s.interview
+          ? `An interview with ${s.interview} is the next step.`
+          : s.careerSpells?.length
+            ? "The last club spell has ended."
+            : "No club is currently under management.";
+    const nextSteps = active
+      ? `Next: keep ${club.name} competitive and build on what is already there.`
+      : s.interview
+        ? `Next: the interview with ${s.interview}.`
+        : "Next: find the next club and start the story again.";
     const origin = `${p.name} began this career in ${p.nation} on ${W.date(start)}, ${p.path === "found" ? "with plans to found a club" : "looking for a club to manage"}.`,
-      chapter = `<article class="mp-card mp-story"><small>THE STORY SO FAR</small><h3>Biography</h3><p>${e(origin)} ${e(careerText)} ${e(l.exit ? "That managerial career has since ended." : active ? `Today, ${p.name.split(" ")[0]} manages ${club.name}.` : s.interview ? `An interview with ${s.interview} is the next step.` : s.careerSpells?.length ? "The last club spell has ended." : "No club is currently under management.")}</p>${homeText ? `<p>${e(homeText)}</p>` : ""}${first ? `<p><b>In football · ${W.date(first.day)}</b> ${e(first.text)}</p>` : ""}${social ? `<p><b>Off the pitch · ${W.date(social.day)}</b> ${e(social.text)}</p>` : ""}</article>`;
+      chapter = `<article class="mp-card mp-story"><small>THE STORY SO FAR</small><h3>Biography</h3><p>${e(origin)} ${e(careerText)}</p><p>${e(todayText)}</p>${honoursPara}${homeText ? `<p>${e(homeText)}</p>` : ""}${kidsText ? `<p>${e(kidsText)}</p>` : ""}${first ? `<p><b>In football · ${W.date(first.day)}</b> ${e(first.text)}</p>` : ""}${social ? `<p><b>Off the pitch · ${W.date(social.day)}</b> ${e(social.text)}</p>` : ""}<p><b>What’s next</b> · ${e(nextSteps)}</p></article>`;
     const timeline = `${chapter}<section class="mp-card"><small>FROM THE PRIVATE ARCHIVE</small><h3>Life history</h3><nav class="mp-filters" aria-label="History category">${Object.entries(
       { all: "All chapters", ...labels },
     )
