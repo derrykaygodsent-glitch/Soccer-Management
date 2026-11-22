@@ -18,7 +18,7 @@
       start,
       "life",
       "Opening chapter",
-      `${p.name || "The manager"} began in ${p.nation}, aged ${p.age}, ${p.path === "found" ? "setting out to build a club from scratch" : "seeking a first appointment with an existing club"}.`,
+      `${p.name || "The manager"} began in ${p.nation}, aged ${Number.isInteger(p.age) ? p.age : "—"}, ${p.path === "found" ? "setting out to build a club from scratch" : "seeking a first appointment with an existing club"}.`,
     );
     for (const r of [...(s.household?.log || [])].reverse())
       add(r.day, "social", "Relationships", r.text);
@@ -244,7 +244,7 @@
     if (club) managed.add(club.name);
     const trophies = [...new Set((s.seasonBook || []).flatMap((season) => season.cupAwards || []).filter((a) => managed.has(a.club)).map((a) => a.title))];
     const honoursPara = trophies.length
-      ? `<p><b>Achievements</b> · ${trophies.map((t) => `won the ${esc(t)}`).join(", ")}.</p>`
+      ? `<p><b>Achievements</b> · ${trophies.map((t) => `won the ${e(t)}`).join(", ")}.</p>`
       : "";
     const todayText = l.exit
       ? "That managerial career has since ended."
@@ -274,7 +274,7 @@
       ? `The club has played ${league.p} league matches: ${league.w} won, ${league.d} drawn, ${league.l} lost, ${league.gs} scored and ${league.gc} conceded, sitting ${H_ordinal(league.rank)} with ${league.pts} points.`
       : "";
     const clubStats = active
-      ? `<article class="mp-card"><small>CLUB AT A GLANCE</small><h3>${esc(club.name)}</h3>${factsList([["Role", club.owner ? "Founder & manager" : "First-team manager"], ["Appointed", W.date(club.appointed)], ["League position", league?.rank ? `#${league.rank} of the table` : "Season not started"], ["Record", league?.p ? `${league.p}P ${league.w}W ${league.d}D ${league.l}L` : "No matches played"], ["Squad", `${s.roster.length} players`], ["Backroom", `${(s.staff || []).length} of 3 appointed`], ["Club funds", W.money(s.fund)]])}<div class="mp-split"><button data-profile-view="history">Club story in your biography →</button><button data-life="go" data-v="club">Open the club profile →</button></div></article>`
+      ? `<article class="mp-card"><small>CLUB AT A GLANCE</small><h3>${e(club.name)}</h3>${factsList([["Role", club.owner ? "Founder & manager" : "First-team manager"], ["Appointed", W.date(club.appointed)], ["League position", league?.rank ? `#${league.rank} of the table` : "Season not started"], ["Record", league?.p ? `${league.p}P ${league.w}W ${league.d}D ${league.l}L` : "No matches played"], ["Squad", `${s.roster.length} players`], ["Backroom", `${(s.staff || []).length} of 3 appointed`], ["Club funds", W.money(s.fund)]])}<div class="mp-split"><button data-profile-view="history">Club story in your biography →</button><button data-life="go" data-v="club">Open the club profile →</button></div></article>`
       : "";
     const origin = `${p.name} began this career in ${p.nation} on ${W.date(start)}, ${p.path === "found" ? "with plans to found a club" : "looking for a club to manage"}.${founding}`,
       chapter = `<article class="mp-card mp-story"><small>THE STORY SO FAR</small><h3>Biography</h3><p>${e(origin)} ${e(careerText)}</p><p>${e(todayText)}</p>${honoursPara}${homeText ? `<p>${e(homeText)}</p>` : ""}${kidsText ? `<p>${e(kidsText)}</p>` : ""}${seasonLine ? `<p><b>This season</b> ${e(seasonLine)}</p>` : ""}${first ? `<p><b>In football · ${W.date(first.day)}</b> ${e(first.text)}</p>` : ""}${social ? `<p><b>Off the pitch · ${W.date(social.day)}</b> ${e(social.text)}</p>` : ""}<p><b>What’s next</b> · ${e(nextSteps)}</p></article>`;

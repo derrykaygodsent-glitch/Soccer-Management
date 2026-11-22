@@ -277,7 +277,8 @@
       const slot = team.slots.find(s => s.player.id === outId);
       const np = team.players.find(p => p.id === inId);
       if (!slot || !np) return { ok: false, msg: 'Invalid substitution.' };
-      if (np.onPitch || np.red || (team.listed && (!team.listed.has(np.id) || np.appeared))) return { ok: false, msg: 'Player not available from the submitted bench.' };
+      if (np.onPitch || np.red || np.subbedOff || np.subbedOn) return { ok: false, msg: 'That player has already been substituted.' };
+      if (team.listed && (!team.listed.has(np.id) || np.appeared)) return { ok: false, msg: 'Player not available from the submitted bench.' };
       if (this.season && this.phase === 'fulltime') return { ok:false, msg:'Substitutions are only available during the match.' };
       const old = slot.player;
       const sp = this.setpiece;
@@ -293,12 +294,14 @@
       np.decisionT = 0; np.tackleT = 0; np.stunT = 0; np.runT = 3; np.running = 0; np.contactT = 0; np.runUntil = 0; np.offsideFlag = false; np.holding = false;
       np.ballPlan = np.releasePlan = null; np.runSince = np.receivedAt = -Infinity; np.quickControl = false;
       np.offsideFlag = old.offsideFlag; np.offsideGap = old.offsideGap;
+      // A substituted player never returns to the bench or the pitch this match.
+      np.subbedOn = true; old.subbedOff = true;
       slot.player = np;
       if (this.kickoffTaker === old) this.kickoffTaker = np;
       if (sp?.taker === old) sp.taker = np;
       if (sp?.throwPlan?.target === old) sp.throwPlan.target = np;
       if (sp?.wall?.includes(old)) sp.wall = sp.wall.map(p => p === old ? np : p);
-      team.bench = team.players.filter(p => !p.onPitch && !p.red && (!team.listed || (team.listed.has(p.id) && !p.appeared)));
+      team.bench = team.players.filter(p => !p.onPitch && !p.red && !p.subbedOff && !p.subbedOn && (!team.listed || (team.listed.has(p.id) && !p.appeared)));
       team.dugout = team.dugout.map(seat => seat.id === np.id ? { id: old.id, used: !!team.listed } : seat);
       team.subsUsed++;
       if (this.ball.owner === old) { this.ball.owner = np; this.ball.lastTouch = np; }
@@ -314,7 +317,7 @@
       this.adjust(p, -0.8);
       team.slots = team.slots.filter(s => s.player !== p);
       this.reassignFormation(p.team);
-      team.bench = team.players.filter(pp => !pp.onPitch && !pp.red && (!team.listed || (team.listed.has(pp.id) && !pp.appeared)));
+      team.bench = team.players.filter(pp => !pp.onPitch && !pp.red && !pp.subbedOff && !pp.subbedOn && (!team.listed || (team.listed.has(pp.id) && !pp.appeared)));
       if (this.ball.owner === p) this.ball.owner = null;
       const n = team.slots.length;
       if (announce) this.say('red', { p: p.name, team: this.teamName(p.team), n }, { team: p.team, player: p, key: true, reason });
