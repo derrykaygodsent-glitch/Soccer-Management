@@ -288,7 +288,8 @@
       .join(
         "",
       )}</nav><p>${filtered.length} recorded ${filtered.length === 1 ? "moment" : "moments"} · newest dates first</p>${shown.map((r, i) => `${!i || W.date(r.day).slice(0, 4) !== W.date(shown[i - 1].day).slice(0, 4) ? `<h4>${W.date(r.day).slice(0, 4)}</h4>` : ""}<article class="mp-entry ${r.kind}"><small><time>${W.date(r.day)}</time> · ${labels[r.kind]}</small><strong>${e(r.title)}</strong><p>${e(r.text)}</p></article>`).join("") || "<p>No moments in this chapter yet.</p>"}${shown.length < filtered.length ? "<button data-profile-more>Show older moments</button>" : ""}</section>`;
-    return `<section class="manager-passport">${header}${
+    const switcher = `<nav class="profile-switch" aria-label="Switch profile"><button type="button" aria-pressed="false" data-life="go" data-v="club">Club profile</button><button type="button" aria-pressed="true" data-life="go" data-v="profile">Manager profile</button></nav>`;
+    return `<section class="manager-passport">${switcher}${header}${
       ui.tab === "history"
         ? timeline
         : `<article class="mp-card mp-wealth"><small>PERSONAL FINANCES</small><h3>Estimated net worth · ${W.money(wealth.total)}</h3><p>Available in your wallet: <b>${W.money(s.cash)}</b></p><details><summary>How this is calculated</summary>${factsList(wealth.rows.filter(([,v],i)=>!i||v).map(([label,v])=>[label,W.money(v)]))}<p>Property and business equipment are valued at cost. Club funds and future income are excluded.</p></details></article><div class="mp-grid"><article class="mp-card"><small>IDENTITY</small><h3>Personal file</h3>${factsList(

@@ -103,7 +103,8 @@
     const avgAbility = team.length ? Math.round(team.reduce((n, p) => n + ability(p), 0) / team.length) : 0;
     const squadValue = team.reduce((n, p) => n + (p.value || 0), 0);
     const storyRows = story(s, club);
-    return `<section class="org club-file">
+    const switcher = `<nav class="profile-switch" aria-label="Switch profile"><button type="button" aria-pressed="true" data-life="go" data-v="club">Club profile</button><button type="button" aria-pressed="false" data-life="go" data-v="profile">Manager profile</button></nav>`;
+    return `<section class="org club-file">${switcher}
       <header class="org-cover club-file-cover">${art('quayside')}<div><small>CLUB DOSSIER · ${esc(clubNation(s)).toUpperCase()}</small><h2><span class="club-file-emblem" aria-hidden="true">${esc(club.emblem || '◇')}</span>${esc(club.name)}</h2><p>${esc(club.nick || 'The first team')}${club.owner ? ` · founded by ${esc(s.profile.name)} on ${day(club.appointed)}` : ` · under new management since ${day(club.appointed)}`}</p><div class="club-file-chips"><span>${esc(row?.rank ? `#${row.rank} in the league` : 'New club')}</span><span>${team.length} players</span><span>${money(s.fund)} in the bank</span></div></div></header>
       <div class="cp-kpis">${kpis(s, club, row, team).map(([label, value, note]) => `<div><small>${esc(label)}</small><b>${esc(value)}</b><em>${esc(note)}</em></div>`).join('')}</div>
       <div class="cp-grid">
