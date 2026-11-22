@@ -171,6 +171,7 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
 .squad-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0 5px;font-size:11px;letter-spacing:.055em;text-transform:uppercase;color:#bfd0be}.squad-head strong{color:var(--text)}
 .squad-row{display:grid;grid-template-columns:26px minmax(0,1fr) 39px 49px auto;align-items:center;gap:5px;min-height:37px;border-top:1px solid #304538;font-size:12px;color:#e2eee2}.squad-row>span:first-child,.squad-row .row-role,.squad-row .row-cond{color:#b0c2b0;font-variant-numeric:tabular-nums;font-size:11px}.squad-row .button{min-height:31px;padding:0 8px;font-size:11px}
 .sub-note{background:#293d29;border:1px solid #5e7b52;padding:8px 9px;border-radius:7px;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:7px;line-height:1.4}.sub-note button{min-height:30px}
+.sub-badge{font-size:8.6px;padding:1px 6px;border-radius:9px;background:#7fd37f;color:#163016;font-weight:800;margin-left:6px;letter-spacing:.02em}
 .stat-line{display:grid;grid-template-columns:1fr 2fr 1fr;align-items:center;gap:5px;padding:6px 0;border-bottom:1px solid #304538;text-align:center;font-size:12px;color:#b4c6b5}.stat-line strong{font-variant-numeric:tabular-nums;font-weight:750;color:#ecf4e9}.stat-line strong:first-child{text-align:left}.stat-line strong:last-child{text-align:right}
 .stats-title{display:flex;justify-content:space-between;gap:5px;font-weight:770;text-transform:uppercase;letter-spacing:.1em;font-size:10px;color:#cddacd;margin-bottom:6px}
 .section-heading{font-size:11px;font-weight:760;letter-spacing:.08em;text-transform:uppercase;color:#bbcbbd;margin:15px 0 6px}.mini-pitch{width:100%;height:auto;aspect-ratio:2/1;display:block;border:1px solid #40604a;border-radius:8px;background:#263f2b}
@@ -6822,6 +6823,19 @@ const api={systemSkills,ability,jobs,identity,familiarity,footFactor,duty,mental
   const clockMinute = n => String(Math.max(0, n)).padStart(2, '0') + '′';
   const condition = p => Math.round(p.cond * 100);
   const colorCond = p => p.cond >= .75 ? '#b3da90' : p.cond >= .55 ? '#eed08a' : '#e69482';
+  const posGroup = p => p.pos==='GK'?'G':['DC','FB'].includes(p.pos)?'D':['DM','CM','AM'].includes(p.pos)?'M':['W','ST'].includes(p.pos)?'F':'?';
+  function replacerScore(p, out) {
+    // How well bench player p can replace the player going off (out). Higher = better.
+    let score = 0;
+    if (out) {
+      if (p.pos === out.pos) score += 70;
+      else if (posGroup(p) === posGroup(out)) score += 30;
+      score += (D.ROLE_WEIGHTS && D.ROLE_WEIGHTS[out.pos] ? D.ROLE_WEIGHTS[out.pos](p.attrs||{}) / 20 * 30 : (p.rating||7) * 3);
+    }
+    score += p.cond * 20 + (p.rating||7) * 3;
+    if (p.injury) score -= 45;
+    return score;
+  }
   const shapeLabel = s => s.replace(/-/g, '–');
   const portraitKit = color => color === '#334155' ? '#647690' : color === '#15803d' ? '#35a75c' : color;
   const viewingMatch = () => !$('matchScreen').hidden;
@@ -7502,9 +7516,19 @@ const api={systemSkills,ability,jobs,identity,familiarity,footFactor,duty,mental
     const pendingReview = state.match.phase === 'review';
     const available = !spectator() && !state.ready && state.match.phase !== 'fulltime' && !pendingReview;
     const inPlayer = t.players.find(p => p.id === state.subMode);
-    const row = (p, role, bench) => `<div class="squad-row"${p.injury?' data-knock="true"':''}><span>${p.num}</span><span>${html(p.name)}</span><span class="row-role">${role}${p.injury?' · Knock':''}</span><span class="row-cond">${condition(p)}%</span>${bench ? `<button type="button" class="button" data-bench="${html(p.id)}" ${!available || t.subsUsed >= 5 ? 'disabled' : ''}>Bring on</button>` : inPlayer ? `<button type="button" class="button" data-out="${html(p.id)}" ${!available || (role === 'GK') !== (inPlayer.pos === 'GK') ? 'disabled' : ''}>Replace</button>` : '<span></span>'}</div>`;
+    const outId = state.replaceId;
+    const outPlayer = outId ? state.meta[outId] : null;
+    const inSub = outId || inPlayer;
+    const benchOrder = inSub ? [...t.bench].sort((a, b) => replacerScore(b, outPlayer) - replacerScore(a, outPlayer)) : t.bench;
+    const best = inSub ? benchOrder[0] : null;
+    const bestLabel = outId ? 'Best replacer' : 'Best option';
+    const row = (p, role, benchRow) => {
+      const badge = benchRow && p.id === best?.id ? ` <span class="sub-badge">${bestLabel}</span>` : '';
+      return `<div class="squad-row"${p.injury?' data-knock="true"':''}><span>${p.num}</span><span>${html(p.name)}${badge}</span><span class="row-role">${role}${p.injury?' · Knock':''}</span><span class="row-cond">${condition(p)}%</span>${benchRow ? `<button type="button" class="button" data-bench="${html(p.id)}" ${!available || t.subsUsed >= 5 ? 'disabled' : ''}>Bring on</button>` : inPlayer ? `<button type="button" class="button" data-out="${html(p.id)}" ${!available || (role === 'GK') !== (inPlayer.pos === 'GK') ? 'disabled' : ''}>Replace</button>` : '<span></span>'}</div>`;
+    };
     const timing = filmView() ? ` · changes take effect at ${state.match.clockStr()}` : '';
-    $('tab-squad').innerHTML = `<p class="help-text${state.club?'':' desk-feedback'}"${state.club?'':' role="status"'}>${state.ready ? 'Substitutions are available after kick-off.' : pendingReview ? 'Wait for the VAR decision before substituting.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining${timing}.`}</p>${state.club?'<p class="help-text desk-feedback" role="status" hidden></p>':''}${state.replaceId?`<p class="sub-note">Choose a replacement for ${html(state.meta[state.replaceId].name)}.</p>`:''}${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${t.bench.map(p => row(p, p.pos, true)).join('')}`;
+    const outNote = outId ? `<p class="sub-note">Choose a replacement for ${html(outPlayer.name)}.${best?` Best replacer: ${html(best.name)}.`:''}</p>` : '';
+    $('tab-squad').innerHTML = `<p class="help-text${state.club?'':' desk-feedback'}"${state.club?'':' role="status"'}>${state.ready ? 'Substitutions are available after kick-off.' : pendingReview ? 'Wait for the VAR decision before substituting.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining${timing}.`}</p>${state.club?'<p class="help-text desk-feedback" role="status" hidden></p>':''}${outNote}${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${benchOrder.map(p => row(p, p.pos, true)).join('')}`;
   }
 
   const statLine = (title, a, b) => `<div class="stat-line"><strong>${a}</strong><span>${title}</span><strong>${b}</strong></div>`;

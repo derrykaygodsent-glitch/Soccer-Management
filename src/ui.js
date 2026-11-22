@@ -41,6 +41,19 @@
   const clockMinute = n => String(Math.max(0, n)).padStart(2, '0') + '′';
   const condition = p => Math.round(p.cond * 100);
   const colorCond = p => p.cond >= .75 ? '#b3da90' : p.cond >= .55 ? '#eed08a' : '#e69482';
+  const posGroup = p => p.pos==='GK'?'G':['DC','FB'].includes(p.pos)?'D':['DM','CM','AM'].includes(p.pos)?'M':['W','ST'].includes(p.pos)?'F':'?';
+  function replacerScore(p, out) {
+    // How well bench player p can replace the player going off (out). Higher = better.
+    let score = 0;
+    if (out) {
+      if (p.pos === out.pos) score += 70;
+      else if (posGroup(p) === posGroup(out)) score += 30;
+      score += (D.ROLE_WEIGHTS && D.ROLE_WEIGHTS[out.pos] ? D.ROLE_WEIGHTS[out.pos](p.attrs||{}) / 20 * 30 : (p.rating||7) * 3);
+    }
+    score += p.cond * 20 + (p.rating||7) * 3;
+    if (p.injury) score -= 45;
+    return score;
+  }
   const shapeLabel = s => s.replace(/-/g, '–');
   const portraitKit = color => color === '#334155' ? '#647690' : color === '#15803d' ? '#35a75c' : color;
   const viewingMatch = () => !$('matchScreen').hidden;
@@ -721,9 +734,19 @@
     const pendingReview = state.match.phase === 'review';
     const available = !spectator() && !state.ready && state.match.phase !== 'fulltime' && !pendingReview;
     const inPlayer = t.players.find(p => p.id === state.subMode);
-    const row = (p, role, bench) => `<div class="squad-row"${p.injury?' data-knock="true"':''}><span>${p.num}</span><span>${html(p.name)}</span><span class="row-role">${role}${p.injury?' · Knock':''}</span><span class="row-cond">${condition(p)}%</span>${bench ? `<button type="button" class="button" data-bench="${html(p.id)}" ${!available || t.subsUsed >= 5 ? 'disabled' : ''}>Bring on</button>` : inPlayer ? `<button type="button" class="button" data-out="${html(p.id)}" ${!available || (role === 'GK') !== (inPlayer.pos === 'GK') ? 'disabled' : ''}>Replace</button>` : '<span></span>'}</div>`;
+    const outId = state.replaceId;
+    const outPlayer = outId ? state.meta[outId] : null;
+    const inSub = outId || inPlayer;
+    const benchOrder = inSub ? [...t.bench].sort((a, b) => replacerScore(b, outPlayer) - replacerScore(a, outPlayer)) : t.bench;
+    const best = inSub ? benchOrder[0] : null;
+    const bestLabel = outId ? 'Best replacer' : 'Best option';
+    const row = (p, role, benchRow) => {
+      const badge = benchRow && p.id === best?.id ? ` <span class="sub-badge">${bestLabel}</span>` : '';
+      return `<div class="squad-row"${p.injury?' data-knock="true"':''}><span>${p.num}</span><span>${html(p.name)}${badge}</span><span class="row-role">${role}${p.injury?' · Knock':''}</span><span class="row-cond">${condition(p)}%</span>${benchRow ? `<button type="button" class="button" data-bench="${html(p.id)}" ${!available || t.subsUsed >= 5 ? 'disabled' : ''}>Bring on</button>` : inPlayer ? `<button type="button" class="button" data-out="${html(p.id)}" ${!available || (role === 'GK') !== (inPlayer.pos === 'GK') ? 'disabled' : ''}>Replace</button>` : '<span></span>'}</div>`;
+    };
     const timing = filmView() ? ` · changes take effect at ${state.match.clockStr()}` : '';
-    $('tab-squad').innerHTML = `<p class="help-text${state.club?'':' desk-feedback'}"${state.club?'':' role="status"'}>${state.ready ? 'Substitutions are available after kick-off.' : pendingReview ? 'Wait for the VAR decision before substituting.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining${timing}.`}</p>${state.club?'<p class="help-text desk-feedback" role="status" hidden></p>':''}${state.replaceId?`<p class="sub-note">Choose a replacement for ${html(state.meta[state.replaceId].name)}.</p>`:''}${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${t.bench.map(p => row(p, p.pos, true)).join('')}`;
+    const outNote = outId ? `<p class="sub-note">Choose a replacement for ${html(outPlayer.name)}.${best?` Best replacer: ${html(best.name)}.`:''}</p>` : '';
+    $('tab-squad').innerHTML = `<p class="help-text${state.club?'':' desk-feedback'}"${state.club?'':' role="status"'}>${state.ready ? 'Substitutions are available after kick-off.' : pendingReview ? 'Wait for the VAR decision before substituting.' : `${Math.max(0, 5 - t.subsUsed)} substitutions remaining${timing}.`}</p>${state.club?'<p class="help-text desk-feedback" role="status" hidden></p>':''}${outNote}${inPlayer ? `<div class="sub-note">Bring on ${html(inPlayer.name)}. Pick a player to replace.<button class="button" type="button" data-cancel-sub>Cancel</button></div>` : ''}<div class="squad-head"><strong>On the pitch</strong><span>${t.slots.length} players</span></div>${t.slots.map(s => row(s.player, s.role, false)).join('')}<div class="squad-head"><strong>On the bench</strong></div>${benchOrder.map(p => row(p, p.pos, true)).join('')}`;
   }
 
   const statLine = (title, a, b) => `<div class="stat-line"><strong>${a}</strong><span>${title}</span><strong>${b}</strong></div>`;
