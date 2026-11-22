@@ -758,7 +758,9 @@
     const inPlayer = t.players.find(p => p.id === state.subMode);
     // The player being subbed in either direction must never appear in the subs list.
     const excludedId = outPlayer ? outPlayer.id : inPlayer ? inPlayer.id : null;
-    const benchOrder = [...t.bench].filter(p => p.id !== excludedId)
+    // A player on the pitch can never also be offered as a substitute.
+    const onPitch = new Set(t.slots.map(s => s.player.id));
+    const benchOrder = [...t.bench].filter(p => p.id !== excludedId && !onPitch.has(p.id))
       .sort((a, b) => replacerScore(b, outPlayer || inPlayer) - replacerScore(a, outPlayer || inPlayer));
     const best = benchOrder[0] || null;
     const row = (p, role, benchRow) => {

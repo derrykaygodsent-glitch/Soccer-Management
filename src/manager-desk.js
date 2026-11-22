@@ -36,15 +36,15 @@ function views(updates=[]){const p=s.profile,roster=s.roster.map(id=>W.pool.find
  case 'planner':return g.TLSquadRoom.planner(s,roster);case 'groundPass':return g.TLDistrictView.invitation(s,true);case 'transfers':return g.TLTransferCentre.render(s,transferView,updates);
  case 'tactics':return g.TLBoardRoom.render(s,roster);
  case 'dynamics':return g.TLDynamics.render(s,roster);
- case 'training':return card('Team training',roster.length?btn('train','Schedule team practice tomorrow'):'No players to train yet.');
+ case 'training':return g.TLTrainingRoom?.render?g.TLTrainingRoom.render(s,roster):card('Team training',roster.length?btn('train','Schedule team practice tomorrow'):'No players to train yet.');
  case 'medical':return g.TLDynamics.render(s,roster,true);
  case 'fixtures':case 'day':return g.TLFieldwork.friendlyView(s)+btn('advance','Advance one day')+g.TLLeagueMatchday.card(s)+g.TLOfficeOrganiser.calendar(s,organiser);
  case 'atlas':{const a=W.atlas;return g.TLWorldGuide.passport(atlasCode||a.countries.find(c=>c.name===p.nation)?.code,atlasTown)+g.TLAtlasMap.mapView(atlasCode||a.countries.find(c=>c.name===p.nation)?.code,atlasTown)+card('Meridian · Touchline’s fictional world',`<p>Foundation ${a.version} · 5 continents · 20 nations · 100 founding clubs</p><p>Three planned divisions of 16 per country. The full 960-club pyramid is a target, not the current field.</p>`)+a.continents.map(k=>card(k.name,`<p>${k.identity}</p><small>Continental competition: ${k.competition}</small>${a.countries.filter(c=>c.continent===k.name).map(c=>`<details><summary>${c.name} (${c.code}) · capital: ${c.capital}</summary><p>${c.association}${a.majorAssociations[c.name]?' · Major domestic association':''}</p>${c.places.map(t=>`<p>${t.name} · <b>${c.members.filter(m=>m.home===t.id).map(m=>m.name).join(' · ')}</b></p>`).join('')}${a.rivalries.filter(r=>r.clubs.includes(c.places[0].club.id)).map(r=>`<p>${r.name}: ${r.clubs.map(id=>c.places.find(t=>t.club.id===id).club.name).join(' v ')} · ${r.nature} rivalry</p>`).join('')}</details>`).join('')}`)).join('')+card('Competition blueprint',`<p>Divisions: ${a.divisions.join(' · ')}</p><p>Domestic competitions: ${a.domestic.join(' · ')}</p><p>Global competitions: ${a.global.join(' · ')}</p>`);}
  case 'league':return g.TLCompetitionRoom.render(s,competition);
  case 'scouting':return g.TLScoutCentre.render(s,recruitment);
  case 'staff':return g.TLStaffOffice.render(s);
- case 'development':return card('Youth development',roster.filter(x=>x.age<=21).map(player).join('')||'No youth players currently registered.');
- case 'club':return card(clubName,club?`${esc(club.emblem)} ${esc(club.nick)} · ${club.owner?'Founded by '+esc(p.name):'Managed by '+esc(p.name)}`:btn('go','Visit club registration','create'));
+ case 'development':return g.TLCareerDevelopment?.render?g.TLCareerDevelopment.render(s):card('Player development','The development desk could not load. Reopen the game to reload its modules.');
+ case 'club':return g.TLClubProfile?.render?g.TLClubProfile.render(s):card(clubName,club?`${esc(club.emblem)} ${esc(club.nick)}`:'No club');
  case 'create':return card('National FA · club registration',g.TLFAHearing.application(s))+(s.worldVersion?g.TLFAHearing.render(s):'');
  case 'vision':return g.TLBoardroom.render(s)+(club?careerDesk():'');
  case 'finance':return g.TLLuma.wallet(s)+g.TLEconomy.panel(s)+g.TLPersonalEnterprise.render(s)+g.TLCommercial.render(s);
