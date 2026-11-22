@@ -30,7 +30,7 @@
   }
   function bar(cur, top, label) {
     const seg = n => `<span class="dv-seg ${n < cur ? 'full' : n < top ? 'empty' : 'gap'}"></span>`;
-    return `<span class="dv-bar" aria-label="${esc(label)}: ${cur} now, ${top} projected"><span class="dv-track">${Array.from({ length: 10 }, (_, i) => seg(i * 10)).join('')}</span><b>${cur} → ${top}</b></span>`;
+    return `<span class="dv-bar" aria-label="${esc(label)}: ${cur} now, ${top} projected"><span class="dv-track">${Array.from({ length: 10 }, (_, i) => seg(i * 10)).join('')}</span><b>${cur} to ${top}</b></span>`;
   }
   function staleness(v) {
     if (!v) return ['No data', 'info'];
@@ -72,7 +72,7 @@
       <div class="cp-kpis">${[
         counter('Under 22', `${youth.length}`, `of ${team.length} players`),
         counter('Average age', avgAge, 'First-team squad'),
-        counter('Best prospect', best ? best.name : '–', best ? `${ability(best)} → ${ceiling(best)} projected` : 'No youth players'),
+        counter('Best prospect', best ? best.name : '–', best ? `${ability(best)} current, ${ceiling(best)} projected` : 'No youth players'),
         counter('Youth minutes', youthMinutes.toLocaleString('en-GB'), 'Across all competitions'),
       ].join('')}</div>
       <div class="cp-grid">

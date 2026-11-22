@@ -1,4 +1,4 @@
-/* Touchline 26 — Classic 2D match controls and replay playback. */
+/* Touchline 26 - Classic 2D match controls and replay playback. */
 (function (global) {
   'use strict';
   const D = global.TLData, E = global.TLEngine, A = global.TLAudio, V = global.TLHighlights, O = global.TLReferee, B = global.TLBroadcast;
@@ -610,7 +610,7 @@
     const lineup = $('lineup'), from = lineup.scrollLeft;
     text('formationLabel', shapeLabel(home.tactics.formation));
     const captain = [home.assignments?.captain,home.assignments?.vice].find(id=>home.slots.some(s=>s.player.id===id)) || (home.assignments&&home.slots.find(s=>s.role!=='GK')?.player.id);
-    lineup.innerHTML = home.slots.map(({ player: p, role }) => `<button type="button" class="player-tile" data-player="${html(p.id)}" aria-label="${html(p.name)}, number ${p.num}, ${role}" aria-pressed="${state.selected === p.id}" title="${html(p.name)}" style="--kit:${portraitKit(role === 'GK' ? home.club.gk : home.club.primary)};--condition:${condition(p)}%;--condition-color:${colorCond(p)}"><span class="tile-head"><span>${role}${p.id===captain?' · C':''}${p.yellow ? ' · YC' : ''}${p.injury ? ' · +' : ''}</span><span class="tile-no">${p.num}</span></span><span class="tile-main">${icon('shirt')}<span class="tile-name">${html(p.name.split(' ').pop())}</span></span><span class="tile-rating">${state.ready?'—':p.rating.toFixed(1)}</span><span class="tile-cond" aria-hidden="true"><i></i></span></button>`).join('');
+    lineup.innerHTML = home.slots.map(({ player: p, role }) => `<button type="button" class="player-tile" data-player="${html(p.id)}" aria-label="${html(p.name)}, number ${p.num}, ${role}" aria-pressed="${state.selected === p.id}" title="${html(p.name)}" style="--kit:${portraitKit(role === 'GK' ? home.club.gk : home.club.primary)};--condition:${condition(p)}%;--condition-color:${colorCond(p)}"><span class="tile-head"><span>${role}${p.id===captain?' · C':''}${p.yellow ? ' · YC' : ''}${p.injury ? ' · +' : ''}</span><span class="tile-no">${p.num}</span></span><span class="tile-main">${icon('shirt')}<span class="tile-name">${html(p.name.split(' ').pop())}</span></span><span class="tile-rating">${state.ready?'N/A':p.rating.toFixed(1)}</span><span class="tile-cond" aria-hidden="true"><i></i></span></button>`).join('');
     lineup.scrollLeft = from;
     if (state.selected && !state.match.onPitchPlayers().some(p => p.id === state.selected)) selectPlayer(null);
   }
@@ -618,7 +618,7 @@
     for (const button of $('lineup').querySelectorAll('[data-player]')) {
       const p = state.meta[button.dataset.player];
       if (!p) continue;
-      button.querySelector('.tile-rating').textContent=state.ready?'—':p.rating.toFixed(1);button.style.setProperty('--condition', condition(p) + '%');
+      button.querySelector('.tile-rating').textContent=state.ready?'N/A':p.rating.toFixed(1);button.style.setProperty('--condition', condition(p) + '%');
       button.style.setProperty('--condition-color', colorCond(p));
     }
     if (state.selected) updateFocus(state.meta[state.selected]);
@@ -788,7 +788,7 @@
     const poss = view ? view.poss : m.possTime;
     const total = poss[0] + poss[1];
     const possession = total ? Math.round(poss[0] / total * 100) : 50;
-    const passPct = s => s.passes ? Math.round(s.passWon / s.passes * 100) + '%' : '–';
+    const passPct = s => s.passes ? Math.round(s.passWon / s.passes * 100) + '%' : 'N/A';
     return statLine('Possession', possession + '%', (100 - possession) + '%') +
       statLine('Shots', a.shots, b.shots) + statLine('On target', a.onTarget, b.onTarget) +
       statLine('Expected goals', a.xG.toFixed(2), b.xG.toFixed(2)) + statLine('Passes completed', a.passWon, b.passWon) +

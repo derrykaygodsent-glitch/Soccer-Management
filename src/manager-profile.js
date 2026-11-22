@@ -18,7 +18,7 @@
       start,
       "life",
       "Opening chapter",
-      `${p.name || "The manager"} began in ${p.nation}, aged ${Number.isInteger(p.age) ? p.age : "—"}, ${p.path === "found" ? "setting out to build a club from scratch" : "seeking a first appointment with an existing club"}.`,
+      `${p.name || "The manager"} began in ${p.nation}, aged ${Number.isInteger(p.age) ? p.age : "not recorded"}, ${p.path === "found" ? "setting out to build a club from scratch" : "seeking a first appointment with an existing club"}.`,
     );
     for (const r of [...(s.household?.log || [])].reverse())
       add(r.day, "social", "Relationships", r.text);
@@ -61,7 +61,7 @@
             r.day,
             "social",
             "From the touchline",
-            `“${r.text}” — @${s.network.handle}. ${r.fan} replied: “${r.response}”`,
+            `“${r.text}”. Posted by @${s.network.handle}. ${r.fan} replied: “${r.response}”`,
           );
     }
     for (const c of [...(s.careerSpells || []), ...(s.club ? [s.club] : [])]) {
@@ -266,7 +266,7 @@
       league = (W.table(nation, s.day) || []).find(r => r.name === club?.name) || null;
     } catch {}
     const founding = club?.owner
-      ? ` ${name} founded ${club.name}${club.nick ? ` — ${club.nick} —` : ""} and remains its owner. The FA registered the club on ${W.date(club.appointed)}${s.faDecision?.ok ? ` after the licence hearing` : ""}.`
+      ? ` ${name} founded ${club.name}${club.nick ? ` (${club.nick})` : ""} and remains its owner. The FA registered the club on ${W.date(club.appointed)}${s.faDecision?.ok ? ` after the licence hearing` : ""}.`
       : club
         ? ` ${name} took charge of ${club.name} on ${W.date(club.appointed)}.`
         : "";
@@ -274,7 +274,7 @@
       ? `The club has played ${league.p} league matches: ${league.w} won, ${league.d} drawn, ${league.l} lost, ${league.gs} scored and ${league.gc} conceded, sitting ${H_ordinal(league.rank)} with ${league.pts} points.`
       : "";
     const clubStats = active
-      ? `<article class="mp-card"><small>CLUB AT A GLANCE</small><h3>${e(club.name)}</h3>${factsList([["Role", club.owner ? "Founder & manager" : "First-team manager"], ["Appointed", W.date(club.appointed)], ["League position", league?.rank ? `#${league.rank} of the table` : "Season not started"], ["Record", league?.p ? `${league.p}P ${league.w}W ${league.d}D ${league.l}L` : "No matches played"], ["Squad", `${s.roster.length} players`], ["Backroom", `${(s.staff || []).length} appointments`], ["Club funds", W.money(s.fund)]])}<div class="mp-split"><button data-profile-view="history">Club story in your biography →</button><button data-life="go" data-v="club">Open the club profile →</button></div></article>`
+      ? `<article class="mp-card"><small>CLUB AT A GLANCE</small><h3>${e(club.name)}</h3>${factsList([["Role", club.owner ? "Founder & manager" : "First-team manager"], ["Appointed", W.date(club.appointed)], ["League position", league?.rank ? `#${league.rank} of the table` : "Season not started"], ["Record", league?.p ? `${league.p}P ${league.w}W ${league.d}D ${league.l}L` : "No matches played"], ["Squad", `${s.roster.length} players`], ["Backroom", `${(s.staff || []).length} appointments`], ["Club funds", W.money(s.fund)]])}<div class="mp-split"><button data-profile-view="history">Club story in your biography</button><button data-life="go" data-v="club">Open the club profile</button></div></article>`
       : "";
     const origin = `${p.name} began this career in ${p.nation} on ${W.date(start)}, ${p.path === "found" ? "with plans to found a club" : "looking for a club to manage"}.${founding}`,
       chapter = `<article class="mp-card mp-story"><small>THE STORY SO FAR</small><h3>Biography</h3><p>${e(origin)} ${e(careerText)}</p><p>${e(todayText)}</p>${honoursPara}${homeText ? `<p>${e(homeText)}</p>` : ""}${kidsText ? `<p>${e(kidsText)}</p>` : ""}${seasonLine ? `<p><b>This season</b> ${e(seasonLine)}</p>` : ""}${first ? `<p><b>In football · ${W.date(first.day)}</b> ${e(first.text)}</p>` : ""}${social ? `<p><b>Off the pitch · ${W.date(social.day)}</b> ${e(social.text)}</p>` : ""}<p><b>What’s next</b> · ${e(nextSteps)}</p></article>`;
@@ -326,7 +326,7 @@
                   ]
                 : []),
             ],
-          )}</article></div><article class="mp-card"><small>PRIVATE JOURNAL</small><h3>Your life in football</h3><p>${e(origin)}</p><button data-profile-view="history">Read biography & history →</button></article><details class="mp-card"><summary>Save management</summary><p>This affects the local copy of this manager’s career.</p><button class="cc-btn" data-remove-current>Delete local profile &amp; save</button></details>`
+          )}</article></div><article class="mp-card"><small>PRIVATE JOURNAL</small><h3>Your life in football</h3><p>${e(origin)}</p><button data-profile-view="history">Read biography and history</button></article><details class="mp-card"><summary>Save management</summary><p>This affects the local copy of this manager’s career.</p><button class="cc-btn" data-remove-current>Delete local profile &amp; save</button></details>`
     }</section>`;
   }
   const api = { capture, history, render };

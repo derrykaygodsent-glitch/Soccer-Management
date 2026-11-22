@@ -1,5 +1,5 @@
 const test = require('node:test'), a = require('node:assert/strict'), path = require('node:path');
-// The tactics board renders the FM-style three-column layout and its swap/remove commands work.
+// The tactics board renders the FM-inspired split selection layout and its swap/remove commands work.
 global.window = global;
 const src = n => require(path.join('..', 'src', n));
 for (const f of ['data.js', 'player-intelligence.js', 'team-dynamics.js', 'tactical-zones.js', 'squad-registration.js', 'match-board.js']) src(f);
@@ -28,7 +28,7 @@ const career = () => ({
 
 test('tactics board renders the FM-style rail, pitch and squad list', () => {
   const html = TLBoardRoom.render(career(), pool);
-  for (const needle of ['fm-layout', 'fm-rail', 'fm-pitch', 'fm-squad', 'TACTICAL STYLE', 'IN POSSESSION', 'IN TRANSITION', 'OUT OF POSSESSION', 'TEAM FLUIDITY', 'FORMATION', 'Quick selection'])
+  for (const needle of ['fm-layout', 'fm-left-pane', 'fm-rail', 'fm-pitch', 'fm-squad', 'TACTICAL STYLE', 'IN POSSESSION', 'IN TRANSITION', 'OUT OF POSSESSION', 'TEAM FLUIDITY', 'FORMATION', 'Quick selection', 'Minimise pitch · focus on squad', 'First-team selection', 'ROLE / DU.', 'data-slot="0"', 'data-board="bestXI"'])
     a.ok(html.includes(needle), 'missing ' + needle);
   a.equal((html.match(/›› Change/g) || []).length, 4, 'four instruction cards offer a change control');
   a.equal((html.match(/class="fm-row"/g) || []).length, 11, 'eleven starting rows');

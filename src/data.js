@@ -1,4 +1,4 @@
-/* TOUCHLINE 26 — original data layer. Fictional clubs & players. */
+/* TOUCHLINE 26 - original data layer. Fictional clubs & players. */
 (function (global) {
   'use strict';
 

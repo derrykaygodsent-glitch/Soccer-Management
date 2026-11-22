@@ -1,4 +1,4 @@
-/* Touchline 26 — ball mechanics in metres and seconds; no renderer or random rolls. */
+/* Touchline 26 - ball mechanics in metres and seconds; no renderer or random rolls. */
 (function (global) {
   'use strict';
   const G = 9.81, DRAG = .105, ROLL = 2.65, RADIUS = .11;

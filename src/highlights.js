@@ -1,4 +1,4 @@
-/* Touchline 26 — viewing policy only. The match engine never depends on this module. */
+/* Touchline 26 - viewing policy only. The match engine never depends on this module. */
 (function (global) {
   'use strict';
 
