@@ -189,6 +189,10 @@
       .reverse()
       .sort((a, b) => b.day - a.day);
   }
+  const H_ordinal = n => {
+    const v = Number(n) || 0;
+    return `${v}${v % 100 >= 11 && v % 100 <= 13 ? "th" : { 1: "st", 2: "nd", 3: "rd" }[v % 10] || "th"}`;
+  };
   function render(s, ui = {}) {
     const W = g.TLManagerLife,
       { esc: e, art } = g.TLClubUI,
@@ -256,9 +260,25 @@
       : s.interview
         ? `Next: the interview with ${s.interview}.`
         : "Next: find the next club and start the story again.";
-    const origin = `${p.name} began this career in ${p.nation} on ${W.date(start)}, ${p.path === "found" ? "with plans to found a club" : "looking for a club to manage"}.`,
-      chapter = `<article class="mp-card mp-story"><small>THE STORY SO FAR</small><h3>Biography</h3><p>${e(origin)} ${e(careerText)}</p><p>${e(todayText)}</p>${honoursPara}${homeText ? `<p>${e(homeText)}</p>` : ""}${kidsText ? `<p>${e(kidsText)}</p>` : ""}${first ? `<p><b>In football · ${W.date(first.day)}</b> ${e(first.text)}</p>` : ""}${social ? `<p><b>Off the pitch · ${W.date(social.day)}</b> ${e(social.text)}</p>` : ""}<p><b>What’s next</b> · ${e(nextSteps)}</p></article>`;
-    const timeline = `${chapter}<section class="mp-card"><small>FROM THE PRIVATE ARCHIVE</small><h3>Life history</h3><nav class="mp-filters" aria-label="History category">${Object.entries(
+    let league = null;
+    try {
+      const nation = club?.owner ? p.nation : Object.keys(W.nations || {}).find(k => (W.nations[k] || []).includes(club?.name)) || p.nation;
+      league = (W.table(nation, s.day) || []).find(r => r.name === club?.name) || null;
+    } catch {}
+    const founding = club?.owner
+      ? ` ${name} founded ${club.name}${club.nick ? ` — ${club.nick} —` : ""} and remains its owner. The FA registered the club on ${W.date(club.appointed)}${s.faDecision?.ok ? ` after the licence hearing` : ""}.`
+      : club
+        ? ` ${name} took charge of ${club.name} on ${W.date(club.appointed)}.`
+        : "";
+    const seasonLine = league?.p
+      ? `The club has played ${league.p} league matches: ${league.w} won, ${league.d} drawn, ${league.l} lost, ${league.gs} scored and ${league.gc} conceded, sitting ${H_ordinal(league.rank)} with ${league.pts} points.`
+      : "";
+    const clubStats = active
+      ? `<article class="mp-card"><small>CLUB AT A GLANCE</small><h3>${esc(club.name)}</h3>${factsList([["Role", club.owner ? "Founder & manager" : "First-team manager"], ["Appointed", W.date(club.appointed)], ["League position", league?.rank ? `#${league.rank} of the table` : "Season not started"], ["Record", league?.p ? `${league.p}P ${league.w}W ${league.d}D ${league.l}L` : "No matches played"], ["Squad", `${s.roster.length} players`], ["Backroom", `${(s.staff || []).length} of 3 appointed`], ["Club funds", W.money(s.fund)]])}<button data-profile-view="history">Read the club story →</button></article>`
+      : "";
+    const origin = `${p.name} began this career in ${p.nation} on ${W.date(start)}, ${p.path === "found" ? "with plans to found a club" : "looking for a club to manage"}.${founding}`,
+      chapter = `<article class="mp-card mp-story"><small>THE STORY SO FAR</small><h3>Biography</h3><p>${e(origin)} ${e(careerText)}</p><p>${e(todayText)}</p>${honoursPara}${homeText ? `<p>${e(homeText)}</p>` : ""}${kidsText ? `<p>${e(kidsText)}</p>` : ""}${seasonLine ? `<p><b>This season</b> ${e(seasonLine)}</p>` : ""}${first ? `<p><b>In football · ${W.date(first.day)}</b> ${e(first.text)}</p>` : ""}${social ? `<p><b>Off the pitch · ${W.date(social.day)}</b> ${e(social.text)}</p>` : ""}<p><b>What’s next</b> · ${e(nextSteps)}</p></article>`;
+    const timeline = `${chapter}${clubStats}<section class="mp-card"><small>FROM THE PRIVATE ARCHIVE</small><h3>Life history</h3><nav class="mp-filters" aria-label="History category">${Object.entries(
       { all: "All chapters", ...labels },
     )
       .map(

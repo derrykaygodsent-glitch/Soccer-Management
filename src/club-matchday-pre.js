@@ -27,7 +27,12 @@
     const {s,ui,f}=c, p=s.plan, t=p.tactics, ratings=S.playerStats(s), expanded=ui.layout!=='compact', tab=ui.tab||'overview', team=M.sheet(p,s.now,s.injuries), opp=c.opposition;
     const field=(key,label,list,value)=>ctl(key,label,list,value);
     const pool=M.avail(s.now,s.injuries);
-    const sel=(p,index,which,role)=>ctl(`${which}:${index}`,`${which==='xi'?role+' starter':'Substitute '+(index+1)}`,pool.filter(q=>(which==='bench'||(q.pos==='GK')===(role==='GK'))).map(q=>[q.id,`${p.id!==q.id&&s.plan.xi.includes(q.id)?'↔ ':''}${q.name}`]),p.id,true);
+    // Every slot offers only players who are not already picked elsewhere on the sheet.
+    const sel=(p,index,which,role)=>{
+      const elsewhere=new Set([...(s.plan.xi||[]),...(s.plan.bench||[])].filter(id=>id!==p.id));
+      const list=pool.filter(q=>!elsewhere.has(q.id)&&(which==='bench'||(q.pos==='GK')===(role==='GK')));
+      return ctl(`${which}:${index}`,`${which==='xi'?role+' starter':'Substitute '+(index+1)}`,list.map(q=>[q.id,q.name]),p.id,true);
+    };
     const players=team.xi.map(({player:p,role,job,label},i)=>`<tr><td><b>${label}</b></td><td><span class="ms-table-shirt">${shirt(p,H.homeId)}</span></td><td>${sel(p,i,'xi',role)}</td><td>${ctl(`role:${i}`,`Role and duty for ${p.name}`,M.roleOptions[role].map(([id,n,d])=>[id,`${n} · ${d}`]),job[0],true)}</td><td>${condition(S.condition(s,p.id))}</td><td>${p.id===s.plan.set.captain?tag('C','teal'):U.rank(ratings[p.id].rating)}</td></tr>`).join('');
     const bench=team.bench.map((p,i)=>`<tr class="ms-bench-row"><td><b>S${i+1}</b></td><td><span class="ms-table-shirt">${shirt(p,H.homeId)}</span></td><td>${sel(p,i,'bench',p.pos)}</td><td>${esc(p.position)}</td><td>${condition(S.condition(s,p.id))}</td><td>${U.rank(ratings[p.id].rating)}</td></tr>`).join('');
     const roster=`<section class="ms-panel ms-selection-list"><header><div><span class="cc-eyebrow">First team</span><h2>Starting XI &amp; bench</h2></div>${cmd('Quick pick','pick','',{icon:'team'})}</header>${U.scroll('match-roster','Team selection table',`<table class="ms-selection-table"><thead><tr>${['Pos','No.','Selected player','Role & duty','Fit','Avg'].map(x=>`<th scope="col">${x}</th>`).join('')}</tr></thead><tbody>${players}${bench}</tbody></table>`)}${team.out.length?`<p class="ms-hint">Unavailable: ${esc(team.out.map(p=>p.name).join(', '))}</p>`:''}</section>`;
