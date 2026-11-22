@@ -66,7 +66,7 @@
     return [
       ['League position', row?.rank ? `#${row.rank}` : '–', row?.p ? `${row.pts} pts · ${row.p} played` : 'Season not started'],
       ['Squad', `${team.length}`, team.length ? `Avg age ${(team.reduce((n, p) => n + p.age, 0) / team.length).toFixed(1)}` : 'No players yet'],
-      ['Staff', `${(s.staff || []).length} / 3`, 'Backroom team'],
+      ['Staff', `${(s.staff || []).length}`, 'Backroom team'],
       ['Club funds', money(s.fund), 'Not personal wallet'],
       ['Wage bill', wages ? `${money(wages)}/wk` : 'No wages', Object.keys(s.contracts || {}).length + ' contracts'],
       ['Ground', v ? `${(v.capacity || 0).toLocaleString('en-GB')}` : 'No venue', v ? v.name : 'Arrange in the boardroom'],

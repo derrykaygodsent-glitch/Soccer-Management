@@ -13,6 +13,8 @@
     const team = players || [];
     const club = s.club?.name || 'your club';
     const staff = s.staff || [];
+    const coaches = staff.filter(name => ['Assistant coach','Head coach','Tactical coach','Goalkeeping coach','Fitness coach','Youth development coach','Academy manager'].includes(name));
+    const leadCoach = staff.includes('Head coach') ? 'Head coach' : staff.includes('Assistant coach') ? 'Assistant coach' : coaches[0];
     const rows = team.map(p => ({ p, v: state(s, p) }));
     const ready = rows.filter(r => r.v && !r.v.knock && r.v.sharp >= 75 && r.v.fitness >= 70);
     const loading = rows.filter(r => r.v && !r.v.knock && (r.v.sharp < 75 || r.v.fitness < 70));
@@ -32,12 +34,12 @@
         counter('Match ready', `${ready.length}`, `of ${team.length} players`),
         counter('Building', `${loading.length}`, 'Below full sharpness'),
         counter('In recovery', `${out.length}`, 'Carrying a knock'),
-        counter('Next session', next ? day(next.due) : pending ? 'Planned' : 'None booked', staff.includes('Assistant coach') ? 'Assistant coach leads' : 'Take the session yourself'),
+        counter('Next session', next ? day(next.due) : pending ? 'Planned' : 'None booked', leadCoach ? `${esc(leadCoach)} leads · ${coaches.length} coaches appointed` : 'Take the session yourself'),
       ].join('')}</div>
       <div class="cp-grid">
         <article class="org-agenda"><h3>This week</h3><div class="tr-week">${week}</div>${team.length ? `<div class="cp-actions">${pending ? '<button data-life="go" data-v="day">Open the calendar</button>' : '<button data-life="train">Schedule team practice tomorrow</button>'}<button data-life="go" data-v="medical">Medical centre</button></div>` : '<p class="cp-muted">Recruit players before planning sessions.</p>'}</article>
         <article class="org-agenda"><h3>Squad readiness</h3>${rows.length ? `<table class="cp-table tr-table"><thead><tr><th scope="col">Player</th><th scope="col">Sharp</th><th scope="col">Fit</th><th scope="col">Status</th></tr></thead><tbody>${rows.slice().sort((a, b) => (a.v?.sharp ?? 0) - (b.v?.sharp ?? 0)).map(({ p, v }) => { const [label, tone] = status(v); return `<tr><td>${esc(p.name)}<small>${esc(p.pos)}</small></td><td>${v ? v.sharp + '%' : '–'}</td><td>${v ? v.fitness + '%' : '–'}</td><td><span class="dv-tag ${tone}">${esc(label)}</span></td></tr>`; }).join('')}</tbody></table>` : '<p class="cp-muted">No players registered yet.</p>'}</article>
-        <article class="org-agenda"><h3>The sessions</h3><p>Team practice lifts sharpness across the squad and costs condition. Players in recovery sit it out.</p><p class="cp-muted">${staff.length ? `Coaching team: ${esc(staff.join(', '))}.` : 'No coaching staff appointed. Appoint an assistant to run sessions.'}</p><div class="cp-actions"><button data-life="go" data-v="staff">Staff</button><button data-life="go" data-v="development">Player development</button></div></article>
+        <article class="org-agenda"><h3>The sessions</h3><p>Team practice lifts sharpness across the squad and costs condition. Players in recovery sit it out.</p><p class="cp-muted">${coaches.length ? `Coaching team: ${esc(coaches.join(', '))}.` : 'No coaching staff appointed. Appoint an assistant or head coach to delegate sessions.'}</p><div class="cp-actions"><button data-life="go" data-v="staff">Staff</button><button data-life="go" data-v="development">Player development</button></div></article>
       </div>
     </section>`;
   }
