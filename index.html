@@ -108,6 +108,9 @@ h1{font:700 clamp(35px,4vw,45px)/.99 'Barlow Condensed','Arial Narrow',sans-seri
 .player-focus[data-technical=true]{top:var(--pitch-overlay-top,14px);bottom:auto;right:auto;left:clamp(6px,calc(var(--person-x) - 82px),calc(100% - 199px));max-width:min(192px,calc(100% - 12px));width:max-content;z-index:3}
 .player-focus[data-technical=true]>div{min-width:0}
 .focus-meta{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:750}.player-focus strong{display:block;font-size:12px;margin-top:3px}.focus-stats{display:block;font-size:10px;color:var(--muted);margin-top:3px}
+.focus-role{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:750;margin-top:6px;flex:none;min-width:0}
+.focus-role select{font:inherit;background:transparent;border:1px solid #47604d;border-radius:4px;color:var(--text);padding:1px 5px;margin-top:2px;width:max-content;cursor:pointer}
+.focus-role select option{background:#111d16}
 .commentary{--feed-accent:#c7ea91;position:relative;display:flex;align-items:center;gap:11px;min-height:37px;padding:0 11px 0 13px;background:color-mix(in srgb,var(--feed-accent) 10%,#18271f);border-top:1px solid color-mix(in srgb,var(--feed-accent) 38%,#2c4434);border-bottom:1px solid #35493b;box-shadow:inset 3px 0 var(--feed-accent)}
 .feed-label{display:flex;align-items:center;gap:6px;flex:none;color:#d0dec9;white-space:nowrap;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding-right:10px;border-right:1px solid #4a5c4c}
 .feed-pip{width:5px;height:5px;border-radius:2px;background:var(--feed-accent);flex:none}
@@ -1843,6 +1846,7 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
         </div>
         <div class="player-focus" id="playerFocus" hidden>
           <div><div class="focus-meta" id="focusMeta"></div><strong id="focusName" aria-live="polite"></strong><span class="focus-stats" id="focusStats"></span></div>
+          <label class="focus-role" id="focusRoleLabel" hidden>Role <select id="focusRole"></select></label>
           <button class="button" id="focusTactics" hidden>Tactics</button><button class="button" id="focusSub" hidden>Substitute off</button><button class="button" id="groundScout" type="button" hidden>Scout player</button>
           <button class="icon-button mini" id="btnClearPlayer" type="button" aria-label="Clear selection"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
         </div>
@@ -7411,6 +7415,27 @@ const api={systemSkills,ability,jobs,identity,familiarity,footFactor,duty,mental
     text('focusMeta', `#${p.num} · ${p.role || p.pos} · ${state.match.teams[p.team].club.short}`);
     text('focusName', p.name);
     text('focusStats', `${condition(p)}% condition${state.ready ? '' : ` · ${p.rating.toFixed(1)} rating${state.careerMatch?' · '+p.stats.goals+' goals · '+p.stats.shots+' shots · '+p.stats.passWon+'/'+p.stats.passes+' passes':''}`}`);
+    const roleLab=$('focusRoleLabel'), roleSel=$('focusRole');
+    const canChangeRole=!spectator()&&p.team===managed()&&p.onPitch&&!state.ready&&state.match.phase!=='fulltime'&&state.match.phase!=='review';
+    roleLab.hidden=!canChangeRole;
+    if(canChangeRole){
+      const opts=(global.TLMatchdayData.roleOptions[p.pos]||[]);
+      const curOpt=opts.find(o=>o[0]===p.role); const curDuty=curOpt?curOpt[2]:'Defend';
+      const cur=`${p.role}-${curDuty.toLowerCase()}`;
+      roleSel.innerHTML=opts.map(([code,name,duty])=>`<option value="${code}-${duty.toLowerCase()}" ${code+'-'+duty.toLowerCase()===cur?'selected':''}>${name} · ${duty}</option>`).join('');
+      roleSel.value=cur;
+    }
+  }
+  function focusRoleChange(p,value){
+    const [code,duty]=String(value).split('-');
+    const slot=team().slots.find(s=>s.player&&s.player.id===p.id);
+    const option=(global.TLMatchdayData.roleOptions[p.pos]||[]).find(o=>o[0]===code);
+    if(!slot||!option)return;
+    const job=[option[0],option[1],duty||option[2]];
+    slot.role=code;slot.job=job;p.role=code;p.job=job;
+    checkpoint({type:'tactic-role',change:{id:p.id,role:code,duty}});
+    renderLineup();draw();
+    notify(`${p.name} is now ${option[1]} (${duty}).`);
   }
   function selectPlayer(p) {
     state.technical = null;
@@ -7686,7 +7711,7 @@ const api={systemSkills,ability,jobs,identity,familiarity,footFactor,duty,mental
 
   function wire() {
     const preferences=$('matchOptions');document.addEventListener('pointerdown',event=>{if(preferences.open&&!preferences.contains(event.target))preferences.open=false;},true);document.addEventListener('keydown',event=>{if(event.key==='Escape'&&preferences.open){preferences.open=false;preferences.querySelector('summary').focus();}});
-    const head=$('matchScreen').querySelector('.broadcast-head');head.append($('matchHome'),$('matchOptions'),$('btnPlay'));$('matchOptions').querySelector('.controls').append($('btnSetup'),$('btnStats'));$('btnSquad').onclick=()=>openDesk('squad');$('focusTactics').onclick=()=>openDesk('tactics');$('focusSub').onclick=()=>{state.replaceId=state.selected;openDesk('squad');};
+    const head=$('matchScreen').querySelector('.broadcast-head');head.append($('matchHome'),$('matchOptions'),$('btnPlay'));$('matchOptions').querySelector('.controls').append($('btnSetup'),$('btnStats'));$('btnSquad').onclick=()=>openDesk('squad');$('focusTactics').onclick=()=>openDesk('tactics');$('focusSub').onclick=()=>{state.replaceId=state.selected;openDesk('squad');};$('focusRole').onchange=e=>{const p=state.selected?state.meta[state.selected]:null;if(p)focusRoleChange(p,e.target.value);};
     $('btnPlay').addEventListener('click', togglePlay);
     $('btnSkip').addEventListener('click', toggleSkip);
     const modeOptions = Object.values(V.MODES).map(mode => `<option value="${mode.id}">${mode.label}</option>`).join('');

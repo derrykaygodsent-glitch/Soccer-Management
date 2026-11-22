@@ -629,6 +629,27 @@
     text('focusMeta', `#${p.num} · ${p.role || p.pos} · ${state.match.teams[p.team].club.short}`);
     text('focusName', p.name);
     text('focusStats', `${condition(p)}% condition${state.ready ? '' : ` · ${p.rating.toFixed(1)} rating${state.careerMatch?' · '+p.stats.goals+' goals · '+p.stats.shots+' shots · '+p.stats.passWon+'/'+p.stats.passes+' passes':''}`}`);
+    const roleLab=$('focusRoleLabel'), roleSel=$('focusRole');
+    const canChangeRole=!spectator()&&p.team===managed()&&p.onPitch&&!state.ready&&state.match.phase!=='fulltime'&&state.match.phase!=='review';
+    roleLab.hidden=!canChangeRole;
+    if(canChangeRole){
+      const opts=(global.TLMatchdayData.roleOptions[p.pos]||[]);
+      const curOpt=opts.find(o=>o[0]===p.role); const curDuty=curOpt?curOpt[2]:'Defend';
+      const cur=`${p.role}-${curDuty.toLowerCase()}`;
+      roleSel.innerHTML=opts.map(([code,name,duty])=>`<option value="${code}-${duty.toLowerCase()}" ${code+'-'+duty.toLowerCase()===cur?'selected':''}>${name} · ${duty}</option>`).join('');
+      roleSel.value=cur;
+    }
+  }
+  function focusRoleChange(p,value){
+    const [code,duty]=String(value).split('-');
+    const slot=team().slots.find(s=>s.player&&s.player.id===p.id);
+    const option=(global.TLMatchdayData.roleOptions[p.pos]||[]).find(o=>o[0]===code);
+    if(!slot||!option)return;
+    const job=[option[0],option[1],duty||option[2]];
+    slot.role=code;slot.job=job;p.role=code;p.job=job;
+    checkpoint({type:'tactic-role',change:{id:p.id,role:code,duty}});
+    renderLineup();draw();
+    notify(`${p.name} is now ${option[1]} (${duty}).`);
   }
   function selectPlayer(p) {
     state.technical = null;
@@ -904,7 +925,7 @@
 
   function wire() {
     const preferences=$('matchOptions');document.addEventListener('pointerdown',event=>{if(preferences.open&&!preferences.contains(event.target))preferences.open=false;},true);document.addEventListener('keydown',event=>{if(event.key==='Escape'&&preferences.open){preferences.open=false;preferences.querySelector('summary').focus();}});
-    const head=$('matchScreen').querySelector('.broadcast-head');head.append($('matchHome'),$('matchOptions'),$('btnPlay'));$('matchOptions').querySelector('.controls').append($('btnSetup'),$('btnStats'));$('btnSquad').onclick=()=>openDesk('squad');$('focusTactics').onclick=()=>openDesk('tactics');$('focusSub').onclick=()=>{state.replaceId=state.selected;openDesk('squad');};
+    const head=$('matchScreen').querySelector('.broadcast-head');head.append($('matchHome'),$('matchOptions'),$('btnPlay'));$('matchOptions').querySelector('.controls').append($('btnSetup'),$('btnStats'));$('btnSquad').onclick=()=>openDesk('squad');$('focusTactics').onclick=()=>openDesk('tactics');$('focusSub').onclick=()=>{state.replaceId=state.selected;openDesk('squad');};$('focusRole').onchange=e=>{const p=state.selected?state.meta[state.selected]:null;if(p)focusRoleChange(p,e.target.value);};
     $('btnPlay').addEventListener('click', togglePlay);
     $('btnSkip').addEventListener('click', toggleSkip);
     const modeOptions = Object.values(V.MODES).map(mode => `<option value="${mode.id}">${mode.label}</option>`).join('');
