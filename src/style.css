@@ -101,6 +101,9 @@ h1{font:700 clamp(35px,4vw,45px)/.99 'Barlow Condensed','Arial Narrow',sans-seri
 .player-focus[data-technical=true]{top:var(--pitch-overlay-top,14px);bottom:auto;right:auto;left:clamp(6px,calc(var(--person-x) - 82px),calc(100% - 199px));max-width:min(192px,calc(100% - 12px));width:max-content;z-index:3}
 .player-focus[data-technical=true]>div{min-width:0}
 .focus-meta{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:750}.player-focus strong{display:block;font-size:12px;margin-top:3px}.focus-stats{display:block;font-size:10px;color:var(--muted);margin-top:3px}
+.focus-role{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:750;margin-top:6px;flex:none;min-width:0}
+.focus-role select{font:inherit;background:transparent;border:1px solid #47604d;border-radius:4px;color:var(--text);padding:1px 5px;margin-top:2px;width:max-content;cursor:pointer}
+.focus-role select option{background:#111d16}
 .commentary{--feed-accent:#c7ea91;position:relative;display:flex;align-items:center;gap:11px;min-height:37px;padding:0 11px 0 13px;background:color-mix(in srgb,var(--feed-accent) 10%,#18271f);border-top:1px solid color-mix(in srgb,var(--feed-accent) 38%,#2c4434);border-bottom:1px solid #35493b;box-shadow:inset 3px 0 var(--feed-accent)}
 .feed-label{display:flex;align-items:center;gap:6px;flex:none;color:#d0dec9;white-space:nowrap;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding-right:10px;border-right:1px solid #4a5c4c}
 .feed-pip{width:5px;height:5px;border-radius:2px;background:var(--feed-accent);flex:none}
