@@ -143,12 +143,17 @@
     }
   }
   function toggleDrawer(open,focus=false){
+    const root=$('homeScreen'),mobile=matchMedia('(max-width:980px)').matches;
+    if(open===null){
+      if(mobile)open=!state.drawer;
+      else{const collapsed=root.classList.toggle('hc-rail-collapsed'),menu=$('homeMenu');menu.setAttribute('aria-expanded',String(!collapsed));menu.setAttribute('aria-label',collapsed?'Show club navigation':'Hide club navigation');menu.title=collapsed?'Show club navigation':'Hide club navigation';return;}
+    }
     if(open&&processor?.running)return;
-    const wasOpen=state.drawer;state.drawer=open;
-    $('homeSidebar').classList.toggle('hc-open',open);$('homeScrim').hidden=!open;$('homeFrame').inert=open;
-    $('homeMenu').setAttribute('aria-expanded',String(open));
-    if(open&&focus)($('homeNav').querySelector('[aria-current=page]')||$('homeNav').querySelector('button')).focus();
-    else if(wasOpen&&focus)$('homeMenu').focus();
+    const wasOpen=state.drawer,drawerOpen=mobile&&open;state.drawer=drawerOpen;
+    $('homeSidebar').classList.toggle('hc-open',drawerOpen);$('homeScrim').hidden=!drawerOpen;$('homeFrame').inert=drawerOpen;
+    const expanded=mobile?drawerOpen:!root.classList.contains('hc-rail-collapsed'),menu=$('homeMenu');menu.setAttribute('aria-expanded',String(expanded));menu.setAttribute('aria-label',expanded?'Hide club navigation':'Show club navigation');menu.title=expanded?'Hide club navigation':'Show club navigation';
+    if(drawerOpen&&focus)($('homeNav').querySelector('[aria-current=page]')||$('homeNav').querySelector('button')).focus();
+    else if(wasOpen&&focus)menu.focus();
   }
   function dayDesk(focus=true){
     const s=season.value, tab=K.onDate(s,s.now).length?'fixtures':'today', r=desk.route();
@@ -192,6 +197,8 @@
     if(cmd==='day')return processor.start();
   }
   function init(){
+    toggleDrawer(false);
+    matchMedia('(max-width:980px)').addEventListener?.('change',()=>{state.drawer=false;$('homeScreen').classList.remove('hc-rail-collapsed');toggleDrawer(false);});
     global.TLManagerDesk.install({navigation,toggleDrawer});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();

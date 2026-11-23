@@ -649,16 +649,26 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 #homeScreen:has(.fm-tactics-workspace) .fm-both-view>.fm-shape-switch button{min-height:34px}
 @media(max-width:700px){#homeScreen:has(.fm-tactics-workspace) .fm-player-list,#homeScreen:has(.fm-tactics-workspace) .fm-player-detail{min-height:0}#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace{min-height:0}}
 
-/* Navigation remains available on Tactics: retain the career rail and header while keeping the tactical module expansive. */
+/* Keep clubhouse navigation available on Tactics without pinning the mobile drawer open. */
 #homeScreen.hc-shell:has(.fm-tactics-workspace){display:grid!important;grid-template-columns:215px minmax(0,1fr)!important;width:100%!important;max-width:none!important}
-#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-sidebar{display:flex!important;position:relative!important;inset:auto!important;width:auto!important;visibility:visible!important;transform:none!important;box-shadow:none!important}
+#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-sidebar{display:flex!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-main{display:flex!important;flex-direction:column!important;width:auto!important;min-width:0!important;height:100dvh!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-bar{display:flex!important;flex:none!important}
+#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-mobile-menu{display:grid!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-tabs{display:flex!important;flex:none!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) #homeFrame{width:auto!important;max-width:none!important;height:auto!important;min-height:0!important;flex:1 1 0!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) #clubPage{height:100%!important;max-height:none!important;min-width:0!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) #clubPage>.life-desk{width:100%!important;max-width:none!important}
-@media(max-width:980px){#homeScreen.hc-shell:has(.fm-tactics-workspace){display:flex!important;flex-direction:column!important}#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-sidebar{position:fixed!important;display:flex!important}#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-main{width:100%!important}}
+#homeScreen.hc-shell.hc-rail-collapsed:has(.fm-tactics-workspace){grid-template-columns:0 minmax(0,1fr)!important}
+#homeScreen.hc-shell.hc-rail-collapsed:has(.fm-tactics-workspace) .hc-sidebar{display:none!important}
+@media(max-width:980px){
+ #homeScreen.hc-shell:has(.fm-tactics-workspace){display:flex!important;flex-direction:column!important;grid-template-columns:1fr!important}
+ #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-sidebar{position:fixed!important;inset:0 auto 0 0!important;z-index:22!important;width:min(265px,calc(100% - 58px))!important;visibility:hidden!important;transform:translateX(-100%)!important;transition:transform .19s ease-out,visibility .19s!important;box-shadow:10px 0 38px #050a14aa!important}
+ #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-sidebar.hc-open{visibility:visible!important;transform:translateX(0)!important}
+ #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-main{width:100%!important;height:auto!important;min-height:0!important;flex:1 1 0!important}
+ #homeScreen.hc-shell:has(.fm-tactics-workspace) #homeFrame{width:100%!important;max-width:none!important;min-height:0!important;flex:1 1 0!important}
+ #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-scrim:not([hidden]){display:block!important;position:fixed!important;inset:0!important;z-index:21!important;border:0!important;background:#050a14be!important}
+}
 
 /* Tactical controls: clearer replacement, drop feedback, and resilient instruction layout. */
 .fm-status-chip{cursor:default;user-select:text}
@@ -678,9 +688,41 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 .fm-drag-placeholder{display:block;min-height:35px;box-sizing:border-box}
 .fm-drop-target{outline:3px solid #f2c66f!important;outline-offset:2px!important;background:#eebf5938!important;box-shadow:0 0 0 5px #f2c66f28!important}
 .fm-drop-invalid{outline:3px solid #df8077!important;outline-offset:2px!important;background:#dc746f30!important}
-@media(max-width:1100px){
+ @media(max-width:1100px){
  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace{grid-template-columns:minmax(0,1fr)}
  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual,#homeScreen:has(.fm-tactics-workspace) .fm-context-controls,#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview{grid-column:auto}
  #homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview{display:block}
  #homeScreen:has(.fm-tactics-workspace) .fm-zone-analysis>div{grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))}
+ }
+
+/* Tactics audit: full player names, readable fit, complete review notes and thumb-safe labels. */
+.fm-squad-columns,.fm-squad-panel .fm-row{grid-template-columns:36px minmax(80px,.8fr) 48px minmax(160px,1.8fr) 74px 58px 58px;gap:6px;min-width:560px}
+.fm-squad-columns{font-size:9px;letter-spacing:.045em}
+.fm-squad-panel .fm-row{min-height:44px;font-size:11px}
+.fm-squad-panel .fm-role b{font-size:11px}
+.fm-squad-panel .fm-role small{font-size:9px}
+.fm-squad-panel .fm-person{gap:6px;overflow:hidden}
+.fm-squad-panel .fm-person .fm-player-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f1f5f8;font-size:12px;font-weight:700}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-picker{flex:none;width:44px!important;max-width:44px;height:30px;padding:2px 3px;font-size:9px}
+.fm-squad-panel .fm-suitability,.fm-squad-panel .fm-stat{font-size:10px;font-weight:700}
+.fm-shape-intel>div{min-height:66px;padding:9px 10px}
+.fm-shape-intel small{font-size:10px;letter-spacing:.08em}
+.fm-shape-intel b{font-size:13px}
+.fm-shape-intel span{display:block;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;font-size:10px;line-height:1.4}
+.fm-shape-intel>div:last-child span{display:block;-webkit-line-clamp:unset;-webkit-box-orient:initial;overflow:visible}
+.fm-tactical-overview dt{font-size:10px}
+.fm-tactical-overview dd{font-size:12px}
+.fm-overview-risks p{font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+.fm-player-editor-head h3{font-size:18px}
+.fm-player-editor-head p,.fm-player-readiness,.fm-player-phase>header,.fm-assignment-row label,.fm-player-instruction-grid label{font-size:11px}
+.shape-field button.shirt-marker small{width:max-content;max-width:clamp(64px,13cqw,145px);white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.1;padding:2px 4px;font-size:clamp(8px,1.15cqw,12px);text-shadow:0 1px 2px #000}
+.fm-both-pitches .shirt-marker b{font-size:clamp(9px,1.2cqw,13px)}
+@media(min-width:981px){
+ .fm-primary-pitch .tactic-shirt{width:clamp(30px,5.6cqw,52px)}
+ .fm-both-pitches .tactic-shirt{width:clamp(23px,3.8cqw,40px)}
+}
+@media(max-width:640px){
+ .fm-squad-panel .fm-row{min-height:46px}
+ .fm-shape-intel>div{min-height:0}
+ .shape-field button.shirt-marker small{max-width:clamp(58px,17cqw,100px);font-size:clamp(8px,2.1cqw,10px)}
 }

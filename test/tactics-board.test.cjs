@@ -102,6 +102,20 @@ test('clicking a selected position or empty pitch space never moves a player; dr
   a.deepEqual(actions, [], 'selection and pitch clicks do not swap or reposition players');
 });
 
+test('Both view supports an ordinary click to select either phase without capturing a tap as a drag', () => {
+  const s = career(); s.id = 'both-click-select'; s.boardPhase = 'both';
+  TLBoardRoom.render(s, pool);
+  const handlers = {}, captures = [], root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, setPointerCapture: id => captures.push(id), querySelector: () => null };
+  TLBoardRoom.bind(root, () => {}, () => {});
+  const field = { closest: selector => selector === '.shape-field' ? field : null };
+  const marker = { dataset: { slot: '5', playerId: 'p6' }, hasAttribute: name => name === 'data-slot', closest: selector => ['button','.shape-field [data-slot]'].includes(selector) ? marker : selector === '.shape-field' ? field : null };
+  const ev = { target: marker, isPrimary: true, button: 0, pointerId: 9, clientX: 20, clientY: 20 };
+  handlers.pointerdown(ev); handlers.pointerup(ev);
+  handlers.click({ target: marker, clientX: 20, clientY: 20 });
+  a.deepEqual(captures, [], 'pointer capture starts only after movement crosses the drag threshold');
+  a.equal((TLBoardRoom.render(s, pool).match(/class="shirt-marker[^\"]* selected"/g)||[]).length, 2, 'the same player is selected on both phase pitches');
+});
+
 test('the swap panel offers replacements and clearing a slot empties it', () => {
   const s = career();
   let { slots, bench } = TLMatchBoard.sheet(s.tactic, TLMatchBoard.active(s), pool);
@@ -203,6 +217,46 @@ test('explicit pitch phase edits stay in that phase, including from Both and Com
   a.ok(Math.abs((moved.x - baseBefore.x) - (movedAttack.x - attackBefore.x)) < .01, 'both phase positions move by the same amount');
 });
 
+test('starter rows allow real player selection without invalid nested buttons around the player picker', () => {
+  const s = career(); s.id = 'starter-row-selection';
+  const html = TLBoardRoom.render(s, pool);
+  a.match(html, /<div class="fm-row[^\"]*" role="button" tabindex="0" data-slot="0"/);
+  a.doesNotMatch(html, /<button[^>]*class="fm-row[^>]*>[\s\S]*?<select class="fm-player-picker/);
+  const handlers = {}, root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, querySelector: () => null };
+  let draws = 0;
+  TLBoardRoom.bind(root, () => {}, () => draws++);
+  const row = { dataset: { slot: '0' }, hasAttribute: name => name === 'data-slot', closest: selector => ['.fm-row[data-slot]', '.fm-row[data-slot][role="button"]'].includes(selector) ? row : null };
+  handlers.click({ target: { closest: selector => selector === '[data-player-pick]' ? null : selector === '.fm-row[data-slot]' ? row : null } });
+  a.equal(draws, 1, 'clicking the starter row selects it and opens its player detail editor');
+  a.match(TLBoardRoom.render(s, pool), /class="fm-row on" role="button"[^>]*aria-pressed="true"/);
+  handlers.keydown({ target: row, key: 'Enter', preventDefault() {} });
+  a.equal(draws, 2, 'keyboard activation can deselect the focused player row');
+});
+
+test('player names and phase-specific role-fit warnings remain available in the Team Shape table', () => {
+  src('tactical-analysis.js');
+  const s = career(); s.id = 'fit-warning-tooltip';
+  const plan = TLMatchBoard.active(s); plan.ids = TLMatchBoard.sheet(s.tactic, plan, pool).slots.map(slot => slot.player?.id || null);
+  const weakPool = pool.map(p => p.id === 'p7' ? { ...p, name: 'Luca Marin', attrs: Object.fromEntries(Object.keys(attrs).map(k => [k, 1])) } : p);
+  const html = TLBoardRoom.render(s, weakPool);
+  a.match(html, /class="fm-player-name" title="Luca Marin">Luca Marin<\/span>/, 'the table prints the player name rather than relying on the picker text');
+  a.match(html, /Luca Marin has a \d+% fit for Centre-Back out of possession; the role demands attributes or positional experience they currently lack\./, 'the Needs review text exposes the complete fit explanation on hover');
+  a.match(html, /Luca Marin: Out of possession Centre-Back fit \d+%; In possession Centre-Back fit \d+%\./, 'the fit cell tooltip explains both phases');
+  const css = fs.readFileSync(path.join(__dirname, '../src/reading.css'), 'utf8');
+  a.match(css, /fm-squad-panel \.fm-person \.fm-player-name\{[^}]*font-size:12px/);
+  a.match(css, /fm-shape-intel>div:last-child span\{display:block;[^}]*overflow:visible/);
+});
+
+test('tactics sidebar can collapse on desktop and returns to a real dismissible drawer on mobile', () => {
+  const css = fs.readFileSync(path.join(__dirname, '../src/reading.css'), 'utf8'), homeCss = fs.readFileSync(path.join(__dirname, '../src/home.css'), 'utf8'), home = fs.readFileSync(path.join(__dirname, '../src/home.js'), 'utf8'), desk = fs.readFileSync(path.join(__dirname, '../src/manager-desk.js'), 'utf8');
+  a.match(css, /hc-rail-collapsed:has\(\.fm-tactics-workspace\)\{grid-template-columns:0 minmax\(0,1fr\)!important\}/);
+  a.match(css, /@media\(max-width:980px\)\{[\s\S]*?\.hc-sidebar\.hc-open\{visibility:visible!important;transform:translateX\(0\)!important\}/);
+  a.doesNotMatch(css, /\.hc-sidebar\{display:flex!important;position:relative!important/);
+  a.match(homeCss, /\.hc-shell\.hc-rail-collapsed\{grid-template-columns:0 minmax\(0,1fr\)\}/);
+  a.match(home, /if\(open===null\)[\s\S]*?root\.classList\.toggle\('hc-rail-collapsed'\)/);
+  a.match(desk, /if\(b\.id==='homeMenu'\)\{toggleDrawer\(null,true\);return;\}if\(b\.id==='homeScrim'\)/);
+});
+
 test('status and squad metrics are legible text, with team-instruction responsibilities wrapping cleanly', () => {
   const s = career(); s.id = 'tactics-status-layout';
   const html = TLBoardRoom.render(s, pool);
@@ -244,6 +298,31 @@ test('shirt drag on the defensive pitch moves that phase even while Both is sele
     handlers.pointerup(ev(45, 80));
     a.ok(TLMatchBoard.active(s).moves?.[5], 'the drop commits a defensive position');
     a.equal(TLMatchBoard.active(s).attackByPlayer, undefined, 'it does not move the attacking position');
+  } finally { global.document = oldDocument; }
+});
+
+test('dragging the In Possession jersey in Both edits only that phase and maps open pitch space correctly', () => {
+  const s = career(); s.id = 'both-attack-drag'; s.boardPhase = 'both';
+  const plan = TLMatchBoard.active(s), initial = TLMatchBoard.sheet(s.tactic, plan, pool).slots[5], base = { x: initial.x, y: initial.y }, playerId = initial.player.id;
+  const handlers = {}, root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, setPointerCapture() {}, querySelector: () => null };
+  TLBoardRoom.bind(root, (action, value) => { if (action === 'matchBoard') TLMatchBoard.update(s, value, pool); }, () => {});
+  TLBoardRoom.render(s, pool);
+  const classes = () => { const set = new Set(); return { add: (...v) => v.forEach(x => set.add(x)), remove: (...v) => v.forEach(x => set.delete(x)), toggle: (v, on) => on ? set.add(v) : set.delete(v), contains: v => set.has(v) }; };
+  const rect = { left: 0, top: 0, right: 140, bottom: 100, width: 140, height: 100 };
+  const field = { dataset: { orientation: 'wide', phaseView: 'attack' }, getBoundingClientRect: () => rect, querySelectorAll: () => [nearest], closest: selector => selector === '.shape-field' ? field : null };
+  const nearest = { dataset: { slot: '5' }, classList: classes(), getBoundingClientRect: () => ({ left: 68, top: 22, width: 4, height: 4 }) };
+  const shirt = { dataset: { slot: '5', playerId }, classList: classes(), style: {}, closest: selector => selector === '.shape-field [data-slot]' ? shirt : selector === '.shape-field' ? field : null };
+  const oldDocument = global.document; global.document = { elementFromPoint: () => field };
+  try {
+    const ev = (target, x, y) => ({ target, isPrimary: true, button: 0, pointerId: 10, clientX: x, clientY: y });
+    handlers.pointerdown(ev(shirt, 10, 10)); handlers.pointermove(ev(shirt, 70, 25));
+    a.ok(nearest.classList.contains('fm-drop-target'), 'the in-possession mapped marker is highlighted in Both');
+    a.equal(shirt.style.translate, '60px 15px', 'the actual jersey follows the pointer');
+    handlers.pointerup(ev(shirt, 70, 25));
+    const after = TLMatchBoard.sheet(s.tactic, plan, pool).slots[5];
+    a.deepEqual({ x: after.x, y: after.y }, base, 'the out-of-possession position remains unchanged');
+    a.ok(plan.attackByPlayer?.[playerId], 'the in-possession position is stored for this player');
+    a.equal(plan.attackByPlayer[playerId].y, .88, 'wide-pitch drag accounts for its inset playing area before snapping');
   } finally { global.document = oldDocument; }
 });
 
