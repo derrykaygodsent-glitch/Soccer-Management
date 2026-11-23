@@ -1,4 +1,4 @@
-(function(g){'use strict';let selected=null,context='',workspaceTab='shape';const B=()=>g.TLMatchBoard,e=x=>g.TLClubUI.esc(String(x??''));
+(function(g){'use strict';let selected=null,selectedBench=null,context='',workspaceTab='shape';const B=()=>g.TLMatchBoard,e=x=>g.TLClubUI.esc(String(x??''));
 // Match coordinates describe compact playing positions. Stretch the lines on the chalkboard
 // without changing the underlying tactic, and invert the same projection for touch placement.
 const depth=[[0,5],[.035,8],[.10,24],[.32,41],[.45,56],[.59,72],[.75,89],[1,95]];
@@ -9,7 +9,7 @@ function jersey(n){return `<svg class="tactic-shirt" viewBox="0 0 42 38" aria-hi
 function render(s,players){
   const stars=g.TLDynamics.squadStars(players),lists=g.TLKit.current(s).filter(r=>r.day<=s.day),filed=lists.find(r=>r.title===s.kitScope),numbers=(filed||lists.find(r=>r.title===g.TLKit.league))?.numbers||{},defaults=positionalNumbers(s.tactic);
   if(filed)players=players.filter(p=>filed.numbers[p.id]);
-  const key=[s.id,s.boardIndex,s.tactic,s.kitScope].join(':');if(context!==key){selected=null;workspaceTab='shape';context=key;}
+  const key=[s.id,s.boardIndex,s.tactic,s.kitScope].join(':');if(context!==key){selected=null;selectedBench=null;workspaceTab='shape';context=key;}
   const {slots,bench}=B().sheet(s.tactic,B().active(s),players),W=g.TLManagerLife,Z=g.TLZones,D=g.TLData,plan=B().active(s),phase=s.boardPhase||'base',inst=Z.settings(plan),visualMode=phase;
   const options=(values,current)=>values.map(v=>`<option value="${e(v)}"${v===current?' selected':''}>${e(v)}</option>`).join('');
   const picker=(label,cmd,values,current)=>`<label>${label}<select data-plan="${cmd}">${options(values,current)}</select></label>`;
@@ -38,7 +38,7 @@ function render(s,players){
     const markers=slots.map((v,i)=>{
       const {point,role,job}=location(v,i,mode),p=v.player,n=numbers[p?.id]??p?.num??defaults[i]??'–',label=p?.name||'Open position';
       const left=wide?project(point.x):8+84*point.y,bottom=wide?8+84*(1-point.y):project(point.x);
-      return `<button type="button" draggable="true" title="Drag ${e(label)} to change position" data-slot="${i}" class="shirt-marker${i===0?' keeper':''}${p?'':' vacant'}${selected===i?' selected':''}" aria-label="Select ${e(role)} · ${e(label)} · shirt ${e(n)}" aria-pressed="${selected===i}" style="left:${left}%;bottom:${bottom}%">${jersey(n)}<b>${e(code(role,job?.[0],job?.[2]))}</b><small>${e(p?label.split(' ').at(-1):'Open')}</small></button>`;
+      return `<button type="button" title="Drag ${e(label)} to move or swap; select then click a destination" data-slot="${i}" data-player-id="${e(p?.id||'')}" class="shirt-marker${i===0?' keeper':''}${p?'':' vacant'}${selected===i?' selected':''}" aria-label="Select ${e(role)} · ${e(label)} · shirt ${e(n)}" aria-pressed="${selected===i}" style="left:${left}%;bottom:${bottom}%">${jersey(n)}<b>${e(code(role,job?.[0],job?.[2]))}</b><small>${e(p?label.split(' ').at(-1):'Open')}</small></button>`;
     }).join('');
     const fieldSvg=wide?`<svg class="board-lines" viewBox="0 0 140 100" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width=".6"><rect x="1" y="1" width="138" height="98"/><path d="M70 1v98M1 20h21V80H1M1 37h8v26H1M139 20h-21v60h21m0-43h-8v26h8"/><circle cx="70" cy="50" r="11"/></g></svg>`:fieldLines;
     const markersInZone=withZones?`<div class="fm-zone-overlay" aria-label="Select a tactical pitch zone">${zoneCells.map(z=>`<button type="button" data-board="zone|0|${z.id}" aria-label="${e(z.label)}" aria-pressed="${zone===z.id}"></button>`).join('')}</div>`:'';
@@ -59,10 +59,10 @@ function render(s,players){
   const playerPicker=(slot,i)=>`<select class="fm-player-picker" data-player-pick="${i}" aria-label="Select player for ${e(slot.position)}"><option value="">Open position</option>${players.filter(p=>!p.red&&!readiness[p.id]?.knock).map(p=>`<option value="${e(p.id)}"${slot.player?.id===p.id?' selected':''}>${e(p.name)} · ${e(p.pos)}</option>`).join('')}</select>`;
   const row=(slot,i)=>{
     const p=slot.player,attack=phase==='attack',combined=phase==='combined',averaged=combined?location(slot,i,'combined'):null,pos=combined?averaged.role:attack&&slot.attack?slot.attackPosition:slot.position,job=attack?slot.attackJob:slot.job,ready=p?readiness[p.id]:null;
-    return `<button type="button" class="fm-row${selected===i?' on':''}" data-slot="${i}" aria-pressed="${selected===i}"><span class="fm-pos">${e(pos)}</span><span class="fm-role"><b>${e(code(pos,job[0],job[2]))}</b><small>${e(job[2])}</small></span>${starsOf(p)}<span class="fm-person"><i class="fm-number">${p?e(numbers[p.id]??p.num??defaults[i]??'—'):'—'}</i>${playerPicker(slot,i)}${p?.id===captain?'<b title="Match captain">(c)</b>':''}</span><span class="fm-suitability">${p?Z.fit(p,pos,job[0],s.boardReps?.[p.id])+'%':'—'}</span><span class="fm-status">${status(p)}</span><span class="fm-stat">${ready?.fitness!=null?ready.fitness+'%':'—'}</span></button>`;
+    return `<button type="button" class="fm-row${selected===i?' on':''}" data-slot="${i}" data-player-id="${e(p?.id||'')}" data-player-pos="${e(p?.pos||'')}" aria-pressed="${selected===i}"><span class="fm-pos">${e(pos)}</span><span class="fm-role"><b>${e(code(pos,job[0],job[2]))}</b><small>${e(job[2])}</small></span>${starsOf(p)}<span class="fm-person"><i class="fm-number">${p?e(numbers[p.id]??p.num??defaults[i]??'—'):'—'}</i>${playerPicker(slot,i)}${p?.id===captain?'<b title="Match captain">(c)</b>':''}</span><span class="fm-suitability">${p?Z.fit(p,pos,job[0],s.boardReps?.[p.id])+'%':'—'}</span><span class="fm-status">${status(p)}</span><span class="fm-stat">${ready?.fitness!=null?ready.fitness+'%':'—'}</span></button>`;
   };
-  const subRow=(p,i)=>`<button type="button" class="fm-row fm-sub" data-board="pick|${selected??0}|${e(p.id)}" ${selected==null?'disabled':''}><span class="fm-pos">S${i+1}</span><span class="fm-role"><b>${e(p.pos)}</b><small>Substitute</small></span>${starsOf(p)}<span class="fm-person"><i class="fm-number">${e(numbers[p.id]??p.num??'—')}</i><span>${e(p.name)}</span></span><span class="fm-suitability">${e(p.pos)}</span><span class="fm-status">${status(p)}</span><span class="fm-stat">${readiness[p.id]?.fitness!=null?readiness[p.id].fitness+'%':'—'}</span></button>`;
-  const squad=(title='First-team selection')=>`<aside class="fm-squad-panel" id="tactic-roles"><header class="fm-panel-head"><div><small>TEAM SHEET</small><h3>${title}</h3><p>${slots.filter(x=>x.player).length} starters · ${bench.length} substitutes · select a row to edit</p></div><button type="button" data-board="bestXI">Auto-pick best XI</button></header><div class="fm-squad-table"><div class="fm-squad-columns"><span>POS</span><span>ROLE / DUTY</span><span>ABILITY</span><span>PLAYER</span><span>FIT</span><span>STATUS</span><span>COND.</span></div>${slots.map(row).join('')}<div class="fm-squad-subhead">SUBSTITUTES</div>${bench.map(subRow).join('')||'<p class="fm-empty">No substitutes available.</p>'}</div>${selected!=null?instructionEditor(slots[selected]):''}</aside>`;
+  const subRow=(p,i)=>`<button type="button" class="fm-row fm-sub${selectedBench===p.id?' on':''}" data-player-id="${e(p.id)}" data-player-pos="${e(p.pos)}" data-board="${selected!=null?`pick|${selected}|${e(p.id)}`:`bench|${e(p.id)}`}" aria-pressed="${selectedBench===p.id}"><span class="fm-pos">S${i+1}</span><span class="fm-role"><b>${e(p.pos)}</b><small>${selected!=null?'Replace selected starter':selectedBench===p.id?'Now choose a starter':'Tap, then choose a starter'}</small></span>${starsOf(p)}<span class="fm-person"><i class="fm-number">${e(numbers[p.id]??p.num??'—')}</i><span>${e(p.name)}</span></span><span class="fm-suitability">${e(p.pos)}</span><span class="fm-status">${status(p)}</span><span class="fm-stat">${readiness[p.id]?.fitness!=null?readiness[p.id].fitness+'%':'—'}</span></button>`;
+  const squad=(title='First-team selection')=>`<aside class="fm-squad-panel" id="tactic-roles"><header class="fm-panel-head"><div><small>TEAM SHEET</small><h3>${title}</h3><p>${slots.filter(x=>x.player).length} starters · ${bench.length} substitutes · click starter then sub, or drag a row to a shirt</p></div><button type="button" data-board="bestXI">Auto-pick best XI</button></header><div class="fm-squad-table"><div class="fm-squad-columns"><span>POS</span><span>ROLE / DUTY</span><span>ABILITY</span><span>PLAYER</span><span>FIT</span><span>STATUS</span><span>COND.</span></div>${slots.map(row).join('')}<div class="fm-squad-subhead">SUBSTITUTES</div>${bench.map(subRow).join('')||'<p class="fm-empty">No substitutes available.</p>'}</div>${selected!=null?instructionEditor(slots[selected]):''}</aside>`;
   const phaseButtons=()=>`<div class="fm-shape-switch" role="group" aria-label="Team shape view">${[['combined','Combined'],['attack','In Possession'],['base','Out of Possession'],['both','Both']].map(([v,label])=>`<button type="button" data-board="phase|0|${v}" aria-pressed="${phase===v}">${label}</button>`).join('')}</div>`;
   const shapeFormationControls=`<div class="fm-shape-controls">${picker('Out of possession','tactic',Object.keys(D.FORMATIONS),s.tactic)}<label>In-possession formation<select data-attack-formation>${options(B().phaseFormationOptions(),plan.attackFormation||((plan.attack||Object.keys(plan.attackByPlayer||{}).length)?'Custom':'Same as defensive shape'))}</select></label>${picker('Mentality','mentality',['Very Defensive','Defensive','Cautious','Balanced','Positive','Attacking','Very Attacking'],s.mentality||'Balanced')}<label>Team system<select data-system><option value="">${e(s.style||'Balanced shape')}</option>${options(Object.keys(Z.systems),plan.system)}</select></label></div>`;
   const quickSelect=`<div class="fm-quick-actions"><button type="button" data-board="bestXI" ${players.length?'':'disabled'}>Auto-select best XI</button><button type="button" data-board="rotate" ${bench.some(p=>!p.red&&!readiness[p.id]?.knock)?'':'disabled'}>Rotate squad</button>${plan.previousXI?.shape===s.tactic&&plan.previousXI.scope===(s.kitScope||'')?'<button type="button" data-board="undoXI">Undo selection</button>':''}<small>Selection weighs role fit, readiness and squad ability.</small></div>`;
@@ -94,7 +94,8 @@ function render(s,players){
   const playerContent=`<section class="fm-player-workspace"><div class="fm-player-list"><header><small>FIRST TEAM</small><h3>Player assignments</h3><p>Select a player to edit their phase-specific role and instructions.</p></header>${slots.map(row).join('')}${bench.map(subRow).join('')}</div><div class="fm-player-detail">${instructionEditor(selected==null?null:slots[selected])}</div></section>`;
   const library=B().presetLibrary(s),savedOptions=library.map(x=>`<option value="${e(x.id)}"${s.activeTacticPreset===x.id?' selected':''}>${e(x.name)}</option>`).join('');
   const nav=[['shape','Team Shape'],['instructions','Team Instructions'],['players','Player Instructions']];
-  const header=`<header class="fm-workspace-header"><div class="fm-title-group"><small>TACTICS · ${e(s.club?.name||'FIRST TEAM')}</small><h2>${e(plan.system||s.style||'Balanced shape')}</h2><p>${e(s.tactic)} OOP · ${e(plan.attackFormation||'Same shape')} IP · ${e(s.mentality||'Balanced')} mentality</p></div><div class="fm-header-metrics"><span><small>Familiarity</small><b>${familiarity.position}%</b><i><b style="width:${familiarity.position}%"></b></i></span><span><small>Intensity</small><b>${intensity}%</b><i><b style="width:${intensity}%"></b></i></span><span class="fm-status-chip">${warnings.length?'Needs review':'Ready for review'}</span></div><div class="fm-save-controls"><label class="sr-only" for="fm-tactic-name">Saved tactic name</label><input id="fm-tactic-name" type="text" data-preset-name maxlength="48" placeholder="Name this tactic"><button type="button" data-library-action="save">Save tactic</button><select aria-label="Load saved tactic" data-preset-select><option value="">Saved tactics</option>${savedOptions}</select><button type="button" data-library-action="load" ${library.length?'':'disabled'}>Load</button></div></header>`;
+  const reviewLabel=warnings.length?`Needs review · ${warnings.length}`:'Ready for review',reviewHelp=warnings.length?`${warnings.length} tactical concern${warnings.length===1?'':'s'} need review.`:'No structural risks are currently flagged.';
+  const header=`<header class="fm-workspace-header"><div class="fm-title-group"><small>TACTICS · ${e(s.club?.name||'FIRST TEAM')}</small><h2>${e(plan.system||s.style||'Balanced shape')}</h2><p>${e(s.tactic)} OOP · ${e(plan.attackFormation||'Same shape')} IP · ${e(s.mentality||'Balanced')} mentality</p></div><div class="fm-header-metrics"><span><small>Familiarity</small><b>${familiarity.position}%</b><i><b style="width:${familiarity.position}%"></b></i></span><span><small>Intensity</small><b>${intensity}%</b><i><b style="width:${intensity}%"></b></i></span><span class="fm-status-chip ${warnings.length?'has-risks':'is-clear'}" role="status" title="${e(reviewHelp)}">${e(reviewLabel)}</span></div><div class="fm-save-controls"><label class="sr-only" for="fm-tactic-name">Saved tactic name</label><input id="fm-tactic-name" type="text" data-preset-name maxlength="48" placeholder="Name this tactic"><button type="button" data-library-action="save">Save tactic</button><select aria-label="Load saved tactic" data-preset-select><option value="">Saved tactics</option>${savedOptions}</select><button type="button" data-library-action="load" ${library.length?'':'disabled'}>Load</button></div></header>`;
   const workspaceNav=`<nav class="fm-workspace-nav" aria-label="Tactical workspace">${nav.map(([id,label])=>`<button type="button" data-workspace-tab="${id}" aria-current="${workspaceTab===id?'page':'false'}">${label}</button>`).join('')}</nav>`;
   const content=workspaceTab==='instructions'?instructionContent:workspaceTab==='players'?playerContent:shapeContent;
   const oppFixture=g.TLLeagueMatchday?.fixture(s),oppName=oppFixture?(oppFixture.own===0?oppFixture.host:oppFixture.team):'',oppPlayers=oppName?W.pool.filter(p=>p.club===oppName):[],oppKey=oppPlayers.slice().sort((a,b)=>D.ROLE_WEIGHTS[b.pos](b.attrs)-D.ROLE_WEIGHTS[a.pos](a.attrs)).slice(0,3),oppBacks=oppPlayers.filter(p=>['DC','FB','WB'].includes(p.pos)),oppPace=oppBacks.length?Math.round(oppBacks.reduce((n,p)=>n+(p.attrs.pace||0),0)/oppBacks.length):null;
@@ -102,9 +103,93 @@ function render(s,players){
   const leadership=`<section class="fm-leadership"><small>DRESSING ROOM</small><label>Match captain<select data-arm="0"><option value="">Automatic captain</option>${players.map(p=>`<option value="${e(p.id)}"${s.armband?.[0]===p.id?' selected':''}>${e(p.name)} · Composure ${e(p.attrs.composure)}</option>`).join('')}</select></label></section>`;
   return `<section class="board-room fm-tactics-workspace">${header}${workspaceNav}<main class="fm-workspace-content" data-workspace="${workspaceTab}">${content}</main>${opposition}${leadership}</section>`;
 }
-function bind(root,change,draw){let drag=null,suppressUntil=0;const act=v=>{const [cmd,a]=v.split('|'),i=cmd==='move'?a:null,button=()=>root.querySelector(`.shape-field [data-slot="${i}"]`),before=i&&button()?.getBoundingClientRect();if(['bestXI','rotate','undoXI','preset','loadPreset','importPreset'].includes(cmd))selected=null;else if(['move','pick','swap'].includes(cmd))selected=Number(a);change('matchBoard',v);const after=i&&button()?.getBoundingClientRect();if(before&&after&&!matchMedia('(prefers-reduced-motion: reduce)').matches)button().animate([{translate:`${before.left-after.left}px ${before.top-after.top}px`},{translate:'0 0'}],{duration:170,easing:'ease-out'});};function move(field,i,x,y){const r=field.getBoundingClientRect(),clamp=v=>Math.min(.97,Math.max(.03,v)).toFixed(3),wide=field.dataset.orientation==='wide',longitudinal=wide?project((x-r.left)/r.width*100,true):project((r.bottom-y)/r.height*100,true),lateral=wide?1-(y-r.top)/r.height:((x-r.left)/r.width-.08)/.84;act(`move|${i}|${clamp(longitudinal)}|${clamp(lateral)}`);}
- root.addEventListener('change',ev=>{if(ev.target.hasAttribute('data-tactic-import')){const file=ev.target.files?.[0];if(file)file.text().then(text=>change('matchBoard',`importPreset|0|${encodeURIComponent(text)}`)).catch(()=>change('matchBoard','importPreset|0|invalid'));return;}if(ev.target.hasAttribute('data-attack-formation'))act(`attackFormation|0|${ev.target.value}`);else if(ev.target.hasAttribute('data-phase-job')){const [phase,index]=ev.target.dataset.phaseJob.split('|');act(`phaseJob|${phase}|${index}|${ev.target.value}`);}else if(ev.target.hasAttribute('data-phase-duty')){const [phase,index]=ev.target.dataset.phaseDuty.split('|');act(`phaseDuty|${phase}|${index}|${ev.target.value}`);}else if(ev.target.hasAttribute('data-player-instruction'))act(`individual|${ev.target.dataset.playerInstruction}|${ev.target.value}`);else if(ev.target.hasAttribute('data-response'))act(`response|${ev.target.dataset.response}|${ev.target.dataset.moment}|${ev.target.value}`);else if(ev.target.hasAttribute('data-order'))act(`order|0|${ev.target.dataset.order}|${ev.target.value}`);else if(ev.target.hasAttribute('data-job'))act(`job|${ev.target.dataset.job}|${ev.target.value}`);else if(ev.target.hasAttribute('data-system'))act(`system|0|${ev.target.value}`);else if(ev.target.hasAttribute('data-axis'))act(`axis|0|${ev.target.dataset.axis}|${ev.target.value}`);else if(ev.target.hasAttribute('data-duty'))act(`duty|${ev.target.dataset.duty}|${ev.target.value}`);else if(ev.target.hasAttribute('data-arm'))act(`skipper|${ev.target.dataset.arm}|${ev.target.value}`);else if(ev.target.hasAttribute('data-player-pick'))act(`pick|${ev.target.dataset.playerPick}|${ev.target.value}`);});root.addEventListener('click',ev=>{if(ev.target.closest('[data-player-pick]'))return;const b=ev.target.closest('button'),f=ev.target.closest('.shape-field');if(f&&performance.now()<suppressUntil)return;if(b?.dataset.workspaceTab){workspaceTab=b.dataset.workspaceTab;selected=null;draw();return;}if(b?.dataset.tacticJump){root.querySelector('#tactic-'+b.dataset.tacticJump)?.scrollIntoView({behavior:'smooth',block:'start'});return;}if(b?.dataset.libraryAction){const id=root.querySelector('[data-preset-select]')?.value,name=root.querySelector('[data-preset-name]')?.value?.trim()||'',action=b.dataset.libraryAction;if(action==='save')act(`savePreset|0|${name}`);else if(!id)return;else if(action==='load')act(`loadPreset|0|${id}`);else if(action==='rename')act(`renamePreset|0|${id}|${name}`);else if(action==='duplicate')act(`duplicatePreset|0|${id}|${name}`);else if(action==='delete')act(`deletePreset|0|${id}`);return;}if(b?.hasAttribute('data-tactic-export')){const selected=root.querySelector('[data-preset-select]')?.selectedOptions?.[0]?.textContent||`${s.tactic} ${plan.system||'Custom'}`,data={version:1,name:selected,formation:s.tactic,plan:B().copyPlan(B().active(s))},blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${selected.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'tactic'}.json`;a.click();URL.revokeObjectURL(url);return;}if(b?.dataset.board)act(b.dataset.board);else if(b?.hasAttribute('data-clear-slot')){selected=null;draw();}else if(b?.hasAttribute('data-slot')){const i=+b.dataset.slot;if(f&&selected!=null&&selected!==i)act(`swap|${selected}|${i}`);else{selected=selected===i?null:i;draw();}}else if(f&&selected!=null)move(f,selected,ev.clientX,ev.clientY);});root.addEventListener('pointerdown',ev=>{const shirt=ev.target.closest('.shape-field [data-slot]');if(!shirt||!ev.isPrimary||ev.button!==0)return;drag={id:ev.pointerId,i:+shirt.dataset.slot,shirt,x:ev.clientX,y:ev.clientY,field:shirt.parentElement};shirt.setPointerCapture(ev.pointerId);});
- root.addEventListener('pointermove',ev=>{if(drag?.id!==ev.pointerId)return;const dx=ev.clientX-drag.x,dy=ev.clientY-drag.y;if(!drag.moving&&Math.hypot(dx,dy)<7)return;drag.moving=true;drag.shirt.classList.add('carried');drag.shirt.style.translate=`${dx}px ${dy}px`;});
- function finish(ev,cancel){if(drag?.id!==ev.pointerId)return;const d=drag;drag=null;if(!d.moving)return;suppressUntil=performance.now()+350;d.shirt.style.translate='';d.shirt.classList.remove('carried');if(cancel)return;const target=document.elementFromPoint(ev.clientX,ev.clientY);if(target?.closest('.shape-field')!==d.field)return;const other=target.closest('[data-slot]');if(other&&+other.dataset.slot!==d.i)act(`swap|${d.i}|${other.dataset.slot}`);else move(d.field,d.i,ev.clientX,ev.clientY);}
- root.addEventListener('pointerup',ev=>finish(ev,false));root.addEventListener('pointercancel',ev=>finish(ev,true));root.addEventListener('lostpointercapture',ev=>finish(ev,true));}
- g.TLBoardRoom={render,bind,project,positionalNumbers};})(typeof window==='undefined'?globalThis:window);
+function bind(root,change,draw){
+ let drag=null,suppressUntil=0;
+ const act=value=>{
+  const [cmd,a,b]=value.split('|'),i=cmd==='move'?a:null;
+  if(cmd==='bench'){selected=null;selectedBench=b||a;draw();return;}
+  const button=()=>root.querySelector(`.shape-field [data-slot="${i}"]`),before=i&&button()?.getBoundingClientRect();
+  if(['bestXI','rotate','undoXI','preset','loadPreset','importPreset'].includes(cmd)){selected=null;selectedBench=null;}
+  else if(['move','pick','swap'].includes(cmd)){selected=Number(a);selectedBench=null;}
+  change('matchBoard',value);
+  const after=i&&button()?.getBoundingClientRect();
+  if(before&&after&&!matchMedia('(prefers-reduced-motion: reduce)').matches)button().animate([{translate:`${before.left-after.left}px ${before.top-after.top}px`},{translate:'0 0'}],{duration:170,easing:'ease-out'});
+ };
+ function move(field,i,x,y){
+  const r=field.getBoundingClientRect(),clamp=v=>Math.min(.97,Math.max(.03,v)).toFixed(3),wide=field.dataset.orientation==='wide';
+  const longitudinal=wide?project((x-r.left)/r.width*100,true):project((r.bottom-y)/r.height*100,true),lateral=wide?1-(y-r.top)/r.height:((x-r.left)/r.width-.08)/.84;
+  const phase=['attack','combined'].includes(field.dataset.phaseView)?field.dataset.phaseView:'defense';
+  act(`move|${i}|${clamp(longitudinal)}|${clamp(lateral)}|${phase}`);
+ }
+ root.addEventListener('change',ev=>{
+  if(ev.target.hasAttribute('data-tactic-import')){const file=ev.target.files?.[0];if(file)file.text().then(text=>change('matchBoard',`importPreset|0|${encodeURIComponent(text)}`)).catch(()=>change('matchBoard','importPreset|0|invalid'));return;}
+  if(ev.target.hasAttribute('data-attack-formation'))act(`attackFormation|0|${ev.target.value}`);
+  else if(ev.target.hasAttribute('data-phase-job')){const [phase,index]=ev.target.dataset.phaseJob.split('|');act(`phaseJob|${phase}|${index}|${ev.target.value}`);}
+  else if(ev.target.hasAttribute('data-phase-duty')){const [phase,index]=ev.target.dataset.phaseDuty.split('|');act(`phaseDuty|${phase}|${index}|${ev.target.value}`);}
+  else if(ev.target.hasAttribute('data-player-instruction'))act(`individual|${ev.target.dataset.playerInstruction}|${ev.target.value}`);
+  else if(ev.target.hasAttribute('data-response'))act(`response|${ev.target.dataset.response}|${ev.target.dataset.moment}|${ev.target.value}`);
+  else if(ev.target.hasAttribute('data-order'))act(`order|0|${ev.target.dataset.order}|${ev.target.value}`);
+  else if(ev.target.hasAttribute('data-job'))act(`job|${ev.target.dataset.job}|${ev.target.value}`);
+  else if(ev.target.hasAttribute('data-system'))act(`system|0|${ev.target.value}`);
+  else if(ev.target.hasAttribute('data-axis'))act(`axis|0|${ev.target.dataset.axis}|${ev.target.value}`);
+  else if(ev.target.hasAttribute('data-duty'))act(`duty|${ev.target.dataset.duty}|${ev.target.value}`);
+  else if(ev.target.hasAttribute('data-arm'))act(`skipper|${ev.target.dataset.arm}|${ev.target.value}`);
+  else if(ev.target.hasAttribute('data-player-pick'))act(`pick|${ev.target.dataset.playerPick}|${ev.target.value}`);
+ });
+ root.addEventListener('click',ev=>{
+  if(performance.now()<suppressUntil&&ev.target.closest('.shape-field,.fm-squad-panel .fm-row'))return;
+  if(ev.target.closest('[data-player-pick]'))return;
+  const b=ev.target.closest('button'),f=ev.target.closest('.shape-field');
+  if(b?.dataset.workspaceTab){workspaceTab=b.dataset.workspaceTab;selected=null;selectedBench=null;draw();return;}
+  if(b?.dataset.tacticJump){root.querySelector('#tactic-'+b.dataset.tacticJump)?.scrollIntoView({behavior:'smooth',block:'start'});return;}
+  if(b?.dataset.libraryAction){const id=root.querySelector('[data-preset-select]')?.value,name=root.querySelector('[data-preset-name]')?.value?.trim()||'',action=b.dataset.libraryAction;if(action==='save')act(`savePreset|0|${name}`);else if(!id)return;else if(action==='load')act(`loadPreset|0|${id}`);else if(action==='rename')act(`renamePreset|0|${id}|${name}`);else if(action==='duplicate')act(`duplicatePreset|0|${id}|${name}`);else if(action==='delete')act(`deletePreset|0|${id}`);return;}
+  if(b?.hasAttribute('data-tactic-export')){const name=root.querySelector('[data-preset-select]')?.selectedOptions?.[0]?.textContent||`${s.tactic} ${B().active(s).system||'Custom'}`,data={version:1,name,formation:s.tactic,plan:B().copyPlan(B().active(s))},blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'tactic'}.json`;a.click();URL.revokeObjectURL(url);return;}
+  if(b?.dataset.board){act(b.dataset.board);return;}
+  if(b?.hasAttribute('data-clear-slot')){selected=null;selectedBench=null;draw();return;}
+  if(b?.hasAttribute('data-slot')){const i=+b.dataset.slot;if(selectedBench)act(`pick|${i}|${selectedBench}`);else if(f&&selected!=null&&selected!==i)act(`swap|${selected}|${i}`);else{selected=selected===i?null:i;draw();}return;}
+  if(f&&selected!=null)move(f,selected,ev.clientX,ev.clientY);
+ });
+ function begin(ev){
+  if(!ev.isPrimary||ev.button!==0)return;
+  const shirt=ev.target.closest('.shape-field [data-slot]'),row=shirt?null:ev.target.closest('.fm-squad-panel .fm-row[data-player-id]');
+  if((!shirt&&!row)||(row&&(!row.dataset.playerId||ev.target.closest('select,input,option'))))return;
+  drag={id:ev.pointerId,kind:shirt?'shirt':'player',shirt,row,playerId:shirt?.dataset.playerId||row?.dataset.playerId,playerLabel:row?.querySelector('.fm-person span')?.textContent||row?.dataset.playerId,x:ev.clientX,y:ev.clientY,source:shirt||row,moving:false,hover:null};
+  drag.source.setPointerCapture?.(ev.pointerId);
+ }
+ root.addEventListener('pointerdown',begin);
+ root.addEventListener('pointermove',ev=>{
+  if(drag?.id!==ev.pointerId)return;
+  if(!drag.moving&&Math.hypot(ev.clientX-drag.x,ev.clientY-drag.y)<7)return;
+  drag.moving=true;
+  if(!drag.ghost){
+   drag.ghost=document.createElement('div');drag.ghost.className=`fm-drag-ghost ${drag.kind==='player'?'player-ghost':'shirt-ghost'}`;drag.ghost.setAttribute('aria-hidden','true');
+   if(drag.kind==='shirt')drag.ghost.append(drag.shirt.cloneNode(true));
+   else drag.ghost.textContent=`Place ${drag.playerLabel}`;
+   document.body.appendChild(drag.ghost);drag.source.classList.add('fm-drag-source');
+  }
+  drag.ghost.style.left=`${ev.clientX+14}px`;drag.ghost.style.top=`${ev.clientY+14}px`;
+  const under=document.elementFromPoint(ev.clientX,ev.clientY),field=under?.closest('.shape-field'),marker=under?.closest('.shape-field [data-slot]');
+  const valid=!!field&&(drag.kind==='shirt'||!!marker&&((marker.dataset.slot==='0')===(drag.row.dataset.playerPos==='GK'))),hover=marker||null;
+  if(drag.hover!==hover){drag.hover?.classList.remove('fm-drop-target','fm-drop-invalid');drag.hover=hover;}
+  if(hover)hover.classList.add(valid?'fm-drop-target':'fm-drop-invalid');
+  if(drag.kind==='player'){
+   const targetName=marker?.getAttribute?.('aria-label')?.split(' · ')[1]||'selected position';
+   drag.ghost.textContent=valid&&marker?`Replace ${targetName} with ${drag.playerLabel}`:drag.row.dataset.playerPos==='GK'?'Drop on the goalkeeper slot':'Drop on a pitch slot';
+  }
+  drag.drop={field,marker,valid};drag.ghost.classList.toggle('invalid',!valid);
+ });
+ function finish(ev,cancel){
+  if(drag?.id!==ev.pointerId)return;
+  const d=drag;drag=null;d.hover?.classList.remove('fm-drop-target','fm-drop-invalid');d.ghost?.remove();d.source.classList.remove('fm-drag-source');
+  if(!d.moving)return;
+  suppressUntil=performance.now()+350;if(cancel)return;
+  const under=document.elementFromPoint(ev.clientX,ev.clientY),field=under?.closest('.shape-field'),marker=under?.closest('.shape-field [data-slot]');
+  if(d.kind==='player'){if(marker&&(marker.dataset.slot==='0')===(d.row.dataset.playerPos==='GK'))act(`pick|${marker.dataset.slot}|${d.playerId}`);return;}
+  if(!field)return;
+  if(marker&&marker.dataset.slot!==String(d.shirt.dataset.slot))act(`swap|${d.shirt.dataset.slot}|${marker.dataset.slot}`);
+  else move(field,d.shirt.dataset.slot,ev.clientX,ev.clientY);
+ }
+ root.addEventListener('pointerup',ev=>finish(ev,false));
+ root.addEventListener('pointercancel',ev=>finish(ev,true));
+ root.addEventListener('lostpointercapture',ev=>finish(ev,true));
+}g.TLBoardRoom={render,bind,project,positionalNumbers};})(typeof window==='undefined'?globalThis:window);

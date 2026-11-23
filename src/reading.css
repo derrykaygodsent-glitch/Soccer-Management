@@ -659,3 +659,30 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 #homeScreen.hc-shell:has(.fm-tactics-workspace) #clubPage{height:100%!important;max-height:none!important;min-width:0!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) #clubPage>.life-desk{width:100%!important;max-width:none!important}
 @media(max-width:980px){#homeScreen.hc-shell:has(.fm-tactics-workspace){display:flex!important;flex-direction:column!important}#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-sidebar{position:fixed!important;display:flex!important}#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-main{width:100%!important}}
+
+/* Tactical controls: clearer replacement, drop feedback, and resilient instruction layout. */
+.fm-status-chip{cursor:default;user-select:text}
+#homeScreen:has(.fm-tactics-workspace) .fm-status-chip.is-clear{background:#163a35;border-color:#3d8278;color:#9ce0d1!important}
+#homeScreen:has(.fm-tactics-workspace) .fm-status-chip.has-risks{background:#403322;border-color:#a47c45;color:#f2cd8e!important}
+.fm-primary-pitch .tactic-shirt{width:clamp(27px,5cqw,46px)}
+.fm-both-pitches .tactic-shirt{width:clamp(21px,3.5cqw,35px)}
+.fm-squad-panel .fm-row.on .fm-suitability,.fm-squad-panel .fm-row.on .fm-stat{color:#bce5e0!important;font-variant-numeric:tabular-nums}
+.fm-squad-panel .fm-row.fm-sub[aria-pressed="true"]{background:#1e3a4d!important;box-shadow:inset 3px 0 #e6b760;color:#f5f7fb}
+.fm-zone-analysis{align-items:flex-start}
+.fm-zone-analysis>b{flex:none;white-space:normal;line-height:1.35}
+.fm-zone-analysis>div{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr));align-items:stretch;flex:1 1 auto;flex-wrap:initial;gap:4px;min-width:0;overflow:visible}
+.fm-zone-analysis>div span{min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.35}
+.fm-drag-ghost{position:fixed;z-index:99999;left:0;top:0;pointer-events:none;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;max-width:min(240px,70vw);padding:8px 12px;border:1px solid #81c9c5;border-radius:4px;background:#14283af2;color:#f4f7fb;box-shadow:0 8px 24px #0009;font:700 12px/1.25 system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fm-drag-ghost.shirt-ghost{padding:5px;background:#112133ee}
+.fm-drag-ghost.invalid{border-color:#df8077;background:#321c26f5;color:#f2b7af}
+.fm-drag-ghost>.shirt-marker{position:relative!important;left:auto!important;bottom:auto!important;transform:none!important;width:auto!important;min-width:50px!important;min-height:0!important;padding:3px!important;cursor:grabbing!important;opacity:1!important}
+.fm-drag-ghost .tactic-shirt{width:46px!important;height:auto!important}
+.fm-drag-source{opacity:.3!important}
+.fm-drop-target{outline:3px solid #f2c66f!important;outline-offset:2px!important;background:#eebf5938!important;box-shadow:0 0 0 5px #f2c66f28!important}
+.fm-drop-invalid{outline:3px solid #df8077!important;outline-offset:2px!important;background:#dc746f30!important}
+@media(max-width:1100px){
+ #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace{grid-template-columns:minmax(0,1fr)}
+ #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual,#homeScreen:has(.fm-tactics-workspace) .fm-context-controls,#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview{grid-column:auto}
+ #homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview{display:block}
+ #homeScreen:has(.fm-tactics-workspace) .fm-zone-analysis>div{grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))}
+}

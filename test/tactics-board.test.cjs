@@ -125,3 +125,105 @@ test('saved and imported tactic presets survive career JSON reload with validate
   a.equal(TLMatchBoard.active(restored).untrusted,undefined);
   a.throws(()=>TLMatchBoard.update(restored,'importPreset|0|bad',pool),/valid tactic JSON/i);
 });
+
+test('substitutes stay actionable and support either select-then-replace order', () => {
+  const s = career(); s.id = 'bench-interactions';
+  const handlers = {}, root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, querySelector: () => null };
+  let draws = 0;
+  TLBoardRoom.bind(root, (action, value) => { if (action === 'matchBoard') TLMatchBoard.update(s, value, pool); }, () => draws++);
+  const html = TLBoardRoom.render(s, pool), subId = TLMatchBoard.sheet(s.tactic, TLMatchBoard.active(s), pool).bench[0].id;
+  a.match(html, new RegExp(`data-board="bench\\|${subId}"`));
+  a.doesNotMatch(html, /class="fm-row fm-sub[^\"]*"[^>]*disabled/);
+  const target = button => ({ closest: selector => selector === 'button' ? button : null });
+  handlers.click({ target: target({ dataset: { board: `bench|${subId}` }, hasAttribute: name => name === 'data-board' }), clientX: 0, clientY: 0 });
+  a.match(TLBoardRoom.render(s, pool), new RegExp(`data-player-id="${subId}"[^>]*aria-pressed="true"`));
+  handlers.click({ target: target({ dataset: { slot: '10' }, hasAttribute: name => name === 'data-slot' }), clientX: 0, clientY: 0 });
+  a.equal(TLMatchBoard.sheet(s.tactic, TLMatchBoard.active(s), pool).slots[10].player.id, subId);
+  a.equal(draws, 1, 'choosing a substitute first immediately asks the view to show the pending selection');
+
+  const second = career(); second.id = 'bench-direct-replace';
+  const handlers2 = {}, root2 = { addEventListener: (kind, fn) => { handlers2[kind] = fn; }, querySelector: () => null };
+  TLBoardRoom.bind(root2, (action, value) => { if (action === 'matchBoard') TLMatchBoard.update(second, value, pool); }, () => {});
+  TLBoardRoom.render(second, pool);
+  const replacement = TLMatchBoard.sheet(second.tactic, TLMatchBoard.active(second), pool).bench[0].id;
+  handlers2.click({ target: target({ dataset: { slot: '10' }, hasAttribute: name => name === 'data-slot' }), clientX: 0, clientY: 0 });
+  handlers2.click({ target: target({ dataset: { board: `pick|10|${replacement}` }, hasAttribute: name => name === 'data-board' }), clientX: 0, clientY: 0 });
+  a.equal(TLMatchBoard.sheet(second.tactic, TLMatchBoard.active(second), pool).slots[10].player.id, replacement);
+});
+
+test('dragging a squad player to the pitch previews its destination and assigns it', () => {
+  const s = career(); s.id = 'drag-player';
+  const sub = TLMatchBoard.sheet(s.tactic, TLMatchBoard.active(s), pool).bench.find(p => p.pos !== 'GK');
+  let handlers = {}, root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, querySelector: () => null };
+  TLBoardRoom.bind(root, (action, value) => { if (action === 'matchBoard') TLMatchBoard.update(s, value, pool); }, () => {});
+  TLBoardRoom.render(s, pool);
+  const classes = () => { const set = new Set(); return { add: (...v) => v.forEach(x => set.add(x)), remove: (...v) => v.forEach(x => set.delete(x)), toggle: (v, on) => on ? set.add(v) : set.delete(v), contains: v => set.has(v) }; };
+  const field = { dataset: { orientation: 'portrait', phaseView: 'defense' }, getBoundingClientRect: () => ({ left: 0, top: 0, right: 100, bottom: 140, width: 100, height: 140 }) };
+  const marker = { dataset: { slot: '10' }, classList: classes(), closest: selector => selector === '.shape-field' ? field : selector === '.shape-field [data-slot]' ? marker : null };
+  const row = { dataset: { playerId: sub.id, playerPos: sub.pos }, classList: classes(), setPointerCapture() {}, querySelector: () => ({ textContent: sub.name }), closest: selector => selector === '.fm-squad-panel .fm-row[data-player-id]' ? row : null };
+  const oldDocument = global.document;
+  global.document = { body: { appendChild() {} }, createElement: () => ({ classList: classes(), style: {}, setAttribute() {}, remove() {}, append() {} }), elementFromPoint: () => marker };
+  try {
+    const ev = (target, x, y) => ({ target, isPrimary: true, button: 0, pointerId: 1, clientX: x, clientY: y });
+    handlers.pointerdown(ev(row, 5, 5));
+    handlers.pointermove(ev(row, 20, 20));
+    a.ok(marker.classList.contains('fm-drop-target'), 'valid replacement slot is visibly highlighted');
+    handlers.pointerup(ev(row, 20, 20));
+    a.equal(TLMatchBoard.sheet(s.tactic, TLMatchBoard.active(s), pool).slots[10].player.id, sub.id);
+  } finally { global.document = oldDocument; }
+});
+
+test('explicit pitch phase edits stay in that phase, including from Both and Combined views', () => {
+  const s = career(), plan = TLMatchBoard.active(s);
+  s.boardPhase = 'both';
+  TLMatchBoard.update(s, 'move|5|0.7|0.4|defense', pool);
+  a.ok(plan.moves?.[5], 'a defensive pitch edit stores an out-of-possession coordinate');
+  a.equal(plan.attackByPlayer, undefined, 'the defensive pitch does not accidentally edit in-possession positions');
+  const slot = TLMatchBoard.sheet(s.tactic, plan, pool).slots[5], baseBefore = { x: slot.x, y: slot.y }, attackBefore = slot.attack || baseBefore;
+  const target = { x: .9, y: .5 };
+  TLMatchBoard.update(s, `move|5|${target.x}|${target.y}|combined`, pool);
+  const moved = TLMatchBoard.sheet(s.tactic, plan, pool).slots[5], movedAttack = moved.attack || moved, avg = { x: (moved.x + movedAttack.x) / 2, y: (moved.y + movedAttack.y) / 2 };
+  a.ok(Math.abs(avg.x - target.x) < .04 && Math.abs(avg.y - target.y) < .04, 'combined movement translates both phase positions together');
+  a.ok(Math.abs((moved.x - baseBefore.x) - (movedAttack.x - attackBefore.x)) < .01, 'both phase positions move by the same amount');
+});
+
+test('status and squad metrics are legible text, with team-instruction responsibilities wrapping cleanly', () => {
+  const s = career(); s.id = 'tactics-status-layout';
+  const html = TLBoardRoom.render(s, pool);
+  a.match(html, /<span class="fm-status-chip (?:has-risks|is-clear)" role="status"/);
+  a.ok(!/<button[^>]*class="fm-status-chip/.test(html), 'review state is informational, not an inert button');
+  a.match(html, /data-board="bench\|[^\"]+"/);
+  const css = fs.readFileSync(path.join(__dirname, '../src/reading.css'), 'utf8');
+  a.match(css, /fm-zone-analysis>div\{display:grid;grid-template-columns:repeat\(auto-fit/);
+  a.match(css, /fm-squad-panel \.fm-row\.on \.fm-suitability[^}]*color:#bce5e0!important/);
+  a.match(css, /fm-status-chip\.has-risks[^}]*#f2cd8e!important/);
+});
+
+test('opening a player picker does not accidentally press its containing squad row', () => {
+  const s = career(); s.id = 'player-picker-click';
+  const handlers = {}, root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, querySelector: () => null };
+  TLBoardRoom.bind(root, () => {}, () => {});
+  const html = TLBoardRoom.render(s, pool);
+  a.doesNotMatch(html, /class="fm-row on"/);
+  const picker = { dataset: { playerPick: '5' } };
+  handlers.click({ target: { closest: selector => selector === '[data-player-pick]' ? picker : null }, clientX: 0, clientY: 0 });
+  a.doesNotMatch(TLBoardRoom.render(s, pool), /class="fm-row on"/);
+});
+
+test('shirt drag on the defensive pitch moves that phase even while Both is selected', () => {
+  const s = career(); s.id = 'defensive-drag-from-both'; s.boardPhase = 'both';
+  const handlers = {}, root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, querySelector: () => null };
+  TLBoardRoom.bind(root, (action, value) => { if (action === 'matchBoard') TLMatchBoard.update(s, value, pool); }, () => {});
+  TLBoardRoom.render(s, pool);
+  const classes = () => ({ add() {}, remove() {}, toggle() {} });
+  const field = { dataset: { orientation: 'portrait', phaseView: 'defense' }, getBoundingClientRect: () => ({ left: 0, top: 0, right: 100, bottom: 140, width: 100, height: 140 }), closest: selector => selector === '.shape-field' ? field : null };
+  const shirt = { dataset: { slot: '5', playerId: 'p6' }, parentElement: field, classList: classes(), style: {}, setPointerCapture() {}, cloneNode: () => ({}), closest: selector => selector === '.shape-field [data-slot]' ? shirt : null };
+  const oldDocument = global.document;
+  global.document = { body: { appendChild() {} }, createElement: () => ({ classList: classes(), style: {}, setAttribute() {}, remove() {}, append() {} }), elementFromPoint: () => field };
+  try {
+    const ev = (x, y) => ({ target: shirt, isPrimary: true, button: 0, pointerId: 2, clientX: x, clientY: y });
+    handlers.pointerdown(ev(5, 5)); handlers.pointermove(ev(45, 80)); handlers.pointerup(ev(45, 80));
+    a.ok(TLMatchBoard.active(s).moves?.[5], 'the drop commits a defensive position');
+    a.equal(TLMatchBoard.active(s).attackByPlayer, undefined, 'it does not move the attacking position');
+  } finally { global.document = oldDocument; }
+});
