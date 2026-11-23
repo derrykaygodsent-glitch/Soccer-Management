@@ -160,14 +160,16 @@ test('dragging a squad player to the pitch previews its destination and assigns 
   const classes = () => { const set = new Set(); return { add: (...v) => v.forEach(x => set.add(x)), remove: (...v) => v.forEach(x => set.delete(x)), toggle: (v, on) => on ? set.add(v) : set.delete(v), contains: v => set.has(v) }; };
   const field = { dataset: { orientation: 'portrait', phaseView: 'defense' }, getBoundingClientRect: () => ({ left: 0, top: 0, right: 100, bottom: 140, width: 100, height: 140 }) };
   const marker = { dataset: { slot: '10' }, classList: classes(), closest: selector => selector === '.shape-field' ? field : selector === '.shape-field [data-slot]' ? marker : null };
-  const row = { dataset: { playerId: sub.id, playerPos: sub.pos }, classList: classes(), setPointerCapture() {}, querySelector: () => ({ textContent: sub.name }), closest: selector => selector === '.fm-squad-panel .fm-row[data-player-id]' ? row : null };
+  const parent = { insertBefore(node) { node.parentNode = parent; }, removeChild(node) { node.parentNode = null; } };
+  const row = { dataset: { playerId: sub.id, playerPos: sub.pos }, classList: classes(), style: {}, parentNode: parent, getBoundingClientRect: () => ({ left: 5, top: 5, width: 80, height: 35 }), querySelector: () => ({ textContent: sub.name }), closest: selector => selector === '.fm-squad-panel .fm-row[data-player-id]' ? row : null };
   const oldDocument = global.document;
-  global.document = { body: { appendChild() {} }, createElement: () => ({ classList: classes(), style: {}, setAttribute() {}, remove() {}, append() {} }), elementFromPoint: () => marker };
+  global.document = { body: { appendChild(node) { node.parentNode = this; } }, createElement: () => ({ classList: classes(), style: {}, setAttribute() {}, remove() { this.parentNode = null; }, append() {} }), elementFromPoint: () => marker };
   try {
     const ev = (target, x, y) => ({ target, isPrimary: true, button: 0, pointerId: 1, clientX: x, clientY: y });
     handlers.pointerdown(ev(row, 5, 5));
     handlers.pointermove(ev(row, 20, 20));
     a.ok(marker.classList.contains('fm-drop-target'), 'valid replacement slot is visibly highlighted');
+    a.equal(row.style.translate, '15px 15px', 'the actual squad row tracks the pointer; no lifted clone is used');
     handlers.pointerup(ev(row, 20, 20));
     a.equal(TLMatchBoard.sheet(s.tactic, TLMatchBoard.active(s), pool).slots[10].player.id, sub.id);
   } finally { global.document = oldDocument; }
@@ -197,6 +199,7 @@ test('status and squad metrics are legible text, with team-instruction responsib
   a.match(css, /fm-zone-analysis>div\{display:grid;grid-template-columns:repeat\(auto-fit/);
   a.match(css, /fm-squad-panel \.fm-row\.on \.fm-suitability[^}]*color:#bce5e0!important/);
   a.match(css, /fm-status-chip\.has-risks[^}]*#f2cd8e!important/);
+  a.doesNotMatch(css, /fm-drag-ghost/, 'dragging uses the source item, not a cloned lifted ghost');
 });
 
 test('opening a player picker does not accidentally press its containing squad row', () => {
@@ -222,8 +225,32 @@ test('shirt drag on the defensive pitch moves that phase even while Both is sele
   global.document = { body: { appendChild() {} }, createElement: () => ({ classList: classes(), style: {}, setAttribute() {}, remove() {}, append() {} }), elementFromPoint: () => field };
   try {
     const ev = (x, y) => ({ target: shirt, isPrimary: true, button: 0, pointerId: 2, clientX: x, clientY: y });
-    handlers.pointerdown(ev(5, 5)); handlers.pointermove(ev(45, 80)); handlers.pointerup(ev(45, 80));
+    handlers.pointerdown(ev(5, 5)); handlers.pointermove(ev(45, 80));
+    a.equal(shirt.style.translate, '40px 75px', 'the dragged jersey itself follows the pointer');
+    handlers.pointerup(ev(45, 80));
     a.ok(TLMatchBoard.active(s).moves?.[5], 'the drop commits a defensive position');
     a.equal(TLMatchBoard.active(s).attackByPlayer, undefined, 'it does not move the attacking position');
+  } finally { global.document = oldDocument; }
+});
+
+test('dragging an actual shirt onto another mapped shirt swaps those exact players in Both', () => {
+  const s = career(); s.id = 'both-shirt-swap'; s.boardPhase = 'both';
+  const plan = TLMatchBoard.active(s), before = TLMatchBoard.sheet(s.tactic, plan, pool).slots;
+  const moving = before[5].player.id, displaced = before[10].player.id;
+  const handlers = {}, root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, querySelector: () => null };
+  TLBoardRoom.bind(root, (action, value) => { if (action === 'matchBoard') TLMatchBoard.update(s, value, pool); }, () => {});
+  TLBoardRoom.render(s, pool);
+  const classes = () => { const set = new Set(); return { add: (...v) => v.forEach(x => set.add(x)), remove: (...v) => v.forEach(x => set.delete(x)), toggle: (v, on) => on ? set.add(v) : set.delete(v), contains: v => set.has(v) }; };
+  const field = { dataset: { orientation: 'wide', phaseView: 'defense' }, getBoundingClientRect: () => ({ left: 0, top: 0, right: 140, bottom: 100, width: 140, height: 100 }) };
+  const shirt = (slot, id) => { const el = { dataset: { slot: String(slot), playerId: id }, parentElement: field, classList: classes(), style: {}, setPointerCapture() {}, closest: selector => selector === '.shape-field [data-slot]' ? el : selector === '.shape-field' ? field : null }; return el; };
+  const from = shirt(5, moving), to = shirt(10, displaced), oldDocument = global.document;
+  global.document = { elementFromPoint: () => to };
+  try {
+    const ev = (target, x, y) => ({ target, isPrimary: true, button: 0, pointerId: 3, clientX: x, clientY: y });
+    handlers.pointerdown(ev(from, 10, 10)); handlers.pointermove(ev(from, 80, 75)); handlers.pointerup(ev(from, 80, 75));
+    const after = TLMatchBoard.sheet(s.tactic, plan, pool).slots;
+    a.equal(after[5].player.id, displaced);
+    a.equal(after[10].player.id, moving);
+    a.equal(s.boardPhase, 'both', 'the swap applies to the shared XI while Both remains selected');
   } finally { global.document = oldDocument; }
 });

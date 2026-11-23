@@ -672,12 +672,10 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 .fm-zone-analysis>b{flex:none;white-space:normal;line-height:1.35}
 .fm-zone-analysis>div{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr));align-items:stretch;flex:1 1 auto;flex-wrap:initial;gap:4px;min-width:0;overflow:visible}
 .fm-zone-analysis>div span{min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.35}
-.fm-drag-ghost{position:fixed;z-index:99999;left:0;top:0;pointer-events:none;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;max-width:min(240px,70vw);padding:8px 12px;border:1px solid #81c9c5;border-radius:4px;background:#14283af2;color:#f4f7fb;box-shadow:0 8px 24px #0009;font:700 12px/1.25 system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fm-drag-ghost.shirt-ghost{padding:5px;background:#112133ee}
-.fm-drag-ghost.invalid{border-color:#df8077;background:#321c26f5;color:#f2b7af}
-.fm-drag-ghost>.shirt-marker{position:relative!important;left:auto!important;bottom:auto!important;transform:none!important;width:auto!important;min-width:50px!important;min-height:0!important;padding:3px!important;cursor:grabbing!important;opacity:1!important}
-.fm-drag-ghost .tactic-shirt{width:46px!important;height:auto!important}
-.fm-drag-source{opacity:.3!important}
+.shape-field .shirt-marker.fm-drag-source{position:absolute!important;z-index:999!important;pointer-events:none!important;opacity:.78!important;filter:brightness(1.12)}
+.fm-row.fm-drag-source{pointer-events:none!important;opacity:.72!important;filter:brightness(1.1)}
+.fm-squad-panel .fm-row.fm-drag-source{position:relative;z-index:999}
+.fm-drag-placeholder{display:block;min-height:35px;box-sizing:border-box}
 .fm-drop-target{outline:3px solid #f2c66f!important;outline-offset:2px!important;background:#eebf5938!important;box-shadow:0 0 0 5px #f2c66f28!important}
 .fm-drop-invalid{outline:3px solid #df8077!important;outline-offset:2px!important;background:#dc746f30!important}
 @media(max-width:1100px){

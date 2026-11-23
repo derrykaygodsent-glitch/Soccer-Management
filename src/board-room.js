@@ -115,12 +115,14 @@ function bind(root,change,draw){
   const after=i&&button()?.getBoundingClientRect();
   if(before&&after&&!matchMedia('(prefers-reduced-motion: reduce)').matches)button().animate([{translate:`${before.left-after.left}px ${before.top-after.top}px`},{translate:'0 0'}],{duration:170,easing:'ease-out'});
  };
- function move(field,i,x,y){
+ function nearestSlot(field,x,y){const markers=[...(field?.querySelectorAll?.('[data-slot]')||[])];return markers.sort((a,b)=>{const ar=a.getBoundingClientRect(),br=b.getBoundingClientRect();return Math.hypot(ar.left+ar.width/2-x,ar.top+ar.height/2-y)-Math.hypot(br.left+br.width/2-x,br.top+br.height/2-y);})[0]||null;}
+ function moveValue(field,i,x,y){
   const r=field.getBoundingClientRect(),clamp=v=>Math.min(.97,Math.max(.03,v)).toFixed(3),wide=field.dataset.orientation==='wide';
   const longitudinal=wide?project((x-r.left)/r.width*100,true):project((r.bottom-y)/r.height*100,true),lateral=wide?1-(y-r.top)/r.height:((x-r.left)/r.width-.08)/.84;
   const phase=['attack','combined'].includes(field.dataset.phaseView)?field.dataset.phaseView:'defense';
-  act(`move|${i}|${clamp(longitudinal)}|${clamp(lateral)}|${phase}`);
+  return `move|${i}|${clamp(longitudinal)}|${clamp(lateral)}|${phase}`;
  }
+ function move(field,i,x,y){act(moveValue(field,i,x,y));}
  root.addEventListener('change',ev=>{
   if(ev.target.hasAttribute('data-tactic-import')){const file=ev.target.files?.[0];if(file)file.text().then(text=>change('matchBoard',`importPreset|0|${encodeURIComponent(text)}`)).catch(()=>change('matchBoard','importPreset|0|invalid'));return;}
   if(ev.target.hasAttribute('data-attack-formation'))act(`attackFormation|0|${ev.target.value}`);
@@ -154,40 +156,42 @@ function bind(root,change,draw){
   const shirt=ev.target.closest('.shape-field [data-slot]'),row=shirt?null:ev.target.closest('.fm-squad-panel .fm-row[data-player-id]');
   if((!shirt&&!row)||(row&&(!row.dataset.playerId||ev.target.closest('select,input,option'))))return;
   drag={id:ev.pointerId,kind:shirt?'shirt':'player',shirt,row,playerId:shirt?.dataset.playerId||row?.dataset.playerId,playerLabel:row?.querySelector('.fm-person span')?.textContent||row?.dataset.playerId,x:ev.clientX,y:ev.clientY,source:shirt||row,moving:false,hover:null};
-  drag.source.setPointerCapture?.(ev.pointerId);
+  root.setPointerCapture?.(ev.pointerId);
  }
  root.addEventListener('pointerdown',begin);
  root.addEventListener('pointermove',ev=>{
   if(drag?.id!==ev.pointerId)return;
   if(!drag.moving&&Math.hypot(ev.clientX-drag.x,ev.clientY-drag.y)<7)return;
   drag.moving=true;
-  if(!drag.ghost){
-   drag.ghost=document.createElement('div');drag.ghost.className=`fm-drag-ghost ${drag.kind==='player'?'player-ghost':'shirt-ghost'}`;drag.ghost.setAttribute('aria-hidden','true');
-   if(drag.kind==='shirt')drag.ghost.append(drag.shirt.cloneNode(true));
-   else drag.ghost.textContent=`Place ${drag.playerLabel}`;
-   document.body.appendChild(drag.ghost);drag.source.classList.add('fm-drag-source');
+  if(drag.kind==='player'&&!drag.rowDetached){
+   const r=drag.source.getBoundingClientRect(),placeholder=document.createElement('div');placeholder.className='fm-drag-placeholder';placeholder.style.height=`${r.height}px`;placeholder.style.width=`${r.width}px`;drag.source.parentNode?.insertBefore(placeholder,drag.source);drag.placeholder=placeholder;document.body.appendChild(drag.source);Object.assign(drag.source.style,{position:'fixed',left:`${r.left}px`,top:`${r.top}px`,width:`${r.width}px`,margin:'0',zIndex:'99999',pointerEvents:'none'});drag.rowDetached=true;
   }
-  drag.ghost.style.left=`${ev.clientX+14}px`;drag.ghost.style.top=`${ev.clientY+14}px`;
-  const under=document.elementFromPoint(ev.clientX,ev.clientY),field=under?.closest('.shape-field'),marker=under?.closest('.shape-field [data-slot]');
-  const valid=!!field&&(drag.kind==='shirt'||!!marker&&((marker.dataset.slot==='0')===(drag.row.dataset.playerPos==='GK'))),hover=marker||null;
+  drag.source.style.translate=`${ev.clientX-drag.x}px ${ev.clientY-drag.y}px`;drag.source.classList.add('fm-drag-source');
+  const under=document.elementFromPoint(ev.clientX,ev.clientY),field=under?.closest('.shape-field'),exact=under?.closest('.shape-field [data-slot]'),preview=exact||(field&&nearestSlot(field,ev.clientX,ev.clientY));
+  const valid=!!field&&(drag.kind==='shirt'||!!preview&&((preview.dataset.slot==='0')===(drag.row.dataset.playerPos==='GK'))),hover=preview||null;
   if(drag.hover!==hover){drag.hover?.classList.remove('fm-drop-target','fm-drop-invalid');drag.hover=hover;}
   if(hover)hover.classList.add(valid?'fm-drop-target':'fm-drop-invalid');
-  if(drag.kind==='player'){
-   const targetName=marker?.getAttribute?.('aria-label')?.split(' · ')[1]||'selected position';
-   drag.ghost.textContent=valid&&marker?`Replace ${targetName} with ${drag.playerLabel}`:drag.row.dataset.playerPos==='GK'?'Drop on the goalkeeper slot':'Drop on a pitch slot';
-  }
-  drag.drop={field,marker,valid};drag.ghost.classList.toggle('invalid',!valid);
+  drag.drop={field,marker:exact,preview,valid};
  });
+ function restore(d){
+  if(d.rowDetached&&d.placeholder?.parentNode){d.placeholder.parentNode.insertBefore(d.source,d.placeholder);d.placeholder.remove();for(const key of ['position','left','top','width','margin','zIndex','pointerEvents'])d.source.style[key]='';}
+  d.source.style.translate='';d.source.classList.remove('fm-drag-source');
+ }
  function finish(ev,cancel){
   if(drag?.id!==ev.pointerId)return;
-  const d=drag;drag=null;d.hover?.classList.remove('fm-drop-target','fm-drop-invalid');d.ghost?.remove();d.source.classList.remove('fm-drag-source');
+  const d=drag;drag=null;d.hover?.classList.remove('fm-drop-target','fm-drop-invalid');
   if(!d.moving)return;
-  suppressUntil=performance.now()+350;if(cancel)return;
-  const under=document.elementFromPoint(ev.clientX,ev.clientY),field=under?.closest('.shape-field'),marker=under?.closest('.shape-field [data-slot]');
-  if(d.kind==='player'){if(marker&&(marker.dataset.slot==='0')===(d.row.dataset.playerPos==='GK'))act(`pick|${marker.dataset.slot}|${d.playerId}`);return;}
-  if(!field)return;
-  if(marker&&marker.dataset.slot!==String(d.shirt.dataset.slot))act(`swap|${d.shirt.dataset.slot}|${marker.dataset.slot}`);
-  else move(field,d.shirt.dataset.slot,ev.clientX,ev.clientY);
+  suppressUntil=performance.now()+350;
+  if(cancel){restore(d);return;}
+  const under=document.elementFromPoint(ev.clientX,ev.clientY),field=under?.closest('.shape-field'),exact=under?.closest('.shape-field [data-slot]'),preview=exact||(field&&nearestSlot(field,ev.clientX,ev.clientY));
+  if(d.kind==='player'){
+   if(!field||!preview||(preview.dataset.slot==='0')!==(d.row.dataset.playerPos==='GK')){restore(d);return;}
+   const slot=Number(preview.dataset.slot),placement=!exact?moveValue(field,slot,ev.clientX,ev.clientY):null;restore(d);
+   act(`pick|${slot}|${d.playerId}`);if(placement)act(placement);
+  }else{
+   if(!field){restore(d);return;}
+   const command=exact&&exact.dataset.slot!==String(d.shirt.dataset.slot)?`swap|${d.shirt.dataset.slot}|${exact.dataset.slot}`:moveValue(field,d.shirt.dataset.slot,ev.clientX,ev.clientY);restore(d);act(command);
+  }
  }
  root.addEventListener('pointerup',ev=>finish(ev,false));
  root.addEventListener('pointercancel',ev=>finish(ev,true));
