@@ -1,4 +1,4 @@
-const test = require('node:test'), a = require('node:assert/strict'), path = require('node:path');
+const test = require('node:test'), a = require('node:assert/strict'), path = require('node:path'), fs = require('node:fs');
 // The tactics board renders the FM-inspired split selection layout and its swap/remove commands work.
 global.window = global;
 const src = n => require(path.join('..', 'src', n));
@@ -26,14 +26,66 @@ const career = () => ({
   dressing: { club: 'Kay FC', people: Object.fromEntries(pool.map(p => [p.id, { day: 14, fitness: 90, sharp: 80, mood: 70, settled: 80, injuredUntil: 0, missed: 0 }])), ties: {} },
 });
 
-test('tactics board renders the FM-style rail, pitch and squad list', () => {
-  const html = TLBoardRoom.render(career(), pool);
-  for (const needle of ['fm-layout', 'fm-left-pane', 'fm-rail', 'fm-pitch', 'fm-squad', 'TACTICAL STYLE', 'IN POSSESSION', 'IN TRANSITION', 'OUT OF POSSESSION', 'TEAM FLUIDITY', 'FORMATION', 'Quick selection', 'Minimise pitch · focus on squad', 'First-team selection', 'ROLE / DU.', 'data-slot="0"', 'data-board="bestXI"'])
+test('tactics workspace gives shape, squad and instructions dedicated space', () => {
+  const s = career(), html = TLBoardRoom.render(s, pool);
+  for (const needle of ['fm-workspace-header', 'fm-workspace-nav', 'Team Shape', 'Team Instructions', 'Player Instructions', 'fm-shape-workspace', 'fm-primary-pitch', 'fm-squad-panel', 'Out of Possession', 'In Possession', 'Combined', 'Both', 'Save tactic', 'Familiarity', 'Intensity', 'data-slot="0"', 'data-board="bestXI"'])
     a.ok(html.includes(needle), 'missing ' + needle);
-  a.equal((html.match(/Change details/g) || []).length, 4, 'four instruction cards offer a change control');
-  a.equal((html.match(/class="fm-row"/g) || []).length, 11, 'eleven starting rows');
-  a.ok((html.match(/class="fm-row fm-sub"/g) || []).length >= 1, 'bench rows are listed');
+  a.equal((html.match(/class="fm-row(?: on)?"/g) || []).length, 11, 'eleven starters share selection rows');
+  a.ok((html.match(/class="fm-row fm-sub"/g) || []).length >= 1, 'actual substitutes are listed');
+  a.ok(!html.includes('fm-tactical-nav'), 'the long legacy navigation rail is gone');
   a.ok(!/undefined|NaN|\[object Object\]/.test(html), 'no template garbage');
+
+  s.boardPhase = 'both';
+  const both = TLBoardRoom.render(s, pool);
+  a.equal((both.match(/class="shape-field field-wide"/g) || []).length, 2, 'Both shows two side-by-side landscape pitches');
+  a.match(both, /data-phase-view="defense"/);
+  a.match(both, /data-phase-view="attack"/);
+  s.boardPhase = 'combined';
+  a.match(TLBoardRoom.render(s, pool), /Combined · average player positions/);
+
+  const handlers = {}, root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, querySelector: () => null };
+  let draws = 0;
+  TLBoardRoom.bind(root, (action, value) => { if (action === 'matchBoard') TLMatchBoard.update(s, value, pool); }, () => draws++);
+  const navButton = { dataset: { workspaceTab: 'instructions' }, hasAttribute: () => false };
+  handlers.click({ target: { closest: selector => selector === 'button' ? navButton : null } });
+  a.equal(draws, 1);
+  a.match(TLBoardRoom.render(s, pool), /data-workspace="instructions"/);
+  a.match(TLBoardRoom.render(s, pool), /fm-instruction-workspace/);
+  const overlayScreen = TLBoardRoom.render(s, pool);
+  a.equal((overlayScreen.match(/data-board="zone\|0\|/g) || []).length, 9, 'pitch has nine zone hit areas');
+  const zoneRule = fs.readFileSync(path.join(__dirname, '../src/reading.css'), 'utf8').match(/\.fm-zone-overlay button\{([^}]*)\}/)?.[1] || '';
+  a.match(zoneRule, /position:relative/);
+  a.match(zoneRule, /transform:none/);
+  const instructionScreen = overlayScreen;
+  a.match(instructionScreen, /fm-tactical-overview/);
+  a.match(instructionScreen, /Match plan/);
+  a.match(instructionScreen, /Central area/);
+  a.match(instructionScreen, /Tactical risks/);
+  a.ok(!instructionScreen.includes('Active team orders'), 'overview prioritizes concise, actionable data');
+
+  const zoneButton = { dataset: { board: 'zone|0|attack-left' }, hasAttribute: name => name === 'data-board' };
+  handlers.click({ target: { closest: selector => selector === 'button' ? zoneButton : null } });
+  a.equal(s.tacticZone, 'attack-left', 'zone selection persists through the board action');
+  const plan = TLMatchBoard.active(s), axis = { value: '2', dataset: { axis: 'tempo' }, hasAttribute: name => name === 'data-axis' };
+  handlers.change({ target: axis });
+  a.equal(plan.instructions.tempo, 2, 'tempo control updates the existing tactical plan');
+  const orderValue = TLZones.choicesTeam.trigger[0], order = { value: orderValue, dataset: { order: 'trigger' }, hasAttribute: name => name === 'data-order' };
+  handlers.change({ target: order });
+  a.equal(plan.orders.trigger, orderValue, 'contextual team order updates the existing tactical plan');
+  a.match(TLBoardRoom.render(s, pool), /data-customized="true"/);
+  a.match(TLBoardRoom.render(s, pool), /<i>EDITED<\/i>/, 'custom team instructions receive visible state feedback');
+
+  const selectButton = { dataset: { slot: '3' }, hasAttribute: name => name === 'data-slot' };
+  handlers.click({ target: { closest: selector => selector === 'button' ? selectButton : null } });
+  const selected = TLBoardRoom.render(s, pool);
+  a.equal(draws, 2);
+  a.match(selected, /fm-player-editor/);
+  a.match(selected, /data-phase-job="attack\|3"/);
+  a.match(selected, /data-player-instruction="defense\|p/);
+  const playerId = TLMatchBoard.sheet(s.tactic, plan, pool).slots[3].player.id;
+  const instruction = { value: TLZones.individualInstructions.pressing[0], dataset: { playerInstruction: `defense|${playerId}|pressing` }, hasAttribute: name => name === 'data-player-instruction' };
+  handlers.change({ target: instruction });
+  a.equal(plan.playerInstructions[playerId].defense.pressing, instruction.value, 'phase-specific instruction updates the engine plan');
 });
 
 test('the swap panel offers replacements and clearing a slot empties it', () => {
