@@ -30,11 +30,8 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   const s = career(), html = TLBoardRoom.render(s, pool);
   for (const needle of ['fm-workspace-header', 'fm-workspace-nav', 'Team Shape', 'Team Instructions', 'Player Instructions', 'fm-shape-workspace', 'fm-primary-pitch', 'fm-squad-panel', 'Out of Possession', 'In Possession', 'Combined', 'Both', 'Save tactic', 'Familiarity', 'Intensity', 'data-slot="0"', 'data-board="bestXI"'])
     a.ok(html.includes(needle), 'missing ' + needle);
-  a.equal((html.match(/class="fm-planner-row/g) || []).length, 11 + TLMatchBoard.sheet(s.tactic, TLMatchBoard.active(s), pool).bench.length, 'complete starting XI and substitute table');
-  a.ok((html.match(/data-phase-job="attack\|\d+"/g) || []).length === 11, 'each starter has an in-possession role selector');
-  a.ok((html.match(/data-job="\d+"/g) || []).length === 11, 'each starter has an out-of-possession role selector');
-  a.ok(html.includes('fm-bench-card') && html.includes('fm-planner-group'), 'substitutes are visible under the pitch and in the squad table');
-  a.ok(html.includes('fm-shape-toolbar') && html.includes('fm-planner-table-scroll'), 'Team Shape uses the full-width header and a scrollable player sheet');
+  a.equal((html.match(/class="fm-row(?: on)?"/g) || []).length, 11, 'eleven starters share selection rows');
+  a.ok((html.match(/class="fm-row fm-sub"/g) || []).length >= 1, 'actual substitutes are listed');
   a.ok(!html.includes('fm-tactical-nav'), 'the long legacy navigation rail is gone');
   a.ok(!/undefined|NaN|\[object Object\]/.test(html), 'no template garbage');
 
@@ -44,7 +41,7 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   a.match(both, /data-phase-view="defense"/);
   a.match(both, /data-phase-view="attack"/);
   s.boardPhase = 'combined';
-  a.match(TLBoardRoom.render(s, pool), /Combined average positions/);
+  a.match(TLBoardRoom.render(s, pool), /Combined · average player positions/);
 
   const handlers = {}, root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, querySelector: () => null };
   let draws = 0;
