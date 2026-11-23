@@ -589,3 +589,46 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 .fm-both-view>.fm-shape-intel{margin-top:0}
 @media(max-width:1100px){.fm-shape-intel{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.fm-shape-intel{grid-template-columns:repeat(2,minmax(0,1fr));margin-inline:0}.fm-shape-intel>div{padding:6px}.fm-shape-intel b{font-size:10px}.fm-shape-intel span{font-size:8px}}
+
+/* FM26 tactical workstation takeover: the active tactics route becomes the whole career viewport. */
+#homeScreen:has(.fm-tactics-workspace){--fm-bg:#0a111b;--fm-panel:#111c29;--fm-line:#2b3c50;background:var(--fm-bg)!important}
+#homeScreen:has(.fm-tactics-workspace) .hc-sidebar,#homeScreen:has(.fm-tactics-workspace) .hc-bar,#homeScreen:has(.fm-tactics-workspace) .hc-tabs{display:none!important}
+#homeScreen:has(.fm-tactics-workspace) .hc-shell{display:block!important;background:var(--fm-bg)}
+#homeScreen:has(.fm-tactics-workspace) .hc-main{display:block!important;min-width:0;height:100dvh}
+#homeScreen:has(.fm-tactics-workspace) #homeFrame{height:100dvh!important;min-height:0!important}
+#homeScreen:has(.fm-tactics-workspace) #clubPage{height:100dvh!important;max-height:none!important;overflow:auto!important;padding:0!important;background:linear-gradient(180deg,#0a121d,#0b141f 40%,#09111b)!important}
+#homeScreen:has(.fm-tactics-workspace) #clubPage>.life-desk{display:block!important;width:100%!important;margin:0!important;padding:0!important}
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace{min-height:100dvh;display:grid;grid-template-rows:auto auto 1fr auto auto;gap:0!important;background:#0a111b;color:#e9f1f7;border:0!important;border-radius:0!important}
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace:before{content:"TOUCHLINE 26  /  MATCH PREPARATION";display:flex;align-items:center;height:26px;padding:0 22px;background:#07101a;border-bottom:1px solid #1c2b3b;color:#6f879b;font:800 9px/1 system-ui;letter-spacing:.18em}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-header{grid-template-columns:minmax(260px,1fr) auto minmax(390px,.95fr);min-height:78px;padding:12px 22px!important;background:linear-gradient(180deg,#162638,#101b29)!important;border:0!important;border-bottom:1px solid #33485e!important;border-radius:0!important;box-shadow:0 3px 12px #0005}
+#homeScreen:has(.fm-tactics-workspace) .fm-title-group h2{font-size:25px;letter-spacing:-.025em;color:#f4f7fa}
+#homeScreen:has(.fm-tactics-workspace) .fm-title-group p{color:#9fb1c0}
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics{gap:18px}
+#homeScreen:has(.fm-tactics-workspace) .fm-status-chip{padding:7px 10px;background:#183b37;border:1px solid #39766c;color:#9be0ce!important}
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls{padding-left:14px;border-left:1px solid #33485e}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav{display:flex;align-items:stretch;gap:0;padding:0 22px;background:#0d1825;border-bottom:1px solid #2c3e51}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button{position:relative;padding:13px 22px;background:transparent;border:0;border-right:1px solid #203143;border-radius:0;color:#9badbe;font-size:11px;font-weight:750;letter-spacing:.03em}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button:hover{background:#172638;color:#e8f0f4}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button[aria-current=page]{background:#172b3d;color:#fff}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button[aria-current=page]:after{content:"";position:absolute;left:14px;right:14px;bottom:-1px;height:3px;background:#55c6c2}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-content{min-height:0;padding:16px 22px 18px;background:radial-gradient(ellipse at 50% 0,#142335 0,#0a121c 66%)}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace{grid-template-columns:minmax(490px,1.28fr) minmax(560px,1fr);gap:16px;max-width:1700px;margin:0 auto}
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch,#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel{padding:14px;background:#101d2b;border:1px solid #34495d;border-radius:3px;box-shadow:0 10px 24px #0003}
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field{height:clamp(520px,64vh,760px);max-height:none}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-table{max-height:clamp(420px,58vh,700px);border:1px solid #293c50}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-columns{background:#1a2a3b;color:#8298aa}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row{min-height:39px;background:#111e2c;border-bottom-color:#25374a}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:hover,#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on{background:#1e3447}
+#homeScreen:has(.fm-tactics-workspace) .fm-both-view{max-width:1700px;margin:auto}
+#homeScreen:has(.fm-tactics-workspace) .fm-both-pitches{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+#homeScreen:has(.fm-tactics-workspace) .fm-both-pitches .fm-pitch-card{padding:14px;border-radius:3px;background:#101d2b;border-color:#34495d}
+#homeScreen:has(.fm-tactics-workspace) .fm-both-pitches .shape-field{height:clamp(390px,52vh,620px);max-height:none}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace{max-width:1700px;margin:auto;grid-template-columns:minmax(400px,1.2fr) minmax(350px,1fr) minmax(270px,.72fr);gap:16px}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual,#homeScreen:has(.fm-tactics-workspace) .fm-context-controls,#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview,#homeScreen:has(.fm-tactics-workspace) .fm-player-list,#homeScreen:has(.fm-tactics-workspace) .fm-player-detail{padding:14px;background:#101d2b;border:1px solid #34495d;border-radius:3px;box-shadow:0 10px 24px #0003}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field{height:clamp(520px,67vh,780px);max-height:none}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace{max-width:1700px;margin:auto;grid-template-columns:minmax(420px,.9fr) minmax(560px,1.35fr);gap:16px}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list{max-height:calc(100dvh - 190px);overflow:auto}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-detail{min-height:600px}
+#homeScreen:has(.fm-tactics-workspace) .fm-opposition,#homeScreen:has(.fm-tactics-workspace) .fm-leadership{margin:0;padding:10px 22px;background:#0d1824;border:0;border-top:1px solid #27394d;border-radius:0}
+@media(max-width:1100px){#homeScreen:has(.fm-tactics-workspace) .fm-workspace-header{grid-template-columns:1fr auto;padding-inline:14px!important}#homeScreen:has(.fm-tactics-workspace) .fm-save-controls{grid-column:1/-1;border-left:0;padding-left:0}#homeScreen:has(.fm-tactics-workspace) .fm-workspace-content{padding-inline:14px}#homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace{grid-template-columns:minmax(0,1fr)}#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field{height:min(65vh,650px)}}
+@media(max-width:700px){#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace:before{padding-inline:12px;font-size:8px}#homeScreen:has(.fm-tactics-workspace) .fm-workspace-header{padding:10px 12px!important}#homeScreen:has(.fm-tactics-workspace) .fm-title-group h2{font-size:20px}#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav{padding-inline:8px;overflow-x:auto}#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button{padding-inline:14px;white-space:nowrap}#homeScreen:has(.fm-tactics-workspace) .fm-workspace-content{padding:10px 8px 14px}#homeScreen:has(.fm-tactics-workspace) .fm-both-pitches,#homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace,#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace{grid-template-columns:minmax(0,1fr)}#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field{height:480px}#homeScreen:has(.fm-tactics-workspace) .fm-opposition,#homeScreen:has(.fm-tactics-workspace) .fm-leadership{padding-inline:10px}}
