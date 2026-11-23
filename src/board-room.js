@@ -154,6 +154,7 @@ function bind(root,change,draw){
   if(row||b?.hasAttribute('data-slot')){const target=row||b,i=+target.dataset.slot;if(selectedBench)act(`pick|${i}|${selectedBench}`);else{selected=selected===i?null:i;draw();}return;}
  });
  root.addEventListener('keydown',ev=>{
+  if(ev.target.closest('select,input,textarea,button,[contenteditable="true"]'))return;
   const row=ev.target.closest('.fm-row[data-slot][role="button"]');
   if(!row||!['Enter',' '].includes(ev.key))return;
   ev.preventDefault();const i=+row.dataset.slot;

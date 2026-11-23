@@ -231,6 +231,9 @@ test('starter rows allow real player selection without invalid nested buttons ar
   a.match(TLBoardRoom.render(s, pool), /class="fm-row on" role="button"[^>]*aria-pressed="true"/);
   handlers.keydown({ target: row, key: 'Enter', preventDefault() {} });
   a.equal(draws, 2, 'keyboard activation can deselect the focused player row');
+  const picker = { closest: selector => selector === 'select,input,textarea,button,[contenteditable="true"]' ? picker : selector === '.fm-row[data-slot][role="button"]' ? row : null };
+  handlers.keydown({ target: picker, key: 'Enter', preventDefault() {} });
+  a.equal(draws, 2, 'the row keyboard shortcut does not steal keyboard interaction from the nested player picker');
 });
 
 test('player names and phase-specific role-fit warnings remain available in the Team Shape table', () => {
