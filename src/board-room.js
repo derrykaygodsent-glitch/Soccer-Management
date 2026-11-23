@@ -38,7 +38,7 @@ function render(s,players){
     const markers=slots.map((v,i)=>{
       const {point,role,job}=location(v,i,mode),p=v.player,n=numbers[p?.id]??p?.num??defaults[i]??'–',label=p?.name||'Open position';
       const left=wide?project(point.x):8+84*point.y,bottom=wide?8+84*(1-point.y):project(point.x);
-      return `<button type="button" title="Drag ${e(label)} to move or swap; select then click a destination" data-slot="${i}" data-player-id="${e(p?.id||'')}" class="shirt-marker${i===0?' keeper':''}${p?'':' vacant'}${selected===i?' selected':''}" aria-label="Select ${e(role)} · ${e(label)} · shirt ${e(n)}" aria-pressed="${selected===i}" style="left:${left}%;bottom:${bottom}%">${jersey(n)}<b>${e(code(role,job?.[0],job?.[2]))}</b><small>${e(p?label.split(' ').at(-1):'Open')}</small></button>`;
+      return `<button type="button" title="Drag to move or swap; select to edit player instructions" data-slot="${i}" data-player-id="${e(p?.id||'')}" class="shirt-marker${i===0?' keeper':''}${p?'':' vacant'}${selected===i?' selected':''}" aria-label="Select ${e(role)} · ${e(label)} · shirt ${e(n)}" aria-pressed="${selected===i}" style="left:${left}%;bottom:${bottom}%">${jersey(n)}<b>${e(code(role,job?.[0],job?.[2]))}</b><small>${e(p?label.split(' ').at(-1):'Open')}</small></button>`;
     }).join('');
     const fieldSvg=wide?`<svg class="board-lines" viewBox="0 0 140 100" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width=".6"><rect x="1" y="1" width="138" height="98"/><path d="M70 1v98M1 20h21V80H1M1 37h8v26H1M139 20h-21v60h21m0-43h-8v26h8"/><circle cx="70" cy="50" r="11"/></g></svg>`:fieldLines;
     const markersInZone=withZones?`<div class="fm-zone-overlay" aria-label="Select a tactical pitch zone">${zoneCells.map(z=>`<button type="button" data-board="zone|0|${z.id}" aria-label="${e(z.label)}" aria-pressed="${zone===z.id}"></button>`).join('')}</div>`:'';
@@ -122,7 +122,6 @@ function bind(root,change,draw){
   const phase=['attack','combined'].includes(field.dataset.phaseView)?field.dataset.phaseView:'defense';
   return `move|${i}|${clamp(longitudinal)}|${clamp(lateral)}|${phase}`;
  }
- function move(field,i,x,y){act(moveValue(field,i,x,y));}
  root.addEventListener('change',ev=>{
   if(ev.target.hasAttribute('data-tactic-import')){const file=ev.target.files?.[0];if(file)file.text().then(text=>change('matchBoard',`importPreset|0|${encodeURIComponent(text)}`)).catch(()=>change('matchBoard','importPreset|0|invalid'));return;}
   if(ev.target.hasAttribute('data-attack-formation'))act(`attackFormation|0|${ev.target.value}`);
@@ -141,15 +140,14 @@ function bind(root,change,draw){
  root.addEventListener('click',ev=>{
   if(performance.now()<suppressUntil&&ev.target.closest('.shape-field,.fm-squad-panel .fm-row'))return;
   if(ev.target.closest('[data-player-pick]'))return;
-  const b=ev.target.closest('button'),f=ev.target.closest('.shape-field');
+  const b=ev.target.closest('button');
   if(b?.dataset.workspaceTab){workspaceTab=b.dataset.workspaceTab;selected=null;selectedBench=null;draw();return;}
   if(b?.dataset.tacticJump){root.querySelector('#tactic-'+b.dataset.tacticJump)?.scrollIntoView({behavior:'smooth',block:'start'});return;}
   if(b?.dataset.libraryAction){const id=root.querySelector('[data-preset-select]')?.value,name=root.querySelector('[data-preset-name]')?.value?.trim()||'',action=b.dataset.libraryAction;if(action==='save')act(`savePreset|0|${name}`);else if(!id)return;else if(action==='load')act(`loadPreset|0|${id}`);else if(action==='rename')act(`renamePreset|0|${id}|${name}`);else if(action==='duplicate')act(`duplicatePreset|0|${id}|${name}`);else if(action==='delete')act(`deletePreset|0|${id}`);return;}
   if(b?.hasAttribute('data-tactic-export')){const name=root.querySelector('[data-preset-select]')?.selectedOptions?.[0]?.textContent||`${s.tactic} ${B().active(s).system||'Custom'}`,data={version:1,name,formation:s.tactic,plan:B().copyPlan(B().active(s))},blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'tactic'}.json`;a.click();URL.revokeObjectURL(url);return;}
   if(b?.dataset.board){act(b.dataset.board);return;}
   if(b?.hasAttribute('data-clear-slot')){selected=null;selectedBench=null;draw();return;}
-  if(b?.hasAttribute('data-slot')){const i=+b.dataset.slot;if(selectedBench)act(`pick|${i}|${selectedBench}`);else if(f&&selected!=null&&selected!==i)act(`swap|${selected}|${i}`);else{selected=selected===i?null:i;draw();}return;}
-  if(f&&selected!=null)move(f,selected,ev.clientX,ev.clientY);
+  if(b?.hasAttribute('data-slot')){const i=+b.dataset.slot;if(selectedBench)act(`pick|${i}|${selectedBench}`);else{selected=selected===i?null:i;draw();}return;}
  });
  function begin(ev){
   if(!ev.isPrimary||ev.button!==0)return;

@@ -88,6 +88,20 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   a.equal(plan.playerInstructions[playerId].defense.pressing, instruction.value, 'phase-specific instruction updates the engine plan');
 });
 
+test('clicking a selected position or empty pitch space never moves a player; dragging is required', () => {
+  const s = career(); s.id = 'drag-only-movement';
+  TLBoardRoom.render(s, pool);
+  const handlers = {}, actions = [], root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, querySelector: () => null };
+  TLBoardRoom.bind(root, (action, value) => { actions.push(value); if (action === 'matchBoard') TLMatchBoard.update(s, value, pool); }, () => {});
+  const field = { closest: selector => selector === '.shape-field' ? field : null };
+  const marker = slot => { const el = { dataset: { slot: String(slot) }, hasAttribute: name => name === 'data-slot', closest: selector => selector === 'button' ? el : selector === '.shape-field' ? field : null }; return el; };
+  const click = target => handlers.click({ target, clientX: 60, clientY: 60 });
+  click(marker(5));
+  click(marker(10));
+  click(field);
+  a.deepEqual(actions, [], 'selection and pitch clicks do not swap or reposition players');
+});
+
 test('the swap panel offers replacements and clearing a slot empties it', () => {
   const s = career();
   let { slots, bench } = TLMatchBoard.sheet(s.tactic, TLMatchBoard.active(s), pool);
