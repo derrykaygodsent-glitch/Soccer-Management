@@ -680,7 +680,7 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 @media(max-width:640px){.fm-shape-active>.fm-workspace-content{padding:6px}.fm-shape-toolbar-main{align-items:flex-end}.fm-shape-club{width:100%;border:0}.fm-shape-toolbar .fm-formation-choice,.fm-shape-toolbar .fm-system-choice,.fm-shape-toolbar .fm-mentality-choice{flex:1;width:auto;min-width:135px}.fm-shape-metric{display:none}.fm-shape-toolbar-actions>span{width:100%}.fm-planner-sheet-head{align-items:flex-start;flex-direction:column}.fm-planner-sheet-head h3,.fm-planner-sheet-head p{display:block;margin:3px 0}.fm-shape-pitch-frame>.shape-field{height:500px!important;min-height:400px!important}.fm-bench-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fm-shape-pitch-frame.is-comparison section{grid-template-columns:minmax(0,1fr)}.fm-shape-pitch-frame.is-comparison .shape-field{max-height:220px}}
 
 /* Screenshot-led Team Shape corrections: compact coded roles, fixed pitch flow, visible squad columns. */
-.fm-shape-active .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.fm-tactics-workspace .fm-planner-role>.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .fm-shape-planner{grid-template-columns:minmax(300px,34%) minmax(0,66%);min-height:0;align-items:start}
 .fm-shape-left{align-self:start}
 .fm-shape-left .fm-primary-pitch{display:block;flex:none;min-height:0}

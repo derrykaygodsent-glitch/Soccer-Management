@@ -37,7 +37,7 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   a.ok(html.includes('fm-shape-toolbar') && html.includes('fm-planner-table-scroll'), 'Team Shape uses the full-width header and a scrollable player sheet');
   a.ok(html.includes('IP Role') && html.includes('OOP Role'), 'phase role headings stay compact like the planner reference');
   const plannerCss = fs.readFileSync(path.join(__dirname, '../src/reading.css'), 'utf8');
-  a.match(plannerCss, /fm-shape-active \.sr-only\{position:absolute!important/, 'role descriptions remain accessible without appearing as row text');
+  a.match(plannerCss, /fm-planner-role>\.sr-only\{position:absolute!important/, 'role descriptions remain accessible without appearing as row text');
   a.match(plannerCss, /fm-planner-table-scroll\{height:calc\(100dvh - 455px\)/, 'the squad table scrolls inside its allotted viewport height');
   a.ok(!html.includes('fm-tactical-nav'), 'the long legacy navigation rail is gone');
   a.ok(!/undefined|NaN|\[object Object\]/.test(html), 'no template garbage');
