@@ -637,3 +637,14 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 #homeScreen.hc-shell:has(.fm-tactics-workspace){display:block!important;grid-template-columns:1fr!important;width:100%!important;max-width:none!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-main{width:100%!important;max-width:none!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) #homeFrame{width:100%!important;max-width:none!important}
+
+/* Tactical usability: direct first-team player replacement and full-height player instruction desk. */
+#homeScreen:has(.fm-tactics-workspace) .fm-player-picker{width:100%;min-width:0;height:26px;padding:2px 4px;background:#142536;color:#edf4f8;border:1px solid #40566b;border-radius:2px;font:inherit;font-size:9px;cursor:pointer}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-picker:focus{outline:2px solid #61c9c3;outline-offset:1px}
+#homeScreen:has(.fm-tactics-workspace) .fm-person{display:flex;align-items:center;min-width:0}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace{min-height:calc(100dvh - 210px);align-items:stretch}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list,#homeScreen:has(.fm-tactics-workspace) .fm-player-detail{min-height:calc(100dvh - 230px);box-sizing:border-box}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-detail .fm-player-editor{height:100%;box-sizing:border-box;margin:0}
+#homeScreen:has(.fm-tactics-workspace) .fm-both-view>.fm-shape-switch{max-width:680px;margin:0 auto 12px}
+#homeScreen:has(.fm-tactics-workspace) .fm-both-view>.fm-shape-switch button{min-height:34px}
+@media(max-width:700px){#homeScreen:has(.fm-tactics-workspace) .fm-player-list,#homeScreen:has(.fm-tactics-workspace) .fm-player-detail{min-height:0}#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace{min-height:0}}
