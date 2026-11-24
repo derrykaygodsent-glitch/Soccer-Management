@@ -54,6 +54,21 @@ test('club identity signals are evidence-based, rolling, and require repeated se
     'the recurring style shifts only after the rolling evidence favors the new pattern');
 });
 
+test('repeated net investment or selling establishes a spending style only after three seasons', () => {
+  const state = {};
+  const observe = (year, direction) => ClubHistory.update(state, year, {
+    Club: { players: [], startDay: year * 100, endDay: year * 100 + 99 },
+  }, direction ? [{ day: year * 100 + 1, from: direction > 0 ? 'Elsewhere' : 'Club', to: direction > 0 ? 'Club' : 'Elsewhere', type: 'Permanent transfer', price: 100 }] : []);
+  observe(2026, 1); observe(2027, 1);
+  assert.equal(state.clubWorldHistory.Club.identity.spendingStyle, null,
+    'two positive seasons are still too little evidence');
+  observe(2028, 1);
+  assert.equal(state.clubWorldHistory.Club.identity.spendingStyle, 'investor');
+  observe(2029, 1); observe(2030, -1); observe(2031, -1); observe(2032, -1);
+  assert.equal(state.clubWorldHistory.Club.identity.spendingStyle, 'seller',
+    'the rolling profile follows the new repeated pattern after older seasons leave the window');
+});
+
 test('club history replaces duplicate season observations and retains a bounded window', () => {
   const state = {};
   for (let year = 2020; year < 2030; year++) {

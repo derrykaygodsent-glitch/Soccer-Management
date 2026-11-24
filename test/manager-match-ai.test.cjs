@@ -38,10 +38,11 @@ test('manager traits are visible in the dugout and manager dossier', () => {
   const coach = Technical.person('career:manager:visible');
   global.TLManagerLife = { nations: { Testland: ['Harbour Rovers'] }, date: day => String(day), money: value => String(value), table: () => [] };
   global.TLClubUI = { esc: value => String(value), art: () => '' };
-  const state = { id: 'trait-display', day: 20, profile: { nation: 'Testland', name: 'User' }, plans: [], benches: { 'Harbour Rovers': [{ day: 1, coach, reason: 'Appointed' }] }, clubWorldHistory: { 'Harbour Rovers': { identity: { seasonsObserved: 3, recurringStyle: 'possession', youthStartShare: .31, youthPathwayEstablished: true, netSpend: 1400 } } } };
+  const state = { id: 'trait-display', day: 20, profile: { nation: 'Testland', name: 'User' }, plans: [], benches: { 'Harbour Rovers': [{ day: 1, coach, reason: 'Appointed' }] }, clubWorldHistory: { 'Harbour Rovers': { identity: { seasonsObserved: 3, recurringStyle: 'possession', youthStartShare: .31, youthPathwayEstablished: true, netSpend: 1400, spendingStyle: 'investor' } } } };
   assert.match(Technical.render(state, 'Testland'), /Club identity evidence · 3 seasons/);
   assert.match(Technical.render(state, 'Testland'), /Possession style recurring/);
   assert.match(Technical.render(state, 'Testland'), /youth starter share 31% · sustained youth pathway/);
+  assert.match(Technical.render(state, 'Testland'), /sustained investor transfer approach/);
   assert.match(Technical.render(state, 'Testland'), new RegExp(`Adaptability ${coach.traits.adaptability}/5`));
   assert.match(Technical.render(state, 'Testland'), new RegExp(`Risk tolerance ${coach.traits.riskTolerance}/5`));
   const dossier = ManagerProfile.renderWorld(state, coach.id, 'Harbour Rovers');

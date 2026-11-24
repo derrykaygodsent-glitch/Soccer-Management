@@ -36,6 +36,8 @@
     const styleEntries = [...stylesBySeason.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
     const youthStarts = rows.reduce((n, row) => n + row.youthStarts, 0);
     const totalStarts = rows.reduce((n, row) => n + row.totalStarts, 0);
+    const investmentSeasons=rows.filter(row=>row.netSpend>0).length,sellingSeasons=rows.filter(row=>row.netSpend<0).length;
+    const spendingStyle=rows.length>=3&&investmentSeasons>=3?'investor':rows.length>=3&&sellingSeasons>=3?'seller':null;
     return {
       seasonsObserved: rows.length,
       recurringStyle: rows.length >= 3 && styleEntries[0]?.[1] >= 3 ? styleEntries[0][0] : null,
@@ -45,6 +47,7 @@
       permanentArrivals: rows.reduce((n, row) => n + row.permanentArrivals, 0),
       permanentDepartures: rows.reduce((n, row) => n + row.permanentDepartures, 0),
       netSpend: rows.reduce((n, row) => n + row.netSpend, 0),
+      spendingStyle, investmentSeasons, sellingSeasons,
     };
   }
 
