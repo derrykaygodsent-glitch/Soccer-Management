@@ -34,11 +34,11 @@ Existing foundations found:
 - `src/technical-area.js` gives coaches stable identities/styles and deterministic traits, records appointments and dismissals, rehires available former coaches, and dismisses managers against board-target/league-form evidence.
 - Club mandates are checked against league position, youth/training or reserve evidence and stored in `boardMemory`; transfer and former-club systems preserve dated moves and club assets.
 
-First implementation slice now underway: `src/club-world-history.js` keeps a bounded five-season evidence window for manager style, youth-player starting share, permanent transfer counts and net transfer spending; the Technical Area reports the evidence and only calls a style recurring or a youth pathway sustained after repeated seasons. League match records now retain starter appearance evidence, with a fallback for older saves. This is a record-and-explain foundation; it does not yet make club identity influence hiring, recruitment or tactics.
+First implementation slice underway: `src/club-world-history.js` keeps a bounded five-season evidence window for manager style, youth-player starting share, permanent transfer counts and net transfer spending. The Technical Area reports the evidence; a style is recurring or a youth pathway sustained only after repeated seasons. League match records retain starter appearance evidence, with a fallback for older saves. Once the history is strong enough, recurring style now influences manager appointments and an established youth pathway modestly biases AI recruitment toward younger players. Spending evidence is recorded but does not yet influence decisions; club identity also does not yet drive in-match tactics.
 
 Remaining gaps to implement incrementally:
 
-1. **Club identity from repeated choices:** extend the new evidence profile so repeated youth pathway, recruitment, spending and tactical choices gradually influence later decisions. Keep the evidence separate from inference; distinguish registered youth from actual playing time and avoid making a label from a single season.
+1. **Club identity from repeated choices:** next use the recorded recruitment/spending signals in bounded AI club decisions, and test the existing style-based hiring and youth-oriented recruitment over extended saves. Consider tactical effects only when evidence is strong and preserve varied club approaches. Keep evidence separate from inference; distinguish registered youth from actual playing time and never assign a durable identity from one season.
 2. **Rivalries/narratives from encounters:** season results are archived, but there is not yet a general persistent rivalry trajectory that grows from repeated competitive meetings and meaningful events.
 3. **Review people/board progression as needed:** build on the existing coach lifecycle, club promises and target reviews; add only history-backed gaps, not a duplicate hiring/retirement system.
 
@@ -62,7 +62,7 @@ Review and improve the tactical editor's Team Instructions and Player Instructio
 
 ## Current audit for gradual multi-season change
 
-*Foundation audit completed; bounded club-identity evidence capture is the first implementation slice.* Existing mechanics and remaining gaps are documented under item 3 above. Extend rather than duplicate the established player, manager, board, transfer and season-archive systems. Before classifying a club as academy-led, use actual appearance evidence; do not mistake a youth player merely being registered for receiving minutes. The new profile is intentionally descriptive until the evidence and thresholds are validated over longer saves.
+*Foundation audit completed; bounded club-identity evidence capture is the first implementation slice.* Existing mechanics and remaining gaps are documented under item 3 above. Extend rather than duplicate the established player, manager, board, transfer and season-archive systems. Before classifying a club as academy-led, use actual appearance evidence; do not mistake a youth player merely being registered for receiving minutes. The profile remains mostly descriptive; its limited hiring and youth-recruitment effects activate only after evidence thresholds. Validate those effects over long saves before broadening them.
 
 ## Working rules
 

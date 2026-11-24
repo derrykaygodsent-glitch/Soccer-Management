@@ -21,6 +21,19 @@ test('AI manager traits are stable per identity and old records receive determin
     { adaptability: 4, riskTolerance: 2 }, 'valid saved ratings remain authoritative');
 });
 
+test('established club style influences manager appointments without replacing an available matching coach', () => {
+  const state = { id: 'club-style-hiring', day: 470, clubWorldHistory: { Harbour: { identity: { seasonsObserved: 3, recurringStyle: 'possession' } } } };
+  const matching = { id: 'former-possession', style: 'possession' }, other = { id: 'former-direct', style: 'direct' };
+  assert.equal(Technical.hireCoach(state, 'Harbour', [other, matching]), matching,
+    'a stable multi-season philosophy prefers an available former coach who already matches it');
+  assert.equal(Technical.hireCoach(state, 'Harbour', []).style, 'possession',
+    'a new identity is aligned with the club when no former coach is available');
+  state.clubWorldHistory.Harbour.identity.seasonsObserved = 2;
+  assert.equal(Technical.hireCoach(state, 'Harbour', []).style,
+    Technical.person(state.id + ':hire:Harbour:' + state.day).style,
+    'a short or unproven history does not constrain a new appointment');
+});
+
 test('manager traits are visible in the dugout and manager dossier', () => {
   const coach = Technical.person('career:manager:visible');
   global.TLManagerLife = { nations: { Testland: ['Harbour Rovers'] }, date: day => String(day), money: value => String(value), table: () => [] };
