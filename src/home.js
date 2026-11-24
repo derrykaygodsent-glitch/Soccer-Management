@@ -198,6 +198,7 @@
   }
   function init(){
     toggleDrawer(false);
+    global.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&state.drawer){ev.preventDefault();toggleDrawer(false,true);}});
     matchMedia('(max-width:980px)').addEventListener?.('change',()=>{state.drawer=false;$('homeScreen').classList.remove('hc-rail-collapsed');toggleDrawer(false);});
     global.TLManagerDesk.install({navigation,toggleDrawer});
   }

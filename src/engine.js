@@ -8,6 +8,7 @@
   const delta=(p,k)=>(p?.mind?.ratings[k]??10)-10,secret=(p,k)=>(p?.mind?.hidden[k]??10)-10,habit=(p,k)=>p?.mind?.traits.includes(k);
   const P = typeof window === 'undefined' ? require('./physics.js') : global.TLPhysics;
   const AI = typeof window === 'undefined' ? require('./decisions.js') : global.TLDecisions;
+  const ManagerMatchAI = typeof window === 'undefined' ? require('./manager-match-ai.js') : global.TLManagerMatchAI;
 
   const { L, W, CX, CY, GOAL_HALF, GOAL_H, BOX_L, BOX_HALF, SIX_L, SIX_HALF, PEN, FREE_DISTANCE, THROW_DISTANCE } = typeof window === 'undefined' ? require('./pitch.js') : global.TLPitch;
   const S = typeof window === 'undefined' ? require('./setpieces.js') : global.TLSetPieces;
@@ -93,6 +94,12 @@
       this.lastPass = null;
       this.tacticalMetrics={changes:[],pressSignals:[0,0],pressEngagements:[0,0],pressRecoveries:[0,0],defensiveActions:[0,0],defensiveSamples:[0,0],coverSupported:[0,0],phase:{attack:[{distance:0,samples:0},{distance:0,samples:0}],defense:[{distance:0,samples:0},{distance:0,samples:0}]}};
       this.lastTacticalSignal=[-Infinity,-Infinity];this.lastMetricsSample=-Infinity;
+      this.managerAITeams=new Set((opts.managerAITeams||[]).filter(i=>i===0||i===1));
+      this.managerStyles=opts.managerStyles||[];
+      this.managerProfiles=opts.managerProfiles||[];
+      this.managerAICheckBucket=-1;this.managerOppositionKeys=[null,null];
+      this.managerFlankObservations=[0,1].map(()=>({left:{samples:0,gapTotal:0},right:{samples:0,gapTotal:0}}));
+      this.lastManagerFlankSample=[-Infinity,-Infinity];
       this.teams = [homeClub, awayClub].map((club, i) => {
         // Supplied career players are copied: match fatigue and cards must not mutate the world database.
         const players = opts.squads?.[i] ? JSON.parse(JSON.stringify(opts.squads[i])) : D.genSquad(club, D.seedFor(club.id));
@@ -252,7 +259,47 @@
         team.attackDir *= -1;
         for (const s of team.slots) { s.player.cond = Math.min(1, s.player.cond + 0.065); }
       }
+      for (const idx of this.managerAITeams) {
+        const team=this.teams[idx],opponent=this.teams[1-idx],profile=this.managerProfiles[idx]||{},traits=profile.traits||{},style=this.managerStyles[idx]||profile.style||team.club.style||'balanced',plan=ManagerMatchAI?.halfTimePlan({style,adaptability:traits.adaptability,riskTolerance:traits.riskTolerance,tactics:team.tactics,goalsFor:team.score,goalsAgainst:opponent.score,xgFor:team.stats.xG,xgAgainst:opponent.stats.xG,shotsFor:team.stats.shots,shotsAgainst:opponent.stats.shots});
+        if(plan){
+          this.setTactics(idx,plan.change);
+          const entry=this.tacticalMetrics.changes.at(-1);
+          if(entry?.team===idx){entry.source='AI manager';entry.reason=plan.reason;}
+          this.emit('tactic',{team:idx,text:`${team.club.name}’s manager adjusts at half-time: ${plan.reason}`});
+        }
+        const substitution=ManagerMatchAI?.halfTimeSubstitution({slots:team.slots,bench:team.bench,subsUsed:team.subsUsed,adaptability:traits.adaptability,riskTolerance:traits.riskTolerance,roleFit:D.roleFit,roleScore:(player,role)=>(D.ROLE_WEIGHTS[role]||(()=>0))(player.attrs||{})});
+        if(substitution&&this.substitute(idx,substitution.outId,substitution.inId).ok){
+          const change={substitution:{out:substitution.outId,in:substitution.inId,role:substitution.role}},entry=(this.recordTacticalChange(idx,change),this.tacticalMetrics.changes.at(-1));
+          if(entry?.team===idx){entry.source='AI manager';entry.reason=substitution.reason;}
+          this.emit('tactic',{team:idx,text:`${team.club.name}’s manager makes a half-time change: ${substitution.reason} ${substitution.replacementName} comes on.`});
+        }
+      }
       this.setupKickoff(1);
+    }
+
+    considerManagerAIInPlay(){
+      if(!this.managerAITeams.size||this.phase!=='open'||this.half>2)return;
+      const bucket=Math.floor(this.elapsed/300),minute=(this.half-1)*45+this.t/60;
+      if(bucket<=this.managerAICheckBucket)return;
+      this.managerAICheckBucket=bucket;
+      if(minute<15||minute>80)return;
+      const opposition=this.teams.map(side=>({tactics:{...side.tactics},roles:side.slots.map(slot=>slot.role)}));
+      for(const idx of this.managerAITeams){
+        const team=this.teams[idx],profile=this.managerProfiles[idx]||{},traits=profile.traits||{},other=opposition[1-idx].tactics;
+        const key=[other.formation,other.attackFormation,other.press,other.line,other.width].join('|'),prior=this.managerOppositionKeys[idx],automatedOpponent=this.managerAITeams.has(1-idx);
+        if(prior!==key)this.managerOppositionKeys[idx]=key;
+        // Two automated managers should not chase each other's changes forever.
+        // Their initial plans can be scouted, but later changes are not treated as human evidence.
+        if(automatedOpponent&&prior!==null)continue;
+        const observations=this.managerFlankObservations[idx],flankObservations=Object.fromEntries(['left','right'].map(side=>[side,{samples:observations[side].samples,averageGap:observations[side].samples?observations[side].gapTotal/observations[side].samples:0}]));
+        const plan=ManagerMatchAI?.inPlayPlan({ownTactics:team.tactics,opponentTactics:other,opponentRoles:opposition[1-idx].roles,flankObservations,adaptability:traits.adaptability,riskTolerance:traits.riskTolerance});
+        if(!plan)continue;
+        this.setTactics(idx,plan.change);
+        if(plan.focusFlank)team.tactics.managerFocusFlank=plan.focusFlank;
+        const entry=this.tacticalMetrics.changes.at(-1);
+        if(entry?.team===idx){entry.source='AI manager';entry.reason=plan.reason;entry.trigger=plan.focusFlank?'observed flank exposure':'opponent tactical shape';if(plan.focusFlank)entry.change.managerFocusFlank=plan.focusFlank;}
+        this.emit('tactic',{team:idx,text:`${team.club.name}’s manager responds to ${plan.opponentShape}: ${plan.reason}`});
+      }
     }
 
     recordTacticalChange(ti,change){if(!this.tacticalMetrics)return;this.tacticalMetrics.changes.push({team:ti,tick:Math.round(this.elapsed/(global.TLHighlights?.STEP||1/40)),minute:this.clockStr?.()||'',change:JSON.parse(JSON.stringify(change||{}))});if(this.tacticalMetrics.changes.length>100)this.tacticalMetrics.changes.shift();}
@@ -260,7 +307,7 @@
     setTactics(ti, partial) {
       const team = this.teams[ti];
       const oldForm = team.tactics.formation, oldAttack=team.tactics.attackFormation;
-      if(partial.tactical){const prior=team.tactics.tactical||{};team.tactics.tactical={...prior,...partial.tactical,phaseJobs:{...prior.phaseJobs,...(partial.tactical.phaseJobs||{})},playerInstructions:{...prior.playerInstructions,...(partial.tactical.playerInstructions||{})},attackByPlayer:{...prior.attackByPlayer,...(partial.tactical.attackByPlayer||{})}};}
+      if(partial.tactical){const prior=team.tactics.tactical||{};team.tactics.tactical={...prior,...partial.tactical,phaseJobs:{...prior.phaseJobs,...(partial.tactical.phaseJobs||{})},phaseRoles:partial.tactical.phaseRoles||prior.phaseRoles||[],playerInstructions:{...prior.playerInstructions,...(partial.tactical.playerInstructions||{})},attackByPlayer:{...prior.attackByPlayer,...(partial.tactical.attackByPlayer||{})}};}
       const patch={...partial};delete patch.tactical;if(Object.hasOwn(patch,'trigger')){team.tactics.club={...(team.tactics.club||{}),trigger:patch.trigger};delete patch.trigger;}Object.assign(team.tactics,patch);this.brainIn = 0;
       if (partial.formation && partial.formation !== oldForm) this.reassignFormation(ti);
       else if(partial.attackFormation&&partial.attackFormation!==oldAttack||partial.tactical)this.refreshPhaseAssignments(ti);
@@ -273,10 +320,11 @@
       const position=phase==='attack'?(slot.attackPosition||slot.position||Z.zone(slot.x,slot.y,slot.role==='GK')):(slot.position||Z.zone(slot.x,slot.y,slot.role==='GK'));
       let mapped=change.job?{job:change.job,duty:change.duty}:M?.engineJob?.(change.role,position,change.duty);if(Array.isArray(mapped))mapped={job:mapped[0],duty:mapped[2]};
       if(!mapped||!Z.jobs[mapped.job]||!(Z.choices(position)||[]).includes(mapped.job))return {ok:false,msg:'That role is not available in this position.'};
-      const player=slot.player,tactical=team.tactics.tactical||{},phases={...(tactical.phaseJobs||{})},row={...(phases[player.id]||{})};row[phase]={job:mapped.job,duty:Z.duty(mapped.job,mapped.duty)};phases[player.id]=row;team.tactics.tactical={...tactical,phaseJobs:phases};
-      if(phase==='defense'){slot.engineJob=[mapped.job,null,row[phase].duty];slot.defenseJob=slot.engineJob;if(change.role){const opt=(M.roleOptions[player.pos]||[]).find(x=>x[0]===change.role);if(opt)slot.job=[opt[0],opt[1],row[phase].duty];player.job=change.role;player.duty=row[phase].duty;}}
-      else slot.attackJob=[mapped.job,null,row[phase].duty];
-      this.careerAssignment(player,slot,team);this.brainIn=0;this.recordTacticalChange?.(ti,{player:player.id,phase,role:mapped.job,duty:row[phase].duty});return {ok:true};
+      const player=slot.player,tactical=team.tactics.tactical||{},index=team.slots.indexOf(slot),phaseRoles=(tactical.phaseRoles||[]).slice(),row={...(phaseRoles[index]||{})};row[phase]={job:mapped.job};phaseRoles[index]=row;team.tactics.tactical={...tactical,phaseRoles};
+      const internalDuty=Z.duty(mapped.job,mapped.duty);
+      if(phase==='defense'){slot.engineJob=[mapped.job,null,internalDuty];slot.defenseJob=slot.engineJob;}
+      else slot.attackJob=[mapped.job,null,internalDuty];
+      this.careerAssignment(player,slot,team);this.brainIn=0;this.recordTacticalChange?.(ti,{player:player.id,phase,role:mapped.job});return {ok:true};
     }
 
     setPlayerInstruction(ti,{id,phase='attack',group,value}={}) {
@@ -290,7 +338,7 @@
     refreshPhaseAssignments(ti) {
       const team=this.teams[ti],M=global.TLMatchdayData;if(!team||!team.tactics.tactical&&!team.slots.some(s=>s.engineJob||s.attackJob||s.instructions))return;
       const tactical=team.tactics.tactical||{},Board=global.TLMatchBoard||(typeof require==='function'?require('./match-board.js'):null),targets=Board?.phaseTargets?.(team.slots,team.tactics.attackFormation||tactical.attackFormation)||{};
-      for(const slot of team.slots){const p=slot.player,position=slot.position||Z.zone(slot.x,slot.y,slot.role==='GK'),phase=tactical.phaseJobs?.[p.id]||{};slot.position=position;
+      for(const [index,slot] of team.slots.entries()){const p=slot.player,position=slot.position||Z.zone(slot.x,slot.y,slot.role==='GK'),phase={...(tactical.phaseJobs?.[p.id]||{}),...(tactical.phaseRoles?.[index]||{})};slot.position=position;
         const defenseChoices=Z.choices(position)||[];if(phase.defense?.job&&defenseChoices.includes(phase.defense.job)){slot.engineJob=[phase.defense.job,null,Z.duty(phase.defense.job,phase.defense.duty)];slot.defenseJob=slot.engineJob;}else if(!defenseChoices.includes(slot.engineJob?.[0])){const job=defenseChoices[0];slot.engineJob=[job,null,Z.duty(job,slot.job?.[2])];slot.defenseJob=slot.engineJob;}
         const point=tactical.attackByPlayer?.[p.id]||targets[p.id];slot.attack=point?{x:point.x,y:point.y}:undefined;slot.attackPosition=point?.role||Z.zone(point?.x??slot.x,point?.y??slot.y,slot.role==='GK');p.attackSlot=slot.attack;
         const attackChoices=Z.choices(slot.attackPosition)||[];if(phase.attack?.job&&attackChoices.includes(phase.attack.job))slot.attackJob=[phase.attack.job,null,Z.duty(phase.attack.job,phase.attack.duty)];else if(!attackChoices.includes(slot.attackJob?.[0])){const job=attackChoices[0];slot.attackJob=[job,null,Z.duty(job,slot.job?.[2])];}
@@ -780,6 +828,7 @@
         this.t = this.elapsed = this.practiceSeconds; this.phase = 'fulltime';
         this.say('ft', { h:this.shortName(0), a:this.shortName(1), hs:this.teams[0].score, as:this.teams[1].score }, {key:true}); return;
       }
+      if(this.phase==='open')this.considerManagerAIInPlay();
       const period = this.half - 1;
       if (!this.addedAnnounced[period] && this.t >= 2700) {
         this.addedAnnounced[period] = true;
@@ -910,6 +959,15 @@
       // Tactical review telemetry is observational: anchor error is positional distance;
       // pressing and cover counts below use explicit proximity/spacing heuristics, not outcomes.
       if(this.elapsed-this.lastMetricsSample>=.5){this.lastMetricsSample=this.elapsed;for(const team of this.teams){const phase=this.controlTeam===team.idx?'attack':'defense',bucket=this.tacticalMetrics.phase[phase][team.idx];let n=0;for(const slot of team.slots){const p=slot.player;if(!p?.onPitch||p.red)continue;const home=this.homePos(p,team),weight=this.phaseWeight(team,p),expected={x:home.x+team.attackDir*(p.attackSlot?.x-p.slotX||0)*L*weight,y:home.y+(p.attackSlot?.y-p.slotY||0)*W*weight};bucket.distance+=dist(p.x,p.y,expected.x,expected.y);n++;}bucket.samples+=n;
+          const carrier=this.ball.owner;
+          if(carrier?.team===team.idx&&carrier.role!=='GK'&&this.elapsed-this.lastManagerFlankSample[team.idx]>=1.5){
+            this.lastManagerFlankSample[team.idx]=this.elapsed;
+            const depth=team.attackDir>0?carrier.x:L-carrier.x,relative=(carrier.y-CY)*team.attackDir;
+            if(depth>L*.62&&Math.abs(relative)>8){
+              const flank=relative<0?'left':'right',defenders=this.playersCache.filter(p=>p.team!==team.idx&&p.role!=='GK'&&p.onPitch&&!p.red),gap=defenders.length?Math.min(...defenders.map(p=>dist(p.x,p.y,carrier.x,carrier.y))):24,obs=this.managerFlankObservations[team.idx][flank];
+              obs.samples++;obs.gapTotal+=Math.min(24,gap);
+            }
+          }
           if(this.ball.owner&&this.ball.owner.team!==team.idx){const presser=this.chasers[team.idx],gap=presser?dist(presser.x,presser.y,this.ball.owner.x,this.ball.owner.y):Infinity;this.tacticalMetrics.defensiveSamples[team.idx]++;if(presser&&team.slots.some(s=>s.player!==presser&&s.player.onPitch&&(s.player.x-presser.x)*team.attackDir<0&&dist(s.player.x,s.player.y,this.ball.owner.x,this.ball.owner.y)<18))this.tacticalMetrics.coverSupported[team.idx]++;if(this.pressSignal(team)&&this.elapsed-this.lastTacticalSignal[team.idx]>=.75){this.lastTacticalSignal[team.idx]=this.elapsed;this.tacticalMetrics.pressSignals[team.idx]++;if(gap<5.5)this.tacticalMetrics.pressEngagements[team.idx]++;}}}
       }
     }
@@ -1776,6 +1834,8 @@
           score -= doubt * .26 + risk * .71 + Math.max(0, (entry ? 4.95 : 3.95) - opening) * (entry ? .083 : .064)
             + Math.max(0, dd - 22) * (style === 0 ? .014 : .0072);
           if (through) score += opening > 5.1 ? .136 : .065;
+          const focusFlank=team.tactics.managerFocusFlank,receiverFlank=(q.y-CY)*d<0?'left':'right';
+          if(focusFlank===receiverFlank&&depth>L*.30)score+=.105;
           if (depth > 64 && gain < 4 && opening > 6.5) score += .055;
           if (cutback) score += .24;
           if (swing) score += .096;
