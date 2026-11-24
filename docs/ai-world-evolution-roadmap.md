@@ -4,7 +4,7 @@ This is the durable working plan for the AI-management and world-evolution work.
 
 ## Status summary
 
-- **Immediate three-step AI plan: 2 of 3 complete; multi-season world evolution is in progress.**
+- **Immediate three-step AI plan: 2 of 3 complete; multi-season world evolution is in progress.** Club rivalry trajectories are now implemented from archived league evidence; extended-save validation remains.
 - **Broader long-term vision: 2 major future areas remain after that:** slow league-wide tactical trends and sustainable continuity for endless saves. Continuity work should be designed alongside multi-season progression, then validated over long advances.
 
 ## Immediate implementation plan
@@ -34,12 +34,12 @@ Existing foundations found:
 - `src/technical-area.js` gives coaches stable identities/styles and deterministic traits, records appointments and dismissals, rehires available former coaches, and dismisses managers against board-target/league-form evidence.
 - Club mandates are checked against league position, youth/training or reserve evidence and stored in `boardMemory`; transfer and former-club systems preserve dated moves and club assets.
 
-First implementation slice underway: `src/club-world-history.js` keeps a bounded five-season evidence window for manager style, youth-player starting share, permanent transfer counts and net transfer spending. The Technical Area reports the evidence; a style is recurring or a youth pathway sustained only after repeated seasons. League match records retain starter appearance evidence, with a fallback for older saves. Once the history is strong enough, recurring style now influences manager appointments; established youth pathways bias AI recruitment toward younger players; and repeated net-selling histories favor lower-cost AI targets when positional need is equal. The Technical Area shows sustained investor/seller patterns only after at least three evidenced seasons. Club identity does not yet drive in-match tactics.
+First implementation slice underway: `src/club-world-history.js` keeps a bounded five-season evidence window for manager style, youth-player starting share, permanent transfer counts and net transfer spending. The Technical Area reports the evidence; a style is recurring or a youth pathway sustained only after repeated seasons. League match records retain starter appearance evidence, with a fallback for older saves. Once the history is strong enough, recurring style now influences manager appointments; established youth pathways bias AI recruitment toward younger players; and repeated net-selling histories favor lower-cost AI targets when positional need is equal. The Technical Area shows sustained investor/seller patterns only after at least three evidenced seasons. `src/club-rivalries.js` derives bounded emerging/established/dormant club rivalries from repeated close archived matches or a close title race, and the Club Dossier shows the recent evidence. Club identity does not yet drive in-match tactics.
 
 Remaining gaps to implement incrementally:
 
 1. **Club identity from repeated choices:** stress-test the new style-, youth- and spending-informed decisions over extended saves; then consider additional tactical effects only where evidence is strong. Keep evidence separate from inference; distinguish registered youth from actual playing time and never assign a durable identity from one season.
-2. **Rivalries/narratives from encounters:** season results are archived, but there is not yet a general persistent rivalry trajectory that grows from repeated competitive meetings and meaningful events.
+2. **Rivalries/narratives from encounters — IMPLEMENTED AND STRESS-TESTED:** a bounded, persisted club-rivalry history derives from archived league encounters. Repeated close meetings or a close title race create an emerging rivalry; qualifying evidence in multiple seasons establishes it, and lack of recent qualifying encounters lets it become dormant. The Club Dossier displays recent evidence. Tests cover single-season false positives, title-race evidence, reload idempotence, dormancy, bounded storage, and a reproducible 20-season save.
 3. **Review people/board progression as needed:** build on the existing coach lifecycle, club promises and target reviews; add only history-backed gaps, not a duplicate hiring/retirement system.
 
 Long-term changes should remain deterministic/reproducible and explainable. Keep consequential evidence available in the season or club history.
