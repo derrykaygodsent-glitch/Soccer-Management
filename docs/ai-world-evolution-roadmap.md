@@ -4,7 +4,7 @@ This is the durable working plan for the AI-management and world-evolution work.
 
 ## Status summary
 
-- **Immediate three-step AI plan: 2 of 3 complete; multi-season world evolution is in progress.** Club rivalry trajectories are now implemented from archived league evidence; extended-save validation remains.
+- **Immediate three-step AI plan: 2 of 3 complete; multi-season world evolution is in progress.** Club identity and rivalry effects have passed reproducible 20-season stress tests; league tactical trends and endless-save continuity remain future roadmap areas.
 - **Broader long-term vision: 2 major future areas remain after that:** slow league-wide tactical trends and sustainable continuity for endless saves. Continuity work should be designed alongside multi-season progression, then validated over long advances.
 
 ## Immediate implementation plan
@@ -38,7 +38,7 @@ First implementation slice underway: `src/club-world-history.js` keeps a bounded
 
 Remaining gaps to implement incrementally:
 
-1. **Club identity from repeated choices:** stress-test the new style-, youth- and spending-informed decisions over extended saves; then consider additional tactical effects only where evidence is strong. Keep evidence separate from inference; distinguish registered youth from actual playing time and never assign a durable identity from one season.
+1. **Club identity from repeated choices — CORE EFFECTS STRESS-TESTED:** a reproducible 20-season world save now verifies identity maturation, evidence-qualified manager hiring and actual youth-start-informed recruitment without resets; a separate 20-season spending-history run checks the investor-to-seller preference shift through the rolling evidence window. Do not add tactical effects unless a clearly supported, bounded decision can be identified; keep registered youth separate from actual playing time and never infer a durable identity from one season.
 2. **Rivalries/narratives from encounters — IMPLEMENTED AND STRESS-TESTED:** a bounded, persisted club-rivalry history derives from archived league encounters. Repeated close meetings or a close title race create an emerging rivalry; qualifying evidence in multiple seasons establishes it, and lack of recent qualifying encounters lets it become dormant. The Club Dossier displays recent evidence. Tests cover single-season false positives, title-race evidence, reload idempotence, dormancy, bounded storage, and a reproducible 20-season save.
 3. **Review people/board progression as needed:** build on the existing coach lifecycle, club promises and target reviews; add only history-backed gaps, not a duplicate hiring/retirement system.
 
@@ -62,7 +62,7 @@ Review and improve the tactical editor's Team Instructions and Player Instructio
 
 ## Current audit for gradual multi-season change
 
-*Foundation audit completed; bounded club-identity evidence capture is the first implementation slice.* Existing mechanics and remaining gaps are documented under item 3 above. Extend rather than duplicate the established player, manager, board, transfer and season-archive systems. Before classifying a club as academy-led, use actual appearance evidence; do not mistake a youth player merely being registered for receiving minutes. The profile remains mostly descriptive; its limited hiring and youth-recruitment effects activate only after evidence thresholds. Validate those effects over long saves before broadening them.
+*Foundation audit completed; bounded club-identity evidence capture is the first implementation slice.* Existing mechanics and remaining gaps are documented under item 3 above. Extend rather than duplicate the established player, manager, board, transfer and season-archive systems. Before classifying a club as academy-led, use actual appearance evidence; do not mistake a youth player merely being registered for receiving minutes. The profile remains mostly descriptive; its limited hiring and youth-recruitment effects activate only after evidence thresholds. Reproducible 20-season tests now verify their persistence and the rolling spending preference shift. Avoid broadening into tactics without a specific evidence-backed benefit.
 
 ## Working rules
 
