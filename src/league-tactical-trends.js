@@ -1,7 +1,7 @@
 /* Slow, local tactical fashions inferred from repeated successful league finishes. */
 (function(g){'use strict';
-const WINDOW=5,STYLES=['press','counter','possession','direct','defend','attack'];
-const D=g.TLData||require('./data.js');
+const WINDOW=5,FIT_MIN=11.5,STYLES=['press','counter','possession','direct','defend','attack'];
+const D=g.TLData||require('./data.js'),FIT={press:['workRate','stamina','pace','aggression'],counter:['pace','shooting','passing','composure'],possession:['passing','dribbling','composure','workRate'],direct:['pace','shooting','passing','stamina'],defend:['tackling','positioning','composure','workRate'],attack:['shooting','dribbling','passing','pace']};
 function season(year,record,styles={}){const clubs=record?.table||[];return {year,podium:clubs.slice(0,3).map(([club],i)=>({club,rank:i+1,style:STYLES.includes(styles[club])?styles[club]:null}))};}
 function profile(rows=[]){
   const seasons=rows.slice(-WINDOW),counts=new Map(),styleYears=new Map(),clubsByStyle=new Map();let total=0;
@@ -21,6 +21,7 @@ function update(state,archive,stylesByNation={}){
   return all;
 }
 function trend(state,nation){const row=state?.leagueTacticalTrends?.[nation];return row?.identity?.style?row.identity:null;}
-function adoption(state,nation,club){const current=trend(state,nation);if(!current||!club)return null;const roll=D.seedFor(`league-style-adoption:${nation}:${club}:${current.style}:${current.sinceYear}`)%100;return roll<28?current.style:null;}
-const api={season,profile,update,trend,adoption,WINDOW,STYLES};g.TLLeagueTacticalTrends=api;if(typeof module!=='undefined')module.exports=api;
+function squadFit(players=[],style){const attributes=FIT[style];if(!attributes||!D.FORMATIONS[D.defaultTactics(style).formation])return {style,formation:null,score:0,players:0,minimum:FIT_MIN,ready:false};const xi=D.bestXI(players,D.defaultTactics(style).formation).xi.filter(slot=>slot.player?.pos!=='GK').map(slot=>slot.player),values=xi.flatMap(player=>attributes.map(key=>Number(player.attrs?.[key])||0)),score=values.length?values.reduce((n,x)=>n+x,0)/values.length:0;return {style,formation:D.defaultTactics(style).formation,score:+score.toFixed(2),players:xi.length,minimum:FIT_MIN,attributes,ready:xi.length>=9&&score>=FIT_MIN};}
+function adoption(state,nation,club,players=[]){const current=trend(state,nation);if(!current||!club||squadFit(players,current.style).ready===false)return null;const roll=D.seedFor(`league-style-adoption:${nation}:${club}:${current.style}:${current.sinceYear}`)%100;return roll<28?current.style:null;}
+const api={season,profile,update,trend,squadFit,adoption,WINDOW,FIT_MIN,STYLES};g.TLLeagueTacticalTrends=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);
