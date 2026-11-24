@@ -4,8 +4,8 @@ This is the durable working plan for the AI-management and world-evolution work.
 
 ## Status summary
 
-- **Immediate three-step AI plan: 2 of 3 complete; multi-season world evolution is in progress.** Club identity and rivalry effects have passed reproducible 20-season stress tests; league tactical trends and endless-save continuity remain future roadmap areas.
-- **Broader long-term vision: 2 major future areas remain after that:** slow league-wide tactical trends and sustainable continuity for endless saves. Continuity work should be designed alongside multi-season progression, then validated over long advances.
+- **Immediate three-step AI plan: 2 of 3 complete; multi-season world evolution is in progress.** Club identity and rivalry effects have passed reproducible 20-season stress tests; the first league-tactical-trend slice is implemented and under validation, while endless-save continuity remains future roadmap work.
+- **Broader long-term vision: league tactical trends are in progress; sustainable continuity for endless saves remains.** Trend adoption is a first, bounded slice; continuity work should be designed alongside multi-season progression and validated over long advances.
 
 ## Immediate implementation plan
 
@@ -46,9 +46,11 @@ Long-term changes should remain deterministic/reproducible and explainable. Keep
 
 ## Broader world-evolution follow-ons
 
-### 4. Slow league tactical trends — NOT STARTED / FUTURE
+### 4. Slow league tactical trends — IN PROGRESS
 
-Successful approaches may be copied and tactics may evolve as managers react and player pools change. Changes should be gradual and uneven: some clubs adopt a trend, some retain a philosophy, and some lack the players to execute it. Preserve club identity and avoid making teams interchangeable.
+First slice implemented in `src/league-tactical-trends.js`: keep a rolling five-season record of manager styles among league top-three finishers. A local trend requires at least three observed seasons, representation by at least two clubs, and at least half of podium style appearances. At new appointments, a deterministic 28% subset of clubs without a proven recurring identity may favor the trend; existing club identities take precedence. The Technical Area reports the top-three evidence, and appointment records explain when a manager follows the trend. Twenty-season world-save checks confirm that some—but not all—clubs copy an established fashion.
+
+Next, validate varied styles against actual squad fit and avoid treating league position as proof that a tactic caused success. Consider only gradual tactical adaptation beyond new appointments when it can be explained by repeated results, manager choices and player attributes. Preserve clubs that retain a philosophy, and avoid making teams interchangeable.
 
 ### 5. Sustainable continuity for endless saves — NOT STARTED / FUTURE
 
