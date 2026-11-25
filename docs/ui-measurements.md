@@ -119,3 +119,63 @@ Most screens show 1–3 failing text/background pairs, but **`tactics` shows 14�
 1. **Populate a save** (club + squad), then re-run `scripts/ui-sweep.cjs` so Squad, Tactics, Schedule, Finances and Transfers are measured with real rows.
 2. **Fix the four bugs found here** — clipped Continue, duplicate Back chip, missing mobile heading, Tactics contrast. Small, self-contained, and they make every later screenshot honest.
 3. **Start Phase 0** (tokens, type ramp, primitives) with this baseline in hand.
+
+
+---
+
+## 7. M2 — re-run with a real career (populated screens)
+
+**Save measured:** *Kay FC* — manager *Derry Kay Godsent*, game day **383**, **17 players**, 9 staff, 73 messages, founded club. Loaded from your exported career file; **624 screen-states re-measured, 0 runtime errors.**
+
+This closes the gap from §1: the shop windows now contain real rows.
+
+| Page | empty 1440: fold / controls | **real 1440: fold / controls / contrast** | real 390: fold / sub-44px | tables wider than box |
+|---|---|---|---|---:|
+| `home` | 1.37× / 66 | **1.22× / 66 / 3** | 1.89× / 58 | 0 |
+| `inbox` | 0.89× / 71 | **0.9× / 150 / 3** | 1.35× / 65 | 0 |
+| `squad` | 0.89× / 58 | **1.1× / 97 / 2** | 1.16× / 94 | 1 |
+| `tactics` | 1.38× / 105 | **2.14× / 122 / 12** | 3.13× / 107 | 0 |
+| `fixtures` | 1.18× / 95 | **1.72× / 101 / 2** | 2.05× / 68 | 0 |
+| `league` | 0.98× / 82 | **2.12× / 97 / 2** | 2.3× / 94 | 1 |
+| `finance` | 1.43× / 60 | **2.68× / 65 / 2** | 3.84× / 62 | 0 |
+| `transfers` | 0.89× / 65 | **1.1× / 80 / 2** | 1.6× / 76 | 0 |
+| `scouting` | 1.77× / 92 | **2.39× / 104 / 2** | 3.08× / 101 | 1 |
+| `staff` | 0.89× / 56 | **5.37× / 119 / 2** | 9.13× / 116 | 0 |
+| `medical` | 0.89× / 56 | **2.06× / 84 / 2** | 2.57× / 81 | 0 |
+| `dynamics` | 0.89× / 56 | **2.08× / 125 / 2** | 5.33× / 122 | 0 |
+| `club` | 0.89× / 57 | **1.31× / 79 / 2** | 2.77× / 76 | 0 |
+| `social` | 3.57× / 89 | **11.52× / 275 / 2** | 13.39× / 272 | 0 |
+
+### New findings from real data
+
+**7.1 The squad table overflows on every device — confirmed.**
+`wideTables = 1` at 390, 768 **and** 1440. On the phone (`.audit/shots-career/390-squad.png`) the columns `Position · Age · Nat · Value` run past the right edge with no scrollbar and no fade. This is the most-used table in the game, and my earlier softened claim (§5 of the audit) is now restored for this table specifically: it *does* force a sideways scroll on a phone. `scouting`, `league` and `kitOffice` overflow the same way.
+
+**7.2 The inbox triples in density when it has real mail.**
+71 controls empty → **150 controls** at 1440. Most of the shortfall is gone from this screen (75 of 150 are under 44 px, versus 65 of 68 in the empty state), so the Inbox is the best-adapted screen in the product — but 150 interactive elements on one screen is a lot to scan.
+
+**7.3 Two pages are effectively unrolled spreadsheets.**
+- `social` — **13.39× viewport on a phone, 11.52× on desktop**, 275 controls, 273 below 44 px. Roughly 10,800 px of feed on a 900 px-tall desktop window.
+- `staff` — 9.13× phone / 5.37× desktop.
+Neither has pagination or a "load more". These are the two pages that most need the Phase 4 pagination component.
+
+**7.4 Tactics has 12 failing contrast pairs — and now I know which.**
+Measured samples: `Forward 2.9:1 @10.6px`, `★★☆ 2.0:1 @8px`, and a role dot at `3.0:1 @10px`. So it is the **role labels and star ratings on the pitch and in the roster**, not the coaching note. Any fix must lift those two, not darken the panel.
+
+**7.5 7 px text appears once there is real data.**
+The minimum rose from 7.45 px (empty) to **7 px** (populated). Star-rating and micro-badge glyphs are the culprits.
+
+**7.6 The Tactics screen is a genuine strength — protect it.**
+The populated screenshot (`.audit/shots-career/1440-tactics.png`) shows the real design: *Gegenpressing*, **4-1-4-1 out of possession / 4-2-1-3 in possession**, familiarity 92 %, intensity 50 %, a segmented *Combined / In Possession / Out of Possession / Both* control, four read-outs (active pair, mentality, familiarity + role fit, coaching note with a named player and a reason), and **two live pitches side by side**. That is a better tactics screen than most of the category, and it should be the reference for the rest of Phase 2.
+
+### Measurement caveat (be honest)
+
+The sub-44 px counts include the sidebar nav items (240 × 31), even when the drawer is closed on mobile. Real in-content shortfalls are therefore lower than the raw numbers — but every screen still has **50+** undersized controls, so the conclusion does not change: tap targets are the main thing between this and "phone first-class".
+
+### Corrections carried into the audit
+
+| Claim | Now | Correction |
+|---|---|---|
+| "Tables force sideways scroll" — softened in §5 of the audit | Squad, Scouting, League and Kit Office tables **do** overflow at 390, 768 and 1440 | Restore for these four; keep it softened for the other workspaces |
+| "Tactics contrast is one component" | It is the **star ratings (2.0:1) and role labels (2.9:1)** | Fix those two elements specifically |
+| "Home is the page that needs paging" | `social` (13.4× phone) and `staff` (9.1× phone) are far worse | Paging work starts there, not on Home |

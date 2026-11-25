@@ -27,6 +27,13 @@ const { chromium: pw } = require('playwright');
 
 const BASE = process.env.SWEEP_URL || 'http://127.0.0.1:4173';
 const OUT = path.join(__dirname, '..', '.audit');
+/* Optional: --career=<file> loads a real exported career (Cloud saves → Export career file)
+   so populated shop windows can be measured instead of empty states. */
+const CAREER_FILE = (process.argv.find(a => a.startsWith('--career=')) || '').split('=')[1] || '';
+const CAREER = CAREER_FILE ? (() => {
+  const raw = JSON.parse(fs.readFileSync(CAREER_FILE, 'utf8'));
+  return raw.career || raw;
+})() : null;
 const WIDTHS = [390, 768, 1440];
 const SHOT_PAGES = new Set(['home', 'inbox', 'squad', 'tactics', 'schedule', 'leagues', 'finance', 'dynamics']);
 
@@ -153,7 +160,7 @@ function measure() {
 }
 
 (async () => {
-  fs.mkdirSync(path.join(OUT, 'shots'), { recursive: true });
+  fs.mkdirSync(path.join(OUT, CAREER ? 'shots-career' : 'shots'), { recursive: true });
   const browser = await pw.launch({
     executablePath: '/tmp/chromium',
     args: [...chromium.args, '--no-sandbox', '--disable-gpu', '--font-render-hinting=none'],
@@ -171,8 +178,23 @@ function measure() {
     page.on('pageerror', e => errors.push(`${width}px pageerror: ${e.message.slice(0, 120)}`));
     page.on('console', m => { if (m.type() === 'error') errors.push(`${width}px console: ${m.text().slice(0, 120)}`); });
 
+    if (CAREER) {
+      await page.addInitScript(career => {
+        try {
+          localStorage.setItem('touchline.careers.v2', JSON.stringify([career]));
+          localStorage.setItem('touchline.recent.v2', career.id);
+        } catch {}
+      }, CAREER);
+    }
+
     await page.goto(BASE, { waitUntil: 'networkidle', timeout: 60000 });
     await page.waitForTimeout(400);
+    if (CAREER) {
+      await page.waitForFunction(() => {
+        const h = document.getElementById('homeScreen');
+        return h && !h.hidden;
+      }, { timeout: 30000 }).catch(() => {});
+    } else {
     await page.click('text=Enter Touchline');
     await page.waitForTimeout(300);
     await page.click('#careerEntry [data-entry="new"]');
@@ -184,12 +206,13 @@ function measure() {
     await page.fill('#careerEntry input[name="name"]', 'Alex Mercer');
     /* The wizard advances with <button type="submit"> (Personal → Appearance → Review → Begin career). */
     for (let step = 0; step < 6; step++) {
-      const inGame = await page.evaluate(() => !document.getElementById('homeScreen').hidden);
-      if (inGame) break;
+      const arrived = await page.evaluate(() => !document.getElementById('homeScreen').hidden);
+      if (arrived) break;
       const submit = page.locator('#careerEntry button[type="submit"]').first();
       if (!(await submit.count())) break;
       await submit.click();
       await page.waitForTimeout(800);
+    }
     }
     const inGame = await page.evaluate(() => !document.getElementById('homeScreen').hidden);
     if (!inGame) { errors.push(`${width}px: could not reach the clubhouse`); await page.close(); continue; }
@@ -207,7 +230,7 @@ function measure() {
       };
       await push('(default)');
       if (SHOT_PAGES.has(id) && (width === 390 || width === 1440)) {
-        await page.screenshot({ path: path.join(OUT, 'shots', `${width}-${id}.png`) });
+        await page.screenshot({ path: path.join(OUT, CAREER ? 'shots-career' : 'shots', `${width}-${id}.png`) });
       }
       const tabs = await page.$$eval('#homeTabs button', els => els.map(e => (e.textContent || '').trim()).filter(Boolean));
       for (const tabLabel of tabs) {
@@ -226,7 +249,7 @@ function measure() {
   }
 
   await browser.close();
-  fs.writeFileSync(path.join(OUT, 'sweep.json'), JSON.stringify({ rows, errors }, null, 1));
+  fs.writeFileSync(path.join(OUT, CAREER ? 'sweep-career.json' : 'sweep.json'), JSON.stringify({ rows, errors, career: CAREER ? { id: CAREER.id, day: CAREER.day, club: CAREER.club?.name, roster: CAREER.roster?.length } : null }, null, 1));
 
   /* console summary */
   for (const width of WIDTHS) {

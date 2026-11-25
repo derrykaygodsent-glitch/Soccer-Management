@@ -76,9 +76,11 @@ The other session works on gameplay/technical systems (PR #112: world checkpoint
 | 6 | Polish & proof | Motion, empty/loading/error, a11y pass, text size + density settings, perf budget | 1–2 |
 | — | *Match engine* | Reserved — starts only after Phase 6 | — |
 
-**Where we are (25 Nov 2026):** the audit is done, the browser toolchain works, and the first measurement sweep has run (624 screen-states). Results: [`docs/ui-measurements.md`](./ui-measurements.md). Next three steps, in order: **(M2)** populate a save and re-measure the data screens, **(B)** fix the four measured bugs, then **(0)** start the token layer.
+**Where we are (25 Nov 2026):** audit done · browser toolchain works · sweep run twice — once on an empty career, once on **Kay FC (day 383, 17 players)** from your exported save. 624 screen-states each, zero runtime errors. Results: [`docs/ui-measurements.md`](./ui-measurements.md).
 
-**Current phase: M2 — populate a save, re-measure (then B, then 0).**
+Next: **(B)** fix the measured bugs below, then **(0)** the token layer.
+
+**Current phase: B — fix the measured bugs (then Phase 0).**
 
 ---
 
@@ -86,13 +88,17 @@ The other session works on gameplay/technical systems (PR #112: world checkpoint
 
 **M1 — done.** `scripts/ui-sweep.cjs` walks every destination and tab at 390/768/1440 and records overflow, fold depth, control count, sub-44 px targets, real computed contrast, table widths, scroll containers and heading count. 624 screen-states, zero runtime errors. Output: `.audit/sweep.json`, `.audit/shots/`, report in `docs/ui-measurements.md`.
 
-**M2 — next. Why:** the sweep ran on a *founded club with no players*, so Squad, Tactics selection, Finances, Schedule and Transfers were measured as empty states. Their real tables — the hard part — are unmeasured.
+**M2 — done.** The sweep now accepts a real career file and was re-run against *Kay FC* (day 383, 17 players):
 
-Two ways to populate, pick whichever is quicker:
-- **A (fastest):** you play a save for ten minutes in the preview, stop at any screen with a squad, then I capture from that state. Tell me when a save has a club with players.
-- **B (automated):** script the `apply for a job` path (profile → job market → apply → advance days → interview → offer) until a club with a squad exists, then re-run the sweep.
+```bash
+node scripts/ui-sweep.cjs --career=.audit/career.json
+```
 
-**Checkpoint M2:** the sweep re-run shows `tables > 0` and populated rows for `squad`, `tactics`, `fixtures`, `finance`, `transfers`.
+It writes `.audit/sweep-career.json` and `.audit/shots-career/`. Every flagship page now has populated numbers; see §7 of `docs/ui-measurements.md`.
+
+**Checkpoint M2 — met:** `tables > 0`, real rows on `squad`, `tactics`, `fixtures`, `finance`, `transfers`; 0 runtime errors.
+
+**How to re-run any time:** export the career from the game (Cloud saves → Backup & account options → Export career file), then pass it with `--career=`. Nothing about the save is committed; `.audit/` is git-ignored.
 
 ---
 
@@ -105,9 +111,12 @@ Small, self-contained, and they make every later screenshot honest. Fix before P
 | B1 | **Continue is clipped at 390 px** (header doesn't fit) | Collapse the header: hide the wallet label and the clock text at < 420 px, keep Continue fully visible; move wallet into the sheet | Screenshot at 390 shows the whole Continue button |
 | B2 | **No visible page title at 390 px** (`h1Count` = 0) | Render `#homeTitle` as a sticky mini-title under the bar on mobile | `h1Count` ≥ 1 at 390 px on every screen |
 | B3 | **Duplicate "Back" chip inside the tab strip** | Remove the stray control from the tab markup | Only one Back on screen at 1440 px |
-| B4 | **15 failing contrast pairs on Tactics** | Re-pair the muted labels on the green pitch panel; target ≥ 4.5:1 body, ≥ 3:1 large | Sweep reports ≤ 3 contrast failures on `tactics` |
+| B4 | **12 failing contrast pairs on Tactics** — measured culprits: star ratings **2.0:1 @8px** and role labels **2.9:1 @10.6px** | Lighten those two elements (do not darken the pitch panel); target ≥ 4.5:1 | Sweep reports ≤ 3 contrast failures on `tactics` |
+| B5 | **Squad table overflows at 390, 768 and 1440** — `Nat`/`Value` columns off-screen, no scroll cue | Ship the mobile row-card list now (it is the most-used table); sticky first column at ≥ 768 | `wideTables = 0` for `squad` in the sweep |
 
-**Checkpoint B:** re-run `scripts/ui-sweep.cjs`; B1–B4 verified by measurement/screenshot, and `docs/ui-measurements.md` updated with a "fixed" column.
+**Checkpoint B:** re-run `scripts/ui-sweep.cjs --career=.audit/career.json`; B1–B5 verified by measurement/screenshot, and `docs/ui-measurements.md` updated with a "fixed" column.
+
+**Not in B** (they belong to later phases): the enormous `social` (13.4× on a phone) and `staff` (9.1×) pages need the Phase 4 pagination component; the 7 px star glyphs get fixed with the Phase 0 type ramp.
 
 ---
 
@@ -299,4 +308,5 @@ No engine changes are in scope for Phases 0–6. Rendering support (canvas DPR c
 | Date | Phase | What changed | Next |
 |---|---|---|---|
 | 2026-11-25 | — | Audit written (`docs/ui-ux-audit.md`); roadmap written; no product code touched | — |
+| 2026-11-25 | M2 | Real career (Kay FC, day 383, 17 players) measured: 624 states, 0 errors. Squad/scouting/league tables confirmed overflowing at all widths; inbox 150 controls; social 13.4x on a phone; tactics contrast isolated to star ratings + role labels. Added `--career=` support to the sweep. | Step B: fix B1-B5 |
 | 2026-11-25 | M1 | Browser toolchain solved (npm-only); `scripts/ui-sweep.cjs` written; 624 screen-states measured at 390/768/1440; `docs/ui-measurements.md` written; audit corrected in 5 places; 4 verified bugs logged | M2: populate a save and re-measure the data screens |
