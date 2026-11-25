@@ -179,3 +179,46 @@ The sub-44 px counts include the sidebar nav items (240 × 31), even when the dr
 | "Tables force sideways scroll" — softened in §5 of the audit | Squad, Scouting, League and Kit Office tables **do** overflow at 390, 768 and 1440 | Restore for these four; keep it softened for the other workspaces |
 | "Tactics contrast is one component" | It is the **star ratings (2.0:1) and role labels (2.9:1)** | Fix those two elements specifically |
 | "Home is the page that needs paging" | `social` (13.4× phone) and `staff` (9.1× phone) are far worse | Paging work starts there, not on Home |
+
+---
+
+## 8. Step B — what was fixed, and what it measures now
+
+All five bugs were presentation-only: CSS and markup, no game rules, no save format, no simulation. Re-measured with the same real career (Kay FC, day 383): **624 screen-states, 0 errors**.
+
+| # | Before (measured) | After (measured) | File |
+|---|---|---|---|
+| B1 | `.hc-bar` `scrollWidth` **457 @390 / 406 @360 / 483 @480**; Continue right edge **457** on a 390 px screen | Header is a two-row grid. Bar overflow **0 px** at 360/390/480/660/768/900/980/1100/1440; Continue right edge **377/390**, **349/360**, **647/660** | `src/home.css` |
+| B2 | `.hc-location` width **0** at 390 px; `h1Count` **0** on every page at 390 and 768 | Title owns a full-width header row. States with no visible `h1`: **0** at 390, 768 and 1440 | `src/home.css` |
+| B3 | Two Back controls at ≥661 px (header history **and** tab-strip chip) | Exactly **one** Back at ≤980 (tab chip; header history hidden), **no** duplicate chip at ≥981 | `src/home.css` |
+| B4 | Tactics **12** failing pairs; **1–3 per state** on almost every screen; worst `★☆` 2.03:1 @8px | **0** failing pairs across all 624 states | `src/reading.css`, `src/home.css`, `src/office.css` |
+| B5 | `wideTables` 1 on `squad`, `scouting`, `league`, `kitOffice` at 390, 768 **and** 1440 | **0** at 768 and 1440; only `league` still over at 390 | `src/reading.css` |
+
+### 8.1 The three token changes behind B4
+
+| Element | Was | Now | Ratio |
+|---|---|---|---|
+| `.fm-stars i` — empty star glyphs | `#3a5259` | `#7a8da0` | 2.03 → **4.93:1** |
+| `.hc-tool:disabled` — header Back with no history | `#53647b` | `#7d90a6` | 2.90 → **5.35:1** |
+| `.inbox-message-list small` — mail date line | `#8098b2` | `#93a9c0` | 3.76 → **4.63:1** on a selected row |
+
+The "role labels 2.9:1" from §7.4 turned out to be the shell's history buttons, not text on the pitch: the pitch labels already passed. Nothing on the green panel was darkened.
+
+Two decoration cases were left alone on purpose: `.life-face` (the dotted face on a skin-tone disc) and `.media-avatar` (initials on a gradient) are artwork, not text, and cannot be scored honestly.
+
+### 8.2 B5 in practice
+
+At 390 px the register now shows `Pkd · Name · Position` and wraps instead of scrolling (`.audit/shots-career/390-squad.png`). `Availability`, `Age` and `Nation` fold away at ≤1000 px, `Value` at ≤620 px, and the name cell wraps (`overflow-wrap:anywhere`) so a long name can never widen the table again.
+
+This is the stop-the-bleeding version. The full row-card list (tap a row, read everything) stays in Phase 4.
+
+### 8.3 Two metric corrections
+
+1. **The stubborn 3 px** was `.table-column-resizer` — the column-width drag handle, which overhangs the table by 3 px by design. `wideTables` now compares the table's own box to its container, instead of the container's `scrollWidth`.
+2. **Contrast over art is not measurable.** Text over photographs, gradients or avatar art has no single backdrop colour, so the sweep now skips it and says so. The first version of that skip walked all the way to `<body>`, hit a gradient and skipped *everything* — it printed a perfect 0 that meant nothing. It now follows the same path as the background lookup and stops at the first opaque colour.
+
+### 8.4 New findings from this pass (for later phases)
+
+- **The phone tab strip scrolls with no cue.** `#homeTabs` overflows on **207 of 208** states at 390 px (Back + 4 tabs is wider than 390). It does scroll, but nothing on screen says so. → Phase 1 navigation.
+- **`league` still overflows at 390 px** — the last table waiting for the Phase 4 table→list contract.
+- **Everything else is unchanged by design:** fold depth (social 13.39× at 390, staff 9.13×), tap targets (atlas 404, social 272 under 44 px at 1440) and the 7 px minimum text. Those are Phase 4 and Phase 6 work.

@@ -53,6 +53,22 @@ function measure() {
     const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
     return (x + 0.05) / (y + 0.05);
   };
+  /* Text painted over artwork, gradients or avatar art cannot be scored from computed
+     styles (there is no single backdrop colour), so it is excluded rather than guessed. */
+  const unmeasurable = el => {
+    if (el.closest('[role="img"],.life-face,.tl-initials,[class*="avatar"],[class*="crest"],.mail-shield')) return true;
+    /* Walk out the same way bgOf() does: the first opaque background is the backdrop.
+       A gradient or image before that point means there is no single colour to score. */
+    let node = el;
+    while (node && node !== document.documentElement) {
+      const cs = getComputedStyle(node);
+      const p = rgb(cs.backgroundColor);
+      if (p && p.a > 0.55) return false;
+      if (cs.backgroundImage !== 'none') return true;
+      node = node.parentElement;
+    }
+    return false;
+  };
   const bgOf = el => {
     let node = el;
     while (node && node !== document.documentElement) {
@@ -101,6 +117,7 @@ function measure() {
   let contrastFails = 0, contrastSamples = [];
   const textEls = all.filter(el => visible(el) && el.children.length === 0 && (el.textContent || '').trim().length > 1).slice(0, 600);
   for (const el of textEls) {
+    if (unmeasurable(el)) continue;
     const cs = getComputedStyle(el);
     const fs = parseFloat(cs.fontSize);
     if (fs < minFont) minFont = fs;
@@ -129,7 +146,13 @@ function measure() {
 
   /* tables */
   const tables = [...document.querySelectorAll('table')].filter(visible);
-  const wideTables = tables.filter(t => (t.parentElement?.scrollWidth || 0) > (t.parentElement?.clientWidth || 0) + 2).length;
+  /* Compare the table's own box to its container. Column-resize handles (3 px) are an
+     affordance, not content overflow, so they must not count as a sideways scroll. */
+  const wideTables = tables.filter(t => {
+    const box = t.parentElement || t;
+    const w = Math.round(t.getBoundingClientRect().width);
+    return w > Math.round(box.clientWidth) + 1;
+  }).length;
 
   /* tab strip overflow */
   const strip = document.querySelector('#homeTabs');

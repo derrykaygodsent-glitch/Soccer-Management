@@ -80,7 +80,7 @@ The other session works on gameplay/technical systems (PR #112: world checkpoint
 
 Next: **(B)** fix the measured bugs below, then **(0)** the token layer.
 
-**Current phase: B — fix the measured bugs (then Phase 0).**
+**Current phase: Phase 0 — Foundations (tokens, type ramp, spacing). Step B closed 25 November 2026.**
 
 ---
 
@@ -102,19 +102,21 @@ It writes `.audit/sweep-career.json` and `.audit/shots-career/`. Every flagship 
 
 ---
 
-## 3. Step B — the four measured bugs
+## 3. Step B — the measured bugs — ✅ closed 25 November 2026
 
-Small, self-contained, and they make every later screenshot honest. Fix before Phase 0 because all four sit in the shell that Phase 1 will touch.
+All five are fixed, re-measured and documented (before/after table in §8 of [`ui-measurements.md`](./ui-measurements.md)). CSS and markup only: no game rules, no save data, no simulation touched.
 
-| # | Bug | Fix | Done when |
+| # | Bug | What landed | Verified by |
 |---|---|---|---|
-| B1 | **Continue is clipped at 390 px** (header doesn't fit) | Collapse the header: hide the wallet label and the clock text at < 420 px, keep Continue fully visible; move wallet into the sheet | Screenshot at 390 shows the whole Continue button |
-| B2 | **No visible page title at 390 px** (`h1Count` = 0) | Render `#homeTitle` as a sticky mini-title under the bar on mobile | `h1Count` ≥ 1 at 390 px on every screen |
-| B3 | **Duplicate "Back" chip inside the tab strip** | Remove the stray control from the tab markup | Only one Back on screen at 1440 px |
-| B4 | **12 failing contrast pairs on Tactics** — measured culprits: star ratings **2.0:1 @8px** and role labels **2.9:1 @10.6px** | Lighten those two elements (do not darken the pitch panel); target ≥ 4.5:1 | Sweep reports ≤ 3 contrast failures on `tactics` |
-| B5 | **Squad table overflows at 390, 768 and 1440** — `Nat`/`Value` columns off-screen, no scroll cue | Ship the mobile row-card list now (it is the most-used table); sticky first column at ≥ 768 | `wideTables = 0` for `squad` in the sweep |
+| B1 | Continue clipped on a phone | Header is a two-row grid (title row, tool row); the wallet rides the title row; the clock drops its weekday at ≤660 | bar overflow **0 px** at 9 widths; Continue right edge **377/390**, **349/360** |
+| B2 | No visible page title | Full-width title row at ≤980; narrow desktops (981–1240) get a 150 px title minimum | **0** states without a visible `h1` (was 0 at 390 and 768 only) |
+| B3 | Duplicate Back chip | Header history hides ≤980, tab chip hides ≥981 | chip count **1 / 1 / 0** at 390 / 768 / 1440 |
+| B4 | Faint text (scope grew from Tactics to the shell) | Empty stars `#7a8da0`, disabled header tools `#7d90a6`, inbox date `#93a9c0` | **0** contrast failures in 624 states (was 12 on Tactics, 1–3 everywhere) |
+| B5 | Squad table overflow | Cells wrap; `Availability/Age/Nation` fold at ≤1000, `Value` at ≤620 | `wideTables` **0** at 768/1440; only `league` at 390 |
 
-**Checkpoint B:** re-run `scripts/ui-sweep.cjs --career=.audit/career.json`; B1–B5 verified by measurement/screenshot, and `docs/ui-measurements.md` updated with a "fixed" column.
+Bonus, same pass: the lime ring that looked like a text highlight behind the page title is gone — it was the shell focus style landing on a non-interactive `h1`.
+
+**Deferred, on purpose:** the phone tab strip scrolls with no edge cue (207 of 208 phone states) → Phase 1. The `league` table at 390 px → Phase 4.
 
 **Not in B** (they belong to later phases): the enormous `social` (13.4× on a phone) and `staff` (9.1×) pages need the Phase 4 pagination component; the 7 px star glyphs get fixed with the Phase 0 type ramp.
 
@@ -308,5 +310,6 @@ No engine changes are in scope for Phases 0–6. Rendering support (canvas DPR c
 | Date | Phase | What changed | Next |
 |---|---|---|---|
 | 2026-11-25 | — | Audit written (`docs/ui-ux-audit.md`); roadmap written; no product code touched | — |
+| 2026-11-25 | B | Step B closed: B1–B5 fixed in CSS only, plus three contrast tokens lifted shell-wide. Sweep: 624 states, 0 errors, 0 contrast failures, 0 page overflow, 1 wide table left (`league` @390). | Phase 0: token layer + type ramp |
 | 2026-11-25 | M2 | Real career (Kay FC, day 383, 17 players) measured: 624 states, 0 errors. Squad/scouting/league tables confirmed overflowing at all widths; inbox 150 controls; social 13.4x on a phone; tactics contrast isolated to star ratings + role labels. Added `--career=` support to the sweep. | Step B: fix B1-B5 |
 | 2026-11-25 | M1 | Browser toolchain solved (npm-only); `scripts/ui-sweep.cjs` written; 624 screen-states measured at 390/768/1440; `docs/ui-measurements.md` written; audit corrected in 5 places; 4 verified bugs logged | M2: populate a save and re-measure the data screens |

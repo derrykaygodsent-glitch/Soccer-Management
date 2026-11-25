@@ -86,6 +86,8 @@ These are verified, reproducible, and each one makes the product feel broken on 
 3. **A stray "Back" button inside the tab strip.** Every page shows Back twice: the history group up top, and again as the first chip of `Overview · Calendar · Inbox · Profile`.
 4. **15 failing contrast pairs on Tactics** (vs 1–3 everywhere else) — muted labels on the green pitch panel. Palette-level contrast is fine, so this is one component, not a retune.
 
+**Status, 25 November 2026:** all four are fixed and re-measured — before/after table in §8 of [`ui-measurements.md`](./ui-measurements.md). 
+
 ### 3.4 Navigation doesn't scale to 70 screens
 
 - **Evidence:** the sidebar holds **26 destinations in 5 groups** in this build (18 clubhouse pages plus the manager-life pages share one sidebar; the sweep found **35 unique nav ids** across shell states) in a 215 px column at 11.75 px. A duplicate **Back** chip also sits inside the tab strip (see §3.3b). Each destination carries its own tab strip: Finances has **8 tabs**, Scouting 7, Dynamics 7, Club Info 6, Staff 6, Development 6, Squad/Eden 4, Transfers 4, Vision 4, Schedule 4, Tactics 6. `.hc-tabs` is `overflow:auto` with `scrollbar-width:none` and 21 px gaps — so on a phone the 8 Finances tabs silently run off-screen with **no fade, no arrows, no snap** to tell you they exist. There is also a page-level tab row (`Overview / Calendar Desk / Club vision`) *above* the section tabs, so there are two horizontal strips stacked, and the second one's contents change when you switch the first.
