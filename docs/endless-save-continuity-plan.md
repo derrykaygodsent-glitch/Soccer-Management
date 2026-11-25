@@ -37,11 +37,13 @@ The initial map is in `docs/career-data-retention-map.md`. It classifies save re
 
 Before reducing `seasonYears` or old development detail, save a complete deterministic world snapshot at a fixed interval (initially test every 5 seasons). On load, start from the newest valid checkpoint and replay only later seasons. Keep the original replay path for old saves and provide a migration/fallback if a checkpoint is missing or fails validation. Checkpoint state must include stable player/club identities, season, and any seeds/history needed for exactly reproducible future evolution.
 
-### 3. Compact archives without losing the user's story — NOT IMPLEMENTED
+### 3. Compact archives without losing the user's story — DESIGN DOCUMENTED / NOT IMPLEMENTED
 
 Keep the latest several seasons in full detail. Convert older season records into a smaller, clearly labelled summary only after the checkpoint path can rebuild the world without them. Preserve important manager-club results, trophies, player milestones, transfers, and rivalry evidence; allow export/recovery of detailed history before compaction. Do not silently delete a save's only copy of a user-visible record.
 
-A safe first slice now exists in `src/career-archive.js`: the Cloud locker can export exact `seasonBook` records as a version-1 sidecar and restore missing records to the matching career. The import checks the career ID, season timeline, duplicate years, and checksum; it refuses conflicting records and backs up the current career before applying additions. The sidecar has a 64 MB limit. This is a recovery/export path only: it does not summarize, remove, or change any save history, and it does not yet make old history screens work from the sidecar alone.
+The proposed schema and workflow are documented in `docs/career-archive-compaction-design.md`. It separates exact sidecar files from compact in-save summaries, keeps `seasonYears` unchanged, and sets a conservative compaction boundary after checkpoint replay needs and a five-season recent-history buffer. It explicitly excludes transfer, registration, unresolved-decision, and other simulation-affecting records from this compaction phase.
+
+The existing safe slice in `src/career-archive.js` remains export/restore only: the Cloud locker exports exact `seasonBook` records as a version-1 sidecar and merges missing records only into the matching career/timeline. It refuses conflicts, backs up the current career before additions, and does not summarize, remove, or change history. Read-only attachment/viewing, a version-2 validator, compact-row consumers, migration, and parity testing are still needed before any record removal.
 
 ### 4. Keep screens and saves bounded
 
