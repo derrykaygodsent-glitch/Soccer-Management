@@ -29,8 +29,9 @@ The 20-season active-career fixture was about 3.81 MB, with roughly 2.49 MB in `
 
 ## Order of safe work
 
-1. Add automated size attribution and this retention inventory to the long-save fixtures.
-2. Design a reversible archive format: recent full seasons, older dated summaries, and an explicit export/recovery path for old detail. Keep cup-seeding and player milestone requirements in the summary contract.
-3. Extend the checkpoint with any current player-registration state required before considering old transfer moves or registration records for summarization.
-4. Migrate a copied 20/50/100-season active save; compare continued simulation, cup draws, manager/AI decisions, shirt eligibility, and current rosters before and after.
-5. Only then implement compaction behind a versioned migration, preserving an untouched backup and making old details available as an export. Keep gameplay balance and tactical-trend parameters unchanged.
+1. Inventory documented and long-save size measurements recorded; automate size attribution in the stress fixtures.
+2. **Export/recovery foundation implemented; compaction format remains to design.** `src/career-archive.js` writes exact season-book records to a version-1 JSON sidecar and merges missing records only into the matching career/timeline. Conflicting seasons, unknown years, and checksum failures are rejected; the Cloud locker writes a full pre-restore copy to the existing one-slot recovery location (replacing any prior recovery backup only after confirmation). This does not compact or summarize saves. The checksum detects accidental corruption only, not deliberate edits or authorship.
+3. Design a versioned compact-summary format and archive attachment/recovery workflow. Keep recent full seasons and dated older summaries; the summary contract must preserve cup-seeding tables, user-club/player milestones, and the detailed export.
+4. Extend the checkpoint with any current player-registration state required before considering old transfer moves or registration records for summarization.
+5. Migrate a copied 20/50/100-season active save; compare continued simulation, cup draws, manager/AI decisions, shirt eligibility, and current rosters before and after.
+6. Only then implement compaction behind a versioned migration, preserving an untouched backup and making old details available as an export. Keep gameplay balance and tactical-trend parameters unchanged.

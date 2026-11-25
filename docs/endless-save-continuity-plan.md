@@ -1,6 +1,6 @@
 # Endless-save continuity — audit and first implementation plan
 
-**Status:** Audit complete; deterministic world-checkpoint slice implemented and under validation. No archive compaction, gameplay rebalance, or tactical-calibration changes.
+**Status:** Audit complete; deterministic checkpoints and a reversible exact-history sidecar are implemented. Archive compaction, gameplay rebalance, and tactical-calibration changes are not implemented.
 
 ## Goal
 
@@ -33,13 +33,15 @@ The checkpoint itself stays bounded and world restoration is deterministic at 20
 
 The initial map is in `docs/career-data-retention-map.md`. It classifies save records by simulation need, user-visible history, and candidate summary/export treatment. It identifies the previous-season table as a cup-seeding dependency and transfer/registration history as unsafe to trim until current player-club state is checkpointed. No retention limits have been changed.
 
-### 2. Add a versioned world checkpoint
+### 2. Add a versioned world checkpoint — IMPLEMENTED
 
 Before reducing `seasonYears` or old development detail, save a complete deterministic world snapshot at a fixed interval (initially test every 5 seasons). On load, start from the newest valid checkpoint and replay only later seasons. Keep the original replay path for old saves and provide a migration/fallback if a checkpoint is missing or fails validation. Checkpoint state must include stable player/club identities, season, and any seeds/history needed for exactly reproducible future evolution.
 
-### 3. Compact archives without losing the user's story
+### 3. Compact archives without losing the user's story — NOT IMPLEMENTED
 
 Keep the latest several seasons in full detail. Convert older season records into a smaller, clearly labelled summary only after the checkpoint path can rebuild the world without them. Preserve important manager-club results, trophies, player milestones, transfers, and rivalry evidence; allow export/recovery of detailed history before compaction. Do not silently delete a save's only copy of a user-visible record.
+
+A safe first slice now exists in `src/career-archive.js`: the Cloud locker can export exact `seasonBook` records as a version-1 sidecar and restore missing records to the matching career. The import checks the career ID, season timeline, duplicate years, and checksum; it refuses conflicting records and backs up the current career before applying additions. The sidecar has a 64 MB limit. This is a recovery/export path only: it does not summarize, remove, or change any save history, and it does not yet make old history screens work from the sidecar alone.
 
 ### 4. Keep screens and saves bounded
 
@@ -49,7 +51,7 @@ Paginate or progressively load old season records rather than rendering every se
 
 Add deterministic tests at 20, 100, and 500 seasons (or a faster test fixture with the same state transitions). At each horizon, compare continued simulation with save/reload, verify identities and key records do not reset, measure serialized size and number of replayed seasons, test old-save migration, and check that archive rendering remains bounded. Do not change gameplay balance as part of storage work.
 
-## First implementation slice — checkpoint-only, history retained
+## First implementation slice — checkpoints, history retained
 
 Implemented in `src/world-checkpoint.js` and connected to `src/manager-life.js`:
 
@@ -59,7 +61,9 @@ Implemented in `src/world-checkpoint.js` and connected to `src/manager-life.js`:
 - Store the evolved world as deltas against the bundled player templates, including youth identities and development changes. Do not delete or compact season archives.
 - Compare canonical saved world state and next-season evolution with full replay. A controlled 20-season no-club fixture now stores a 521 KB checkpoint in a 2.72 MB career, below the current 3.8 MB cloud-save limit.
 
-Tests: `test/world-checkpoint.test.cjs` covers compact round trips, checksum/schema failure, five-season full-replay parity, deterministic next evolution, and old-save checkpoint creation. `test/turnover.test.cjs` covers the 20-season no-club checkpoint/save-size fixture. Active-career parity and size measurements at 20, 50, and 100 seasons are recorded in `docs/career-data-retention-map.md`. This is still only the checkpoint slice: bounded archive display, 500-season coverage, and a reversible compaction/export migration remain before storage continuity is complete.
+Tests: `test/world-checkpoint.test.cjs` covers compact round trips, checksum/schema failure, five-season full-replay parity, deterministic next evolution, and old-save checkpoint creation. `test/career-archive.test.cjs` covers exact sidecar round-trip, idempotent restore, conflict and wrong-career refusal, timeline validation, and checksum rejection. `test/turnover.test.cjs` covers the 20-season no-club checkpoint/save-size fixture. Active-career parity and size measurements at 20, 50, and 100 seasons are recorded in `docs/career-data-retention-map.md`.
+
+The sidecar checksum is an accidental-corruption check, not a signature or proof of authorship. The current implementation still retains full history in the career save; bounded archive display, checkpoint coverage for transfer/registration dependencies, compaction summaries with a supported restore path, and 500-season coverage remain before storage continuity is complete.
 
 ## Guardrails
 

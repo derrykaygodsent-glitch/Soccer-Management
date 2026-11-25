@@ -1,0 +1,14 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),Archive=require('../src/career-archive');
+const source=fs.readFileSync('src/cloud.js','utf8').replace('/* @CLOUD@ */ {}',JSON.stringify({url:'',key:'',engine:'test-engine'}));
+function setup(career){const nodes=new Map(),local=new Map(),session=new Map(),listeners={},window={TLCareerArchive:Archive,TLCareerFiles:{confirm:async()=>true}},location={reloaded:false,reload(){this.reloaded=true;}};const node=selector=>{if(!nodes.has(selector))nodes.set(selector,{value:'',textContent:'',disabled:false,hidden:false});return nodes.get(selector);};const dialog={querySelector:node,setAttribute(){},addEventListener:(name,fn)=>listeners[name]=fn};const document={createElement:tag=>tag==='dialog'?dialog:{click(){}},body:{append(){}},addEventListener(){}};vm.runInNewContext(source,{window,document,TextEncoder,Date,JSON,URL,Blob,location,localStorage:{getItem:k=>local.get(k)||null,setItem:(k,v)=>local.set(k,v)},sessionStorage:{setItem:(k,v)=>session.set(k,v)},setTimeout(){}});let saved=null;window.TLCloud.init({current:()=>career,find:()=>career,import:c=>{saved=c;career=c;}});return{nodes,node,local,location,window,importArchive:async archive=>{const input=node('[data-history-import]');input.onchange({target:{files:[{size:Buffer.byteLength(JSON.stringify(archive)),text:async()=>JSON.stringify(archive)}],value:''}});await new Promise(resolve=>setImmediate(resolve));return saved;}};}
+
+test('locker restore backs up the active career and imports exact missing archive records',async()=>{
+ const original={id:'same-career',profile:{name:'Ari'},day:42,seasonYears:[2027],seasonBook:[],plans:[],mail:[],roster:[],staff:[],fund:100,cash:30},bundle=Archive.pack({...original,seasonBook:[{year:2026,nations:{A:{results:[[0,1,2,1]]}}}]});
+ const app=setup(original),saved=await app.importArchive(bundle);assert.equal(saved.seasonBook.length,1);assert.deepEqual(JSON.parse(JSON.stringify(saved.seasonBook[0])),{year:2026,nations:{A:{results:[[0,1,2,1]]}}});assert.equal(app.location.reloaded,true);const backup=JSON.parse(app.local.get('touchline.manager.cloud.backup.v2'));assert.equal(backup.snapshot.career.seasonBook.length,0);
+});
+
+test('locker refuses a conflicting archive without replacing or reloading the career',async()=>{
+ const original={id:'same-career',profile:{name:'Ari'},day:42,seasonYears:[2027],seasonBook:[{year:2026,result:'played'}],plans:[],mail:[],roster:[],staff:[],fund:100,cash:30},bundle=Archive.pack({...original,seasonBook:[{year:2026,result:'different'}]});
+ const app=setup(original),saved=await app.importArchive(bundle);assert.equal(saved,null);assert.equal(app.location.reloaded,false);assert.match(app.node('[role=status]').textContent,/different history/);
+});
