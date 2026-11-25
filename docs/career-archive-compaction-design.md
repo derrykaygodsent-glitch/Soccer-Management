@@ -1,6 +1,6 @@
 # Career archive compaction design
 
-**Status:** Design proposal only. The current version-1 history sidecar remains exact and reversible, but no compact-save schema or migration is implemented. No career history has been removed.
+**Status:** Version-2 exact sidecar validation/export and read-only attachment/viewing are implemented. The compact in-save summary schema below remains a proposal; no compact-save migration has been implemented and no career history has been removed.
 
 ## Design goals
 
@@ -17,11 +17,11 @@ Do not conflate a full history export with a compact season stub.
 
 ### Existing full-history sidecar — version 1
 
-`src/career-archive.js` currently emits `kind: "touchline-career-history"`, `version: 1`, `careerId`, `managerName`, `createdAt`, exact `seasons`, and a checksum. It is an exact copy, not a compacted save. Its 32-bit checksum detects accidental changes only; it does not prove who created the file. Keep its current import behavior: merge only missing exact rows for the same career and timeline, and reject conflicting rows.
+`src/career-archive.js` currently emits `kind: "touchline-career-history"`, `version: 1`, `careerId`, `managerName`, `createdAt`, exact `seasons`, and a checksum. It is an exact copy, not a compacted save. Its 32-bit checksum detects accidental changes only; it does not prove who created the file. The legacy `merge` operation still adds only missing exact rows for the same career/timeline and rejects conflicts. The cross-version restore path can replace a compact stub only when the stub's SHA-256 record digest matches the exact version-1 row.
 
-### Proposed full-history sidecar — version 2
+### Full-history sidecar — version 2 IMPLEMENTED
 
-Version 2 should be introduced separately (do not reinterpret version 1):
+Version 2 is a separate format; version 1 is not reinterpreted. `packV2` creates it, `inspectV2` strictly validates it, and `inspectAny`/`mergeAny` retain version-1 import support. The Cloud locker exports version 2. `attach` accepts either version, keeps matching records in memory for this browser session, and `readRecord` exposes an exact row only when the career ID, timeline, and stub digest match. Attachment is read-only and is not saved or synced.
 
 ```json
 {
@@ -42,7 +42,7 @@ Version 2 should be introduced separately (do not reinterpret version 1):
 
 Requirements: years are unique and sorted; each record's `year` matches its wrapper; the record digest is over the canonical JSON representation of the exact original `seasonBook` row; and the manifest digest covers identity, coverage, record digests, and payloads. Use SHA-256 for v2 integrity checks. This detects accidental corruption, not authorship or malicious editing. Keep bounded input sizes and record counts. Version 1 remains importable and should never be silently upgraded by rewriting user files.
 
-## Proposed compact record in a career save
+## Proposed compact record in a career save — NOT IMPLEMENTED
 
 A compacted `seasonBook` row keeps the familiar summary fields and adds an explicit external-detail pointer:
 
@@ -114,15 +114,15 @@ This is a candidate rule, not proof that compaction is safe. If a consumer audit
 
 ## Migration and verification gates
 
-Before the first compaction implementation:
+Before any compaction can be offered:
 
-- Add readers for both full and compact rows and enumerate every `seasonBook` consumer. Test that missing match results are handled as “external detail,” not as zero results.
-- Migrate copied full-detail careers only. Compare the original and compacted careers at the checkpoint boundary and after continued seasons for world players, season evolution, cup draws, club and league AI decisions, shirt eligibility, and current rosters.
+- `src/season-book.js` now renders summary rows and shows a clear external-detail notice instead of treating missing results as an empty season. The Cloud locker validates and attaches version-1 or version-2 sidecars; exact rendering is read-only and session-scoped. Continue the consumer audit before changing data shape.
+- Build a non-mutating compaction candidate for copied full-detail careers only. Compare the original and candidate at the checkpoint boundary and after continued seasons for world players, season evolution, cup draws, club and league AI decisions, shirt eligibility, and current rosters.
 - With the sidecar attached, compare exact historical table, awards, retirement and result rendering against the un-compacted save. With it absent, verify useful summaries remain and no crash occurs.
 - Test export/verify/compact/restore, old version-1 sidecar import, legacy saves without checkpoints, checksum failures, interruption before save replacement, backup recovery, and duplicate/conflicting records.
 - Measure 20, 50, 100, and 500-season active careers for file size, checkpoint replay work, and archive rendering time. Record both the compact save and external archive sizes.
 - Do not turn the feature on by default until parity gates pass. Gameplay balance, transfer decisions, registration eligibility, and tactical-study outcomes must not change.
 
-## Immediate next implementation after this design
+## Immediate next implementation after this slice
 
-Build read-only attachment and viewing for the existing exact version-1 sidecar, then add the version-2 validator and round-trip/parity fixtures. Do not implement removal of `seasonBook` results until those UI and migration tests pass and the dependency checkpoint work is complete.
+Add a dry-run compact-summary transformer and copied-career parity fixtures. Keep live career saves unchanged while testing; only design/enable the actual migration after the dry run proves all required simulation and display parity.

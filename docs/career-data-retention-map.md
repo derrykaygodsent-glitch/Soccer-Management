@@ -1,6 +1,6 @@
 # Career data retention map
 
-**Status:** Inventory and proposed safe treatment only. No historical data has been compacted or deleted.
+**Status:** Inventory and compaction proposal documented; versioned sidecar viewing is implemented. No historical data has been compacted, summarized, or deleted.
 
 **Purpose:** Identify what can be summarized or exported to control save growth without changing simulation results or silently erasing the manager's story. This map is based on current producer/consumer code and active-career measurements; any compaction still needs migration, parity, export/recovery, and UI tests.
 
@@ -30,9 +30,9 @@ The 20-season active-career fixture was about 3.81 MB, with roughly 2.49 MB in `
 ## Order of safe work
 
 1. Inventory documented and long-save size measurements recorded; automate size attribution in the stress fixtures.
-2. **Export/recovery foundation implemented; compaction format remains to design.** `src/career-archive.js` writes exact season-book records to a version-1 JSON sidecar and merges missing records only into the matching career/timeline. Conflicting seasons, unknown years, and checksum failures are rejected; the Cloud locker writes a full pre-restore copy to the existing one-slot recovery location (replacing any prior recovery backup only after confirmation). This does not compact or summarize saves. The checksum detects accidental corruption only, not deliberate edits or authorship.
-3. **Format and workflow design documented** in `docs/career-archive-compaction-design.md`; no compact schema or migration is implemented. The proposal separates version-2 exact sidecars from in-save summary stubs, keeps the newest five seasons and post-checkpoint replay inputs exact, and preserves summary tables, awards, milestones, and sidecar recovery.
-4. Implement read-only attachment/viewing for full-history sidecars, a strict version-2 validator, and readers that clearly distinguish missing external results from empty results.
-5. Extend checkpoint coverage before separately considering old transfer moves or registration records for summarization; those records remain unchanged in this phase.
-6. Migrate copied 20/50/100-season active saves; compare continued simulation, cup draws, manager/AI decisions, shirt eligibility, current rosters, and detailed-history rendering before and after.
-7. Only after those gates, implement compaction behind a versioned migration, preserving an untouched backup and making old details available as an export. Keep gameplay balance and tactical-trend parameters unchanged.
+2. **Export/recovery foundation implemented; compaction remains separate.** `src/career-archive.js` still reads version-1 exact sidecars and now exports/validates version-2 JSON bundles with SHA-256 record and manifest digests. Restore adds exact missing rows or replaces a matching compact stub only when its saved digest matches; conflicts, unknown years, and wrong career IDs are rejected. The Cloud locker writes a full pre-restore copy to the existing one-slot recovery location (replacing any prior recovery backup only after confirmation). This does not compact or summarize saves. Digests detect accidental corruption, not authorship.
+3. **Compact format and workflow designed** in `docs/career-archive-compaction-design.md`; compact in-save rows and migration are not implemented. The proposal separates version-2 exact sidecars from summary stubs, keeps the newest five seasons and post-checkpoint replay inputs exact, and preserves tables, awards, milestones, and sidecar recovery.
+4. **Read-only archive viewing and version-2 validation implemented.** `src/career-archive.js` exports/validates SHA-256 version-2 bundles, retains version-1 import support, attaches exact rows in memory for the current session, and can restore only matching compact stubs. `src/season-book.js` shows useful summary content and explains when exact results need an attached file. These changes do not compact saves.
+5. Add a dry-run compaction transformer for copied saves and verify deterministic simulation, cup draws, AI decisions, eligibility, roster, and rendering parity before enabling any save migration.
+6. Extend checkpoint coverage before separately considering old transfer moves or registration records for summarization; those records remain unchanged in this phase.
+7. Measure copied 20/50/100/500-season active saves, then implement compaction behind an explicit, versioned migration only if parity gates pass. Preserve a full backup and exportable detail; do not change gameplay or tactical-trend parameters.

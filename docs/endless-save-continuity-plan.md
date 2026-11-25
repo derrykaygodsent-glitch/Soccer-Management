@@ -1,6 +1,6 @@
 # Endless-save continuity — audit and first implementation plan
 
-**Status:** Audit complete; deterministic checkpoints and a reversible exact-history sidecar are implemented. Archive compaction, gameplay rebalance, and tactical-calibration changes are not implemented.
+**Status:** Audit, deterministic checkpoints, exact-history sidecar validation, and read-only archive viewing are implemented. Compact save rows and their migration are not implemented; no history or gameplay behavior has been changed.
 
 ## Goal
 
@@ -41,9 +41,9 @@ Before reducing `seasonYears` or old development detail, save a complete determi
 
 Keep the latest several seasons in full detail. Convert older season records into a smaller, clearly labelled summary only after the checkpoint path can rebuild the world without them. Preserve important manager-club results, trophies, player milestones, transfers, and rivalry evidence; allow export/recovery of detailed history before compaction. Do not silently delete a save's only copy of a user-visible record.
 
-The proposed schema and workflow are documented in `docs/career-archive-compaction-design.md`. It separates exact sidecar files from compact in-save summaries, keeps `seasonYears` unchanged, and sets a conservative compaction boundary after checkpoint replay needs and a five-season recent-history buffer. It explicitly excludes transfer, registration, unresolved-decision, and other simulation-affecting records from this compaction phase.
+The proposed compact summary and migration workflow are documented in `docs/career-archive-compaction-design.md`. It keeps `seasonYears` unchanged, requires checkpoint replay inputs and a five-season recent-history buffer, and excludes transfer, registration, unresolved-decision, and other simulation-affecting records from this phase.
 
-The existing safe slice in `src/career-archive.js` remains export/restore only: the Cloud locker exports exact `seasonBook` records as a version-1 sidecar and merges missing records only into the matching career/timeline. It refuses conflicts, backs up the current career before additions, and does not summarize, remove, or change history. Read-only attachment/viewing, a version-2 validator, compact-row consumers, migration, and parity testing are still needed before any record removal.
+`src/career-archive.js` now exports strict SHA-256 version-2 sidecars, still validates and restores version-1 sidecars, and supports read-only attachment in memory for the current browser session. It only serves an archived row when the career, timeline, and record digest match. The Cloud locker offers attach-for-viewing separately from restore. `src/season-book.js` displays a useful compact summary and clearly says when match-level detail is external; selecting a matching archive reveals exact results without changing the save. Compact-row migration and long-career parity testing are still required before any record removal.
 
 ### 4. Keep screens and saves bounded
 
@@ -63,9 +63,9 @@ Implemented in `src/world-checkpoint.js` and connected to `src/manager-life.js`:
 - Store the evolved world as deltas against the bundled player templates, including youth identities and development changes. Do not delete or compact season archives.
 - Compare canonical saved world state and next-season evolution with full replay. A controlled 20-season no-club fixture now stores a 521 KB checkpoint in a 2.72 MB career, below the current 3.8 MB cloud-save limit.
 
-Tests: `test/world-checkpoint.test.cjs` covers compact round trips, checksum/schema failure, five-season full-replay parity, deterministic next evolution, and old-save checkpoint creation. `test/career-archive.test.cjs` covers exact sidecar round-trip, idempotent restore, conflict and wrong-career refusal, timeline validation, and checksum rejection. `test/turnover.test.cjs` covers the 20-season no-club checkpoint/save-size fixture. Active-career parity and size measurements at 20, 50, and 100 seasons are recorded in `docs/career-data-retention-map.md`.
+Tests: `test/world-checkpoint.test.cjs` covers compact round trips, checksum/schema failure, five-season full-replay parity, deterministic next evolution, and old-save checkpoint creation. `test/career-archive.test.cjs` covers exact v1/v2 sidecars, strict digest validation, read-only matching attachment, idempotent restore, conflict refusal, and compact-stub recovery. `test/career-archive-ui.test.cjs` covers the no-save-change attachment path; `test/season-book-archive.test.cjs` covers summary fallback and exact attached rendering. `test/turnover.test.cjs` covers the 20-season no-club checkpoint/save-size fixture. Active-career parity and size measurements at 20, 50, and 100 seasons are recorded in `docs/career-data-retention-map.md`.
 
-The sidecar checksum is an accidental-corruption check, not a signature or proof of authorship. The current implementation still retains full history in the career save; bounded archive display, checkpoint coverage for transfer/registration dependencies, compaction summaries with a supported restore path, and 500-season coverage remain before storage continuity is complete.
+The v1 checksum detects accidental corruption only; v2 uses SHA-256 integrity hashes, which still do not prove authorship. The current implementation still retains full history in real career saves. A dry-run compaction transformer, copied-career parity tests, transfer/registration checkpoint review, and 500-season coverage remain before any live save migration.
 
 ## Guardrails
 
