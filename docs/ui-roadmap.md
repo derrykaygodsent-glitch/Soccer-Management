@@ -43,6 +43,15 @@ FM wins on database depth and loses on feel: small type, nested panels, no text 
 - Never regress: focus restoration, `aria-current`, `prefers-reduced-motion`, table captions, chart labels, dialog semantics.
 - `npm run build` + `npm test` must pass at every checkpoint. The build currently inlines everything; Phase 1 changes that, so keep `preview.cjs` working throughout.
 
+### Tooling note (browser-based UI work)
+
+A browser is available without the blocked download hosts:
+`npm i -D playwright @sparticuz/chromium`, extract the binary with
+`node -e "require('@sparticuz/chromium').default.executablePath()"`, decompress
+`node_modules/@sparticuz/chromium/bin/al2023.tar.br` to `/tmp/al2023`, then run Chromium with
+`LD_LIBRARY_PATH=/tmp/al2023/lib`. `scripts/ui-sweep.cjs` does all of this and prints its own setup reminder.
+`package.json` is deliberately untouched until PR #112 (which also edits it) merges; `.audit/` is git-ignored.
+
 ### Coordination with the other chat
 
 The other session works on gameplay/technical systems (PR #112: world checkpoints, save retention; it touches `src/`, `test/`, `docs/`, `scripts/`, `build.cjs`, `index.html`).
@@ -67,11 +76,42 @@ The other session works on gameplay/technical systems (PR #112: world checkpoint
 | 6 | Polish & proof | Motion, empty/loading/error, a11y pass, text size + density settings, perf budget | 1–2 |
 | — | *Match engine* | Reserved — starts only after Phase 6 | — |
 
-**Current phase: 0 — Foundations.**
+**Where we are (25 Nov 2026):** the audit is done, the browser toolchain works, and the first measurement sweep has run (624 screen-states). Results: [`docs/ui-measurements.md`](./ui-measurements.md). Next three steps, in order: **(M2)** populate a save and re-measure the data screens, **(B)** fix the four measured bugs, then **(0)** start the token layer.
+
+**Current phase: M2 — populate a save, re-measure (then B, then 0).**
 
 ---
 
-## 2. Phase 0 — Foundations
+## 2. Step M — measure (M1 done, M2 next)
+
+**M1 — done.** `scripts/ui-sweep.cjs` walks every destination and tab at 390/768/1440 and records overflow, fold depth, control count, sub-44 px targets, real computed contrast, table widths, scroll containers and heading count. 624 screen-states, zero runtime errors. Output: `.audit/sweep.json`, `.audit/shots/`, report in `docs/ui-measurements.md`.
+
+**M2 — next. Why:** the sweep ran on a *founded club with no players*, so Squad, Tactics selection, Finances, Schedule and Transfers were measured as empty states. Their real tables — the hard part — are unmeasured.
+
+Two ways to populate, pick whichever is quicker:
+- **A (fastest):** you play a save for ten minutes in the preview, stop at any screen with a squad, then I capture from that state. Tell me when a save has a club with players.
+- **B (automated):** script the `apply for a job` path (profile → job market → apply → advance days → interview → offer) until a club with a squad exists, then re-run the sweep.
+
+**Checkpoint M2:** the sweep re-run shows `tables > 0` and populated rows for `squad`, `tactics`, `fixtures`, `finance`, `transfers`.
+
+---
+
+## 3. Step B — the four measured bugs
+
+Small, self-contained, and they make every later screenshot honest. Fix before Phase 0 because all four sit in the shell that Phase 1 will touch.
+
+| # | Bug | Fix | Done when |
+|---|---|---|---|
+| B1 | **Continue is clipped at 390 px** (header doesn't fit) | Collapse the header: hide the wallet label and the clock text at < 420 px, keep Continue fully visible; move wallet into the sheet | Screenshot at 390 shows the whole Continue button |
+| B2 | **No visible page title at 390 px** (`h1Count` = 0) | Render `#homeTitle` as a sticky mini-title under the bar on mobile | `h1Count` ≥ 1 at 390 px on every screen |
+| B3 | **Duplicate "Back" chip inside the tab strip** | Remove the stray control from the tab markup | Only one Back on screen at 1440 px |
+| B4 | **15 failing contrast pairs on Tactics** | Re-pair the muted labels on the green pitch panel; target ≥ 4.5:1 body, ≥ 3:1 large | Sweep reports ≤ 3 contrast failures on `tactics` |
+
+**Checkpoint B:** re-run `scripts/ui-sweep.cjs`; B1–B4 verified by measurement/screenshot, and `docs/ui-measurements.md` updated with a "fixed" column.
+
+---
+
+## 4. Phase 0 — Foundations
 
 **Goal:** one vocabulary. After this phase, every later screen is assembled, not hand-painted.
 
@@ -101,7 +141,7 @@ The other session works on gameplay/technical systems (PR #112: world checkpoint
 
 ---
 
-## 3. Phase 1 — Shell and navigation
+## 5. Phase 1 — Shell and navigation
 
 **Goal:** 92 screens become feelable.
 
@@ -124,7 +164,7 @@ The other session works on gameplay/technical systems (PR #112: world checkpoint
 
 ---
 
-## 4. Phase 2 — Flagship screens
+## 6. Phase 2 — Flagship screens
 
 **Goal:** the five screens players see most stop looking like a dashboard.
 
@@ -164,7 +204,7 @@ The other session works on gameplay/technical systems (PR #112: world checkpoint
 
 ---
 
-## 5. Phase 3 — Matchday
+## 7. Phase 3 — Matchday
 
 **Goal:** make the ritual shorter and the pitch feel like a broadcast.
 
@@ -184,7 +224,7 @@ The other session works on gameplay/technical systems (PR #112: world checkpoint
 
 ---
 
-## 6. Phase 4 — Data workspaces
+## 8. Phase 4 — Data workspaces
 
 **Goal:** no horizontal tables on phones; every long list has an honest end.
 
@@ -203,7 +243,7 @@ The other session works on gameplay/technical systems (PR #112: world checkpoint
 
 ---
 
-## 7. Phase 5 — Rooms and the manager-life layer
+## 9. Phase 5 — Rooms and the manager-life layer
 
 **Goal:** the product stops looking like two products.
 
@@ -221,7 +261,7 @@ The other session works on gameplay/technical systems (PR #112: world checkpoint
 
 ---
 
-## 8. Phase 6 — Polish and proof
+## 10. Phase 6 — Polish and proof
 
 **Goal:** nothing feels unfinished, and the claims are measurable.
 
@@ -241,7 +281,7 @@ The other session works on gameplay/technical systems (PR #112: world checkpoint
 
 ---
 
-## 9. Reserved: match engine
+## 11. Reserved: match engine
 
 Starts **only** after Phase 6 closes. Planned shape, subject to a fresh audit of `engine.js` / `render.js` / `physics.js` at that time:
 
@@ -254,8 +294,9 @@ No engine changes are in scope for Phases 0–6. Rendering support (canvas DPR c
 
 ---
 
-## 10. Session log
+## 12. Session log
 
 | Date | Phase | What changed | Next |
 |---|---|---|---|
-| 2026-11-25 | — | Audit written (`docs/ui-ux-audit.md`); roadmap written; no product code touched | Open Phase 0: `tokens.css`, `primitives.css`, breakpoint collapse |
+| 2026-11-25 | — | Audit written (`docs/ui-ux-audit.md`); roadmap written; no product code touched | — |
+| 2026-11-25 | M1 | Browser toolchain solved (npm-only); `scripts/ui-sweep.cjs` written; 624 screen-states measured at 390/768/1440; `docs/ui-measurements.md` written; audit corrected in 5 places; 4 verified bugs logged | M2: populate a save and re-measure the data screens |

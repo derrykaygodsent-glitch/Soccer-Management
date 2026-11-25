@@ -14,9 +14,10 @@ I read the whole interface layer rather than eyeballing screenshots:
 - all 1,481,783 bytes of UI JavaScript, including every `views.*` renderer, every matchday `stage`, the entry flow and the 5 dialogs
 - measured values pulled out mechanically: colour census, type-scale census, breakpoint census, tap-target sizes, table minimum widths, contrast ratios, class-namespace counts, artifact weight
 
-**Blind spot:** this sandbox cannot run a browser (Chromium's system libraries are missing and the browser-download hosts are blocked), so I have not seen rendered pixels. Everything below is derived from the markup and the computed styles that produce those pixels. Judgements about *legibility, density and touch ergonomics* are therefore based on declared `font-size`, `min-height`, `min-width` and breakpoint values — which is precise — but the very first thing I should do when a browser is available is a 390 px / 768 px / 1440 px pixel pass to confirm the three or four calls that depend on real optical rhythm.
+**Now measured.** A browser became available part-way through this audit (Chromium 158, from an npm-only toolchain — see `docs/ui-measurements.md`), so the findings below were checked against **624 real screen-states**: 35 destinations × their tabs × 390 / 768 / 1440 px. The results, the screenshot evidence and the five places where pixels corrected me are in [`docs/ui-measurements.md`](./ui-measurements.md). Tool: [`scripts/ui-sweep.cjs`](../scripts/ui-sweep.cjs).
 
-The local preview is running at `http://localhost:4173` for you meanwhile.
+**Remaining blind spot:** the measured save is a *founded club with no players*, so squad-dependent screens (Squad, Tactic selection, Finances, Schedule, Transfers) were measured in their **empty state**. Populated tables still need a save with a club — that is the next job.
+
 
 ---
 
@@ -76,9 +77,18 @@ Each finding: **evidence → why it costs you → what to do.**
 - **Why it costs you:** every screen has its own private set of breakpoints, so no two screens behave the same when you resize. That's the source of "it feels fine on my laptop but wrong on my phone".
 - **What to do:** five breakpoints, named, applied by *layout role*, not by number: `sm 480` (single column, dock nav), `md 768` (tablet, two-pane collapses to drawer), `lg 1024` (sidebar appears), `xl 1440` (12-column grid, panels side-by-side), `2xl 1800` (max content width 1560 px, centred). Delete the rest.
 
+### 3.3b Four defects the browser found (fix these first — they are small)
+
+These are verified, reproducible, and each one makes the product feel broken on a phone:
+
+1. **The Continue button is clipped at 390 px.** The header row does not fit; "Continue" is cut off at the right edge (`.audit/shots/390-home.png`). The page reports no horizontal overflow because the header clips it. The primary action of the whole game is partly off-screen.
+2. **No page title on a phone.** `h1Count` is **0 at 390 px** on every screen and 1 at 1440 px — the title lives in a bar that collapses on mobile.
+3. **A stray "Back" button inside the tab strip.** Every page shows Back twice: the history group up top, and again as the first chip of `Overview · Calendar · Inbox · Profile`.
+4. **15 failing contrast pairs on Tactics** (vs 1–3 everywhere else) — muted labels on the green pitch panel. Palette-level contrast is fine, so this is one component, not a retune.
+
 ### 3.4 Navigation doesn't scale to 70 screens
 
-- **Evidence:** the sidebar holds **18 destinations in 5 groups** in a 215 px column at 11.75 px. Each destination carries its own tab strip: Finances has **8 tabs**, Scouting 7, Dynamics 7, Club Info 6, Staff 6, Development 6, Squad/Eden 4, Transfers 4, Vision 4, Schedule 4, Tactics 6. `.hc-tabs` is `overflow:auto` with `scrollbar-width:none` and 21 px gaps — so on a phone the 8 Finances tabs silently run off-screen with **no fade, no arrows, no snap** to tell you they exist. There is also a page-level tab row (`Overview / Calendar Desk / Club vision`) *above* the section tabs, so there are two horizontal strips stacked, and the second one's contents change when you switch the first.
+- **Evidence:** the sidebar holds **26 destinations in 5 groups** in this build (18 clubhouse pages plus the manager-life pages share one sidebar; the sweep found **35 unique nav ids** across shell states) in a 215 px column at 11.75 px. A duplicate **Back** chip also sits inside the tab strip (see §3.3b). Each destination carries its own tab strip: Finances has **8 tabs**, Scouting 7, Dynamics 7, Club Info 6, Staff 6, Development 6, Squad/Eden 4, Transfers 4, Vision 4, Schedule 4, Tactics 6. `.hc-tabs` is `overflow:auto` with `scrollbar-width:none` and 21 px gaps — so on a phone the 8 Finances tabs silently run off-screen with **no fade, no arrows, no snap** to tell you they exist. There is also a page-level tab row (`Overview / Calendar Desk / Club vision`) *above* the section tabs, so there are two horizontal strips stacked, and the second one's contents change when you switch the first.
 - **Why it costs you:** this is the #1 "casual dashboard" tell. Deep products feel deep when depth is *revealed*, not listed. Two stacked horizontal strips plus a hamburger is a lot of chrome to hold 70 screens and it never shows the *shape* of the game — no sense of "Club → Football → Squad", no breadcrumb, no favourites, no recents.
 - **What to do (the "futuristic navigation" bit, concretely):**
   1. **Three-tier navigation.** L1 = 5 icon+label hubs in a 72 px rail (Clubhouse, Football, Season, Operations, Office) that stays visible at all widths. L2 = the chosen hub's pages in a collapsible 200 px panel with icons and live badges. L3 = the page's tabs, rendered as a **segmented rail directly under the title**, horizontally scrollable with edge fade + snap + keyboard arrows, and collapsing into a dropdown when > 5 tabs.
@@ -105,7 +115,7 @@ Each finding: **evidence → why it costs you → what to do.**
 
 ### 3.6 The default composition is a stack of cards
 
-- **Evidence:** Home (`clubhouse()`) stacks nine modules in one scroll — match hero, today's desk, 4 KPI tiles, fixtures panel, league table, player leaders, club ledger, Terrace panel — with no reflow, no personalisation and no priority. On a 390 px viewport this is roughly 2,300–2,600 px of vertical scroll before the player reaches the bottom. Many workspaces are also 2-pane at every width until a breakpoint removes the pane entirely.
+- **Evidence:** Home (`clubhouse()`) stacks nine modules in one scroll — match hero, today's desk, 4 KPI tiles, fixtures panel, league table, player leaders, club ledger, Terrace panel — with no reflow, no personalisation and no priority. Measured: the clubhouse Home is **2.19× viewport** at 390 px (≈1,850 px of scroll) — long, but not the worst offender; `intelligence` (15.06×), `jobs` (11.38×) and `atlas` (10.11×) are the pages that really need paging. Many workspaces are also 2-pane at every width until a breakpoint removes the pane entirely.
 - **Why it costs you:** "cards and buttons" is precisely what you said you don't want. A card grid says *here is everything*; a game screen says *here is what matters now*.
 - **What to do:** recompose Home as a **matchday poster with a modular board**:
   - a full-bleed hero (next fixture, countdown, opponent form, one primary CTA) that occupies ~38% of the fold at every size
@@ -117,6 +127,7 @@ Each finding: **evidence → why it costs you → what to do.**
 ### 3.7 Tables have no mobile mode and there is no pagination
 
 - **Evidence:** tables are the primary data surface (12 modules render `<table>`; `club-squad`, `club-people` alone emit 8 tables). Minimum widths are hard-coded: `355px`, `370px`, `407px`, `453px`, `600px`. They sit inside `.cc-scroll{overflow:auto}` — so on a 390 px screen a squad table is a horizontal scroll with no sticky first column. There is no pagination anywhere: lists render in full, and long ones are capped by `max-height` (e.g. `455px`, `clamp(340px, 100svh - 247px, 650px)`), which means three nested scroll areas (`page → panel → table`) on mobile. The player-dossier flow has a "More" that increments by 30 — the only paging gesture in the product.
+- **Measured:** page-level horizontal overflow is **0 of 624** states — so the layout itself is robust. Only 2 states have a table wider than its own scroll container (`scouting`, `league`). The remaining problem is real but contained: on a phone those tables are still a sideways scroll inside a panel, and 88% of all controls are under 44 px.
 - **Why it costs you:** horizontal scrolling inside a vertically scrolling page inside a full-screen shell is the classic mobile-web failure. And a 38-row league table, 40+ fixtures or a 200-player shortlist all deserve explicit paging, not infinite scroll.
 - **What to do:**
   1. **Responsive table contract** — at ≥1024 px: full table, sticky header inside one scroll container, sticky primary column. At 768–1023: drop to 4–5 essential columns with a row-expand for the rest. At <768: **switch component entirely** to a card/row list (name + 3 metrics + chevron), grouped by section with sticky group headers. Never a horizontally scrolling table on a phone.
@@ -204,7 +215,7 @@ Scoring: **Hierarchy** (can I tell what matters), **Legibility** (can I read it 
 
 ### 5.1 Entry — Main menu
 
-**Now:** full-bleed scene (`#careerScene`) with an editorial panel: `TL / 26 · CAREER CENTRE`, huge condensed `TOUCHLINE 26`, then Resume / Start a new game / Load game, footer "OFFLINE EDITION / SEASON 2026–27". Top-right: Cloud saves, Full screen, Open in new tab.
+**Now:** there is a **splash stage first** (`data-entry="splash"` → a single **Enter Touchline** button), and the menu sits behind it. The menu is a full-bleed scene (`#careerScene`) with an editorial panel: `TL / 26 · CAREER CENTRE`, huge condensed `TOUCHLINE 26`, then Resume / Start a new game / Load game, footer "OFFLINE EDITION / SEASON 2026–27". Top-right: Cloud saves, Full screen, Open in new tab.
 
 **Works:** the type is confident, the photo scene gives it a real identity, keyboard focus is moved to the `<h1>`, reduced-motion is respected. This is the best-looking screen in the product.
 
