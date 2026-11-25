@@ -1,0 +1,1636 @@
+{
+  "generatedAt": "2026-11-25T16:49:06.635Z",
+  "protocol": {
+    "manifestSha256": "373bc37833a2e92b1f4682346b7715029390b5be7a247e2c34b0be2da7943ad4",
+    "manifestBlocks": 2592,
+    "rows": 7776,
+    "primaryOutcome": "focal xG difference (focal xG minus opponent xG); paired effect is relevant minus control",
+    "secondaryComparator": "relevant minus neutral",
+    "styles": [
+      "press",
+      "counter",
+      "possession",
+      "direct",
+      "defend",
+      "attack"
+    ],
+    "reputations": [
+      50,
+      60,
+      75
+    ],
+    "primaryContrasts": 18,
+    "alpha": 0.05,
+    "bonferroniAlpha": 0.002777777777777778,
+    "mdeXgPerMatch": 1,
+    "bootstrapReplicatesPrimary": 100000,
+    "bootstrapReplicatesSecondary": 25000,
+    "bootstrapSeed": "SHA-256 of manifest hash and contrast label; seeded via TLData.mulberry32",
+    "primaryBootstrapP": "two-sided, centered nonparametric block bootstrap under a zero-mean null; plus-one correction",
+    "primaryCI": "percentile paired-block bootstrap; familywise coverage 1 - 0.05/18",
+    "sensitivity": "paired exact sign test, Bonferroni-adjusted over the 18 primary cells",
+    "unit": "base squad / match seed / venue block; the three conditions within a block are paired"
+  },
+  "provenance": {
+    "gitCommit": "a102a7a2d811db0d747c8f511722a0b14ca4a47f",
+    "node": "v22.22.3",
+    "analysisSha256": "78e4d6ee682c37e996aa96a1c9c4847a25f1741211a452357c078af00713835d",
+    "manifestSha256": "373bc37833a2e92b1f4682346b7715029390b5be7a247e2c34b0be2da7943ad4",
+    "runnerSha256": "fbd9642754debc9a99538cb296f2b44de4ea8fc241b9c6e6aeaba4a4a15b210b",
+    "engineSha256": "cf107e87d10229b0e8b733391a91ad879c521d27fe7fe5915a42c47ecc379fa1",
+    "dataSha256": "d7d6f1c2c42f10b67c05915b3d2aee7eb9c914a285b6dd0c03b53d9a57a1b985",
+    "fitSha256": "99eaa03be9a66535673861d6154c55ded1bbcd8cd27fa2467880ccf57c102748",
+    "csvSha256": [
+      "ff357750bd7e526fd9438463b157f7cd4064be0eb8cffd076cd4627ef6595a52",
+      "7ef3b51c649f5db48c22c2feb4fc4b34a16e2499ee7cf7192d623b9f82a6f814"
+    ]
+  },
+  "primary": [
+    {
+      "rep": 50,
+      "style": "press",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 0.7233,
+      "sd": 1.8354,
+      "bootstrapCI95": [
+        0.427,
+        1.025
+      ],
+      "familywiseBootstrapCI": [
+        0.2672,
+        1.187
+      ],
+      "bootstrapP": 0.00001999980000199998,
+      "bonferroniP": 0.0003599964000359997,
+      "pairedTP": 0.000005351722786706148,
+      "bonferroniTP": 0.00009633101016071066,
+      "signTest": {
+        "n": 144,
+        "positive": 87,
+        "negative": 57,
+        "ties": 0,
+        "p": 0.015370514949913823
+      },
+      "signTestBonferroniP": 0.2766692690984488,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": true,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": false
+    },
+    {
+      "rep": 50,
+      "style": "counter",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 0.409,
+      "sd": 1.2046,
+      "bootstrapCI95": [
+        0.2117,
+        0.6024
+      ],
+      "familywiseBootstrapCI": [
+        0.1094,
+        0.7061
+      ],
+      "bootstrapP": 0.00004999950000499995,
+      "bonferroniP": 0.0008999910000899991,
+      "pairedTP": 0.00007633634825299218,
+      "bonferroniTP": 0.0013740542685538593,
+      "signTest": {
+        "n": 144,
+        "positive": 88,
+        "negative": 56,
+        "ties": 0,
+        "p": 0.009543281732431094
+      },
+      "signTestBonferroniP": 0.17177907118375968,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": true,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": true
+    },
+    {
+      "rep": 50,
+      "style": "possession",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 0.8208,
+      "sd": 1.763,
+      "bootstrapCI95": [
+        0.5345,
+        1.1098
+      ],
+      "familywiseBootstrapCI": [
+        0.3907,
+        1.2752
+      ],
+      "bootstrapP": 0.00000999990000099999,
+      "bonferroniP": 0.00017999820001799984,
+      "pairedTP": 1.1317668380250723e-7,
+      "bonferroniTP": 0.00000203718030844513,
+      "signTest": {
+        "n": 144,
+        "positive": 100,
+        "negative": 44,
+        "ties": 0,
+        "p": 0.00000349380965110911
+      },
+      "signTestBonferroniP": 0.00006288857371996398,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": true,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": false
+    },
+    {
+      "rep": 50,
+      "style": "direct",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 0.1551,
+      "sd": 1.2608,
+      "bootstrapCI95": [
+        -0.0491,
+        0.3621
+      ],
+      "familywiseBootstrapCI": [
+        -0.1541,
+        0.4731
+      ],
+      "bootstrapP": 0.13901860981390185,
+      "bonferroniP": 1,
+      "pairedTP": 0.14197925377601983,
+      "bonferroniTP": 1,
+      "signTest": {
+        "n": 144,
+        "positive": 79,
+        "negative": 65,
+        "ties": 0,
+        "p": 0.27861454634422134
+      },
+      "signTestBonferroniP": 1,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": false,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": true
+    },
+    {
+      "rep": 50,
+      "style": "defend",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 0.1773,
+      "sd": 1.1395,
+      "bootstrapCI95": [
+        -0.0082,
+        0.3621
+      ],
+      "familywiseBootstrapCI": [
+        -0.103,
+        0.4642
+      ],
+      "bootstrapP": 0.06058939410605894,
+      "bonferroniP": 1,
+      "pairedTP": 0.06385904078466442,
+      "bonferroniTP": 1,
+      "signTest": {
+        "n": 144,
+        "positive": 81,
+        "negative": 63,
+        "ties": 0,
+        "p": 0.15633984208003984
+      },
+      "signTestBonferroniP": 1,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": false,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": true
+    },
+    {
+      "rep": 50,
+      "style": "attack",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 1.1147,
+      "sd": 1.806,
+      "bootstrapCI95": [
+        0.8269,
+        1.4152
+      ],
+      "familywiseBootstrapCI": [
+        0.6905,
+        1.5771
+      ],
+      "bootstrapP": 0.00000999990000099999,
+      "bonferroniP": 0.00017999820001799984,
+      "pairedTP": 1.027888885118955e-11,
+      "bonferroniTP": 1.850199993214119e-10,
+      "signTest": {
+        "n": 144,
+        "positive": 103,
+        "negative": 41,
+        "ties": 0,
+        "p": 2.448062602203216e-7
+      },
+      "signTestBonferroniP": 0.000004406512683965789,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": true,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": false
+    },
+    {
+      "rep": 60,
+      "style": "press",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 0.7081,
+      "sd": 1.9524,
+      "bootstrapCI95": [
+        0.3872,
+        1.0227
+      ],
+      "familywiseBootstrapCI": [
+        0.2178,
+        1.1925
+      ],
+      "bootstrapP": 0.00000999990000099999,
+      "bonferroniP": 0.00017999820001799984,
+      "pairedTP": 0.000025490624043555954,
+      "bonferroniTP": 0.00045883123278400717,
+      "signTest": {
+        "n": 144,
+        "positive": 90,
+        "negative": 54,
+        "ties": 0,
+        "p": 0.00339388406357323
+      },
+      "signTestBonferroniP": 0.061089913144318136,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": true,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": false
+    },
+    {
+      "rep": 60,
+      "style": "counter",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 0.3649,
+      "sd": 1.3477,
+      "bootstrapCI95": [
+        0.1453,
+        0.5848
+      ],
+      "familywiseBootstrapCI": [
+        0.0296,
+        0.7032
+      ],
+      "bootstrapP": 0.001019989800101999,
+      "bonferroniP": 0.018359816401835982,
+      "pairedTP": 0.0014450228987290537,
+      "bonferroniTP": 0.026010412177122966,
+      "signTest": {
+        "n": 144,
+        "positive": 91,
+        "negative": 53,
+        "ties": 0,
+        "p": 0.001942531970080341
+      },
+      "signTestBonferroniP": 0.03496557546144614,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": true,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": true
+    },
+    {
+      "rep": 60,
+      "style": "possession",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 1.2051,
+      "sd": 1.9157,
+      "bootstrapCI95": [
+        0.8937,
+        1.5178
+      ],
+      "familywiseBootstrapCI": [
+        0.7274,
+        1.6854
+      ],
+      "bootstrapP": 0.00000999990000099999,
+      "bonferroniP": 0.00017999820001799984,
+      "pairedTP": 4.7200021668913905e-12,
+      "bonferroniTP": 8.496003900404503e-11,
+      "signTest": {
+        "n": 144,
+        "positive": 104,
+        "negative": 40,
+        "ties": 0,
+        "p": 9.454907617706666e-8
+      },
+      "signTestBonferroniP": 0.0000017018833711871999,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": true,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": false
+    },
+    {
+      "rep": 60,
+      "style": "direct",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 0.235,
+      "sd": 1.2001,
+      "bootstrapCI95": [
+        0.0391,
+        0.4314
+      ],
+      "familywiseBootstrapCI": [
+        -0.0646,
+        0.5367
+      ],
+      "bootstrapP": 0.018879811201887982,
+      "bonferroniP": 0.33983660163398366,
+      "pairedTP": 0.020140101617103,
+      "bonferroniTP": 0.362521829107854,
+      "signTest": {
+        "n": 144,
+        "positive": 78,
+        "negative": 66,
+        "ties": 0,
+        "p": 0.35936440328775604
+      },
+      "signTestBonferroniP": 1,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": false,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": true
+    },
+    {
+      "rep": 60,
+      "style": "defend",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 0.3063,
+      "sd": 1.1641,
+      "bootstrapCI95": [
+        0.1178,
+        0.4983
+      ],
+      "familywiseBootstrapCI": [
+        0.0188,
+        0.6024
+      ],
+      "bootstrapP": 0.0017199828001719982,
+      "bonferroniP": 0.030959690403095968,
+      "pairedTP": 0.001940205157643815,
+      "bonferroniTP": 0.03492369283758867,
+      "signTest": {
+        "n": 144,
+        "positive": 86,
+        "negative": 58,
+        "ties": 0,
+        "p": 0.024111364776137904
+      },
+      "signTestBonferroniP": 0.43400456597048226,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": true,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": true
+    },
+    {
+      "rep": 60,
+      "style": "attack",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 0.7388,
+      "sd": 1.6862,
+      "bootstrapCI95": [
+        0.4647,
+        1.0133
+      ],
+      "familywiseBootstrapCI": [
+        0.3177,
+        1.1586
+      ],
+      "bootstrapP": 0.00000999990000099999,
+      "bonferroniP": 0.00017999820001799984,
+      "pairedTP": 5.209030033981321e-7,
+      "bonferroniTP": 0.000009376254061166378,
+      "signTest": {
+        "n": 144,
+        "positive": 93,
+        "negative": 51,
+        "ties": 0,
+        "p": 0.0005851398425063653
+      },
+      "signTestBonferroniP": 0.010532517165114575,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": true,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": false
+    },
+    {
+      "rep": 75,
+      "style": "press",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 1.1421,
+      "sd": 2.0946,
+      "bootstrapCI95": [
+        0.7986,
+        1.4784
+      ],
+      "familywiseBootstrapCI": [
+        0.6152,
+        1.6588
+      ],
+      "bootstrapP": 0.00000999990000099999,
+      "bonferroniP": 0.00017999820001799984,
+      "pairedTP": 1.002031790875435e-9,
+      "bonferroniTP": 1.803657223575783e-8,
+      "signTest": {
+        "n": 144,
+        "positive": 104,
+        "negative": 40,
+        "ties": 0,
+        "p": 9.454907617706666e-8
+      },
+      "signTestBonferroniP": 0.0000017018833711871999,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": true,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": false
+    },
+    {
+      "rep": 75,
+      "style": "counter",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 0.0706,
+      "sd": 1.4424,
+      "bootstrapCI95": [
+        -0.1652,
+        0.3047
+      ],
+      "familywiseBootstrapCI": [
+        -0.2917,
+        0.4242
+      ],
+      "bootstrapP": 0.5552144478555214,
+      "bonferroniP": 1,
+      "pairedTP": 0.5578889892434145,
+      "bonferroniTP": 1,
+      "signTest": {
+        "n": 144,
+        "positive": 75,
+        "negative": 69,
+        "ties": 0,
+        "p": 0.6770697943668336
+      },
+      "signTestBonferroniP": 1,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": false,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": true
+    },
+    {
+      "rep": 75,
+      "style": "possession",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 1.2038,
+      "sd": 2.1137,
+      "bootstrapCI95": [
+        0.8651,
+        1.5523
+      ],
+      "familywiseBootstrapCI": [
+        0.6944,
+        1.7388
+      ],
+      "bootstrapP": 0.00000999990000099999,
+      "bonferroniP": 0.00017999820001799984,
+      "pairedTP": 2.2028867618928416e-10,
+      "bonferroniTP": 3.965196171407115e-9,
+      "signTest": {
+        "n": 144,
+        "positive": 106,
+        "negative": 38,
+        "ties": 0,
+        "p": 1.2746973691979582e-8
+      },
+      "signTestBonferroniP": 2.2944552645563247e-7,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": true,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": false
+    },
+    {
+      "rep": 75,
+      "style": "direct",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 0.388,
+      "sd": 1.2683,
+      "bootstrapCI95": [
+        0.1829,
+        0.5943
+      ],
+      "familywiseBootstrapCI": [
+        0.0756,
+        0.7027
+      ],
+      "bootstrapP": 0.0002899971000289997,
+      "bonferroniP": 0.005219947800521994,
+      "pairedTP": 0.00034003343956734433,
+      "bonferroniTP": 0.006120601912212198,
+      "signTest": {
+        "n": 144,
+        "positive": 86,
+        "negative": 58,
+        "ties": 0,
+        "p": 0.024111364776137904
+      },
+      "signTestBonferroniP": 0.43400456597048226,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": true,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": true
+    },
+    {
+      "rep": 75,
+      "style": "defend",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 0.3384,
+      "sd": 1.2759,
+      "bootstrapCI95": [
+        0.129,
+        0.5446
+      ],
+      "familywiseBootstrapCI": [
+        0.0164,
+        0.6518
+      ],
+      "bootstrapP": 0.0014299857001429986,
+      "bonferroniP": 0.025739742602573976,
+      "pairedTP": 0.0017905431246150183,
+      "bonferroniTP": 0.03222977624307033,
+      "signTest": {
+        "n": 144,
+        "positive": 90,
+        "negative": 54,
+        "ties": 0,
+        "p": 0.00339388406357323
+      },
+      "signTestBonferroniP": 0.061089913144318136,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": true,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": true
+    },
+    {
+      "rep": 75,
+      "style": "attack",
+      "n": 144,
+      "homeN": 72,
+      "awayN": 72,
+      "mean": 1.3662,
+      "sd": 1.9107,
+      "bootstrapCI95": [
+        1.0558,
+        1.6778
+      ],
+      "familywiseBootstrapCI": [
+        0.9032,
+        1.8394
+      ],
+      "bootstrapP": 0.00000999990000099999,
+      "bonferroniP": 0.00017999820001799984,
+      "pairedTP": 1.4210854715202004e-14,
+      "bonferroniTP": 2.5579538487363607e-13,
+      "signTest": {
+        "n": 144,
+        "positive": 108,
+        "negative": 36,
+        "ties": 0,
+        "p": 1.495758749576495e-9
+      },
+      "signTestBonferroniP": 2.6923657492376907e-8,
+      "mde": 1,
+      "excludesZeroAfterFamilywiseCI": true,
+      "entirelyAboveMDE": false,
+      "entirelyBelowMDE": false
+    }
+  ],
+  "secondaryRelevantMinusNeutral": [
+    {
+      "rep": 50,
+      "style": "press",
+      "n": 144,
+      "mean": 0.8204,
+      "sd": 1.7911,
+      "ci95": [
+        0.5334,
+        1.1121
+      ],
+      "bootstrapP": 0.00003999840006399744
+    },
+    {
+      "rep": 50,
+      "style": "counter",
+      "n": 144,
+      "mean": 0.3733,
+      "sd": 1.2255,
+      "ci95": [
+        0.1729,
+        0.5686
+      ],
+      "bootstrapP": 0.0001999920003199872
+    },
+    {
+      "rep": 50,
+      "style": "possession",
+      "n": 144,
+      "mean": 0.8334,
+      "sd": 1.7775,
+      "ci95": [
+        0.5414,
+        1.127
+      ],
+      "bootstrapP": 0.00003999840006399744
+    },
+    {
+      "rep": 50,
+      "style": "direct",
+      "n": 144,
+      "mean": 0.1641,
+      "sd": 1.2048,
+      "ci95": [
+        -0.0301,
+        0.3605
+      ],
+      "bootstrapP": 0.10271589136434543
+    },
+    {
+      "rep": 50,
+      "style": "defend",
+      "n": 144,
+      "mean": 0.1967,
+      "sd": 1.1047,
+      "ci95": [
+        0.0186,
+        0.3774
+      ],
+      "bootstrapP": 0.031238750449982002
+    },
+    {
+      "rep": 50,
+      "style": "attack",
+      "n": 144,
+      "mean": 0.8092,
+      "sd": 1.6721,
+      "ci95": [
+        0.5428,
+        1.0848
+      ],
+      "bootstrapP": 0.00003999840006399744
+    },
+    {
+      "rep": 60,
+      "style": "press",
+      "n": 144,
+      "mean": 0.6602,
+      "sd": 2.0532,
+      "ci95": [
+        0.3268,
+        0.9931
+      ],
+      "bootstrapP": 0.00007999680012799488
+    },
+    {
+      "rep": 60,
+      "style": "counter",
+      "n": 144,
+      "mean": 0.2484,
+      "sd": 1.479,
+      "ci95": [
+        0.0069,
+        0.4873
+      ],
+      "bootstrapP": 0.04247830086796528
+    },
+    {
+      "rep": 60,
+      "style": "possession",
+      "n": 144,
+      "mean": 0.8886,
+      "sd": 1.9111,
+      "ci95": [
+        0.5783,
+        1.2025
+      ],
+      "bootstrapP": 0.00003999840006399744
+    },
+    {
+      "rep": 60,
+      "style": "direct",
+      "n": 144,
+      "mean": 0.2354,
+      "sd": 1.1333,
+      "ci95": [
+        0.0492,
+        0.4213
+      ],
+      "bootstrapP": 0.012319507219711211
+    },
+    {
+      "rep": 60,
+      "style": "defend",
+      "n": 144,
+      "mean": 0.3749,
+      "sd": 1.1872,
+      "ci95": [
+        0.1849,
+        0.5708
+      ],
+      "bootstrapP": 0.0001999920003199872
+    },
+    {
+      "rep": 60,
+      "style": "attack",
+      "n": 144,
+      "mean": 0.8925,
+      "sd": 1.6271,
+      "ci95": [
+        0.6325,
+        1.1566
+      ],
+      "bootstrapP": 0.00003999840006399744
+    },
+    {
+      "rep": 75,
+      "style": "press",
+      "n": 144,
+      "mean": 0.9234,
+      "sd": 2.1953,
+      "ci95": [
+        0.5644,
+        1.2773
+      ],
+      "bootstrapP": 0.00003999840006399744
+    },
+    {
+      "rep": 75,
+      "style": "counter",
+      "n": 144,
+      "mean": 0.3022,
+      "sd": 1.2653,
+      "ci95": [
+        0.096,
+        0.508
+      ],
+      "bootstrapP": 0.004079836806527739
+    },
+    {
+      "rep": 75,
+      "style": "possession",
+      "n": 144,
+      "mean": 1.3298,
+      "sd": 2.3435,
+      "ci95": [
+        0.9517,
+        1.7123
+      ],
+      "bootstrapP": 0.00003999840006399744
+    },
+    {
+      "rep": 75,
+      "style": "direct",
+      "n": 144,
+      "mean": 0.2246,
+      "sd": 1.2926,
+      "ci95": [
+        0.0152,
+        0.4376
+      ],
+      "bootstrapP": 0.03763849446022159
+    },
+    {
+      "rep": 75,
+      "style": "defend",
+      "n": 144,
+      "mean": 0.3042,
+      "sd": 1.241,
+      "ci95": [
+        0.0996,
+        0.5068
+      ],
+      "bootstrapP": 0.003719851205951762
+    },
+    {
+      "rep": 75,
+      "style": "attack",
+      "n": 144,
+      "mean": 1.1663,
+      "sd": 2.0276,
+      "ci95": [
+        0.8418,
+        1.4959
+      ],
+      "bootstrapP": 0.00003999840006399744
+    }
+  ],
+  "venueSensitivity": [
+    {
+      "rep": 50,
+      "style": "press",
+      "venue": "home",
+      "n": 72,
+      "mean": 0.7009,
+      "ci95": [
+        0.2264,
+        1.1854
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "press",
+      "venue": "away",
+      "n": 72,
+      "mean": 0.7457,
+      "ci95": [
+        0.3961,
+        1.1047
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "counter",
+      "venue": "home",
+      "n": 72,
+      "mean": 0.4769,
+      "ci95": [
+        0.1828,
+        0.7627
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "counter",
+      "venue": "away",
+      "n": 72,
+      "mean": 0.341,
+      "ci95": [
+        0.0812,
+        0.6022
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "possession",
+      "venue": "home",
+      "n": 72,
+      "mean": 0.8411,
+      "ci95": [
+        0.4259,
+        1.2602
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "possession",
+      "venue": "away",
+      "n": 72,
+      "mean": 0.8004,
+      "ci95": [
+        0.4087,
+        1.2027
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "direct",
+      "venue": "home",
+      "n": 72,
+      "mean": 0.2359,
+      "ci95": [
+        -0.0474,
+        0.5236
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "direct",
+      "venue": "away",
+      "n": 72,
+      "mean": 0.0744,
+      "ci95": [
+        -0.2123,
+        0.3647
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "defend",
+      "venue": "home",
+      "n": 72,
+      "mean": 0.047,
+      "ci95": [
+        -0.2033,
+        0.3008
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "defend",
+      "venue": "away",
+      "n": 72,
+      "mean": 0.3077,
+      "ci95": [
+        0.0437,
+        0.5768
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "attack",
+      "venue": "home",
+      "n": 72,
+      "mean": 0.9888,
+      "ci95": [
+        0.5602,
+        1.4587
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "attack",
+      "venue": "away",
+      "n": 72,
+      "mean": 1.2406,
+      "ci95": [
+        0.8715,
+        1.6295
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "press",
+      "venue": "home",
+      "n": 72,
+      "mean": 0.7253,
+      "ci95": [
+        0.2903,
+        1.1534
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "press",
+      "venue": "away",
+      "n": 72,
+      "mean": 0.6909,
+      "ci95": [
+        0.2244,
+        1.1516
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "counter",
+      "venue": "home",
+      "n": 72,
+      "mean": 0.3912,
+      "ci95": [
+        0.0685,
+        0.7193
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "counter",
+      "venue": "away",
+      "n": 72,
+      "mean": 0.3386,
+      "ci95": [
+        0.0439,
+        0.6315
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "possession",
+      "venue": "home",
+      "n": 72,
+      "mean": 1.339,
+      "ci95": [
+        0.9277,
+        1.7443
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "possession",
+      "venue": "away",
+      "n": 72,
+      "mean": 1.0712,
+      "ci95": [
+        0.5993,
+        1.5518
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "direct",
+      "venue": "home",
+      "n": 72,
+      "mean": 0.2579,
+      "ci95": [
+        0.0055,
+        0.5187
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "direct",
+      "venue": "away",
+      "n": 72,
+      "mean": 0.2121,
+      "ci95": [
+        -0.0808,
+        0.4984
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "defend",
+      "venue": "home",
+      "n": 72,
+      "mean": 0.2699,
+      "ci95": [
+        -0.0004,
+        0.5455
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "defend",
+      "venue": "away",
+      "n": 72,
+      "mean": 0.3428,
+      "ci95": [
+        0.0801,
+        0.6074
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "attack",
+      "venue": "home",
+      "n": 72,
+      "mean": 0.6095,
+      "ci95": [
+        0.2139,
+        1.0131
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "attack",
+      "venue": "away",
+      "n": 72,
+      "mean": 0.8681,
+      "ci95": [
+        0.4935,
+        1.2452
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "press",
+      "venue": "home",
+      "n": 72,
+      "mean": 1.394,
+      "ci95": [
+        0.924,
+        1.8673
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "press",
+      "venue": "away",
+      "n": 72,
+      "mean": 0.8901,
+      "ci95": [
+        0.3951,
+        1.3699
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "counter",
+      "venue": "home",
+      "n": 72,
+      "mean": 0.361,
+      "ci95": [
+        0.0711,
+        0.6445
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "counter",
+      "venue": "away",
+      "n": 72,
+      "mean": -0.2198,
+      "ci95": [
+        -0.5779,
+        0.14
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "possession",
+      "venue": "home",
+      "n": 72,
+      "mean": 1.2016,
+      "ci95": [
+        0.778,
+        1.6378
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "possession",
+      "venue": "away",
+      "n": 72,
+      "mean": 1.2059,
+      "ci95": [
+        0.6746,
+        1.7504
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "direct",
+      "venue": "home",
+      "n": 72,
+      "mean": 0.3769,
+      "ci95": [
+        0.0684,
+        0.6889
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "direct",
+      "venue": "away",
+      "n": 72,
+      "mean": 0.3991,
+      "ci95": [
+        0.1217,
+        0.6706
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "defend",
+      "venue": "home",
+      "n": 72,
+      "mean": 0.2984,
+      "ci95": [
+        0.0345,
+        0.5625
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "defend",
+      "venue": "away",
+      "n": 72,
+      "mean": 0.3784,
+      "ci95": [
+        0.0546,
+        0.694
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "attack",
+      "venue": "home",
+      "n": 72,
+      "mean": 1.3633,
+      "ci95": [
+        0.9447,
+        1.7751
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "attack",
+      "venue": "away",
+      "n": 72,
+      "mean": 1.3692,
+      "ci95": [
+        0.9027,
+        1.8425
+      ]
+    }
+  ],
+  "scoreBandExploratory": [
+    {
+      "rep": 50,
+      "style": "press",
+      "scoreBand": "near-11.5",
+      "n": 72,
+      "mean": 0.6927,
+      "ci95": [
+        0.2945,
+        1.1069
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "press",
+      "scoreBand": "below-11.5",
+      "n": 72,
+      "mean": 0.7539,
+      "ci95": [
+        0.3197,
+        1.1955
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "counter",
+      "scoreBand": "below-11.5",
+      "n": 72,
+      "mean": 0.5312,
+      "ci95": [
+        0.2688,
+        0.7946
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "counter",
+      "scoreBand": "near-11.5",
+      "n": 72,
+      "mean": 0.2867,
+      "ci95": [
+        -0.0071,
+        0.5745
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "possession",
+      "scoreBand": "near-11.5",
+      "n": 72,
+      "mean": 1.1166,
+      "ci95": [
+        0.6772,
+        1.5699
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "possession",
+      "scoreBand": "below-11.5",
+      "n": 72,
+      "mean": 0.5249,
+      "ci95": [
+        0.183,
+        0.8621
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "direct",
+      "scoreBand": "near-11.5",
+      "n": 72,
+      "mean": 0.0117,
+      "ci95": [
+        -0.2982,
+        0.3214
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "direct",
+      "scoreBand": "below-11.5",
+      "n": 72,
+      "mean": 0.2986,
+      "ci95": [
+        0.0362,
+        0.5656
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "defend",
+      "scoreBand": "near-11.5",
+      "n": 72,
+      "mean": 0.3108,
+      "ci95": [
+        0.0424,
+        0.5849
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "defend",
+      "scoreBand": "below-11.5",
+      "n": 72,
+      "mean": 0.0439,
+      "ci95": [
+        -0.2069,
+        0.2976
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "attack",
+      "scoreBand": "near-11.5",
+      "n": 72,
+      "mean": 0.9721,
+      "ci95": [
+        0.6156,
+        1.3401
+      ]
+    },
+    {
+      "rep": 50,
+      "style": "attack",
+      "scoreBand": "below-11.5",
+      "n": 72,
+      "mean": 1.2572,
+      "ci95": [
+        0.8222,
+        1.736
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "press",
+      "scoreBand": "high-12.5-plus",
+      "n": 72,
+      "mean": 0.4885,
+      "ci95": [
+        0.0471,
+        0.9114
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "press",
+      "scoreBand": "near-11.5",
+      "n": 72,
+      "mean": 0.9277,
+      "ci95": [
+        0.4721,
+        1.3818
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "counter",
+      "scoreBand": "high-12.5-plus",
+      "n": 72,
+      "mean": 0.2513,
+      "ci95": [
+        -0.0386,
+        0.5349
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "counter",
+      "scoreBand": "near-11.5",
+      "n": 72,
+      "mean": 0.4784,
+      "ci95": [
+        0.1519,
+        0.8061
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "possession",
+      "scoreBand": "near-11.5",
+      "n": 72,
+      "mean": 1.1293,
+      "ci95": [
+        0.7095,
+        1.5519
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "possession",
+      "scoreBand": "high-12.5-plus",
+      "n": 72,
+      "mean": 1.2809,
+      "ci95": [
+        0.8241,
+        1.7372
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "direct",
+      "scoreBand": "near-11.5",
+      "n": 72,
+      "mean": 0.2952,
+      "ci95": [
+        0.034,
+        0.5566
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "direct",
+      "scoreBand": "high-12.5-plus",
+      "n": 72,
+      "mean": 0.1748,
+      "ci95": [
+        -0.1092,
+        0.4639
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "defend",
+      "scoreBand": "high-12.5-plus",
+      "n": 72,
+      "mean": 0.3018,
+      "ci95": [
+        0.0397,
+        0.5761
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "defend",
+      "scoreBand": "near-11.5",
+      "n": 72,
+      "mean": 0.3108,
+      "ci95": [
+        0.0472,
+        0.5777
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "attack",
+      "scoreBand": "high-12.5-plus",
+      "n": 72,
+      "mean": 0.7318,
+      "ci95": [
+        0.3289,
+        1.1419
+      ]
+    },
+    {
+      "rep": 60,
+      "style": "attack",
+      "scoreBand": "near-11.5",
+      "n": 72,
+      "mean": 0.7458,
+      "ci95": [
+        0.3823,
+        1.1214
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "press",
+      "scoreBand": "high-12.5-plus",
+      "n": 144,
+      "mean": 1.1421,
+      "ci95": [
+        0.7985,
+        1.4799
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "counter",
+      "scoreBand": "high-12.5-plus",
+      "n": 144,
+      "mean": 0.0706,
+      "ci95": [
+        -0.1664,
+        0.3054
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "possession",
+      "scoreBand": "high-12.5-plus",
+      "n": 144,
+      "mean": 1.2038,
+      "ci95": [
+        0.8671,
+        1.554
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "direct",
+      "scoreBand": "high-12.5-plus",
+      "n": 144,
+      "mean": 0.388,
+      "ci95": [
+        0.1813,
+        0.5958
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "defend",
+      "scoreBand": "high-12.5-plus",
+      "n": 144,
+      "mean": 0.3384,
+      "ci95": [
+        0.1295,
+        0.5472
+      ]
+    },
+    {
+      "rep": 75,
+      "style": "attack",
+      "scoreBand": "high-12.5-plus",
+      "n": 144,
+      "mean": 1.3662,
+      "ci95": [
+        1.0565,
+        1.6765
+      ]
+    }
+  ],
+  "scoreCoverage": [
+    {
+      "cell": "50/below-11.5",
+      "blocks": 432,
+      "styles": 6,
+      "proxyMin": 10.6,
+      "proxyMax": 11.47
+    },
+    {
+      "cell": "50/near-11.5",
+      "blocks": 432,
+      "styles": 6,
+      "proxyMin": 11.5,
+      "proxyMax": 12.32
+    },
+    {
+      "cell": "60/high-12.5-plus",
+      "blocks": 432,
+      "styles": 6,
+      "proxyMin": 12.5,
+      "proxyMax": 13.47
+    },
+    {
+      "cell": "60/near-11.5",
+      "blocks": 432,
+      "styles": 6,
+      "proxyMin": 11.55,
+      "proxyMax": 12.47
+    },
+    {
+      "cell": "75/high-12.5-plus",
+      "blocks": 864,
+      "styles": 6,
+      "proxyMin": 12.65,
+      "proxyMax": 14.82
+    }
+  ],
+  "summary": {
+    "primaryContrastsSignificantAfterBootstrapBonferroni": 14,
+    "primaryContrastsFamilywiseBootstrapCIExcludingZero": 14,
+    "primaryContrastsSignTestBonferroniSignificant": 8,
+    "contrastsWithFamilywiseCIEntirelyAboveMde": 0,
+    "contrastsWithFamilywiseCIEntirelyBelowMde": 9
+  }
+}

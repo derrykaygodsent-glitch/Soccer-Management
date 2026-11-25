@@ -1,0 +1,485 @@
+{
+  "generatedAt": "2026-11-24T10:04:45.413Z",
+  "gitCommit": "a102a7a2d811db0d747c8f511722a0b14ca4a47f",
+  "node": "v22.22.3",
+  "configuration": {
+    "styles": [
+      "press",
+      "counter",
+      "possession",
+      "direct",
+      "defend",
+      "attack"
+    ],
+    "reps": [
+      75
+    ],
+    "baseSeeds": [
+      79,
+      113
+    ],
+    "matchSeeds": [
+      4101,
+      5102,
+      6103,
+      7104
+    ],
+    "conditions": [
+      "neutral",
+      "relevant",
+      "control"
+    ],
+    "venueLevels": [
+      "home",
+      "away"
+    ],
+    "venueSchedule": "same venue for matched conditions; alternates by base-seed index + match-seed index",
+    "controlAttributes": [
+      "throwing",
+      "throwPower",
+      "freeKicks",
+      "penalties"
+    ],
+    "requestedBoost": 3,
+    "target": "projected-XI outfield players only",
+    "opponent": {
+      "club": "calibration-neutral",
+      "rep": 70,
+      "seed": 880070,
+      "tactic": "balanced default"
+    },
+    "dt": "1/40 second"
+  },
+  "hashes": {
+    "scripts/calibrate-tactical-fit.cjs": "8e111ef3241978e5f1d499c43c50b3ea204f401eff340305337ea9a4cc799211",
+    "src/engine.js": "cf107e87d10229b0e8b733391a91ad879c521d27fe7fe5915a42c47ecc379fa1",
+    "src/data.js": "d7d6f1c2c42f10b67c05915b3d2aee7eb9c914a285b6dd0c03b53d9a57a1b985",
+    "src/league-tactical-trends.js": "99eaa03be9a66535673861d6154c55ded1bbcd8cd27fa2467880ccf57c102748"
+  },
+  "rowCount": 144,
+  "rawCsv": "tactical-fit-calibration-pilot-rep75.csv",
+  "primaryOutcome": "focal team xG minus opponent xG",
+  "pairedAnalysis": "relevant-minus-control and relevant-minus-neutral; venue legs averaged within base-squad/match-seed block; 4000 deterministic paired bootstrap resamples",
+  "summaries": [
+    {
+      "rep": 75,
+      "style": "press",
+      "contrast": "relevant-minus-control",
+      "pairedBlocks": {
+        "n": 8,
+        "mean": 1.2901,
+        "median": 3.2082,
+        "sd": 3.0754,
+        "ci95": [
+          -0.661,
+          3.2038
+        ]
+      },
+      "homeOnly": {
+        "n": 4,
+        "mean": 1.888,
+        "median": 3.362,
+        "sd": 3.4847,
+        "ci95": [
+          -1.628,
+          4.0069
+        ]
+      },
+      "awayOnly": {
+        "n": 4,
+        "mean": 0.6923,
+        "median": 0.9503,
+        "sd": 2.9953,
+        "ci95": [
+          -1.4975,
+          3.3281
+        ]
+      }
+    },
+    {
+      "rep": 75,
+      "style": "press",
+      "contrast": "relevant-minus-neutral",
+      "pairedBlocks": {
+        "n": 8,
+        "mean": 2.1383,
+        "median": 2.3297,
+        "sd": 2.9588,
+        "ci95": [
+          0.3809,
+          4.1791
+        ]
+      },
+      "homeOnly": {
+        "n": 4,
+        "mean": 2.1872,
+        "median": 3.1441,
+        "sd": 1.7247,
+        "ci95": [
+          0.5731,
+          3.3516
+        ]
+      },
+      "awayOnly": {
+        "n": 4,
+        "mean": 2.0893,
+        "median": 1.8168,
+        "sd": 4.1768,
+        "ci95": [
+          -0.7704,
+          5.8778
+        ]
+      }
+    },
+    {
+      "rep": 75,
+      "style": "counter",
+      "contrast": "relevant-minus-control",
+      "pairedBlocks": {
+        "n": 8,
+        "mean": 0.003,
+        "median": 0.4313,
+        "sd": 1.636,
+        "ci95": [
+          -1.1965,
+          0.9
+        ]
+      },
+      "homeOnly": {
+        "n": 4,
+        "mean": 0.4335,
+        "median": 0.4313,
+        "sd": 0.7219,
+        "ci95": [
+          -0.1016,
+          1.1072
+        ]
+      },
+      "awayOnly": {
+        "n": 4,
+        "mean": -0.4275,
+        "median": 1.1561,
+        "sd": 2.2869,
+        "ci95": [
+          -2.4691,
+          1.1732
+        ]
+      }
+    },
+    {
+      "rep": 75,
+      "style": "counter",
+      "contrast": "relevant-minus-neutral",
+      "pairedBlocks": {
+        "n": 8,
+        "mean": 0.7112,
+        "median": 1.2886,
+        "sd": 2.258,
+        "ci95": [
+          -0.7162,
+          2.1419
+        ]
+      },
+      "homeOnly": {
+        "n": 4,
+        "mean": 1.3492,
+        "median": 1.3173,
+        "sd": 1.2714,
+        "ci95": [
+          0.2092,
+          2.5355
+        ]
+      },
+      "awayOnly": {
+        "n": 4,
+        "mean": 0.0731,
+        "median": -0.7177,
+        "sd": 3.0323,
+        "ci95": [
+          -1.8602,
+          3.074
+        ]
+      }
+    },
+    {
+      "rep": 75,
+      "style": "possession",
+      "contrast": "relevant-minus-control",
+      "pairedBlocks": {
+        "n": 8,
+        "mean": 1.539,
+        "median": 1.6968,
+        "sd": 1.1805,
+        "ci95": [
+          0.7717,
+          2.2973
+        ]
+      },
+      "homeOnly": {
+        "n": 4,
+        "mean": 1.3328,
+        "median": 1.6968,
+        "sd": 1.7259,
+        "ci95": [
+          0.0041,
+          2.7408
+        ]
+      },
+      "awayOnly": {
+        "n": 4,
+        "mean": 1.7451,
+        "median": 2.0363,
+        "sd": 0.3995,
+        "ci95": [
+          1.4227,
+          2.0674
+        ]
+      }
+    },
+    {
+      "rep": 75,
+      "style": "possession",
+      "contrast": "relevant-minus-neutral",
+      "pairedBlocks": {
+        "n": 8,
+        "mean": 2.2616,
+        "median": 2.2608,
+        "sd": 2.105,
+        "ci95": [
+          0.9866,
+          3.6952
+        ]
+      },
+      "homeOnly": {
+        "n": 4,
+        "mean": 1.3819,
+        "median": 1.4433,
+        "sd": 1.798,
+        "ci95": [
+          -0.2912,
+          3.0047
+        ]
+      },
+      "awayOnly": {
+        "n": 4,
+        "mean": 3.1414,
+        "median": 3.1951,
+        "sd": 2.2454,
+        "ci95": [
+          1.4803,
+          5.216
+        ]
+      }
+    },
+    {
+      "rep": 75,
+      "style": "direct",
+      "contrast": "relevant-minus-control",
+      "pairedBlocks": {
+        "n": 8,
+        "mean": 0.0522,
+        "median": -0.2364,
+        "sd": 0.8034,
+        "ci95": [
+          -0.423,
+          0.6108
+        ]
+      },
+      "homeOnly": {
+        "n": 4,
+        "mean": 0.1283,
+        "median": 0.3596,
+        "sd": 0.9191,
+        "ci95": [
+          -0.583,
+          0.8834
+        ]
+      },
+      "awayOnly": {
+        "n": 4,
+        "mean": -0.024,
+        "median": -0.2364,
+        "sd": 0.8037,
+        "ci95": [
+          -0.5111,
+          0.7614
+        ]
+      }
+    },
+    {
+      "rep": 75,
+      "style": "direct",
+      "contrast": "relevant-minus-neutral",
+      "pairedBlocks": {
+        "n": 8,
+        "mean": 1.2336,
+        "median": 1.0247,
+        "sd": 0.874,
+        "ci95": [
+          0.7039,
+          1.8156
+        ]
+      },
+      "homeOnly": {
+        "n": 4,
+        "mean": 1.3644,
+        "median": 1.4232,
+        "sd": 1.0294,
+        "ci95": [
+          0.4689,
+          2.306
+        ]
+      },
+      "awayOnly": {
+        "n": 4,
+        "mean": 1.1027,
+        "median": 1.0247,
+        "sd": 0.8227,
+        "ci95": [
+          0.4849,
+          1.8949
+        ]
+      }
+    },
+    {
+      "rep": 75,
+      "style": "defend",
+      "contrast": "relevant-minus-control",
+      "pairedBlocks": {
+        "n": 8,
+        "mean": 0.1992,
+        "median": 0.4326,
+        "sd": 1.1397,
+        "ci95": [
+          -0.5042,
+          0.949
+        ]
+      },
+      "homeOnly": {
+        "n": 4,
+        "mean": -0.3212,
+        "median": -0.0397,
+        "sd": 1.1498,
+        "ci95": [
+          -1.217,
+          0.5945
+        ]
+      },
+      "awayOnly": {
+        "n": 4,
+        "mean": 0.7196,
+        "median": 0.8737,
+        "sd": 0.9933,
+        "ci95": [
+          -0.0866,
+          1.5922
+        ]
+      }
+    },
+    {
+      "rep": 75,
+      "style": "defend",
+      "contrast": "relevant-minus-neutral",
+      "pairedBlocks": {
+        "n": 8,
+        "mean": 0.6683,
+        "median": 1.1997,
+        "sd": 1.5864,
+        "ci95": [
+          -0.4118,
+          1.6884
+        ]
+      },
+      "homeOnly": {
+        "n": 4,
+        "mean": 0.3949,
+        "median": 2.0099,
+        "sd": 2.1035,
+        "ci95": [
+          -1.4211,
+          2.2109
+        ]
+      },
+      "awayOnly": {
+        "n": 4,
+        "mean": 0.9418,
+        "median": 1.1997,
+        "sd": 1.1173,
+        "ci95": [
+          -0.1633,
+          1.816
+        ]
+      }
+    },
+    {
+      "rep": 75,
+      "style": "attack",
+      "contrast": "relevant-minus-control",
+      "pairedBlocks": {
+        "n": 8,
+        "mean": 1.6143,
+        "median": 2.0388,
+        "sd": 1.6427,
+        "ci95": [
+          0.5557,
+          2.6907
+        ]
+      },
+      "homeOnly": {
+        "n": 4,
+        "mean": 1.5075,
+        "median": 2.0388,
+        "sd": 1.4743,
+        "ci95": [
+          0.3451,
+          2.6698
+        ]
+      },
+      "awayOnly": {
+        "n": 4,
+        "mean": 1.7212,
+        "median": 2.6954,
+        "sd": 2.0229,
+        "ci95": [
+          0.0677,
+          3.3746
+        ]
+      }
+    },
+    {
+      "rep": 75,
+      "style": "attack",
+      "contrast": "relevant-minus-neutral",
+      "pairedBlocks": {
+        "n": 8,
+        "mean": 0.7819,
+        "median": 0.4811,
+        "sd": 2.6326,
+        "ci95": [
+          -0.6618,
+          2.6524
+        ]
+      },
+      "homeOnly": {
+        "n": 4,
+        "mean": 0.474,
+        "median": 0.4811,
+        "sd": 0.8821,
+        "ci95": [
+          -0.2605,
+          1.2959
+        ]
+      },
+      "awayOnly": {
+        "n": 4,
+        "mean": 1.0898,
+        "median": 0.5057,
+        "sd": 3.891,
+        "ci95": [
+          -1.8038,
+          4.8958
+        ]
+      }
+    }
+  ]
+}
