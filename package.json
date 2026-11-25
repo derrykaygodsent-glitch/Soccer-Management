@@ -8,6 +8,7 @@
   "scripts": {
     "build": "node build.cjs",
     "preview": "node build.cjs && node preview.cjs",
+    "preview:live": "node dev-preview.cjs",
     "test": "node --test test/*.test.cjs",
     "test:sim": "node test/sim-test.cjs"
   },

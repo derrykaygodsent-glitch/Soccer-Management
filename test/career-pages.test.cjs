@@ -34,6 +34,7 @@ const career = {
   staffGrowth:{p2:{sessions:6,points:2}},playerGrowth:{p2:{log:[{day:13,staff:'Youth Coach',attribute:'passing',delta:1,source:'Youth development coach'}]}},
   enterprise: { deposit: { principal: 10000, due: 40 }, stall: { setupCost: 800, next: 20, paid: 120, weeks: 2 } },
 };
+career.clubRivalries = { [JSON.stringify(['East Pier', 'Kay FC'])]: { id: JSON.stringify(['East Pier', 'Kay FC']), clubs: ['East Pier', 'Kay FC'], status: 'Established', seasons: [{ year: 2027 }, { year: 2028 }], closeMeetings: 4, history: [{ year: 2027, close: 2, titleRace: false }, { year: 2028, close: 2, titleRace: true }] } };
 const table = [{ rank: 1, name: 'Kay FC', p: 6, w: 4, d: 1, l: 1, gs: 12, gc: 6, pts: 13, gd: 6, form: ['W', 'W', 'D', 'L', 'W'] }, { rank: 2, name: 'East Pier', p: 6, w: 3, d: 2, l: 1, gs: 9, gc: 5, pts: 11, gd: 4, form: ['D', 'W', 'W', 'D', 'L'] }];
 const ROLE_WEIGHTS = require('../src/data').ROLE_WEIGHTS;
 pool[1].ceiling=180;pool[2].ceiling=150;pool[2].change={pace:-1};
@@ -50,6 +51,7 @@ const g = {
     snapshot: s => ({ players: s.dressing.people, ties: s.dressing.ties }),
   },
   TLManagerLife: { money, date: day, pool, nations: { Zandora: ['Kay FC', 'East Pier'] }, table: () => table, jobs: ['Assistant coach'] },
+  TLClubRivalries: require('../src/club-rivalries'),
 };
 for (const file of ['club-profile.js', 'career-development.js', 'training-room.js', 'team-dynamics.js']) {
   vm.runInNewContext(read(file), { window: g, module: undefined });
@@ -70,7 +72,7 @@ for (const [name, run] of Object.entries(pages)) {
 }
 test('club profile reports identity, ground, honours and league position', () => {
   const html = g.TLClubProfile.render(career);
-  for (const bit of ['Kay FC', 'The Destroyers', 'League position', 'Municipal Ground', 'District Cup', 'club story']) a.ok(html.includes(bit), `missing ${bit}`);
+  for (const bit of ['Kay FC', 'The Destroyers', 'League position', 'Municipal Ground', 'District Cup', 'club story', 'Rivalries from the record', 'East Pier', 'established']) a.ok(html.includes(bit), `missing ${bit}`);
   const average=html.match(/<dt>Average ability<\/dt><dd>(\d+)\/100/);
   a.ok(average,'average ability should be a bounded score out of 100');
   a.ok(+average[1]>=0&&+average[1]<=100);

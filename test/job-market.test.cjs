@@ -56,6 +56,8 @@ test('manager can apply to several vacancies and receive separate press rumours 
   assert.match(pressMail.from, /Wire|Gazette|Ledger|Post|Matchday|Touchline/);
   assert.equal(Inbox.classify(pressMail)[3], 'inbox');
   assert.equal(Guide.decision(s, () => false)[1], 'Press conference request');
+  assert.equal(Guide.decision(s, () => false)[3], 'inbox', 'press requests interrupt into the Inbox, not the job desk');
+  assert.doesNotMatch(Guide.managerJobs(s), /Press room|Journalist directory|media-reporter/, 'the job desk does not duplicate press workflow or history');
   assert.ok(new Set(Array.from({ length: 18 }, (_, i) => Press.outlet(s, s.profile.nation, 'media-' + i))).size > 1, 'more than one media source covers the country');
   const wire = Press.render(s, 'For you', s.profile.nation, (id, body) => id + body, (_mark, name) => name, (_page, label) => label);
   assert.match(wire, /Rumour: Jo Bell applies to/);
@@ -65,9 +67,16 @@ test('manager can apply to several vacancies and receive separate press rumours 
   s = W.act(s, 'advance');
   assert.equal(s.interview, offers[0].club);
   assert.equal(s.interviewQueue.length, 1);
-  const interview = Guide.managerJobs(s);
+  const invitation = s.mail.find(m => m.from === s.interview && m.text.startsWith('Interview invitation'));
+  assert.ok(invitation, 'the active board interview has an Inbox invitation');
+  assert.equal(Inbox.classify(invitation)[4], 'Attend board interview');
+  s.boardInterviewSession = Guide.startBoardInterview(s);
+  const interview = Guide.boardInterview(s);
   assert.match(interview, /applied to/);
-  assert.match(interview, /What would be your first priority/);
+  assert.match(interview, /What interests you in this project/);
+  assert.match(interview, /Board chair/);
+  assert.match(interview, /data-board-interview-choice/);
+  assert.doesNotMatch(interview, /Open vacancies|data-vacancy-grid/);
   s = W.act(s, 'answer', { priority: 'academy', motivation: 'transparent' });
   assert.equal(s.interview, offers[1].club);
   s = W.act(s, 'answer', { priority: 'budget', motivation: 'exclusive' });

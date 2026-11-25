@@ -2,6 +2,7 @@
 <div hidden class="hc-shell" id="homeScreen">
   <aside class="hc-sidebar" id="homeSidebar" aria-label="Club navigation">
     <button class="tl-brand" type="button" data-hc-open="home" aria-label="Touchline 26 home"><span class="tl-brandmark"><svg class="hc-icon" aria-hidden="true"><use href="#tl-i-mark"/></svg></span><span><b>TOUCHLINE<span>26</span></b><small>FOOTBALL MANAGEMENT</small></span></button>
+    <button class="hc-sidebar-close" type="button" id="homeSidebarClose"><span aria-hidden="true">×</span> Close navigation</button>
     <button class="tl-club-card" type="button" data-hc-open="club"><span id="homeHeaderCrest"></span><span><b>Independent manager</b><small>Season 2026/27</small></span></button>
     <nav id="homeNav" aria-label="Sections"></nav>
     <div class="display-controls" aria-label="Screen size"><button type="button" data-fullscreen>Full screen</button><a href="" target="_blank" rel="noopener">New tab </a></div>
@@ -13,7 +14,7 @@
   <div class="hc-main" id="homeFrame">
     <header class="hc-header">
       <div class="hc-bar">
-        <button type="button" class="hc-tool hc-mobile-menu" id="homeMenu" aria-expanded="false" aria-controls="homeSidebar" aria-label="Club navigation"><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-menu"/></svg></button>
+        <button type="button" class="hc-tool hc-mobile-menu" id="homeMenu" aria-expanded="true" aria-controls="homeSidebar" aria-label="Toggle club navigation" title="Hide club navigation"><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-menu"/></svg></button>
         <div class="hc-history" aria-label="Navigation history">
           <button class="hc-tool hc-back" type="button" id="homeBack" disabled aria-label="Back">Back</button>
           <button class="hc-tool" type="button" id="homeForward" disabled aria-label="Forward">Forward</button>

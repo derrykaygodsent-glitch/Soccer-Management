@@ -48,6 +48,8 @@ test('answers persist transcript, change relationships and trust, and build a pe
   assert.ok(state.media.dressingRoom > 50);
   assert.equal(Media.transcript(conference).length, 3);
   const appointment = Media.create('appointment:repeat', 'appointment', { club: 'Cedar Town' });
+  assert.equal(appointment.title, 'Application-rumour press conference', 'application coverage is visibly distinct from the board interview');
+  assert.ok(appointment.questions.every(q => Media.byId[q.journalistId]), 'appointment press questions remain journalist-led');
   for (let i = 0; i < appointment.questions.length; i++) Media.apply(state, appointment, 'interested');
   assert.equal(Media.personality(state.media), 'The Straight-Talking Manager');
   const restored = JSON.parse(JSON.stringify({ state, conference }));
@@ -61,7 +63,7 @@ test('repeated topics are phrased differently when recent conference history is 
   assert.notEqual(first.questions[0].prompt, next.questions[0].prompt);
 });
 
-test('press desk renders an active conference and its answer controls without completing it', () => {
+test('press room renders an active conference and its answer controls without completing it', () => {
   const state = {
     id: 'desk-render', day: 17,
     profile: { name: 'Jordan Boateng', nation: 'Valdoria' },
@@ -78,4 +80,29 @@ test('press desk renders an active conference and its answer controls without co
   assert.match(html, /mediaEnd/);
   assert.equal(conference.status, 'invited');
   assert.equal(conference.cursor, undefined);
+});
+
+test('the in-Inbox room shows journalist status and requires Continue between individual responses', () => {
+  const state = { id: 'step-render', day: 19, profile: { name: 'Jordan Boateng', nation: 'Valdoria' }, club: { name: 'Harbour FC' }, mail: [] };
+  const conference = Press.open(state, 'pre-match', { club: 'Harbour FC', nation: 'Valdoria', opponent: 'Cedar Town' }, 'pre:step-test');
+  let html = Press.conferencePanel(state, conference);
+  assert.match(html, /Journalist attendance/);
+  assert.match(html, /Asking now/);
+  Press.answer(state, conference.id, conference.questions[0].options[0].id);
+  html = Press.conferencePanel(state, conference);
+  assert.match(html, /RESPONSE RECORDED/);
+  assert.match(html, /data-inbox-continue="pre:step-test"/);
+  assert.doesNotMatch(html, /data-life="mediaAnswer"/);
+  assert.equal(conference.awaitingContinue, true);
+});
+
+test('an ended conference stays on its completed report instead of leaving live answer controls open', () => {
+  const state = { id: 'ended-render', day: 18, profile: { name: 'Jordan Boateng', nation: 'Valdoria' }, club: { name: 'Harbour FC' }, mail: [] };
+  const conference = Press.open(state, 'pre-match', { club: 'Harbour FC', nation: 'Valdoria', opponent: 'Cedar Town' }, 'pre:ended-test');
+  Press.endConference(state, conference.id);
+  const html = Press.conferencePanel(state, conference);
+  assert.match(html, /Conference ended/);
+  assert.doesNotMatch(html, /data-life="mediaAnswer"/);
+  assert.match(html, /unfinished session is preserved/);
+  assert.equal(conference.completed, true);
 });

@@ -93,8 +93,8 @@ button.md-marker:hover .md-pitch-name{background:#154f63;color:#aaf9fc}
 .md-person-shirt{display:flex;gap:4px;align-items:center;min-width:0;white-space:nowrap}
 .md-person-shirt .md-shirt{width:22px;height:23px}.md-person-shirt .md-shirt b{font-size:7px}
 .md-slot{color:#dde3f2;font-size:10.3px}
-.md-duty{display:inline-grid;min-width:40px;color:#fcfdff;line-height:1.1;font-size:9.6px;border-radius:3px;padding:2px 4px;background:#3f5374}
-.md-duty small{font-size:9px;color:#e2eaff}.md-duty-attack{background:#5d4379}.md-duty-support{background:#325c65}.md-duty-defend{background:#40557c}
+.md-phase-role{display:grid;gap:2px;min-width:92px;color:#e2edf0;line-height:1.2;font-size:10px}
+.md-phase-role small{color:#a8c4bc;font-size:8px}
 .md-roster-table .md-reserve>td,.md-live-table .md-reserve>td{color:#c8d2e0;background:#ffffff05}.md-roster-table .md-unavailable>td{background:#62324355;color:#ffbabd}
 .md-full-board .md-instructions{grid-template-columns:160px minmax(0,1fr)}
 .md-full-board .md-tactics-rail{padding:10px}

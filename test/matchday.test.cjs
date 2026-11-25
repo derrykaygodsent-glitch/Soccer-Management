@@ -216,8 +216,8 @@ test('Club Season dual-phase tactics execute live, replay after reload and produ
   const disk=storage();let store=S.open(disk);openTie(store);assert.ok(store.move('meeting','selection'));
   assert.ok(store.edit('attackFormation','3-2-5'));assert.ok(store.edit('press','Much more often'));assert.ok(store.edit('trigger','On a backward pass'));
   let plan=store.value.plan, setup=M.sheet(plan,store.value.now,store.value.injuries), selected=setup.xi.find(x=>x.attackJob&&Z.choices(x.attackPosition).length>1);
-  assert.ok(selected);const attackRole=Z.choices(selected.attackPosition).find(x=>x!==selected.attackJob[0]);
-  assert.ok(store.edit(`phaseRole:${selected.player.id}:attack`,attackRole));assert.ok(store.edit(`phaseDuty:${selected.player.id}:attack`,Z.jobs[attackRole].duties[0]));assert.ok(store.edit(`individual:${selected.player.id}:attack:risk`,'Take more risks'));
+  assert.ok(selected);const attackRole=Z.choices(selected.attackPosition).find(x=>x!==selected.attackJob[0]),selectedIndex=store.value.plan.xi.indexOf(selected.player.id);
+  assert.ok(store.edit(`phaseRole:${selectedIndex}:attack`,attackRole));assert.ok(store.edit(`individual:${selected.player.id}:attack:risk`,'Take more risks'));
   assert.ok(store.submit());putOnPitch(store);const f=store.fixture(),side=Q.managed(f),submitted=store.value.session.submitted,m=Q.create(f,store.value.session),team=m.teams[side];
   assert.equal(team.tactics.formation,submitted.sheet.tactics.form);assert.equal(team.tactics.attackFormation,'3-2-5');
   assert.ok(team.slots.some(x=>x.attack&&x.attackPosition!==x.position));
@@ -231,20 +231,21 @@ test('Club Season dual-phase tactics execute live, replay after reload and produ
   assert.equal(m.elapsed,before.elapsed);assert.equal(team.score,before.score);assert.equal(m.events.length,before.events);assert.equal(team.subsUsed,before.subs);
   for(const [id,p] of Object.entries(before.players)){const now=team.players.find(x=>x.id===id);assert.equal(now.x,p.x);assert.equal(now.y,p.y);assert.equal(now.cond,p.cond);assert.equal(now.injury||0,p.injury);}
   const playerSlot=team.slots.find(x=>x.player.id===selected.player.id),available=Z.choices(playerSlot.attackPosition),liveRole=available.find(x=>x!==playerSlot.attackJob[0])||available[0];
-  const roleCommand={type:'tactic-role',change:{id:selected.player.id,phase:'attack',job:liveRole,duty:Z.duty(liveRole,'Attack')}};
+  const roleCommand={type:'tactic-role',change:{id:selected.player.id,phase:'attack',job:liveRole}};
   assert.ok(Q.applyCommand(m,side,roleCommand).ok);assert.ok(store.checkpoint(Q.ticks(m),roleCommand));
   const instructionControl=Q.create(f,S.open(disk).value.session),instructionCommand={type:'tactic-instruction',change:{id:selected.player.id,phase:'attack',group:'risk',value:'Take fewer risks'}};
   assert.ok(Q.applyCommand(m,side,instructionCommand).ok);assert.ok(store.checkpoint(Q.ticks(m),instructionCommand));
   assert.equal(playerSlot.player.assignment.attack.name,liveRole);assert.equal(playerSlot.player.assignment.instructions.attack.risk,'Take fewer risks');
   const passScores=engine=>{const p=engine.teams[side].players.find(x=>x.id===selected.player.id),read=engine.readPlay(p,4),options=engine.decisionOptions(p,read);return new Map(options.filter(x=>x.kind==='pass').map(x=>[`${x.purpose}:${x.pass.target.id}`,x.score]));},beforeRisk=passScores(instructionControl),afterRisk=passScores(m),common=[...beforeRisk.keys()].filter(key=>afterRisk.has(key));
   assert.ok(common.some(key=>afterRisk.get(key)>beforeRisk.get(key)+.05),'Take fewer risks must change at least one subsequent safe-pass score in the Club Season engine');
-  const out=team.slots.find(x=>x.role!=='GK').player.id,into=team.bench.find(x=>x.pos!=='GK').id,subCommand={type:'sub',out,in:into};
+  const outSlot=team.slots.findIndex(x=>x.role!=='GK'),out=team.slots[outSlot].player.id,into=team.bench.find(x=>x.pos!=='GK').id,roleBeforeSub=team.tactics.tactical.phaseRoles[outSlot],subCommand={type:'sub',out,in:into};
   assert.ok(Q.applyCommand(m,side,subCommand).ok);assert.ok(store.checkpoint(Q.ticks(m),subCommand));
+  assert.equal(team.slots[outSlot].player.id,into,'substitution keeps the tactical position and its player-role instructions');assert.deepEqual(team.tactics.tactical.phaseRoles[outSlot],roleBeforeSub);
   const restored=Q.create(f,S.open(disk).value.session);assert.deepEqual(restored.snapshotFrame(),m.snapshotFrame());
   assert.equal(restored.teams[side].tactics.club.trigger,'Carrier facing own goal');assert.equal(restored.teams[side].subsUsed,1);
   assert.equal(restored.teams[side].slots.find(x=>x.player.id===selected.player.id).player.assignment.instructions.attack.risk,'Take fewer risks');
   assert.deepEqual(Q.report(restored,f),Q.report(m,f));
-  assert.ok(store.saveLive(Q.tacticsFrom(store.value.plan.tactics,team.tactics)));assert.equal(store.value.plan.tactics.form,shape);assert.equal(store.value.plan.tactics.trigger,'Carrier facing own goal');assert.equal(store.value.plan.tactics.phaseJobs[selected.player.id].attack.job,liveRole);assert.equal(store.value.plan.tactics.playerInstructions[selected.player.id].attack.risk,'Take fewer risks');assert.deepEqual(store.value.session.submitted,submitted);
+  assert.ok(store.saveLive(Q.tacticsFrom(store.value.plan.tactics,team.tactics)));assert.equal(store.value.plan.tactics.form,shape);assert.equal(store.value.plan.tactics.trigger,'Carrier facing own goal');assert.equal(store.value.plan.tactics.phaseRoles[store.value.plan.xi.indexOf(selected.player.id)].attack.job,liveRole);assert.equal(store.value.plan.tactics.playerInstructions[selected.player.id].attack.risk,'Take fewer risks');assert.deepEqual(store.value.session.submitted,submitted);
   runTo(m,'halftime');const ht=Q.report(m,f);assert.ok(ht.tactical[side].execution.attackObservations>0);assert.ok(ht.opposition[side].recommendations.every(x=>x.action&&x.reason));
   assert.ok(store.break('ht',ht,Q.ticks(m)));assert.deepEqual(S.open(disk).value.session.half,ht);assert.ok(store.move('half','halfTalk'));assert.ok(store.secondHalf(Q.ticks(m)));
   Q.applyCommand(m,side,store.value.session.checkpoint.commands.at(-1));runTo(m,'fulltime');const ft=Q.report(m,f,true),review=ft.tactical[side];
@@ -284,12 +285,12 @@ test('the offline bundle has an isolated match shell, not a stage picker or a re
   assert.doesNotMatch(page,/Scripted example|Play Classic 2D|Review-only Riverside|Sample data · Changes do not affect/);
 });
 
-test('Club Season preparation renders the separate phases and stable-ID role/duty instructions',()=>{
+test('Club Season preparation renders phase-specific position roles with suitability and role guidance',()=>{
   const page=readFileSync(join(__dirname,'../index.html'),'utf8'),context={document:{readyState:'loading',addEventListener(){}},console,setTimeout,clearTimeout};context.window=context;
   for(const [,script] of page.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g))runInNewContext(script,context);
   const store=context.TLSeasonState.open(),s=store.value,M=context.TLMatchdayData,K=context.TLSeasonCalendar,f=K.next(s),opposition=M.opponent(K.club(f.home===M.home.id?f.away:f.home)),base={s,f,opposition,crest:()=>'<svg></svg>'};
   const overview=context.TLMatchPrep.picker({...base,ui:{tab:'overview',layout:'expanded',phase:'attack'}});
   assert.match(overview,/In-possession shape/);assert.match(overview,/Without the ball/);assert.match(overview,/In possession/);
   const individual=context.TLMatchPrep.picker({...base,ui:{tab:'individual',layout:'expanded',instructionPhase:'attack'}});
-  assert.match(individual,/data-ms-field="phaseRole:/);assert.match(individual,/data-ms-field="phaseDuty:/);assert.match(individual,/Take more risks/);
+  assert.match(individual,/data-ms-field="phaseRole:/);assert.doesNotMatch(individual,/phaseDuty|Role duty|Attack ·|Support ·|Defend ·/);assert.match(individual,/Key attributes/);assert.match(individual,/Tactical behaviour/);assert.match(individual,/Take more risks/);
 });
