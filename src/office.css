@@ -409,3 +409,6 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
   .kit-selected .world-entity-link,.kit-selected .auto-entity-link,
   .kit-conflict .world-entity-link,.kit-conflict .auto-entity-link{pointer-events:none}
 }
+@media (max-width:720px){
+  .sq-room .rec-box button,.rec-box [data-life=contractOffer]{min-height:44px}
+}

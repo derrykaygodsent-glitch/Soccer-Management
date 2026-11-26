@@ -9,7 +9,7 @@
     { id: 'squad', label: 'Squad', items: [
       ['squad', 'First team'], ['tactics', 'Tactics'], ['training', 'Training'], ['planner', 'Squad planner'],
       ['dynamics', 'Squad dynamics'], ['medical', 'Medical'], ['development', 'Player development'],
-      ['kitOffice', 'Registration & numbers'], ['staff', 'Staff']] },
+      ['kitOffice', 'Registration & numbers'], ['contracts', 'Contracts'], ['staff', 'Staff']] },
     { id: 'club', label: 'Club', items: [
       ['fixtures', 'Matches'], ['league', 'Competitions'], ['vision', 'Boardroom'], ['finance', 'Club account'],
       ['club', 'Club profile'], ['transfers', 'Transfers'], ['bids', 'Transfer talks'], ['scouting', 'Scouting'],
@@ -40,6 +40,8 @@
     medical: { go: 'squad', label: 'Check the squad' },
     development: { go: 'training', label: 'Open training' },
     kitOffice: { go: 'squad', label: 'Check the squad' },
+    contracts: { go: 'squad', label: 'Open the squad' },
+    squadPlayer: { go: 'squad', label: 'Open the squad' },
     staff: { go: 'squad', label: 'Open the squad' },
 
     fixtures: { go: 'tactics', label: 'Pick the team' },
@@ -87,6 +89,9 @@
   const TITLES = titles();
   /* The rail calls the squad screen "First team"; the breadcrumb must agree with it. */
   const RAIL_LABEL = { squad: 'First team' };
+  /* Screens reached from a row rather than the rail still sit inside a hub, so the breadcrumb
+     names their hub instead of printing the raw page id. */
+  const HUB_ALIAS = { squadPlayer: { hub: 'squad', label: 'Player profile' } };
   const hubOf = page => HUBS.find(h => h.items.some(([id]) => id === page));
 
   /* The rail keeps the shape the desk renderer already knows: [groupLabel, [[id, label], …]] */
@@ -139,8 +144,9 @@
   /* One bar: where you are on the left, what needs doing and the one primary action on the right.
      The screen's own heading carries the title, so this line never repeats it. */
   function html(page, ctx) {
-    const hub = hubOf(page);
-    const title = RAIL_LABEL[page] || TITLES.get(page) || String(page || '');
+    const alias = HUB_ALIAS[page];
+    const hub = hubOf(page) || (alias && HUBS.find(h => h.id === alias.hub));
+    const title = RAIL_LABEL[page] || (alias && alias.label) || TITLES.get(page) || String(page || '');
     const next = NEXT[page];
     const crumbs = hub
       ? `<button type="button" class="tl-crumb-link" data-hc-open="${esc(hub.items[0][0])}">${esc(hub.label)}</button><span class="tl-crumb-sep" aria-hidden="true"></span><span class="tl-crumb-here" aria-current="page">${esc(title)}</span>`

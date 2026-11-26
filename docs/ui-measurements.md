@@ -879,3 +879,72 @@ Phase 3 is closed. What it delivered: phone roster cards, fourteen table modes, 
 role fit, form, compare, grouped attributes, the player in focus, squad health, the four-view squad
 hub, registration with gaps by name, a pinned list, a conflict queue and a searchable queue, and
 urgent-first training readiness.
+
+---
+
+## 20. Phase 4, session 1: the contract expiry queue
+
+### 20.1 What the screen is
+
+`src/contract-queue.js` renders the Contracts destination in the Squad hub (10th item). The rule the
+game already enforces is that renewal talks open inside the final 90 days, so the screen is grouped by
+that rule rather than by table order:
+
+| Group | What the screen says |
+|---|---|
+| Days left 30 or fewer | `Ends within 30 days` · count |
+| 31 to 60 | `Ends in 31 to 60 days` · count |
+| 61 to 90 | `Ends in 61 to 90 days` · count |
+| More than 90 | `Beyond 90 days` · count |
+| No professional terms | `13 players have no contract` (real career uses 17) |
+
+Above the queue, four facts: players with terms, weekly wage bill, talks open now, wages still owed.
+The status chip is the rule in words (`Renewal open`, `Too early to talk`, `Expired`,
+`No professional terms`), and the tones are semantic only: bad for expired, the palette's attention blue
+for open talks, plain for everything else. No amber and no gold on the screen.
+
+### 20.2 The queue is a decision, not a report
+
+The queue leads with one command naming the next player: `Start with Kofi Vico · 18 days left` when
+terms exist, `Offer terms to Kofi Vico` when nobody has terms. It opens the player file, and the player
+file now carries that player's contract desk (`g.TLContracts.render`) under the role fit, so the row,
+the command and the desk are one path. The player file also stopped printing the raw page id: the
+breadcrumb reads `Squad / Player profile` (`HUB_ALIAS` in `src/screen-head.js`), and the head bar has a
+primary action again.
+
+### 20.3 A phone
+
+At 390 px the table becomes one card per player (`.contract-room` rules in `src/home.css`):
+name and position on the first line, then `Ends 1 Dec 2027`, `18 days`, `Wage ₥120` and the status.
+Nothing is dropped, there is no sideways scroll, and every control in the card is 44 px including the
+player name and the sort bar. The sort bar hides itself when the table has no rows, so an empty queue
+is not offered a sort order it cannot use.
+
+### 20.4 Numbers
+
+| Contract | §19 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 70/70 | 72/72 |
+| Status chips | 76 | 78, 0 without words |
+| Tables without a phone mode | 0 of 14 | 0 of 16 |
+| Contrast failures | 0 | 0 |
+| Text under 11 px, not metadata | 762 | 776 |
+| Tests | 313 | 313 pass, 0 fail |
+
+Sweep: 214 screens at 390, 768 and 1440 px, 0 horizontal overflow, smallest text 9 px, nested scroll
+traps 41 / 38 / 38 (one more at 390 than §19: the phone tab strip plus the desk scroller on a page that
+is now deeper). Sub-44 px targets are unchanged in kind: atlas 386/376/377, social 220/230/231,
+registration 120/154/155.
+
+Two defects fixed while measuring, both shell-wide:
+
+- The last column's resize handle sat 3 px outside the table, so every table's scroller overflowed
+  itself by 3 px. The handle now sits inside the edge: `.table-column-resizer` measured 3 px → 0.
+- Empty tables still showed a phone sort bar. `src/table-headings.js` now skips the bar when the body
+  has no data row.
+
+Read on the real career (Kay FC, 13 Nov 2027): 0 players with terms, `₥0` wage bill, 0 talks open,
+primary `Offer terms to Kofi Vico`, `17 players have no contract`, 0 overflow at both widths. Read on a
+copy given four synthetic contracts: 4 with terms, `₥720` wage bill, 3 talks open, `₥90` owed, groups
+1/1/1/1, rows `Kofi Vico · 1 Dec 2027 · 18 · ₥120 · Renewal open` to `Felix Ibarra · 10 Jun 2028 · 210 ·
+₥240 · Too early to talk`.

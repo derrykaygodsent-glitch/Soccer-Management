@@ -34,7 +34,7 @@ function views(updates=[]){const p=s.profile,roster=s.roster.map(id=>W.pool.find
  case 'profile':return g.TLManagerProfile.render(s,profileView);case 'worldManager':return g.TLManagerProfile.renderWorld(s,worldManager,worldManagerClub);case 'worldClub':return g.TLClubProfile.renderWorld(s,worldClub);
  case 'inbox':return g.TLOfficeOrganiser.inbox(s,organiser);
  case 'social':case 'news':return g.TLMeridianFeed.render(s,feedTab,terraceClub);
- case 'kitOffice':return g.TLKit.render(s,W.pool);case 'squad':case 'squadPlayer':return g.TLSquadRoom.render(s,roster,page==='squadPlayer'?squadId:null,squadCompare,squadTab);
+ case 'contracts':return g.TLContractQueue.render(s,roster);case 'kitOffice':return g.TLKit.render(s,W.pool);case 'squad':case 'squadPlayer':return g.TLSquadRoom.render(s,roster,page==='squadPlayer'?squadId:null,squadCompare,squadTab);
  case 'planner':return g.TLSquadRoom.planner(s,roster);case 'groundPass':return g.TLDistrictView.invitation(s,true);case 'transfers':return g.TLTransferCentre.render(s,transferView,updates);
  case 'tactics':return g.TLBoardRoom.render(s,roster);
  case 'dynamics':return g.TLDynamics.render(s,roster);

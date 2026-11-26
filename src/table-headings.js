@@ -204,6 +204,7 @@
       for (const spec of extraEnabled) if (added.has(spec.key)) addExtra(spec, false);
       function phoneSortBar() {
         if (table.dataset.phoneSort === 'off' || table.closest('.tl-table-sort')) return;
+        if (!table.tBodies[0] || !table.tBodies[0].querySelector('tr:not(.tr-group) td:not([colspan])')) return;
         const bar = document.createElement('div');
         bar.className = 'tl-table-sort';
         const label = document.createElement('label');

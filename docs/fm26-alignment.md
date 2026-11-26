@@ -92,3 +92,11 @@ frame and the numbers in [`ui-measurements.md` §15](./ui-measurements.md).
 |---|---|---|
 | Registration list with the filed XI visible | The list opens with the chosen players in shirt order, the gaps by name, and a conflict line for players filed elsewhere | The conflict line names the players and says why they cannot appear, and the row below repeats it with a disabled select, so the reason is never a mystery |
 | Medical urgency first | Training readiness is grouped In recovery, Needs work, Building, Match ready, each with a count, and an injured player states the return date | The group order matches what stops a selection, so the top of the list is the first decision |
+
+## 10. Phase 4, first pass: contracts
+
+| FM26 pattern | Touchline now | Beyond FM26 |
+|---|---|---|
+| A contracts panel that lists expiring deals and opens a renewal | A queue grouped by the 90-day rule with a count per group, the days left, the wage and a status chip that repeats the rule in words, above it the four facts a decision needs | The queue names the next player as a command (`Start with Kofi Vico · 18 days left`) instead of leaving the manager to read eleven rows, and the row, the command and the contract desk on the player file are one path |
+| Renewal talks with an agent across a table | The desk states the wage, the expiry, the agent, up to four packages with a breakdown of wage, bonus, fee and full term cost, and answers in two days | The desk sits inside the player's own file rather than in a separate negotiation screen, so the role fit, the form and the cost are read together before a proposal is sent |
+| A mobile view of a dense financial table | One card per player at 390 px: name and position, then labelled expiry, days left, wage and status; no sideways scroll and no hidden column | The card keeps the 90-day grouping visible, so the reason a player is on the screen is never lost on a phone |
