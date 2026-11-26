@@ -118,3 +118,12 @@ frame and the numbers in [`ui-measurements.md` §15](./ui-measurements.md).
 | A player card that keeps the decision facts on screen | A sticky identity bar carrying grade, role fit, value and status, pinned under the shell header at every width; 145 px on a desktop, 172 px on a phone | Status is phrased in the manager's terms — `With your squad`, `Shortlisted`, `Registered`, `Available` — rather than as a raw flag |
 | Saved shortlists and filters | Six named views, defaulting to `Nation · Position`, stored per career and restored after a reload | A view holds the whole filter set, so reopening one is one tap, and a chip can be forgotten without leaving the board |
 | A shortlist column in the list itself | A `Status` column repeats the four states in the table and on the phone card | The row and the file now say the same thing in the same words, so the list can be triaged without opening a player |
+
+## 13. Phase 4, fourth pass: the boardroom
+
+| FM26 pattern | Touchline now | Beyond FM26 |
+|---|---|---|
+| A boardroom with an ownership register | A register table sorted by stake value, with holder, seat, share, stake and dividends, and a live search that states `Showing 1 of 4 holders` | The selected row opens a pane with that holder's dividends, proposed payout and the buy-back price, so the decision is made on the register, not below it |
+| A board of directors you can approach | A candidates table with what each one wants and their status (`Open to talk`, `Offer sent`, `Declined`) | The pane carries one candidate's four structures as priced buttons, and a declined candidate keeps the note that a different structure may still open the conversation |
+| A record of decisions | Minutes as a table: when, motion, `3 for · 2 against` | A motion with no vote taken says so, rather than showing an empty list |
+| Mobile: the same register | Phone cards with `Share`, `Stake` and `Dividends` labelled and the seat right-aligned; 0 sideways scroll | Selection is kept in desk state, so scrolling away and back does not lose the holder you were reading |

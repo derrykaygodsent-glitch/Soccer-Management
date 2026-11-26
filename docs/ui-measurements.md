@@ -1109,3 +1109,85 @@ smallest text 9 px. Tests: 313 pass, 0 fail.
 | Visible ranges | "Showing x to y of N players" in the head and the foot, page count, Prev/Next, page resets on every filter change |
 | Saved views | Six chips, named, persisted per career, reopen and forget |
 | 0 tables overflow | 0 of 16 tables without a phone mode; 0 horizontal overflow at three widths |
+
+
+## 23. Phase 4, session 4: the boardroom as tables
+
+### 23.1 The problem the tables fix
+
+The boardroom was four stacks of cards: the share register as one `<article>` per holder, the local
+network as one `<details>` per candidate with all four offers already open, the ground agreements and
+the minutes as more `<details>`. Nothing could be searched, nothing could be sorted, and every holder's
+buy-back controls were spread down the page instead of attached to one holder. On a phone the page was
+5.08 folds; the network alone was three 325 px cards.
+
+### 23.2 What the boardroom is now
+
+| Before | Now |
+|---|---|
+| One card per holder, in whatever order the career held them | A table sorted by stake value by default, with holder, seat, share, stake and dividends columns |
+| No search | "Find a holder" filters rows as you type and the range says `Showing 1 of 4 holders` |
+| Holder actions spread down the register | One detail pane for the selected holder: share, stake, dividends paid, proposed payout, and the buy-back control with its two prices and the personal-funds line |
+| Three candidate cards, all four offers visible at once | A candidates table (wants, status) and a pane that carries the selected candidate's quote and the four offers |
+| Minutes as five `<details>` cards | A table: when, motion, votes as `3 for · 2 against` or `No vote taken` |
+| ISO dates inside the boardroom | `7 Dec 2027` for reply dates, ground agreements and minutes |
+
+Sorting is the game's own table affordance (`data-sort-table`), so the register and the candidate list
+carry the same header buttons and remembered order as every other table. The register defaults to stake
+value descending. Selection lives in desk state (`board.sel`, `board.sel2`), so a redraw or a vote keeps
+the holder you were looking at.
+
+The commands did not move: `shareBuy`, `boardDividend`, `directorOffer`, `groundMotion` and `estateMotion`
+are the same calls with the same preflight, and the buy-back buttons still name their price in the
+button text. This session is markup and view state only.
+
+### 23.3 Numbers
+
+| Contract | §22 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 72/72 | 72/72 |
+| Status chips | 78 | 78, 0 without words |
+| Tables without a phone mode | 0 of 16 | 0 of 22 |
+| Contrast failures | 0 | 0 |
+| Text under 11 px, not metadata | 545 | 545 |
+| Tests | 313 | 313 pass, 0 fail |
+
+Three tables carry the boardroom now, each with a phone card mode, which is why the table count moved
+from 16 to 22. The scoped rule `.br-table .column-sort{font-size:11px}` keeps the new header buttons at
+the type floor; without it the tiny-text count read 551.
+
+Depth, `scrollHeight / clientHeight` of the desk:
+
+| Career | 1440 px | 390 px |
+|---|---:|---:|
+| The real career (one holder, 100 %) | 3.21 (was 3.27) | 5.25 (was 5.08) |
+| Four holders, dividends and a buy-back | 3.03 | 4.74 |
+
+The honest reading is a trade, not a saving. On the real career the network shrank (1177 px to 906 px at
+390) because three 325 px cards became a 366 px table and a 440 px pane, but the register gained what
+this session was for — a 217 px detail pane and the search field — so the phone page ends 126 px taller.
+On a career whose register has something to sort, the page is 3.03 / 4.74 against 3.27 / 5.08. What is
+left is the valuation header, the dividend rules, the ground agreements and the minutes, which are copy
+and a legal record rather than card stacks: the sections, at 390 px, are valuation 1077, network 906,
+ground and minutes 1014.
+
+Behaviour, measured in the browser on a four-holder career at 1440 and 390 px:
+
+- Register renders four rows in stake order, range `4 holders · you hold 65%`, 0 horizontal overflow.
+- Search `Nico` leaves one row and the range reads `Showing 1 of 4 holders`.
+- The Share header sorts 65, 20, 10, 5 to 5, 10, 20, 65 and back.
+- Selecting the local investor moves the pane to `Emil Larne · Local investor · No vote` with 20 %,
+  ₥860,617 stake, ₥3,000 dividends and the two buy-back buttons (5 % · ₥258,186, 20 % · ₥1,032,741).
+- Exactly one row carries `aria-selected="true"`.
+
+Sweep: 214 screens at 390, 768 and 1440 px, 0 horizontal overflow, nested scroll traps 41 / 38 / 38,
+smallest text 9 px. Tests: 313 pass, 0 fail.
+
+### 23.4 Gate
+
+| Gate from the plan | Result |
+|---|---|
+| Boardroom card stacks to a searchable, sortable table | Register and candidates are tables with the game's sort headers; the register has a live search with a written range |
+| A detail pane | One pane per table, selected by `aria-selected`, carrying the facts and the actions for that row |
+| 0 tables overflow | 0 of 22 tables without a phone mode; 0 horizontal overflow at three widths |
+| Nothing new in the engine | Same five commands, same confirmations, same arithmetic |

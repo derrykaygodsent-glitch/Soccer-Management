@@ -788,3 +788,72 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 .st-how label{display:grid;gap:3px;font-size:11px;color:#a7bfbf}
 .st-how select{min-height:36px;background:#1b333d;color:#f1f7ed;border:1px solid #547077;border-radius:7px;padding:.35rem;font:inherit}
 @media(max-width:720px){.st-how select{min-height:44px}.st-cand{grid-template-columns:1fr}.st-cand button{justify-self:start}}
+
+/* ---- Phase 4 · boardroom: the register and the network as tables with one detail pane ---- */
+.br-register{margin:14px 0 6px}
+.br-head{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;justify-content:space-between;margin:10px 0 10px}
+.br-head h3{margin:0 0 2px}
+.br-range{margin:0;font-size:.85rem;font-weight:700;color:#dcefe0}
+.br-search{display:grid;gap:4px;font-size:11.5px;color:#a9bfc6;min-width:min(250px,100%)}
+.br-search input{min-height:44px;padding:8px 10px;border-radius:8px;border:1px solid #46606b;background:#101f28;color:#eef7ef;font:inherit}
+.br-split{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:14px;align-items:start}
+.br-table-wrap{min-width:0}
+.br-table{width:100%;border-collapse:collapse;font-size:.84rem}
+.br-table th{text-align:left;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:#9fb8bd;font-weight:700;padding:7px 8px;border-bottom:1px solid #35485a}
+.br-table td{padding:7px 8px;border-bottom:1px solid #2b3b4b;color:#e2efe7;font-variant-numeric:tabular-nums;white-space:nowrap}
+.br-table tbody tr[aria-selected=true]{background:#1c3b39}
+.br-table tbody tr[aria-selected=true] th{box-shadow:inset 3px 0 0 #d7f59f}
+.br-table tbody tr[hidden]{display:none}
+.br-table th[data-col=holder],.br-table th[data-col=candidate]{white-space:normal}
+.br-table th[data-col=holder] small,.br-table th[data-col=candidate] small{display:block;color:#9fb8bd;font-weight:500;font-size:11.5px;text-transform:none;letter-spacing:0}
+.br-table th[data-col=holder] button,.br-table th[data-col=candidate] button{min-height:44px;padding:4px 6px;margin-left:-6px;border:0;background:none;color:#eaf7ea;font:inherit;font-weight:800;text-align:left;text-decoration:underline;text-decoration-color:#4d6d6a;text-underline-offset:3px;cursor:pointer}
+.br-table th[data-col=holder] button:hover,.br-table th[data-col=candidate] button:hover{color:#d7f59f}
+.br-pane{padding:12px 14px;border:1px solid #3b5760;border-radius:12px;background:#162936}
+.br-pane h3{margin:2px 0 2px;font-size:1.02rem}
+.br-role{margin:0;color:#bcd3cd;font-size:11.5px;letter-spacing:.02em}
+.br-quote{margin:8px 0 0;color:#e7f2ea;font-size:.86rem;line-height:1.45}
+.br-facts{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin:10px 0 6px}
+.br-facts dt{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;color:#9fc0b5}
+.br-facts dd{margin:1px 0 0;font-weight:800;font-size:.9rem;color:#f0f8f1;font-variant-numeric:tabular-nums}
+.br-note{margin:6px 0 0;color:#a9c0c2;font-size:11.5px;line-height:1.45}
+.br-offers{display:grid;gap:6px;margin:8px 0 4px}
+.br-offers button{min-height:44px;text-align:left;padding:8px 10px;border:1px solid #46606b;border-radius:8px;background:#20343f;color:#eaf5ee;font:inherit;font-size:.84rem;font-weight:650;cursor:pointer}
+.br-offers button:hover{border-color:#88b3a4;background:#27414c}
+.br-buy{margin:8px 0 0;padding:8px;border:1px solid #3b5760;border-radius:8px;background:#12222c}
+.br-buy summary{font-weight:750;color:#dcefe0}
+.br-buy p{margin:6px 0;font-size:11.5px;color:#b8cfcb}
+.br-buy button{min-height:44px;margin:2px 4px 2px 0;padding:8px 10px;border:1px solid #46606b;border-radius:8px;background:#20343f;color:#eaf5ee;font:inherit;font-weight:650;cursor:pointer}
+.br-buy button[disabled]{opacity:.5;cursor:not-allowed}
+.br-none{margin:8px 0 0;font-size:11.5px;color:#a9c0c2}
+.br-network .br-split{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+@media(max-width:1000px){.br-split,.br-network .br-split{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:720px){
+  .br-head{align-items:stretch}
+  .br-search{width:100%}
+  .br-table[data-tl-table=cards] tr{display:flex;flex-wrap:wrap;gap:2px 8px;padding:10px;border:1px solid #334d55;border-radius:10px;background:#132430}
+  .br-table[data-tl-table=cards] th[data-col=holder]{order:0;flex:1 1 100%}
+  .br-table[data-tl-table=cards] td[data-col=share]{order:1;font-weight:800;color:#d7f59f}
+  .br-table[data-tl-table=cards] td[data-col=stake]{order:2}
+  .br-table[data-tl-table=cards] td[data-col=dividends]{order:3}
+  .br-table[data-tl-table=cards] td[data-col=seat]{order:4;margin-left:auto;color:#a9c0c2}
+  .br-table[data-tl-table=cards] td[data-col=wants]{order:2;flex:1 1 100%;color:#bcd3cd}
+  .br-table[data-tl-table=cards] td[data-col=state]{order:1;margin-left:auto}
+  .br-table[data-tl-table=cards] td[data-col=share]:before{content:"Share ";font-size:11px;color:#9fc0b5;font-weight:700}
+  .br-table[data-tl-table=cards] td[data-col=stake]:before{content:"Stake ";font-size:11px;color:#9fc0b5;font-weight:700}
+  .br-table[data-tl-table=cards] td[data-col=dividends]:before{content:"Dividends ";font-size:11px;color:#9fc0b5;font-weight:700}
+  .br-pane{padding:12px}
+  .br-facts{grid-template-columns:1fr 1fr}
+}
+
+.br-minutes{margin:8px 0 0}
+.br-minutes th[data-col=when]{white-space:nowrap;font-weight:700;color:#dcefe0;font-size:.84rem;letter-spacing:0;text-transform:none}
+.br-minutes td[data-col=motion]{color:#cfe0d8;white-space:normal}
+.br-minutes td[data-col=votes]{color:#9fb8bd;white-space:nowrap}
+@media(max-width:720px){
+  .br-table[data-tl-table=cards].br-minutes th[data-col=when]{order:0;flex:0 0 auto}
+  .br-table[data-tl-table=cards].br-minutes td[data-col=votes]{order:1;margin-left:auto;font-size:11.5px}
+  .br-table[data-tl-table=cards].br-minutes td[data-col=motion]{order:2;flex:1 1 100%}
+}
+
+/* the boardroom's sort buttons sit at the 11px floor, not the 10.5px table default */
+.br-table .column-sort{font-size:11px}
