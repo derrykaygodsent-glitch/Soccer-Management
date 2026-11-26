@@ -28,7 +28,7 @@ const career = () => ({
 
 test('tactics workspace gives shape, squad and instructions dedicated space', () => {
   const s = career(), html = TLBoardRoom.render(s, pool);
-  for (const needle of ['fm-workspace-header', 'fm-workspace-nav', 'Team Shape', 'Team Instructions', 'Player Instructions', 'fm-shape-workspace', 'fm-primary-pitch', 'fm-squad-panel', 'Out of Possession', 'In Possession', 'Combined', 'Both', 'Save tactic', 'Familiarity', 'Intensity', 'data-slot="0"', 'data-board="bestXI"'])
+  for (const needle of ['fm-workspace-header', 'fm-workspace-nav', 'Team Shape', 'Team Instructions', 'Player Instructions', 'fm-shape-workspace', 'fm-primary-pitch', 'fm-squad-panel', 'Out of possession', 'In possession', 'fm-sticky-summary', 'fm-code-legend', 'Average positions', 'Side by side', 'Save tactic', 'Familiarity', 'Intensity', 'data-slot="0"', 'data-board="bestXI"'])
     a.ok(html.includes(needle), 'missing ' + needle);
   a.equal((html.match(/class="fm-row(?: on)?"/g) || []).length, 11, 'eleven starters share selection rows');
   a.ok((html.match(/class="fm-row fm-sub"/g) || []).length >= 1, 'actual substitutes are listed');
@@ -41,7 +41,7 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   a.match(both, /data-phase-view="defense"/);
   a.match(both, /data-phase-view="attack"/);
   s.boardPhase = 'combined';
-  a.match(TLBoardRoom.render(s, pool), /Combined · average player positions/);
+  a.match(TLBoardRoom.render(s, pool), /Average positions/);
 
   const handlers = {}, root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, querySelector: () => null };
   let draws = 0;
@@ -124,4 +124,42 @@ test('saved and imported tactic presets survive career JSON reload with validate
   a.equal(restored.tacticLibrary.at(-1).name,'Imported shape');
   a.equal(TLMatchBoard.active(restored).untrusted,undefined);
   a.throws(()=>TLMatchBoard.update(restored,'importPreset|0|bad',pool),/valid tactic JSON/i);
+});
+
+test('every pitch code is named in words beside it, and the team sheet names each position', () => {
+  const s = career(); s.id = 'c-codes';
+  const html = TLBoardRoom.render(s, pool);
+  const legend = html.match(/<ul class="fm-code-legend"[\s\S]*?<\/ul>/);
+  a.ok(legend, 'the pitch carries a code key');
+  const items = [...legend[0].matchAll(/<li><b>([^<]+)<\/b>\s*([^<]+)<\/li>/g)].map(m => ({ code: m[1], words: m[2].trim() }));
+  a.ok(items.length >= 5, 'each distinct assignment on the pitch appears once');
+  for (const item of items) {
+    a.match(item.code, /^[A-Za-z]+-(At|De|Su)$/, `${item.code} is a role-duty code`);
+    a.match(item.words, /^[A-Z][a-z].*, (attacking|defending|supporting)$/, `${item.code} is named in words: ${item.words}`);
+    a.equal(new Set(items.map(i => i.code)).size, items.length, 'no code is explained twice');
+  }
+  a.match(html, /<abbr title="Left-back">LB<\/abbr>/, 'a position code carries its plain name');
+  a.match(html, /<span class="fm-role"><b>GK-De<\/b><small>Goalkeeper<\/small><\/span>/, 'the team sheet names the role under its code');
+  a.doesNotMatch(html, /<span class="fm-role"><b>[^<]+<\/b><small>[A-Z][a-z]+-[A-Z]/, 'role names are written in sentence case, not as codes');
+});
+
+test('the summary stays on screen through every workspace tab and says what needs a decision', () => {
+  const s = career();
+  const html = TLBoardRoom.render(s, pool);
+  const summary = html.match(/<div class="fm-sticky-summary" role="status" aria-label="Tactic summary">[\s\S]*?<\/div>/);
+  a.ok(summary, 'the tactic summary is part of the workspace, not of one tab');
+  for (const words of [/Out of possession/, /In possession/, /Mentality/, /Familiarity/]) a.match(summary[0], words);
+  a.match(summary[0], /class="fm-sticky-state (is-clear|has-risks)">(?:Shape checked|\d+ to review)</, 'the state is either checked or counted in words');
+  a.ok(html.indexOf('fm-sticky-summary') < html.indexOf('fm-workspace-content'), 'the summary sits above the tab content it summarises');
+});
+
+test('the four shape views are named in words and one command picks the XI', () => {
+  const s = career(); s.id = 'c-views';
+  const html = TLBoardRoom.render(s, pool);
+  const views = html.match(/<div class="fm-shape-switch"[\s\S]*?<\/div>/)[0];
+  const labels = [...views.matchAll(/<button[^>]*>([^<]+)<\/button>/g)].map(m => m[1].trim());
+  a.deepEqual(labels, ['Out of possession', 'In possession', 'Average positions', 'Side by side']);
+  a.equal((html.match(/data-board="bestXI"/g) || []).length, 1, 'one auto-pick command, not two');
+  a.match(html, /<small>TACTIC DESIGN · Kay FC<\/small>/, 'the screen names the job it does');
+  a.doesNotMatch(html, /MATCH PREPARATION/, 'prep is not this screen');
 });

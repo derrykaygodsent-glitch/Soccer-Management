@@ -1672,3 +1672,89 @@ The phase gate was two statements. Both hold:
 
 Out of scope, still: the club's own **Matches** screen (`[data-hc-open="fixtures"]`, the matchday hub) was
 not touched — it belongs to Phase 6, with tactics and the Season Book.
+
+## 30. Phase 6, session 1: one screen, one job — and codes that say their own name
+
+### 30.1 The problem
+
+The tactics page was two screens pretending to be one. The head said `SQUAD / TACTICS`; a strip above
+the pitch said `TOUCHLINE 26 / MATCH PREPARATION` — a CSS pseudo-element, not a control — and neither
+line said whether this was where you *design* a tactic or where you *prepare for a match*. The next match
+was one press away in the head, so the two destinations existed without ever being named.
+
+On a phone the header grid kept two columns at 390 px: the title column collapsed to **33 px**, so
+`Kay FC` stacked one word per line and `Attacking mentality` broke mid-word (`Attac / king / menta / lity`).
+The layout was measured at 392 px of header where it needed 240.
+
+Every position was a bare code — `CB-De`, `FB-Su`, `LB`, `MR` — on the pitch, in the team sheet and on
+the bench, with no words anywhere. And the four facts a manager checks constantly (formation, mentality,
+familiarity, what needs reviewing) sat in the middle of the scroll, so reading them meant scrolling back
+up on every one of the three workspace tabs.
+
+### 30.2 What the screen is now
+
+**Canonical destination, decided and written down:** *Tactics designs; the next match prepares.* Design
+lives here — shape, phase roles, duties, instructions, the XI, saved tactics. Team news, the opposition
+briefing and kickoff live in the match. The page says so in its own words (`TACTIC DESIGN · Kay FC`), the
+strip that claimed "match preparation" is gone, and the screen keeps exactly one primary action,
+`Open the next match`, as the bridge to prep.
+
+| Before | After |
+|---|---|
+| `TOUCHLINE 26 / MATCH PREPARATION` printed above the workspace, cut from CSS | Removed. The head crumb (`Squad / Tactics`) and the hero (`TACTIC DESIGN · Kay FC`) are the only two labels |
+| Codes and nothing else: `CB-De`, `FB-Su`, `LB`, `MR` | The pitch carries a key built from the same slots it draws: `CB-De Centre-back, defending` · `FB-Su Full-back, supporting` · `WM-Su Wide midfielder, supporting` — one line per distinct assignment, in sentence case |
+| Position codes in the team sheet | `GK-De` over `Goalkeeper`; position codes carry their plain name as an `abbr` title (`LB` → Left-back, `MR` → Right midfielder) |
+| Pitch markers titled `Drag Serra to change position` | `CB-De · Centre-back, defending — drag to move Serra`, and the button's accessible name says the role in words |
+| Formation, mentality, familiarity and warnings scattered mid-scroll | A sticky summary above the tab content: `OUT OF POSSESSION 4-1-4-1 · IN POSSESSION 4-2-1-3 · MENTALITY Attacking · FAMILIARITY 92% · 14 to review`, pinned to the top of the scroll and present on all three tabs |
+| `Combined` and `Both` as two names for two different views | `Out of possession` · `In possession` · `Average positions` · `Side by side` |
+| Two commands for one job: `Auto-pick best XI` (panel) and `Auto-select best XI` (below) | One: `Auto-pick best XI` |
+| Three different phrases for the review state, and a count that included notes | One phrase per state — `Needs review` / `Ready to rehearse` — and the sticky chip counts only things that need a decision: `14 to review`, not `15 warnings` |
+| A phone header in two columns (title 33 px wide, 392 px tall) | One column: title 366 px wide, header **240 px**; metrics, then the save controls, then the tabs |
+
+The team sheet's column header also stopped colliding with itself: `ABILITY` and `PLAYER` were printing on
+top of each other because the header row and the data rows disagreed about their columns. They now share
+one template (`34px · role · 58px · player · 46px · 62px · 54px`), and the player picker is capped at
+230 px instead of stretching to whatever the row gave it.
+
+### 30.3 Numbers
+
+| | Before | After |
+|---|---:|---:|
+| Tactics depth @1440 | 2.55 (2,055 px) | 2.64 (2,127 px) |
+| Tactics depth @390 | 4.27 (2,932 px) | 4.28 (2,939 px) |
+| Header height @390 | 392 px | **240 px** |
+| Team Instructions tab | — | 1.77 / 3.40 |
+| Player Instructions tab | — | 1.69 / 2.44 |
+
+The depth barely moved because the summary that was added is the same height as nothing at all on a
+phone: the header lost 152 px and the sticky bar took back a row. The gate for this phase is a phone fold
+of **≤ 3.0×**, and the screen is at **4.28** — session 2's work (line-grouped starters, collapsed bench,
+a bottom-sheet editor) is where that gets paid for. Measured at 390: the pitch alone is the largest single
+block, and the team sheet below it runs 11 starters plus 6 substitutes as 17 rows.
+
+| Contract | §29 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 72/72 | 72/72 |
+| Status chips | 78 | 78, 0 without words |
+| Long lists without a range | 0 | 0 |
+| Tables without a phone mode | 0 of 22 | 0 of 22 |
+| Contrast failures | 0 | 0 |
+| Tests | 324 | **327 pass, 0 fail** |
+
+Three new tests: the pitch key names every code it draws (and never repeats one), the sticky summary is
+above the tab content and states its four facts with a state that is either `Shape checked` or a count,
+and the four shape views are named in words with a single auto-pick command and no `MATCH PREPARATION`
+anywhere on the screen.
+
+Behaviour, measured in the browser at 1440 and 390: the summary's `position` is `sticky`, it sits at the
+scroll container's top after an 800 px scroll (`143 = 143` at 1440, `158 = 158` at 390), and it survives
+switching to Team Instructions and Player Instructions. 0 horizontal overflow at both widths, 0 ISO dates
+on the screen.
+
+Sweep: 214 screens at 390, 768 and 1440 px, **0 horizontal overflow**, nested scroll traps 40 / 38 / 38.
+
+### 30.4 What this leaves for session 2
+
+The phone. Starters are still 11 identical rows, the bench is a flat list of 6, and the role/duty/condition
+editor is a panel below both — the plan's "line-grouped starters, collapsed bench, bottom-sheet
+role/duty/condition editor". That is also where the 4.28 folds get cut to under 3.0.
