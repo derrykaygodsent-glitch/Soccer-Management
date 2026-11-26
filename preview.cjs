@@ -60,11 +60,15 @@ const LIVE_VIEWER = `<!doctype html><html lang="en"><head><meta charset="utf-8">
   .stage{border:1px solid var(--edge);border-radius:12px;overflow:hidden;background:#05090f;max-width:100%}
   .stage img{display:block;width:100%;height:auto}
   .stage .wait{padding:28px;text-align:center;color:var(--dim)}
+  ol.log{list-style:none;margin:8px 0 0;padding:0;font-size:12px;color:var(--dim);display:grid;gap:3px}
+  ol.log b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 </style></head><body>
 <h1>Live screen</h1>
 <p>The browser this workspace drives, mirrored from port 4180 onto this one.</p>
 <div class="bar"><span class="dot" id="dot"></span><b id="live">connecting…</b><span id="tick">frame 0</span></div>
 <div class="stage"><img id="view" alt="Live view of the agent's browser"><div class="wait" id="wait">Waiting for the first frame…</div></div>
+<h1 style="margin-top:16px">Work log</h1>
+<ol class="log" id="log"><li>no entries yet</li></ol>
 <script>
   var img = document.getElementById('view'), dot = document.getElementById('dot'),
       live = document.getElementById('live'), tick = document.getElementById('tick'), wait = document.getElementById('wait');
@@ -80,9 +84,20 @@ const LIVE_VIEWER = `<!doctype html><html lang="en"><head><meta charset="utf-8">
   img.addEventListener('error', function () { dot.className = 'dot'; live.textContent = 'reconnecting…'; });
   pull();
   setInterval(pull, 1000);
-  fetch('/live/state').then(function (r) { return r.json(); }).then(function (s) {
-    tick.textContent = 'frame ' + s.seq + ' · picture ' + Math.round(s.frameAgeMs / 1000) + 's old';
-  }).catch(function () {});
+  var log = document.getElementById('log');
+  function pullState() {
+    fetch('/live/state').then(function (r) { return r.json(); }).then(function (s) {
+      tick.textContent = 'frame ' + s.seq + ' · picture ' + Math.round(s.frameAgeMs / 1000) + 's old';
+      if (s.log && s.log.length) {
+        log.innerHTML = s.log.slice(-8).reverse().map(function (row) {
+          return '<li><b>' + row.at + '</b> ' + String(row.text).replace(/[<>&]/g, '') + '</li>';
+        }).join('');
+      }
+      if (s.url) live.textContent = s.frameAgeMs < 4000 ? 'live' : 'stalled';
+    }).catch(function () { live.textContent = 'screen offline'; });
+  }
+  pullState();
+  setInterval(pullState, 2500);
 </script></body></html>`;
 
 const server = createServer((request, response) => {
