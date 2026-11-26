@@ -109,3 +109,12 @@ frame and the numbers in [`ui-measurements.md` §15](./ui-measurements.md).
 | Staff list beside a detail panel | People pairs a roster row per appointment with one panel for the selected member: responsibility, monthly target, latest delivery, contract state and the decisions | The rating is repeated as a chip in the roster and with its score in the panel, so comparison happens in the list and judgement in the panel |
 | A recruitment market with prepared deals | Recruitment holds the signature queue, the scouting reports and one row per open position, with a hiring panel naming both candidates, their wage and the fee | The screen states that no proposal joins a player until the manager signs, and that there is no cap on appointments |
 | Mobile: one long administrative page | Phone fold 9.13 to 1.54 at 390 px, 0 sideways scroll, 44 px controls | The nav hides its counts at 390 px so all four views stay one tap apart rather than two scrolls apart |
+
+## 12. Phase 4, third pass: the scouting board
+
+| FM26 pattern | Touchline now | Beyond FM26 |
+|---|---|---|
+| A scouting list with a visible result count and paging | 25 a page with "Showing 26 to 50 of 366 players", "Page 2 of 15" and Prev/Next at both ends of the table; every filter, sort, reset and saved view returns to page 1 | The range is written twice, above the rows and under them, so a manager who has read to the bottom does not scroll up to find out where they are |
+| A player card that keeps the decision facts on screen | A sticky identity bar carrying grade, role fit, value and status, pinned under the shell header at every width; 145 px on a desktop, 172 px on a phone | Status is phrased in the manager's terms — `With your squad`, `Shortlisted`, `Registered`, `Available` — rather than as a raw flag |
+| Saved shortlists and filters | Six named views, defaulting to `Nation · Position`, stored per career and restored after a reload | A view holds the whole filter set, so reopening one is one tap, and a chip can be forgotten without leaving the board |
+| A shortlist column in the list itself | A `Status` column repeats the four states in the table and on the phone card | The row and the file now say the same thing in the same words, so the list can be triaged without opening a player |

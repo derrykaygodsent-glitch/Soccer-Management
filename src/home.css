@@ -286,6 +286,7 @@
   .contract-room table[data-tl-table=cards] td[data-col=days]{order:3;flex:0 0 auto;font-size:11.5px;color:var(--ui-ink-2);font-variant-numeric:tabular-nums}
   .contract-room table[data-tl-table=cards] td[data-col=days]::after{content:' days';color:var(--ui-muted)}
   .contract-room table[data-tl-table=cards] td[data-col=state]{order:4;flex:0 0 auto;margin-left:auto}
+  table[data-tl-table=cards].player-directory td[data-col=state]{order:6;flex:0 0 auto;margin-left:auto}
 }
 
 /* ---- Phase 3 · standings and result tables on a phone --------------------------------

@@ -412,3 +412,56 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
 @media (max-width:720px){
   .sq-room .rec-box button,.rec-box [data-life=contractOffer]{min-height:44px}
 }
+
+/* ---- Phase 4 · scouting: ranges, saved views, a sticky identity -------------------------
+   The board used to render every known player (366 on the real career) and leave the range
+   to a pager under the table. It renders one page of 25, states the range above the table,
+   and keeps the filters in named views. The player file keeps grade, role fit, value and
+   status on screen while the dossier scrolls.
+   -------------------------------------------------------------------------------------- */
+.rec-board .recq-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px;padding-bottom:8px}
+.rec-board .recq-head h3{display:block;margin:0;font-size:1.05rem}
+.recq-range{margin:3px 0 0;font-size:.88rem;font-weight:700;color:#e4f3ea}
+.recq-head>div>small{display:block;margin-top:2px;font-size:11px;color:#b4c5c7}
+.rec-board .recq-pager{display:flex;align-items:center;gap:8px}
+.rec-board .recq-pager button{width:auto;display:inline-flex;grid-template-columns:none;align-items:center;justify-content:center;min-height:44px;padding:8px 14px;border:1px solid #465962;border-radius:8px;background:#21323d;color:inherit;font-weight:700}
+.rec-board .recq-pager button:disabled{opacity:.42;cursor:not-allowed}
+.recq-pager span{font-size:11.5px;color:#bfd4cf;white-space:nowrap}
+.recq-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin:8px 0 0;font-size:11.5px;color:#b4c5c7}
+.recq-views .recq-hint{margin:2px 0 6px;font-size:.8rem;color:#b4c5c7;line-height:1.45}
+.recq-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.recq-chip{display:inline-flex;align-items:stretch;border:1px solid #465962;border-radius:999px;background:#21323d;overflow:hidden}
+.recq-chip button{border:0;background:transparent;color:#e8f4ee;min-height:38px;padding:6px 12px;font:inherit;cursor:pointer}
+.recq-chip button:first-child{font-weight:700}
+.recq-chip .recq-forget{color:#f3b9b3;border-left:1px solid #465962;font-size:11px;padding-inline:10px}
+.recq-empty{font-size:.8rem;color:#b4c5c7}
+.recq-save{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+.recq-save label{display:grid;gap:3px;flex:1 1 220px;font-size:11px;color:#adbfbc}
+.recq-save input{min-height:40px;background:#1b2b36;color:inherit;border:1px solid #465962;border-radius:8px;padding:8px;font:inherit}
+.recq-save button{min-height:40px;padding:8px 14px;border:1px solid #465962;border-radius:8px;background:#294941;color:inherit;font:inherit;font-weight:700;cursor:pointer}
+.rec-identity.recq-sticky{position:sticky;top:0;z-index:4;flex-wrap:wrap;background:#192f32;box-shadow:0 12px 26px #0006}
+.recq-facts{display:grid;grid-template-columns:repeat(4,auto);gap:10px 16px;margin-left:auto}
+.recq-facts>div{display:grid;gap:1px;min-width:0}
+.recq-facts small{font-size:11px;letter-spacing:.08em;font-weight:800;color:#9fc0b5}
+.recq-facts b{font-size:.9rem;color:#f0f8f1;font-variant-numeric:tabular-nums;white-space:nowrap}
+@media(max-width:900px){.recq-facts{grid-template-columns:repeat(2,minmax(0,1fr));width:100%;margin-left:0}}
+@media(max-width:720px){
+  .rec-identity.recq-sticky{padding:10px 12px;gap:8px}
+  .recq-sticky .rec-headshot{display:none}
+  .recq-sticky h2{font-size:1.2rem}
+  .recq-sticky .recq-id p{font-size:11.5px;margin:1px 0}
+  .recq-facts{gap:6px 10px}
+  .recq-facts small{font-size:11px;letter-spacing:.06em}
+  .recq-facts b{font-size:.82rem}
+  .rec-headshot svg{width:52px;height:65px}
+  .recq-chip button{min-height:44px}
+  .recq-save input,.recq-save button{min-height:44px}
+  .rec-board .recq-pager{width:100%}
+  .rec-board .recq-pager button{flex:1}
+}
+
+/* The board's legacy row-button rule must not reach the sort controls or the pager. */
+.rec-board .tl-table-sort{display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%}
+.rec-board .tl-table-sort button{width:auto;display:inline-flex;grid-template-columns:none;align-items:center;justify-content:center;min-height:44px;padding:8px 14px;border:1px solid #465962;border-radius:8px;background:#21323d;color:inherit;font-weight:700;white-space:nowrap}
+.rec-board .tl-table-sort label{width:auto;color:#adbfbc}
+.rec-board .tl-table-sort select{min-height:44px}

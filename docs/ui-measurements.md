@@ -1024,3 +1024,88 @@ smallest text 9 px. Tests: 313 pass, 0 fail.
 
 The staff contract test now checks the four views together, because the roles, the target control and the
 no-cap statement live in the view that owns them.
+
+
+## 22. Phase 4, session 3: scouting ranges
+
+### 22.1 The problem the ranges fix
+
+The player directory held 366 players in one table and offered "Show 25 more". There was no count, no
+page state and no way back to where you were: closing the tab, changing a filter or opening a player lost
+your position, and the only number on the page was a footer that appeared once you had already scrolled
+past twenty-five rows. Reading a scouting report meant scrolling back up to find out what the player was
+worth, and the four things a scouting decision turns on — grade, role fit, value, status — were spread
+between the row and the file.
+
+### 22.2 What the board does now
+
+| Before | Now |
+|---|---|
+| 366 rows, "Show 25 more" appended 25 at a time | 25 a page, "Showing 26 to 50 of 366 players", "Page 2 of 15" |
+| No position to lose, so no position to restore | Previous / Next, disabled at the ends, repeated in the foot of the table |
+| Filter, sort and the reset all kept whatever row count was left | Every filter change, sort, reset and saved view returns to page 1 |
+| Status lived only inside the player file | A `Status` column: With your squad · Shortlisted · Registered · Available |
+| No saved views | Up to six chips; the field defaults to `Nation · Position`; a chip reopens the whole filter set and a chip can be forgotten |
+
+Saved views are stored per career in `touchline.scoutViews.v1`, the same localStorage pattern the table
+columns already use, so they survive a reload without touching the career save. Verified by saving
+"Persist test", reloading the app and finding the chip still on the board with the store intact.
+
+The player file now opens with a sticky identity that carries the decision facts as four labelled cells:
+
+`GRADE A · ROLE FIT 18/20 · VALUE ₥1,252,900 · STATUS Registered · Densari FC`, under the player's name,
+position, age and nation.
+
+| Measurement | 1440 px | 390 px |
+|---|---:|---:|
+| Identity height, at rest | 145 px | 172 px |
+| Identity pinned at | 164 px | 196 px |
+| Shell header above it | 143 px | 182 px |
+| Horizontal overflow | 0 | 0 |
+
+The pinned offset is 0 inside the desk's own scrollport (`#clubPage`), which already starts below the
+shell header, so the identity sits exactly one hairline under it at every width. At 390 px the headshot
+is hidden while pinned and the facts go two-up, which is what took the bar from 201 px to 172 px — a
+quarter of a phone viewport, and the four facts stay legible without a sideways scroll.
+
+### 22.3 Also fixed
+
+- The board's legacy "row is a button" rule was reaching the sort controls, so at 390 px "High to low"
+  rendered as a full-width box with three-line wrapping. The sort bar is now scoped back to a select and
+  a 44 px button on one line.
+- Phone cards put `Registered` first and the name second. Status now sorts to the end of the card, so a
+  card reads name, value, position, age, then nation, club, role fit, grade and status.
+- Status dates read `28 Nov 2027`, not `2027-11-28`.
+
+### 22.4 Numbers
+
+| Contract | §21 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 72/72 | 72/72 |
+| Status chips | 78 | 78, 0 without words |
+| Long lists without a range | 0 | 0 |
+| Tables without a phone mode | 0 of 16 | 0 of 16 |
+| Contrast failures | 0 | 0 |
+| Text under 11 px, not metadata | 544 | 545 |
+| Tests | 313 | 313 pass, 0 fail |
+
+The single extra small-text node is the new `Status` header's sort button at 10.5 px, the same size as
+every other sortable header in the game; the four-up fact labels were moved from 10 px to 11 px in the
+same pass.
+
+Depth on the real career, `scrollHeight / clientHeight` of the desk: board **4.26 at 1440**, 5.58 at
+1200×760, 7.48 at 390 (25 cards); player file 1.12, 1.47, 2.30. The directory now carries a range at the
+top and the foot, and the context blocks above it — the staff reports, the travel desk, the talent desk —
+are the leftover depth this session did not move; the plan puts that sorting in Phase 8.
+
+Sweep: 214 screens at 390, 768 and 1440 px, 0 horizontal overflow, nested scroll traps 38 / 38 / 38,
+smallest text 9 px. Tests: 313 pass, 0 fail.
+
+### 22.5 Gate
+
+| Gate from the plan | Result |
+|---|---|
+| Scouting: sticky identity, grade/value/status always visible | Identity pinned under the shell header at 1440 and 390, four facts in it, 0 overflow |
+| Visible ranges | "Showing x to y of N players" in the head and the foot, page count, Prev/Next, page resets on every filter change |
+| Saved views | Six chips, named, persisted per career, reopen and forget |
+| 0 tables overflow | 0 of 16 tables without a phone mode; 0 horizontal overflow at three widths |
