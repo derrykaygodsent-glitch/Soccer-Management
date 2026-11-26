@@ -9,3 +9,9 @@ test('compact season renders useful tables without pretending missing results ar
  const summary=renderWith(career);assert.match(summary,/compact summary/);assert.match(summary,/Home/);assert.match(summary,/Exact match results are in this season’s external history archive/);assert.doesNotMatch(summary,/2–1/);
  await Archive.attach(career,bundle);const exact=renderWith(career);assert.match(exact,/2–1/);assert.doesNotMatch(exact,/Attach the matching season-history archive/);Archive.detach(career.id);
 });
+
+test('checkpoint-free legacy saves keep full history visible and can attach version-1 archive details read-only',async()=>{
+ const id='legacy-display',legacy={id,profile:{name:'Ada'},day:100,seasonYears:[2027],seasonBook:[fullRecord]},v2=await Archive.packV2(legacy),v1=Archive.pack(legacy),stub={...fullRecord,nations:{Valdoria:{...fullRecord.nations.Valdoria,resultsCount:1}}};delete stub.nations.Valdoria.results;stub.seasonArchive={format:1,detail:'external',archiveId:v2.archiveId,recordSha256:v2.records[0].sha256};const compactLegacy={...legacy,seasonBook:[stub]},before=JSON.stringify(compactLegacy);
+ assert.equal(Object.hasOwn(legacy,'worldCheckpoint'),false);assert.match(renderWith(legacy),/2–1/);const summary=renderWith(compactLegacy);assert.match(summary,/compact summary/);assert.match(summary,/Exact match results are in this season’s external history archive/);assert.doesNotMatch(summary,/2–1/);
+ assert.equal((await Archive.attach(compactLegacy,v1)).matched,1);assert.match(renderWith(compactLegacy),/2–1/);assert.equal(JSON.stringify(compactLegacy),before,'v1 archive attachment must not mutate the checkpoint-free career');Archive.detach(id);
+});

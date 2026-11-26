@@ -657,3 +657,20 @@ test('imported tactic presets validate and preserve the unified coordinates for 
   a.equal(plan.defenseFormation, '4-2-1-3');
   a.equal(s.tactic, '4-2-1-3');
 });
+
+test('player instructions expose only settings that have an effect in the selected possession phase',()=>{
+ const s=career();s.id='phase-aware-player-instructions';let handlers={};const root={addEventListener:(kind,fn)=>handlers[kind]=fn,querySelector:()=>null};TLBoardRoom.bind(root,(action,value)=>{if(action==='matchBoard')TLMatchBoard.update(s,value,pool);},()=>{});TLBoardRoom.render(s,pool);
+ handlers.click({target:{closest:selector=>selector==='button'?{dataset:{workspaceTab:'players'},hasAttribute:()=>false}:null}});
+ handlers.click({target:{closest:selector=>selector==='.fm-row[data-slot]'?{dataset:{slot:'3'}}:null}});
+ s.boardPhase='attack';let html=TLBoardRoom.render(s,pool);a.match(html,/data-player-instruction="attack\|p\d+\|risk"/);a.match(html,/data-player-instruction="attack\|p\d+\|dribbling"/);a.doesNotMatch(html,/data-player-instruction="attack\|p\d+\|pressing"/);let attackPosition=html.match(/<select data-player-instruction="attack\|p\d+\|position">([\s\S]*?)<\/select>/)?.[1]||'';a.doesNotMatch(attackPosition,/Hold defensive position/);
+ s.boardPhase='base';html=TLBoardRoom.render(s,pool);a.match(html,/data-player-instruction="defense\|p\d+\|pressing"/);a.match(html,/data-player-instruction="defense\|p\d+\|position"/);a.doesNotMatch(html,/data-player-instruction="defense\|p\d+\|(?:risk|shooting|dribbling)"/);let defensePosition=html.match(/<select data-player-instruction="defense\|p\d+\|position">([\s\S]*?)<\/select>/)?.[1]||'';a.doesNotMatch(defensePosition,/Get further forward/);
+});
+
+test('Team Instructions has a distinct transition and distribution panel without rewriting either phase shape',()=>{
+ const s=career();s.id='team-transition-instructions';const before={tactic:s.tactic,plan:JSON.parse(JSON.stringify(TLMatchBoard.active(s)))},handlers={};const root={addEventListener:(kind,fn)=>handlers[kind]=fn,querySelector:()=>null};TLBoardRoom.bind(root,(action,value)=>{if(action==='matchBoard')TLMatchBoard.update(s,value,pool);},()=>{});TLBoardRoom.render(s,pool);
+ handlers.click({target:{closest:selector=>selector==='button'?{dataset:{workspaceTab:'instructions'},hasAttribute:()=>false}:null}});TLBoardRoom.render(s,pool);TLMatchBoard.update(s,'phase|0|transition',pool);let html=TLBoardRoom.render(s,pool);
+ for(const group of ['lost','won','gk','target','delivery'])a.match(html,new RegExp(`data-order="${group}"`));for(const label of ['When possession is lost','When possession is won','Goalkeeper distribution · when the goalkeeper has the ball','Transitions & goalkeeper distribution'])a.ok(html.includes(label),`missing ${label}`);
+ for(const [group,value] of [['lost','Counter-press'],['won','Play forward immediately'],['gk','Distribute quickly'],['target','Flanks'],['delivery','Take long kicks']])handlers.change({target:{value,dataset:{order:group},hasAttribute:name=>name==='data-order'}});
+ const saved=JSON.parse(JSON.stringify(s)),plan=TLMatchBoard.active(saved);a.deepEqual(plan.orders,{lost:'Counter-press',won:'Play forward immediately',gk:'Distribute quickly',target:'Flanks',delivery:'Take long kicks'});a.equal(saved.boardPhase,'transition');a.equal(saved.tactic,before.tactic);for(const key of ['defenseFormation','attackFormation','phaseCoordinates','playerInstructions','instructions'])a.deepEqual(plan[key],before.plan[key],`transition settings preserve ${key}`);
+ TLMatchBoard.update(saved,'phase|0|attack',pool);a.equal(TLMatchBoard.active(saved).orders.lost,'Counter-press');a.equal(TLMatchBoard.active(saved).orders.won,'Play forward immediately');
+});

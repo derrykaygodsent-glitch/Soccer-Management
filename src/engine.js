@@ -329,7 +329,7 @@
 
     setPlayerInstruction(ti,{id,phase='attack',group,value}={}) {
       const team=this.teams[ti],slot=team?.slots.find(s=>s.player?.id===id);
-      if(!slot||!['attack','defense'].includes(phase)||!Z.individualInstructions[group]?.includes(value))return {ok:false,msg:'Invalid player instruction.'};
+      if(!slot||!['attack','defense'].includes(phase)||!Z.individualInstructionAllowed(phase,group,value))return {ok:false,msg:'Invalid player instruction.'};
       const tactical=team.tactics.tactical||{},all={...(tactical.playerInstructions||{})},player={...(all[id]||{})},instructions={...(player[phase]||{})};
       if(value==='Team default')delete instructions[group];else instructions[group]=value;player[phase]=instructions;all[id]=player;team.tactics.tactical={...tactical,playerInstructions:all};slot.instructions=all[id];
       this.careerAssignment(slot.player,slot,team);this.brainIn=0;this.recordTacticalChange?.(ti,{player:id,phase,group,value});return {ok:true};
