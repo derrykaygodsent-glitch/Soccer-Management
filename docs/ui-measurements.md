@@ -2076,3 +2076,71 @@ Hiding the second pitch or shrinking it would be a pitch change, which was the o
   0 horizontal overflow, tactics rows never wider than their panel (`scrollWidth == clientWidth`).
 - **Blast radius:** every rule in `src/tactics-desk.css` is scoped to the tactics screen; the sleeper
   check is that Inbox, Squad, Club, Today, World and Life render pixel-identical to §33's build.
+
+## 35. Tactics · the desk, rebuilt flat (Round 2)
+
+Round 1 (§34) was measured, gated and then rejected on sight: *"too many lines and is too crowded"*, and
+*"it doesn't even look good on mobile"*. The numbers were fine; the composition was not. §34 had grown to
+thirty-four scoped override sections, each solving one symptom (a strip here, a card there), so the page
+still carried: a hero, a snapshot strip, a toolbar band, two card-shaped instruction panels and an
+overview card with a repeated readiness pill — five horizontal lines before the pitch.
+
+Round 2 deletes those layers rather than restyling them, and lays the page out the way
+`docs/tactics-ui-research.md` describes the FM26 tactical workspace: **a large pitch, a dense assignment
+table beside it, contextual controls in the middle, an overview that summarises instead of repeating, and
+no gradients, glass or decorative chrome.**
+
+### 35.1 What changed
+
+| | §34 (rejected) | §35 |
+|---|---|---|
+| Lines before the pitch | hero band → snapshot strip → toolbar band → tabs | hero → one sticky bar (tabs + live state) → toolbar |
+| Header | two metric tiles with bars + review chip + library row | eyebrow, 31 px name, three chips on the left; library on the right (a `Tactics library` disclosure under 1100 px) |
+| State | header metrics **and** a four-card snapshot repeating them | one place: `Familiarity · Intensity · review` in the sticky bar, plus the formation pair in the toolbar chips |
+| Containers | six bordered panels | one bordered thing on the screen — the pitch. Everything else is type on the page surface |
+| Team sheet | eight columns of chip-shaped cells | a six-column table: position, In-Possession role, Out-of-Possession role, player, fit, readiness. Group rows (`GOALKEEPER 1`), hairline separators, 40 px rows |
+| Phone sheet | a two-line card inside a clipped 60vh scroll box | a two-line row that flows with the page: identity line, then both roles. Fit text is gone from the role cells because the `FIT` column already states it |
+| Instructions | three equal cards with header bands | two columns: visualiser (header, phase switch, pitch, zone analysis — one 520 px stack) + contextual instructions with the tactical overview beneath. Duplicated readiness pill removed |
+| Player instructions | rail + empty detail pane until you pick | rail + detail that opens on the first starter; both phases side by side above 1100 px |
+| Opposition / leadership | two more boxes at the foot of every tab | one `Match context` strip: a hairline, one paragraph, one select |
+| Duplicate actions | `Auto-select best XI` in two places | once, in the sheet header it affects |
+
+The stylesheet was rewritten from scratch (`src/tactics-desk.css`, 275 scoped rules, every rule behind
+`#homeScreen:has(.fm-tactics-workspace)`), not extended. The pitch is untouched: nothing in the sheet
+selects `.shape-field`, `.fm-pitch-marker`, `.tactic-shirt`, `.board-lines`, `.fm-zone-overlay` or
+`.fm-pitch-card`.
+
+### 35.2 Numbers
+
+| Fold (document height ÷ viewport) | 390 | 768 | 1440 |
+|---|---|---|---|
+| Both | 4.11 | 2.36 | 2.46 |
+| One phase | 3.66 | 2.53 | **1.84** |
+| Team Instructions | **2.82** (was 3.47) | 2.31 | **1.59** (was 1.87) |
+| Player Instructions | **2.50** | 2.28 | **1.49** |
+
+The `Both` and one-phase folds at 390 are unchanged from §34, and that is a *correction*, not a
+regression: §34's sheet lived in a `max-height:60vh; overflow:auto` box, so four of the eleven starters
+were behind an inner scrollbar. The 390 numbers above include every row. The phone page is now
+`hero (110 px) → bar (79 px) → phase block (86 px) → pitch (475 px) → sheet (≈900 px) → match context`.
+
+Smaller type: the smallest text on the page is the pitch's own shirt labels at 8 px (untouched); the
+sheet's smallest is 9 px (column headers, group counts). Round 1 carried a 4.11 contrast failure at 9 px
+in `.fm-squad-group small`; the sheet headers now sit at 7.3:1.
+
+### 35.3 Proof
+
+- **Drag:** real pointer path on the built page — `fm-drag-source` on the source, `fm-drop-target` on the
+  destination, `fm-snap-preview` on the shirt mid-drag; `left`/`bottom` change on release. 0 page errors.
+- **Sticky bar:** at 390 the bar pins under the fixed shell chrome (`.fm-desk-bar` top = 158 px, i.e. the
+  top of `#clubPage`'s visible area), tabs on top, state beneath — never at the bottom of the phone.
+- **Disclosures:** `Tactics library` opens (`aria-expanded="true"`, the name field measurable);
+  `SUBSTITUTES · 6` opens six bench rows.
+- **Contracts:** 357 tests, contract **72/72**, **0 contrast failures**, `text under 11px` down from 778 to
+  692; sweep **214 × 390 / 768 / 1440, 0 horizontal overflow**; nested scroll traps attributable to tactics
+  went 2 → 0 (the sheet no longer scrolls inside itself).
+- **Blast radius:** every rule is scoped to the tactics route. Ten other pages were rebuilt from §34's
+  commit and compared shot-for-shot at 1440 and 390: **18 of 20 captures byte-identical** (Home, Inbox,
+  Day, Squad, Training, Fixtures, Transfers, Finance, Intelligence, Job market). The two that differ —
+  Day and Finance at 1440 — differ between two captures of the *same* build as well, so they are the
+  page's own live element, not a leak.
