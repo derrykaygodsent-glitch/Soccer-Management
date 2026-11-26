@@ -85,3 +85,10 @@ frame and the numbers in [`ui-measurements.md` §15](./ui-measurements.md).
 |---|---|---|
 | A squad area with its own nav | Four views inside the squad screen: Roster, Availability, Registration, Development. Banner and unit counts stay above the nav | Availability is ordered by what stops a selection (recovery, then condition, then sharpness) and says the order in words, so the first name is the first decision |
 | Registration with deadlines and a queue | Each competition list states `15 of 25 selected`, names the players with no number, and offers a search that reports `Showing 3 of 17 players` | The gap is a sentence with names, not a red badge |
+
+## 9. Phase 3 close
+
+| FM26 pattern | Touchline now | Beyond FM26 |
+|---|---|---|
+| Registration list with the filed XI visible | The list opens with the chosen players in shirt order, the gaps by name, and a conflict line for players filed elsewhere | The conflict line names the players and says why they cannot appear, and the row below repeats it with a disabled select, so the reason is never a mystery |
+| Medical urgency first | Training readiness is grouped In recovery, Needs work, Building, Match ready, each with a count, and an injured player states the return date | The group order matches what stops a selection, so the top of the list is the first decision |

@@ -823,3 +823,59 @@ Not done, and therefore the phase is not closed:
   urgent-first grouping.
 
 Those three carry into the next session rather than being called complete.
+
+## 19. Phase 3 closed: the last three items
+
+Date: 25 November 2026. Kay FC, 13 November 2027, 17 players.
+
+### 19.1 Pinned list and conflict queue on registration
+
+Each competition list now opens with, in this order: the search and its range, the selected count,
+the gap by name, the conflict line, the list as it stands, then the searchable queue.
+
+- Pinned list: `On this list` followed by the chosen players in shirt order. On the real save that
+  is 15 chips from `#1 Ari Serra` to `#22 Luca Novak`.
+- Conflict line: tested by filing two squad players with another club in a copy of the save.
+  It read `2 players are filed by another club and cannot appear on this list: Kofi Vico, Haru Vale`,
+  and both rows then showed `Filed by another club` with the shirt select disabled.
+- The gap line now also ends with `2 filed by another club` when that is true.
+
+### 19.2 Training readiness: urgent first
+
+The readiness table is grouped and ordered by what stops a selection:
+
+| Group | Order | Tone |
+|---|---:|---|
+| In recovery | 1 | danger |
+| Needs work (sharpness under 60) | 2 | attention |
+| Building (under 75) | 3 | neutral |
+| Match ready | 4 | neutral |
+
+Each group is a row that names itself and its count (`Match ready · 13` on the real save). A player
+in recovery shows the return date under the status chip (`back 18 Nov 2027`).
+
+### 19.3 Numbers
+
+| Contract | §18 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 70/70 | 70/70 |
+| Status chips | 76 | 76, 0 without words |
+| Tables without a phone mode | 0 | 0 of 14 |
+| Contrast failures | 0 | 0 |
+| Text under 11 px, not metadata | 762 | 762 |
+
+Sweep: 208 screens at 390, 768 and 1440 px, 0 horizontal overflow, smallest text 9 px.
+Tests: 313 pass, 0 fail. Relays unchanged: passes per team 690.33, pass rate 76.59%.
+
+### 19.4 Phase 3 gate
+
+| Gate from the plan | Result |
+|---|---|
+| `wideTables` 0 at all widths | 0 tables without a phone mode, 0 overflow at 390, 768 and 1440 |
+| Every table declares a mobile mode | 14 of 14 |
+| Roster tap targets 44 px or more on phones | tabs, card names, shirt selects, sort controls and secondary buttons all 44 px |
+
+Phase 3 is closed. What it delivered: phone roster cards, fourteen table modes, sort and saved views,
+role fit, form, compare, grouped attributes, the player in focus, squad health, the four-view squad
+hub, registration with gaps by name, a pinned list, a conflict queue and a searchable queue, and
+urgent-first training readiness.
