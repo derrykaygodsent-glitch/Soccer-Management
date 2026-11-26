@@ -893,3 +893,55 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 
 /* no club at the far end of a personal deal: a neutral badge, not a fake crest */
 .tc-club-none i{background:#2b3f47;color:#c6d6d0;font-weight:700}
+
+/* ---- Phase 4 · finance: budget rail, period selector, runway, chart with a table ---- */
+.lm-rail{margin:.9rem 0 .5rem}
+.lm-rail small{font-size:11px;letter-spacing:.09em;color:#9fc0b5}
+.lm-rail b{font-variant-numeric:tabular-nums}
+.lm-rail b.lm-good{color:#cdf3a4}
+.lm-rail b.lm-bad{color:#ffc9cb}
+.lm-rail em{font-style:normal;color:#a9c0c2;font-size:11.5px}
+.lm-period{display:flex;flex-wrap:wrap;gap:.35rem;margin:.2rem 0 .7rem}
+.lm-period button{min-height:44px;padding:.4rem .8rem;border:1px solid #46606b;border-radius:999px;background:#20343f;color:#dbeae4;font:inherit;font-weight:650;cursor:pointer}
+.lm-period button[aria-pressed=true]{background:#294942;border-color:#88ac87;color:#def6a7}
+.lm-overview{margin:.4rem 0 .6rem}
+.lm-chart-block{padding:12px 14px;border:1px solid #354957;border-radius:12px;background:#16232f}
+.lm-chart-head{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:space-between}
+.lm-chart-head h3{margin:0;font-size:1.05rem}
+.lm-view{display:flex;gap:.3rem}
+.lm-view button{min-height:44px;padding:.35rem .7rem;border:1px solid #46606b;border-radius:8px;background:#20343f;color:#dbeae4;font:inherit;font-weight:650;cursor:pointer}
+.lm-view button[aria-pressed=true]{background:#294942;border-color:#88ac87;color:#def6a7}
+.lm-range{margin:.35rem 0 .5rem;font-size:.82rem;color:#bcd3cd}
+.lm-bars{display:flex;align-items:flex-end;gap:0;height:120px;padding-top:6px}
+.lm-bar{flex:1 1 0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;min-width:0}
+.lm-bar-track{position:relative;width:100%;height:96px}
+.lm-bar-track:before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:#33495a}
+.lm-bar-track i{position:absolute;left:50%;transform:translateX(-50%);width:min(56px,72%)}
+.lm-bar-track i.credit{background:#b7e08a;border-radius:3px 3px 0 0}
+.lm-bar-track i.debit{background:#e08a8a;border-radius:0 0 3px 3px}
+.lm-swatch{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:2px;vertical-align:baseline}
+.lm-swatch.credit{background:#b7e08a}
+.lm-swatch.debit{background:#e08a8a}
+.lm-bar span{font-size:11px;color:#a9c0c2;white-space:nowrap}
+.lm-table{margin-top:.3rem}
+.lm-table caption{text-align:left;font-size:11px;letter-spacing:.08em;color:#9fc0b5;padding-bottom:.3rem}
+.lm-table th[data-col=day]{white-space:nowrap;font-weight:700;color:#dcefe0;font-size:.84rem;letter-spacing:0;text-transform:none;border-bottom:1px solid #35485a}
+.lm-table th[data-col=day]{width:38%}
+.lm-table th[data-col=in],.lm-table th[data-col=out],.lm-table th[data-col=net]{width:20.6%;text-align:right}
+.lm-table td{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;border-bottom:1px solid rgba(84,111,126,.35)}
+.lm-table tbody tr:last-child td{border-bottom:0}
+.lm-table tfoot th,.lm-table tfoot td{font-weight:800;color:#eaf7ea;border-top:1px solid #35485a}
+.lm-runway{margin:.2rem 0 .8rem;padding:.55rem .75rem;border-left:3px solid #88ac87;background:#16232f;border-radius:0 8px 8px 0;font-size:.84rem;color:#cfe0d6}
+.lm-runway.warn{border-left-color:#c98b8b;color:#ffd9d9;background:#241a20}
+@media(max-width:720px){
+  .lm-bars{height:100px}
+  .lm-bar-track{height:76px}
+  .lm-table caption{display:block;width:100%;white-space:normal}
+  .lm-table[data-tl-table=cards] th[data-col=day]{order:0;flex:1 1 100%}
+  .lm-table[data-tl-table=cards] td[data-col=in]{order:1}
+  .lm-table[data-tl-table=cards] td[data-col=out]{order:2}
+  .lm-table[data-tl-table=cards] td[data-col=net]{order:3;margin-left:auto;font-weight:800}
+  .lm-table[data-tl-table=cards] td[data-col=in]:before{content:"In ";font-size:11px;color:#9fc0b5;font-weight:700}
+  .lm-table[data-tl-table=cards] td[data-col=out]:before{content:"Out ";font-size:11px;color:#9fc0b5;font-weight:700}
+}
+.lm-window{color:#a9c0c2;font-weight:600;letter-spacing:.04em}

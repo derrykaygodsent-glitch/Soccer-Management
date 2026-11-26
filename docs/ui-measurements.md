@@ -1274,3 +1274,80 @@ smallest text 9 px. Tests: 313 pass, 0 fail.
 | Route line `From → To` | Shields with an arrow in the deal card, a written route on every row, and the written route replaces the shields at 560 px and below |
 | Pagination replaces the 12-row arrow browsing | 12 a page with range and page count at both ends; the deal card's browsing arrows are gone and the card follows the page |
 | Transfers show a range (Phase 4 gate) | `Showing 1 to 12 of 17 deals` on both scopes |
+
+## 25. Phase 4, session 6: the club account you can set to a period — and the phase close
+
+### 25.1 The problem
+
+`[data-hc-open="finance"]` does not open `views.finance`. It opens **Club account**, which is
+`TLLuma.wallet(s)` + the economy panel + enterprise + commercial. The rich finance screen in
+`src/club-finance.js` — tabs, FFP, budget panel, `U.chart` — is registered on `views` and never called,
+and its `Breakdown · October 2026` label is the static month the plan complained about. The live
+surface had the opposite problem: a wallet with no period at all. `statement(s, account, days)` could
+filter by account and page three days at a time, but nothing said *which* span of the season the manager
+was looking at, and the £ figures in the header had no context above them.
+
+### 25.2 What the account is now
+
+| Before | Now |
+|---|---|
+| Two cards: `Personal wallet ₥3,878`, `Club treasury ₥223`, no relation stated | A four-cell rail above the activity: **Personal wallet** (yours to spend), **Club treasury** (club money — registration, staff, ground), **Wage bill** (`No contracts` / `17 players on amateur terms` when it is zero), and **Net** for the chosen period with the split `Wallet +₥2,703 · club −₥19,736` |
+| No period control: the statement paged three days at a time with no label | `Today · 7 days · 30 days · Season` as pressed buttons, 44 px, default 30 days; the choice drives the rail, the chart, the table and the statement window |
+| A chart's worth of numbers printed nowhere | `Club money` — bars above and below a zero line (green up = in, red down = out) for the days that moved money, with `in ₥15,000 · out ₥34,736 · net −₥19,736` and the span in days |
+| No alternative to the picture | `Chart | Table` toggle: 13 rows — day, in, out, net — with a `Total` foot, phone cards showing `In ₥0  Out ₥31,153  −₥31,153`, and the same numbers in the chart's `aria-label` |
+| No answer to "how long can the club keep spending" | A runway line under the chart: `At ₥1,158 a day the treasury covers less than a day of club spending` (warn tone). No spending in 30 days says so; a treasury that covers 30 days or more reads in the calm tone |
+| `Recent movements` with no idea of the window | `ACCOUNT ACTIVITY · the last 30 days`, and the header follows the period |
+| `Breakdown · October 2026` in `src/club-finance.js` | `Breakdown this month`. No rendered text on the account carries a month name; the only `October 2026` left in the DOM is inside the inline bundle `<script>` |
+
+The rail, chart and runway only render on the finance surface (`wallet(s, {full:true})`). The Personal
+money page keeps the original compact wallet — two pot cards, contributions, the statement — because it
+is about the manager's money, not the club's books.
+
+Burn is measured on club money over the last 30 days whatever period is showing, so the runway does not
+flip to "infinite" when the manager looks at a quiet week. Days with no club movement are skipped rather
+than drawn as zero bars: the first pass counted them and claimed `30 days with club movements` against
+13 real ones, and its table foot totalled all days while the rows showed the last ten.
+
+### 25.3 Numbers
+
+| Contract | §24 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 72/72 | 72/72 |
+| Status chips | 78 | 78, 0 without words |
+| Tables without a phone mode | 0 of 22 | 0 of 22 |
+| Contrast failures | 0 | 0 |
+| Text under 11 px, not metadata | 545 | 545 |
+| Tests | 313 | 313 pass, 0 fail |
+
+Depth, `scrollHeight / clientHeight`: **3.34 at 1440** (2,694 px) and **5.41 at 390** (3,584 px), against
+3.04 / 5.10 before — one rail, one selector row, one chart block and one runway line. The table view is
+the longer state (3.71 / 6.55 with 13 rows) and it is a deliberate alternative, not the default.
+
+Behaviour, measured in the browser on the real career (Kay FC, day 383 = Sat 13 Nov 2027, wallet ₥3,878,
+treasury ₥223, no contracts):
+
+- **30 days** (default): 6 days with club movements, `in ₥15,000 · out ₥34,736 · net −₥19,736`, rail
+  `Net · 30 days −₥17,033  Wallet +₥2,703 · club −₥19,736`.
+- **7 days**: `Net · 7 days −₥31,330  Wallet +₥754 · club −₥32,084` — the 9 Nov settlement of ₥31,153
+  enters the window and the rail follows. **Today**: `Net · today +₥759  Wallet +₥759 · club +₥0`, and the
+  chart says `No club movements today` instead of drawing an empty frame.
+- **Season**: 13 days with club movements, `17 Sept 2027 to 13 Nov 2027`, `in ₥49,000 · out ₥60,717 ·
+  net −₥11,717`; the table lists all 13 newest-first with the total in the foot.
+- Statement follows the period: three day groups (`Today · Sat, 13 Nov 2027`, `Tue, 9 Nov 2027`,
+  `Mon, 8 Nov 2027`) with `Show earlier activity` still available inside the window.
+- Keyboard: focus a period button, press Enter or Space, the numbers change **and focus stays on the
+  pressed button**. Before this session the redraw dropped focus to `<body>`, so a keyboard user was
+  returned to the top of the page after every press.
+- 6 controls (4 periods + 2 views), all 44 px tall, 13 px text. 0 horizontal overflow at 1440 and 390.
+
+Phase 4 gate, all four items:
+
+| Gate | Result |
+|---|---|
+| Staff fold ≤ 2.0× at 390 | **1.96** at 390 (1,297 px), 1.14 at 1440 |
+| Transfers show a range | `Showing 1 to 12 of 17 deals`, `Page 1 of 2` (§24) |
+| Finance period control changes the numbers | `−₥17,033` / `−₥31,330` / `+₥759` / `−₥24,950` across the four periods, rail, chart, table and statement together |
+| 0 tables overflow | 0 of 22 tables without a phone mode, 0 overflow in the sweep |
+
+Sweep: 214 screens at 390, 768 and 1440 px, 0 horizontal overflow, nested scroll traps 41 / 38 / 38,
+smallest text 9 px.
