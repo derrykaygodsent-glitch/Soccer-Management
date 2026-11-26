@@ -5,7 +5,7 @@ const { join } = require('node:path');
 const src = join(__dirname, 'src');
 const read = name => readFileSync(join(src, name), 'utf8');
 const base64 = name => readFileSync(join(src, name)).toString('base64');
-const css = [read('style.css'), read('home.css'), read('club.css'), read('matchday.css'), read('season.css'), read('office.css'), read('reading.css')].join('\n')
+const css = [read('tokens.css'), read('style.css'), read('home.css'), read('club.css'), read('matchday.css'), read('season.css'), read('office.css'), read('reading.css')].join('\n')
   .replace('{{FAMILY_STREET}}', () => base64('media/family-street.jpg'))
   .replace('{{LOCAL_REPORTER}}', () => base64('media/local-reporter.webp'))
   .replace('{{LOCAL_FOUNDER}}', () => base64('media/local-founder.webp'))

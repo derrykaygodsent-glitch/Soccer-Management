@@ -77,8 +77,8 @@ short version — keep the status column honest.
 |---|---|---|---:|---|
 | M | Measure | Sweep + real-career numbers | 2 | ✅ done |
 | B | Measured bugs | Header, title, Back, contrast, tables | 1 | ✅ done |
-| **0** | **Foundations** | Tokens, type ramp, status anatomy, contract checker | 2 | **next** |
-| 1 | Shell & navigation | Three-tier nav, one Back, breadcrumbs, palette, dock | 4 | |
+| **0** | **Foundations** | Tokens, type ramp, status anatomy, contract checker | 2 | ✅ done |
+| 1 | Shell & navigation | Three-tier nav, one Back, breadcrumbs, palette, dock | 4 | **next** |
 | 2 | Daily loop | Home command centre, Inbox lanes, Calendar, planner | 4 | |
 | 3 | Squad family | Squad hub, player context, phone roster, registration | 4 | |
 | 4 | Operations family | Operations hub, Staff split, Contracts, Scouting, Transfers, Finance | 6 | |
@@ -92,8 +92,10 @@ short version — keep the status column honest.
 sweep run twice on a real career (624 states each, 0 errors) · **Step B closed** (5 bugs fixed, 0 contrast
 failures). Results: [`docs/ui-measurements.md`](./ui-measurements.md).
 
-**Current phase: Phase 0 — Foundations.** Next task: token inventory → `src/tokens.css` → type ramp →
-status component → `scripts/ui-contract.cjs` (see §9 of the rebuild plan).
+**Current phase: Phase 1 — Shell and navigation.** Phase 0 is closed: tokens shipped, type floor at
+9 px (from 7), 0 contrast failures, contract checker running on 70 screens. Numbers and the contract
+baseline: [`ui-measurements.md` §9](./ui-measurements.md). Next work: five-hub rail, panel, tab rail,
+one Back, breadcrumbs, command palette, phone dock (see §4 Phase 1 of the rebuild plan).
 
 ## 2. Step M — measure (M1 and M2 done)
 
@@ -190,6 +192,7 @@ No engine changes are in scope for Phases 0–6. Rendering support (canvas DPR c
 | Date | Phase | What changed | Next |
 |---|---|---|---|
 | 2026-11-25 | — | Audit written (`docs/ui-ux-audit.md`); roadmap written; no product code touched | — |
+| 2026-11-25 | 0 | Foundations shipped: `src/tokens.css` (~90 tokens), palette mapped for `--tl-*` and `.cc-*`, **587 font-size declarations raised** (7 px → 9 px floor), `.tl-status` component, `ui-inventory.cjs` + `ui-contract.cjs` (70 screens). Sweep: 624 states, 0 errors, 0 contrast, 0 overflow, min text 9 px, 312 tests pass. Contract baseline: 0/70 page anchors, 0/70 primary actions, 0/70 breadcrumbs, 440 rows hidden by caps. | Phase 1: shell + nav |
 | 2026-11-25 | Plan | Stored the supplied visual/UX audit (`ui-audit-synthesis.md`) with a cross-check against our numbers, and wrote the execution plan (`ui-rebuild-plan.md`): six markup contracts, 9 phases, 12 measurement gates, ≈38 sessions. Phase 0 is next. | Phase 0: tokens + type ramp + contract checker |
 | 2026-11-25 | B | Step B closed: B1–B5 fixed in CSS only, plus three contrast tokens lifted shell-wide. Sweep: 624 states, 0 errors, 0 contrast failures, 0 page overflow, 1 wide table left (`league` @390). | Phase 0: token layer + type ramp |
 | 2026-11-25 | M2 | Real career (Kay FC, day 383, 17 players) measured: 624 states, 0 errors. Squad/scouting/league tables confirmed overflowing at all widths; inbox 150 controls; social 13.4x on a phone; tactics contrast isolated to star ratings + role labels. Added `--career=` support to the sweep. | Step B: fix B1-B5 |

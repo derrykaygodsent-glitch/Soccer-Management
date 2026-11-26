@@ -115,7 +115,7 @@ function measure() {
   let minFont = 99;
   const smallText = new Set();
   let contrastFails = 0, contrastSamples = [];
-  const textEls = all.filter(el => visible(el) && el.children.length === 0 && (el.textContent || '').trim().length > 1).slice(0, 600);
+  const textEls = all.filter(el => visible(el) && el.children.length === 0 && !el.closest('svg') && (el.textContent || '').trim().length > 1).slice(0, 600);
   for (const el of textEls) {
     if (unmeasurable(el)) continue;
     const cs = getComputedStyle(el);

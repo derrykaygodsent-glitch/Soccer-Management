@@ -222,3 +222,71 @@ This is the stop-the-bleeding version. The full row-card list (tap a row, read e
 - **The phone tab strip scrolls with no cue.** `#homeTabs` overflows on **207 of 208** states at 390 px (Back + 4 tabs is wider than 390). It does scroll, but nothing on screen says so. → Phase 1 navigation.
 - **`league` still overflows at 390 px** — the last table waiting for the Phase 4 table→list contract.
 - **Everything else is unchanged by design:** fold depth (social 13.39× at 390, staff 9.13×), tap targets (atlas 404, social 272 under 44 px at 1440) and the 7 px minimum text. Those are Phase 4 and Phase 6 work.
+
+---
+
+## 9. Phase 0 — Foundations (tokens and the type floor)
+
+Two changes, both measurable: the product now has one token layer, and no text is smaller than 9 px.
+
+### 9.1 Before and after
+
+| Metric | Before Phase 0 | After Phase 0 | Gate |
+|---|---|---|---|
+| Smallest computed text | **7 px** | **9 px** | ✅ ≥ 9 px |
+| Contrast failures (624 states) | 0 | **0** | ✅ = 0 |
+| Pages with horizontal overflow | 0 | **0** | ✅ = 0 |
+| Tables overflowing | 1 (`league` @390) | 1 | unchanged |
+| Runtime errors | 0 | **0** | ✅ = 0 |
+| Tests | 312 pass | **312 pass** | ✅ |
+| Fold depth @390 — social / staff | 13.39 / 9.13 | 13.40 / 9.36 | unchanged (Phase 2/4 work) |
+| Fold depth @1440 — staff | 5.37 | 5.48 | unchanged |
+| Sub-44 px targets @1440 — atlas / social | 404 / 272 | 404 / 271 | unchanged (Phase 1/8 work) |
+
+**587 font-size declarations were raised**: 539 + 6 (shorthand) + 11 (clamp minima) + 4 (second
+pass for the 14 px root) + 27 glyph values held at 9 px. One UA behaviour mattered: `<small>` is
+83 % of its parent, so a `<small>` inside a `.72rem` block computed to **8.4 px** even after the
+sweep; a single `small { font-size: max(9px, .84em) }` rule closed it.
+
+### 9.2 What was built
+
+| File | What it does |
+|---|---|
+| `src/tokens.css` | ~90 tokens: surfaces, edges, ink, action, eight status pairs, type ramp, spacing, radius, motion, focus, layout |
+| `docs/ui-tokens.md` | the rules, the ramp and what changed |
+| `scripts/ui-inventory.cjs` | reads the stylesheets and reports what they actually use (11,252 declarations scanned) |
+| `scripts/ui-contract.cjs` | walks 70 screens (35 destinations × 1440/390) and scores the six contracts |
+| `.tl-status` | the eight-state chip with a deadline slot — built, not yet used on screens |
+| `[data-tl-meta]` | marks the only text allowed below 11 px |
+
+Palette mapping: `--tl-*` now point at `--ui-*` (same values, one source). `.cc-workspace` and
+`.hc-dialog` moved their surfaces, edges, ink and status colours from the purple-grey family onto
+the navy tokens; their identity accents (electric cyan, lime, purple data colours) were kept, so
+the workspaces still read as their own rooms.
+
+### 9.3 The contract baseline (this is what the rebuild has to close)
+
+70 screens measured, 0 runtime errors:
+
+| Contract | Baseline | Target |
+|---|---|---|
+| Page anchors `[data-tl-page]` | **0 / 70** | 70 / 70 |
+| Screens with exactly one `h1` | **70 / 70** ✅ | keep |
+| Screens with exactly one declared primary action | **0 / 70** | 70 / 70 |
+| Status chips | 0 (component exists, unused) | every state on screen |
+| Long lists with a visible range | **8 lists, 440 rows hidden** | 0 hidden |
+| Tables declaring a phone mode | **0 / 14** | 14 / 14 |
+| Danger actions without preflight | 0 / 0 (none declared yet) | must stay paired |
+| Duplicate Back controls | **0** ✅ | keep (fixed in Step B) |
+| Screens with a breadcrumb | **0 / 70** | 70 / 70 |
+| Text under 11 px not marked metadata | **786** | 0 |
+
+Those numbers are the Phase 1–8 scoreboard. `ui-contract.cjs --strict` fails the build on the five
+that must be zero (contrast, danger-without-preflight, duplicate Back, no-h1, runtime errors).
+
+### 9.4 A metric correction
+
+SVG `<text>` was being counted as text (the Atlas map labels sit at 3.6 user units). Vector labels
+scale with their drawing, so they are not a typographic choice; the sweep and the contract checker
+now skip anything inside `<svg>`. Without that, the "smallest text" number could never reach the
+floor, no matter how well the CSS was written.
