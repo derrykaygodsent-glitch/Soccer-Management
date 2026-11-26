@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="b63f128303d7e4b0a996">
+  <meta name="tl-build" content="9c8d52d08ffd8c81f05a">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -3329,6 +3329,41 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   .comp-tabs-label{flex:1 1 100%}
   .comp-room .comp-tabs button,.comp-room .comp-metrics button{padding:0 10px;font-size:13px}
 }
+
+/* ---- Phase 5 · fixtures as rounds, not a 380-row scroll ---- */
+.fix-filters{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 10px}
+.comp-room .fix-filters button,.comp-room .fix-head button{min-height:44px;padding:0 14px;border:1px solid #46606b;border-radius:8px;background:#20343f;color:#dbeae4;font:inherit;font-weight:650;cursor:pointer}
+.comp-room .fix-filters button[aria-pressed=true]{background:#294942;border-color:#88ac87;color:#def6a7}
+.comp-room .fix-head .fix-step{font-size:13px;font-weight:700;letter-spacing:.02em}
+.comp-room .fix-head button:disabled{opacity:.42;cursor:default}
+.fix-head{display:flex;align-items:center;gap:10px;padding:0 0 8px}
+.fix-head p{margin:0;min-width:0;flex:1 1 auto}
+.fix-head b{display:block;font-size:1.05rem}
+.fix-head small{display:block;color:#bcd3cd;font-size:11.5px}
+.fix-spot{margin:0 0 8px;padding:8px 11px;border-left:3px solid #a8bdf5;background:#1b2537;border-radius:0 8px 8px 0;font-size:13px;display:flex;flex-wrap:wrap;gap:2px 8px;align-items:baseline}
+.fix-spot small{flex:1 1 100%;font-size:11px;letter-spacing:.07em;color:#a8bdf5;font-weight:750}
+.fix-range{margin:0 0 6px;font-size:11.5px;color:#bcd3cd}
+.fix-list{list-style:none;margin:0;padding:0}
+.fix-row{display:grid;grid-template-columns:9.5rem minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:9px 2px;border-bottom:1px solid #2c3d4d}
+.fix-row:last-child{border-bottom:0}
+.fix-row small{color:#bcd3cd;font-size:11.5px;font-variant-numeric:tabular-nums}
+.fix-teams{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px;min-width:0}
+.fix-teams button{min-height:32px;padding:2px 0;background:none;border:0;color:#e7f0ea;font:inherit;font-weight:650;text-align:left;cursor:pointer}
+.fix-teams button:hover{text-decoration:underline;text-underline-offset:2px}
+.fix-teams i{color:#8aa1a9;font-style:normal;font-size:11.5px}
+.fix-score{font-variant-numeric:tabular-nums;font-weight:750;color:#eaf7ea;min-width:2.6rem;text-align:right}
+.fix-you{grid-column:1/-1;justify-self:start;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#a8bdf5}
+.fix-tier{font-size:10.5px;color:#0f1a23;background:#9fb6c4;border-radius:3px;padding:1px 4px;font-style:normal}
+.fix-row.fix-own{background:linear-gradient(90deg,#1d2a33,#17212b)}
+@media(max-width:620px){
+  .fix-row{grid-template-columns:1fr auto;row-gap:3px}
+  .fix-row>small{grid-column:1/-1}
+  .fix-teams button{min-height:44px}
+}
+/* the round browser is UI, not prose: it is not held to the 72ch reading measure */
+#clubPage .comp-room .comp-fixtures>.fix-range,#clubPage .comp-room .comp-fixtures>.fix-spot,#clubPage .comp-room .comp-fixtures>.cp-muted{max-inline-size:none;width:100%;margin-inline:0}
+#clubPage .comp-room .comp-fixtures>.fix-range{padding:0;background:none;border:0;margin:0 0 6px;line-height:1.5}
+#clubPage .comp-room .comp-fixtures>.fix-spot{padding:8px 11px;background:#1b2537;border:0;border-inline-start:3px solid #a8bdf5;border-radius:0 8px 8px 0;margin:0 0 8px;line-height:1.4}
 </style>
 </head>
 <body>
@@ -14563,6 +14598,39 @@ g.TLSeasonBook={render,growth,record};})(window);
   /* Dates read as a person writes them: 13 Nov 2027, never 2027-11-13. */
   const dayText = iso => { const d = new Date(String(iso) + 'T12:00:00Z'); return Number.isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }); };
 
+  /* One round is one matchday: the fixtures share an index, and a round can run over two days. */
+  function groupRounds(fixtures) {
+    const byRound = new Map();
+    for (const f of fixtures) {
+      const key = f.i == null ? f.day : f.i;
+      if (!byRound.has(key)) byRound.set(key, { round: key, fixtures: [] });
+      byRound.get(key).fixtures.push(f);
+    }
+    return [...byRound.values()]
+      .map(g => {
+        const days = [...new Set(g.fixtures.map(f => f.day))].sort((a, b) => a - b);
+        return { ...g, from: days[0], to: days[days.length - 1], days };
+      })
+      .sort((a, b) => a.from - b.from || a.round - b.round)
+      .map((g, i) => ({ ...g, number: i + 1 }));
+  }
+  /* A round already behind the manager is a result; the round being played is upcoming. */
+  const roundsFor = (rounds, filter, day) => filter === 'results'
+    ? rounds.filter(r => r.to < day)
+    : filter === 'all' ? rounds : rounds.filter(r => r.to >= day);
+  /* The schedule carries no scores; the league simulation returns [home, away, goals, goals]. */
+  function scoreOf(fixture, results) {
+    if (!results || !results.length) return null;
+    for (const r of results) if (r && r[0] === fixture.a && r[1] === fixture.b) return [r[2], r[3]];
+    return null;
+  }
+  function spanText(from, to) {
+    const a = dayText(from), b = dayText(to);
+    if (a === b) return a;
+    const [da, ma] = a.split(' '), [db, mb] = b.split(' ');
+    return ma === mb ? `${da}–${db} ${ma} ${a.split(' ')[2]}` : `${a} – ${b}`;
+  }
+
   const tabs = (items, current) => items.map(([value, label]) =>
     `<button type="button" data-comp-tab="${value}" aria-pressed="${value === current}">${e(label)}</button>`).join('');
 
@@ -14590,8 +14658,26 @@ g.TLSeasonBook={render,growth,record};})(window);
 
     let panel;
     if (tab === 'Diary') {
-      const fixtures = g.TLFASeason.fixtures(s, n, season).sort((a, b) => a.day - b.day);
-      panel = `<section class="org-agenda comp-fixtures"><header class="comp-panel-head"><h3>${e(n)} fixtures</h3><small>${fixtures.length} ${fixtures.length === 1 ? 'fixture' : 'fixtures'} this season</small></header><p class="comp-note">${e(g.TLFASeason.profiles[n][5])}</p>${fixtures.map(f => `<p data-day="${f.day}"><small>${dayText(W.date(f.day))}${g.TLFASeason.kickoff(f)}${f.day !== f.original ? ' · moved from ' + dayText(W.date(f.original)) : ''}</small>　${f.tier ? `D${f.tier} · ` : ''}<button data-world-club="${e(f.team)}">${e(f.team)}</button> v <button data-world-club="${e(f.host)}">${e(f.host)}</button></p>`).join('')}</section>`;
+      /* The league only returns simulated scores when it is asked for players too. */
+      const results = (W.district(n, s.day, true).results) || [];
+      const schedule = g.TLFASeason.fixtures(s, n, season).sort((a, b) => a.day - b.day || String(a.team).localeCompare(String(b.team)));
+      const rounds = groupRounds(schedule);
+      const filter = ['upcoming', 'results', 'all'].includes(ui.fixFilter) ? ui.fixFilter : 'upcoming';
+      const scope = roundsFor(rounds, filter, s.day);
+      const counts = { upcoming: roundsFor(rounds, 'upcoming', s.day).length, results: roundsFor(rounds, 'results', s.day).length, all: rounds.length };
+      /* Default to the matchday being played, or the first one still to come. */
+      const firstUpcoming = roundsFor(rounds, 'upcoming', s.day)[0];
+      const fallback = scope.includes(firstUpcoming) ? firstUpcoming : scope[scope.length - 1] || scope[0];
+      const want = scope.find(r => r.number === Number(ui.fixRound));
+      const shown = want || fallback;
+      const at = scope.indexOf(shown);
+      const own = shown ? shown.fixtures.find(f => f.team === s.club?.name || f.host === s.club?.name) : null;
+      const rows = shown ? shown.fixtures.map(f => {
+        const score = scoreOf(f, results);
+        return `<li class="fix-row${f === own ? ' fix-own' : ''}"><small><time datetime="${W.date(f.day)}">${dayText(W.date(f.day))}</time>${f.kickoff ? ' · ' + f.kickoff : ''}</small><span class="fix-teams"><button data-world-club="${e(f.team)}">${e(f.team)}</button> <i>v</i> <button data-world-club="${e(f.host)}">${e(f.host)}</button></span><span class="fix-score">${score ? `${score[0]}–${score[1]}` : ''}</span>${f.tier ? `<em class="fix-tier">D${f.tier}</em>` : ''}${f === own ? '<b class="fix-you">Your club</b>' : ''}</li>`;
+      }).join('') : '';
+      const spotlight = own ? `<p class="fix-spot"><small>${shown.to < s.day ? 'YOUR RESULT' : 'YOUR MATCH THIS ROUND'}</small><b>${e(own.team)} v ${e(own.host)}</b>${scoreOf(own, results) ? ` · ${scoreOf(own, results).join('–')}` : own.kickoff ? ` · ${own.kickoff}` : ''} · ${dayText(W.date(own.day))}</p>` : '';
+      panel = `<section class="org-agenda comp-fixtures"><header class="comp-panel-head"><h3>${e(n)} fixtures</h3><small>${schedule.length} ${schedule.length === 1 ? 'fixture' : 'fixtures'} this season</small></header><div class="fix-filters" role="group" aria-label="Show fixtures"><button type="button" data-fix-filter="upcoming" aria-pressed="${filter === 'upcoming'}">Upcoming ${counts.upcoming}</button><button type="button" data-fix-filter="results" aria-pressed="${filter === 'results'}">Results ${counts.results}</button><button type="button" data-fix-filter="all" aria-pressed="${filter === 'all'}">All ${counts.all}</button></div>${!scope.length ? `<p class="cp-muted">${filter === 'results' ? 'No results yet this season. The first round is still to be played.' : 'No rounds left to play this season.'}</p>` : `<div class="fix-head"><button type="button" class="fix-step" data-fix-round="-1" aria-label="Previous round" ${at <= 0 ? 'disabled' : ''}>Previous</button><p><b>Round ${shown.number}</b><small>${spanText(W.date(shown.from), W.date(shown.to))} · ${shown.fixtures.length} ${shown.fixtures.length === 1 ? 'fixture' : 'fixtures'}</small></p><button type="button" class="fix-step" data-fix-round="1" aria-label="Next round" ${at >= scope.length - 1 ? 'disabled' : ''}>Next</button></div>${spotlight}<p class="fix-range" data-tl-meta>Round ${shown.number} of ${rounds.length} · showing ${shown.fixtures.length} of ${schedule.length} fixtures · ${counts[filter]} ${counts[filter] === 1 ? 'round' : 'rounds'} ${filter === 'results' ? 'played' : filter === 'upcoming' ? 'to come' : 'this season'}</p><ul class="fix-list">${rows}</ul>`}<p class="comp-note">${e(g.TLFASeason.profiles[n][5])}</p></section>`;
     } else if (tab === 'Bench') {
       panel = g.TLTechnical.render(s, n);
     } else if (tab === 'Honours') {
@@ -14608,7 +14694,9 @@ g.TLSeasonBook={render,growth,record};})(window);
 
     return `<section class="comp-room" style="--nation:hsl(${h} 72% 72%);--deep:hsl(${h} 40% 22%)"><header class="comp-hero">${art(cups ? 'silverware' : 'terrace')}<div><small>${e(country?.continent || 'MERIDIAN')}　 /　 COMPETITION CENTRE</small><h2>${e(n)}<br>${competition}</h2><span>${cups ? 'Competition directory' : base.rows.length + ' clubs　·　Round ' + rounds}</span></div><b>${e(code)}</b></header>${trail}<div class="comp-tools"><label>Association <select data-comp-country>${Object.keys(W.nations).map(x => `<option ${x === n ? 'selected' : ''}>${e(x)}${g.TLFASeason.major(s, x, season) ? ' · major league' : ''}</option>`).join('')}</select></label><button data-life="go" data-v="atlas">Atlas</button></div><p class="org-agenda comp-note"><small data-offline-status>${e(g.TLOffline?.status() || 'Local competition data')}</small>${s.atlasLeagueFrom > season ? ` · Major leagues begin in July ${s.atlasLeagueFrom} in this save.` : ''}</p><nav class="comp-tabs" aria-label="Competition views"><div class="comp-tabs-main" role="group" aria-label="Views">${tabs(VIEWS, tab)}</div><div class="comp-tabs-records" role="group" aria-label="Records"><span class="comp-tabs-label">Records</span>${tabs(RECORDS, tab)}</div></nav>${panel}</section>`;
   }
-  g.TLCompetitionRoom = { render, VIEWS, RECORDS };
+  const api = { render, VIEWS, RECORDS, groupRounds, roundsFor, scoreOf, spanText };
+  g.TLCompetitionRoom = api;
+  if (typeof module !== 'undefined') module.exports = api;
 })(window);
 
 ;
@@ -16316,7 +16404,7 @@ function start({navigation,toggleDrawer}){if(!s)return false;navigation();const 
  if(back){list?.querySelector(`[data-mail="${mailPlace?.id}"]`)?.focus({preventScroll:true});}
  else if(article&&(readerStep||fromAlert||!list?.offsetWidth)){article.setAttribute('tabindex','-1');article.focus({preventScroll:true});article.scrollIntoView({block:'start',behavior:'instant'});}
  else list?.querySelector(`[data-mail="${organiser.mail}"]`)?.focus({preventScroll:true});
- return;}if(b.dataset.unbook){change('cancelTime',{day:organiser.day??s.day,hour:+b.dataset.unbook});return;}if(b.dataset.attend){const a=g.TLOfficePlanner.today(s);if(!a)return;change('attendTime',+b.dataset.attend);if(!s.appointments?.some(x=>x.day===a.day&&x.hour===a.hour)){page=a.id.startsWith('shift:')?'jobs':a.id;draw();}return;}if(b.dataset.book){change('bookDiary',{task:b.dataset.book,day:organiser.day});return;}if(b.id==='homeBack'||b.hasAttribute('data-manager-back')){if(depth)history.back();return;}if(b.id==='homeForward'){if(depth<furthest)history.forward();return;}if(b.dataset.lmPeriod){moneyView.period=b.dataset.lmPeriod;draw();root.querySelector(`[data-lm-period="${moneyView.period}"]`)?.focus({preventScroll:true});return;}if(b.dataset.lmView){moneyView.view=b.dataset.lmView;draw();root.querySelector(`[data-lm-view="${moneyView.view}"]`)?.focus({preventScroll:true});return;}if(b.dataset.lmAccount||b.dataset.lmMore){const panel=b.closest('.lm-statement'),account=b.dataset.lmAccount||b.dataset.lmCurrent;panel.outerHTML=g.TLLuma.statement(s,account,Number(b.dataset.lmMore)||3,g.TLLuma.windowFrom(s,moneyView.period),g.TLLuma.windowLabel(s,moneyView.period));root.querySelector(b.dataset.lmMore?'.lm-more':`[data-lm-account="${account}"]`)?.focus({preventScroll:true});return;}if(b.dataset.transferScope){transferView.scope=b.dataset.transferScope;transferView.tab=b.dataset.transferScope==='world'?'world':(transferView.tab==='out'?'out':'in');transferView.index=0;transferView.page=0;draw();return;}if(b.dataset.transferPage){transferView.page=Math.max(0,(Number(transferView.page)||0)+Number(b.dataset.transferPage));transferView.index=transferView.page*g.TLTransferCentre.per;draw();return;}if(b.dataset.transferTab||b.hasAttribute('data-transfer-index')){if(b.dataset.transferTab){transferView.tab=b.dataset.transferTab;transferView.index=0;transferView.page=0;}else transferView.index=Number(b.dataset.transferIndex);draw();return;}if(b.dataset.profileView||b.dataset.profileKind||b.hasAttribute('data-profile-more')){if(b.dataset.profileView)profileView.tab=b.dataset.profileView;if(b.dataset.profileKind){profileView.kind=b.dataset.profileKind;profileView.limit=30;}if(b.hasAttribute('data-profile-more'))profileView.limit=(profileView.limit||30)+30;draw();return;}if(b.dataset.compTab||b.dataset.compMetric){const tabView=!!b.dataset.compTab;competition[tabView?'tab':'metric']=b.dataset.compTab||b.dataset.compMetric;draw();root.querySelector(tabView?`[data-comp-tab="${competition.tab}"]`:`[data-comp-metric="${competition.metric}"]`)?.focus({preventScroll:true});return;}if(b.dataset.rivalRead){rivalRead=b.dataset.rivalRead;draw();return;}if(b.dataset.newsTopic||b.dataset.hideStory||b.dataset.showStory){g.TLWorldService.adjust(s,b.dataset.newsTopic?'topic':b.dataset.hideStory?'hide':'show',b.dataset.newsTopic||b.dataset.hideStory||b.dataset.showStory,b.dataset.storyLabel);try{save();}catch{notice='Feed settings not saved on this device.';}draw();return;}if(b.hasAttribute('data-trial-edit')){const f=b.form;f.querySelector('[data-trial-fields]').hidden=false;f.elements.role.value=g.TLTerraceTrials.suggest(f.elements.text.value)||'ANY';return;}if(b.hasAttribute('data-trial-confirm')||b.hasAttribute('data-trial-plain')){const f=b.form;if(!f.reportValidity())return;const text=f.elements.text.value,trial=b.hasAttribute('data-trial-confirm')?{role:f.elements.role.value,days:+f.elements.days.value}:null;change('networkPost',{text,trial});return;}if(b.dataset.inviteTrialist){change('networkInvite',{post:b.dataset.trialSource,id:b.dataset.inviteTrialist});return;}if(b.hasAttribute('data-thread-toggle')){const thread=b.closest('article').querySelector('[data-thread-id]');const open=!thread.open;for(const other of root.querySelectorAll('[data-thread-id][open]')){other.open=false;other.closest('article').querySelector('[data-thread-toggle]').setAttribute('aria-expanded','false');}thread.open=open;b.setAttribute('aria-expanded',String(open));s.networkFocus=thread.open?thread.dataset.threadId:null;return;}if(b.dataset.clubAccount||b.hasAttribute('data-terrace-home')){terraceClub=b.dataset.clubAccount||'';draw();root.querySelector('.terrace-directory')?.scrollIntoView({block:'start'});return;}if(b.hasAttribute('data-mail-terrace')){page='social';feedTab='Discussions';terraceClub='';notice='';draw();const post=[...root.querySelectorAll('[data-terrace-post]')].find(p=>p.dataset.terracePost===b.dataset.mailTerrace),app=post&&[...post.querySelectorAll('[data-trial-applicant]')].find(a=>a.dataset.trialApplicant===b.dataset.mailApplicant);if(app)app.focus({preventScroll:true});(app||post||root.querySelector('.terrace'))?.scrollIntoView({block:'center'});return;}if(b.dataset.networkStory){terraceClub='';feedTab='Discussions';s.networkFocus=b.dataset.networkStory;draw();return;}if(b.dataset.pulseTab){feedTab=b.dataset.pulseTab;draw();return;}if(b.dataset.pulseLike){const id=b.dataset.pulseLike,likes=s.pulseLikes||[];s.pulseLikes=likes.includes(id)?likes.filter(x=>x!==id):[...likes,id];try{save();}catch{notice='Reaction not saved to this device.';}draw();return;}if((s.legacy?.exit||s.legacy?.until>s.day)&&['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){notice='Your management duties are paused or ended.';draw();return;}if(s.trip&&['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){notice='You are scouting abroad until '+W.date(s.trip.end)+'.';draw();return;}if(b.dataset.life==='visitGround'&&!s.practice&&g.TLDistrict.visit(s)&&s.practices?.at(-1)?.day!==s.day){if(g.TLDistrictLife.state(s).place!=='ground'){page='district';notice='Choose Community ground to travel to practice.';draw();return;}if(!g.TLDistrictLife.state(s).done.includes('practice')){try{const next=W.act(s,'districtPractice');slots=slots.map(x=>x.id===s.id?next:x);s=next;save();}catch(err){notice=err.message;draw();return;}}}if(b.dataset.cupMatch||['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){openMatch(b.dataset.life,b.dataset.cupMatch);return;}if(['boardSel','boardPick'].includes(b.dataset.life)){if(b.dataset.life==='boardSel')board.sel=b.dataset.v;else board.sel2=b.dataset.v;notice='';draw();return;}if(b.dataset.life?.startsWith('rec')){const cmd=b.dataset.life;let msg='';const FILTERS=['nation','age','source','query','pos','order','category'];
+ return;}if(b.dataset.unbook){change('cancelTime',{day:organiser.day??s.day,hour:+b.dataset.unbook});return;}if(b.dataset.attend){const a=g.TLOfficePlanner.today(s);if(!a)return;change('attendTime',+b.dataset.attend);if(!s.appointments?.some(x=>x.day===a.day&&x.hour===a.hour)){page=a.id.startsWith('shift:')?'jobs':a.id;draw();}return;}if(b.dataset.book){change('bookDiary',{task:b.dataset.book,day:organiser.day});return;}if(b.id==='homeBack'||b.hasAttribute('data-manager-back')){if(depth)history.back();return;}if(b.id==='homeForward'){if(depth<furthest)history.forward();return;}if(b.dataset.lmPeriod){moneyView.period=b.dataset.lmPeriod;draw();root.querySelector(`[data-lm-period="${moneyView.period}"]`)?.focus({preventScroll:true});return;}if(b.dataset.lmView){moneyView.view=b.dataset.lmView;draw();root.querySelector(`[data-lm-view="${moneyView.view}"]`)?.focus({preventScroll:true});return;}if(b.dataset.lmAccount||b.dataset.lmMore){const panel=b.closest('.lm-statement'),account=b.dataset.lmAccount||b.dataset.lmCurrent;panel.outerHTML=g.TLLuma.statement(s,account,Number(b.dataset.lmMore)||3,g.TLLuma.windowFrom(s,moneyView.period),g.TLLuma.windowLabel(s,moneyView.period));root.querySelector(b.dataset.lmMore?'.lm-more':`[data-lm-account="${account}"]`)?.focus({preventScroll:true});return;}if(b.dataset.transferScope){transferView.scope=b.dataset.transferScope;transferView.tab=b.dataset.transferScope==='world'?'world':(transferView.tab==='out'?'out':'in');transferView.index=0;transferView.page=0;draw();return;}if(b.dataset.transferPage){transferView.page=Math.max(0,(Number(transferView.page)||0)+Number(b.dataset.transferPage));transferView.index=transferView.page*g.TLTransferCentre.per;draw();return;}if(b.dataset.transferTab||b.hasAttribute('data-transfer-index')){if(b.dataset.transferTab){transferView.tab=b.dataset.transferTab;transferView.index=0;transferView.page=0;}else transferView.index=Number(b.dataset.transferIndex);draw();return;}if(b.dataset.profileView||b.dataset.profileKind||b.hasAttribute('data-profile-more')){if(b.dataset.profileView)profileView.tab=b.dataset.profileView;if(b.dataset.profileKind){profileView.kind=b.dataset.profileKind;profileView.limit=30;}if(b.hasAttribute('data-profile-more'))profileView.limit=(profileView.limit||30)+30;draw();return;}if(b.dataset.fixFilter){competition.fixFilter=b.dataset.fixFilter;delete competition.fixRound;draw();root.querySelector(`[data-fix-filter="${competition.fixFilter}"]`)?.focus({preventScroll:true});return;}if(b.dataset.fixRound){const step=Number(b.dataset.fixRound),shown=root.querySelector('.fix-head b')?.textContent||'',at=Number((shown.match(/(\d+)/)||[])[1]);competition.fixRound=Math.max(1,at+step);draw();root.querySelector(`.fix-head [data-fix-round="${step}"]`)?.focus({preventScroll:true});return;}if(b.dataset.compTab||b.dataset.compMetric){const tabView=!!b.dataset.compTab;competition[tabView?'tab':'metric']=b.dataset.compTab||b.dataset.compMetric;draw();root.querySelector(tabView?`[data-comp-tab="${competition.tab}"]`:`[data-comp-metric="${competition.metric}"]`)?.focus({preventScroll:true});return;}if(b.dataset.rivalRead){rivalRead=b.dataset.rivalRead;draw();return;}if(b.dataset.newsTopic||b.dataset.hideStory||b.dataset.showStory){g.TLWorldService.adjust(s,b.dataset.newsTopic?'topic':b.dataset.hideStory?'hide':'show',b.dataset.newsTopic||b.dataset.hideStory||b.dataset.showStory,b.dataset.storyLabel);try{save();}catch{notice='Feed settings not saved on this device.';}draw();return;}if(b.hasAttribute('data-trial-edit')){const f=b.form;f.querySelector('[data-trial-fields]').hidden=false;f.elements.role.value=g.TLTerraceTrials.suggest(f.elements.text.value)||'ANY';return;}if(b.hasAttribute('data-trial-confirm')||b.hasAttribute('data-trial-plain')){const f=b.form;if(!f.reportValidity())return;const text=f.elements.text.value,trial=b.hasAttribute('data-trial-confirm')?{role:f.elements.role.value,days:+f.elements.days.value}:null;change('networkPost',{text,trial});return;}if(b.dataset.inviteTrialist){change('networkInvite',{post:b.dataset.trialSource,id:b.dataset.inviteTrialist});return;}if(b.hasAttribute('data-thread-toggle')){const thread=b.closest('article').querySelector('[data-thread-id]');const open=!thread.open;for(const other of root.querySelectorAll('[data-thread-id][open]')){other.open=false;other.closest('article').querySelector('[data-thread-toggle]').setAttribute('aria-expanded','false');}thread.open=open;b.setAttribute('aria-expanded',String(open));s.networkFocus=thread.open?thread.dataset.threadId:null;return;}if(b.dataset.clubAccount||b.hasAttribute('data-terrace-home')){terraceClub=b.dataset.clubAccount||'';draw();root.querySelector('.terrace-directory')?.scrollIntoView({block:'start'});return;}if(b.hasAttribute('data-mail-terrace')){page='social';feedTab='Discussions';terraceClub='';notice='';draw();const post=[...root.querySelectorAll('[data-terrace-post]')].find(p=>p.dataset.terracePost===b.dataset.mailTerrace),app=post&&[...post.querySelectorAll('[data-trial-applicant]')].find(a=>a.dataset.trialApplicant===b.dataset.mailApplicant);if(app)app.focus({preventScroll:true});(app||post||root.querySelector('.terrace'))?.scrollIntoView({block:'center'});return;}if(b.dataset.networkStory){terraceClub='';feedTab='Discussions';s.networkFocus=b.dataset.networkStory;draw();return;}if(b.dataset.pulseTab){feedTab=b.dataset.pulseTab;draw();return;}if(b.dataset.pulseLike){const id=b.dataset.pulseLike,likes=s.pulseLikes||[];s.pulseLikes=likes.includes(id)?likes.filter(x=>x!==id):[...likes,id];try{save();}catch{notice='Reaction not saved to this device.';}draw();return;}if((s.legacy?.exit||s.legacy?.until>s.day)&&['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){notice='Your management duties are paused or ended.';draw();return;}if(s.trip&&['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){notice='You are scouting abroad until '+W.date(s.trip.end)+'.';draw();return;}if(b.dataset.life==='visitGround'&&!s.practice&&g.TLDistrict.visit(s)&&s.practices?.at(-1)?.day!==s.day){if(g.TLDistrictLife.state(s).place!=='ground'){page='district';notice='Choose Community ground to travel to practice.';draw();return;}if(!g.TLDistrictLife.state(s).done.includes('practice')){try{const next=W.act(s,'districtPractice');slots=slots.map(x=>x.id===s.id?next:x);s=next;save();}catch(err){notice=err.message;draw();return;}}}if(b.dataset.cupMatch||['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){openMatch(b.dataset.life,b.dataset.cupMatch);return;}if(['boardSel','boardPick'].includes(b.dataset.life)){if(b.dataset.life==='boardSel')board.sel=b.dataset.v;else board.sel2=b.dataset.v;notice='';draw();return;}if(b.dataset.life?.startsWith('rec')){const cmd=b.dataset.life;let msg='';const FILTERS=['nation','age','source','query','pos','order','category'];
  if(cmd==='recReset'){for(const k of FILTERS)delete recruitment[k];recruitment.page=0;}
  if(cmd==='recOpen'){recruitment.id=b.dataset.v;recruitment.tab='Report';}
  if(cmd==='recBack')recruitment.id=null;

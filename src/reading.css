@@ -971,3 +971,38 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   .comp-tabs-label{flex:1 1 100%}
   .comp-room .comp-tabs button,.comp-room .comp-metrics button{padding:0 10px;font-size:13px}
 }
+
+/* ---- Phase 5 · fixtures as rounds, not a 380-row scroll ---- */
+.fix-filters{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 10px}
+.comp-room .fix-filters button,.comp-room .fix-head button{min-height:44px;padding:0 14px;border:1px solid #46606b;border-radius:8px;background:#20343f;color:#dbeae4;font:inherit;font-weight:650;cursor:pointer}
+.comp-room .fix-filters button[aria-pressed=true]{background:#294942;border-color:#88ac87;color:#def6a7}
+.comp-room .fix-head .fix-step{font-size:13px;font-weight:700;letter-spacing:.02em}
+.comp-room .fix-head button:disabled{opacity:.42;cursor:default}
+.fix-head{display:flex;align-items:center;gap:10px;padding:0 0 8px}
+.fix-head p{margin:0;min-width:0;flex:1 1 auto}
+.fix-head b{display:block;font-size:1.05rem}
+.fix-head small{display:block;color:#bcd3cd;font-size:11.5px}
+.fix-spot{margin:0 0 8px;padding:8px 11px;border-left:3px solid #a8bdf5;background:#1b2537;border-radius:0 8px 8px 0;font-size:13px;display:flex;flex-wrap:wrap;gap:2px 8px;align-items:baseline}
+.fix-spot small{flex:1 1 100%;font-size:11px;letter-spacing:.07em;color:#a8bdf5;font-weight:750}
+.fix-range{margin:0 0 6px;font-size:11.5px;color:#bcd3cd}
+.fix-list{list-style:none;margin:0;padding:0}
+.fix-row{display:grid;grid-template-columns:9.5rem minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:9px 2px;border-bottom:1px solid #2c3d4d}
+.fix-row:last-child{border-bottom:0}
+.fix-row small{color:#bcd3cd;font-size:11.5px;font-variant-numeric:tabular-nums}
+.fix-teams{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px;min-width:0}
+.fix-teams button{min-height:32px;padding:2px 0;background:none;border:0;color:#e7f0ea;font:inherit;font-weight:650;text-align:left;cursor:pointer}
+.fix-teams button:hover{text-decoration:underline;text-underline-offset:2px}
+.fix-teams i{color:#8aa1a9;font-style:normal;font-size:11.5px}
+.fix-score{font-variant-numeric:tabular-nums;font-weight:750;color:#eaf7ea;min-width:2.6rem;text-align:right}
+.fix-you{grid-column:1/-1;justify-self:start;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#a8bdf5}
+.fix-tier{font-size:10.5px;color:#0f1a23;background:#9fb6c4;border-radius:3px;padding:1px 4px;font-style:normal}
+.fix-row.fix-own{background:linear-gradient(90deg,#1d2a33,#17212b)}
+@media(max-width:620px){
+  .fix-row{grid-template-columns:1fr auto;row-gap:3px}
+  .fix-row>small{grid-column:1/-1}
+  .fix-teams button{min-height:44px}
+}
+/* the round browser is UI, not prose: it is not held to the 72ch reading measure */
+#clubPage .comp-room .comp-fixtures>.fix-range,#clubPage .comp-room .comp-fixtures>.fix-spot,#clubPage .comp-room .comp-fixtures>.cp-muted{max-inline-size:none;width:100%;margin-inline:0}
+#clubPage .comp-room .comp-fixtures>.fix-range{padding:0;background:none;border:0;margin:0 0 6px;line-height:1.5}
+#clubPage .comp-room .comp-fixtures>.fix-spot{padding:8px 11px;background:#1b2537;border:0;border-inline-start:3px solid #a8bdf5;border-radius:0 8px 8px 0;margin:0 0 8px;line-height:1.4}

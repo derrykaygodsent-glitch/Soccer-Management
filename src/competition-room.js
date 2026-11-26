@@ -17,6 +17,39 @@
   /* Dates read as a person writes them: 13 Nov 2027, never 2027-11-13. */
   const dayText = iso => { const d = new Date(String(iso) + 'T12:00:00Z'); return Number.isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }); };
 
+  /* One round is one matchday: the fixtures share an index, and a round can run over two days. */
+  function groupRounds(fixtures) {
+    const byRound = new Map();
+    for (const f of fixtures) {
+      const key = f.i == null ? f.day : f.i;
+      if (!byRound.has(key)) byRound.set(key, { round: key, fixtures: [] });
+      byRound.get(key).fixtures.push(f);
+    }
+    return [...byRound.values()]
+      .map(g => {
+        const days = [...new Set(g.fixtures.map(f => f.day))].sort((a, b) => a - b);
+        return { ...g, from: days[0], to: days[days.length - 1], days };
+      })
+      .sort((a, b) => a.from - b.from || a.round - b.round)
+      .map((g, i) => ({ ...g, number: i + 1 }));
+  }
+  /* A round already behind the manager is a result; the round being played is upcoming. */
+  const roundsFor = (rounds, filter, day) => filter === 'results'
+    ? rounds.filter(r => r.to < day)
+    : filter === 'all' ? rounds : rounds.filter(r => r.to >= day);
+  /* The schedule carries no scores; the league simulation returns [home, away, goals, goals]. */
+  function scoreOf(fixture, results) {
+    if (!results || !results.length) return null;
+    for (const r of results) if (r && r[0] === fixture.a && r[1] === fixture.b) return [r[2], r[3]];
+    return null;
+  }
+  function spanText(from, to) {
+    const a = dayText(from), b = dayText(to);
+    if (a === b) return a;
+    const [da, ma] = a.split(' '), [db, mb] = b.split(' ');
+    return ma === mb ? `${da}–${db} ${ma} ${a.split(' ')[2]}` : `${a} – ${b}`;
+  }
+
   const tabs = (items, current) => items.map(([value, label]) =>
     `<button type="button" data-comp-tab="${value}" aria-pressed="${value === current}">${e(label)}</button>`).join('');
 
@@ -44,8 +77,26 @@
 
     let panel;
     if (tab === 'Diary') {
-      const fixtures = g.TLFASeason.fixtures(s, n, season).sort((a, b) => a.day - b.day);
-      panel = `<section class="org-agenda comp-fixtures"><header class="comp-panel-head"><h3>${e(n)} fixtures</h3><small>${fixtures.length} ${fixtures.length === 1 ? 'fixture' : 'fixtures'} this season</small></header><p class="comp-note">${e(g.TLFASeason.profiles[n][5])}</p>${fixtures.map(f => `<p data-day="${f.day}"><small>${dayText(W.date(f.day))}${g.TLFASeason.kickoff(f)}${f.day !== f.original ? ' · moved from ' + dayText(W.date(f.original)) : ''}</small>　${f.tier ? `D${f.tier} · ` : ''}<button data-world-club="${e(f.team)}">${e(f.team)}</button> v <button data-world-club="${e(f.host)}">${e(f.host)}</button></p>`).join('')}</section>`;
+      /* The league only returns simulated scores when it is asked for players too. */
+      const results = (W.district(n, s.day, true).results) || [];
+      const schedule = g.TLFASeason.fixtures(s, n, season).sort((a, b) => a.day - b.day || String(a.team).localeCompare(String(b.team)));
+      const rounds = groupRounds(schedule);
+      const filter = ['upcoming', 'results', 'all'].includes(ui.fixFilter) ? ui.fixFilter : 'upcoming';
+      const scope = roundsFor(rounds, filter, s.day);
+      const counts = { upcoming: roundsFor(rounds, 'upcoming', s.day).length, results: roundsFor(rounds, 'results', s.day).length, all: rounds.length };
+      /* Default to the matchday being played, or the first one still to come. */
+      const firstUpcoming = roundsFor(rounds, 'upcoming', s.day)[0];
+      const fallback = scope.includes(firstUpcoming) ? firstUpcoming : scope[scope.length - 1] || scope[0];
+      const want = scope.find(r => r.number === Number(ui.fixRound));
+      const shown = want || fallback;
+      const at = scope.indexOf(shown);
+      const own = shown ? shown.fixtures.find(f => f.team === s.club?.name || f.host === s.club?.name) : null;
+      const rows = shown ? shown.fixtures.map(f => {
+        const score = scoreOf(f, results);
+        return `<li class="fix-row${f === own ? ' fix-own' : ''}"><small><time datetime="${W.date(f.day)}">${dayText(W.date(f.day))}</time>${f.kickoff ? ' · ' + f.kickoff : ''}</small><span class="fix-teams"><button data-world-club="${e(f.team)}">${e(f.team)}</button> <i>v</i> <button data-world-club="${e(f.host)}">${e(f.host)}</button></span><span class="fix-score">${score ? `${score[0]}–${score[1]}` : ''}</span>${f.tier ? `<em class="fix-tier">D${f.tier}</em>` : ''}${f === own ? '<b class="fix-you">Your club</b>' : ''}</li>`;
+      }).join('') : '';
+      const spotlight = own ? `<p class="fix-spot"><small>${shown.to < s.day ? 'YOUR RESULT' : 'YOUR MATCH THIS ROUND'}</small><b>${e(own.team)} v ${e(own.host)}</b>${scoreOf(own, results) ? ` · ${scoreOf(own, results).join('–')}` : own.kickoff ? ` · ${own.kickoff}` : ''} · ${dayText(W.date(own.day))}</p>` : '';
+      panel = `<section class="org-agenda comp-fixtures"><header class="comp-panel-head"><h3>${e(n)} fixtures</h3><small>${schedule.length} ${schedule.length === 1 ? 'fixture' : 'fixtures'} this season</small></header><div class="fix-filters" role="group" aria-label="Show fixtures"><button type="button" data-fix-filter="upcoming" aria-pressed="${filter === 'upcoming'}">Upcoming ${counts.upcoming}</button><button type="button" data-fix-filter="results" aria-pressed="${filter === 'results'}">Results ${counts.results}</button><button type="button" data-fix-filter="all" aria-pressed="${filter === 'all'}">All ${counts.all}</button></div>${!scope.length ? `<p class="cp-muted">${filter === 'results' ? 'No results yet this season. The first round is still to be played.' : 'No rounds left to play this season.'}</p>` : `<div class="fix-head"><button type="button" class="fix-step" data-fix-round="-1" aria-label="Previous round" ${at <= 0 ? 'disabled' : ''}>Previous</button><p><b>Round ${shown.number}</b><small>${spanText(W.date(shown.from), W.date(shown.to))} · ${shown.fixtures.length} ${shown.fixtures.length === 1 ? 'fixture' : 'fixtures'}</small></p><button type="button" class="fix-step" data-fix-round="1" aria-label="Next round" ${at >= scope.length - 1 ? 'disabled' : ''}>Next</button></div>${spotlight}<p class="fix-range" data-tl-meta>Round ${shown.number} of ${rounds.length} · showing ${shown.fixtures.length} of ${schedule.length} fixtures · ${counts[filter]} ${counts[filter] === 1 ? 'round' : 'rounds'} ${filter === 'results' ? 'played' : filter === 'upcoming' ? 'to come' : 'this season'}</p><ul class="fix-list">${rows}</ul>`}<p class="comp-note">${e(g.TLFASeason.profiles[n][5])}</p></section>`;
     } else if (tab === 'Bench') {
       panel = g.TLTechnical.render(s, n);
     } else if (tab === 'Honours') {
@@ -62,5 +113,7 @@
 
     return `<section class="comp-room" style="--nation:hsl(${h} 72% 72%);--deep:hsl(${h} 40% 22%)"><header class="comp-hero">${art(cups ? 'silverware' : 'terrace')}<div><small>${e(country?.continent || 'MERIDIAN')}　 /　 COMPETITION CENTRE</small><h2>${e(n)}<br>${competition}</h2><span>${cups ? 'Competition directory' : base.rows.length + ' clubs　·　Round ' + rounds}</span></div><b>${e(code)}</b></header>${trail}<div class="comp-tools"><label>Association <select data-comp-country>${Object.keys(W.nations).map(x => `<option ${x === n ? 'selected' : ''}>${e(x)}${g.TLFASeason.major(s, x, season) ? ' · major league' : ''}</option>`).join('')}</select></label><button data-life="go" data-v="atlas">Atlas</button></div><p class="org-agenda comp-note"><small data-offline-status>${e(g.TLOffline?.status() || 'Local competition data')}</small>${s.atlasLeagueFrom > season ? ` · Major leagues begin in July ${s.atlasLeagueFrom} in this save.` : ''}</p><nav class="comp-tabs" aria-label="Competition views"><div class="comp-tabs-main" role="group" aria-label="Views">${tabs(VIEWS, tab)}</div><div class="comp-tabs-records" role="group" aria-label="Records"><span class="comp-tabs-label">Records</span>${tabs(RECORDS, tab)}</div></nav>${panel}</section>`;
   }
-  g.TLCompetitionRoom = { render, VIEWS, RECORDS };
+  const api = { render, VIEWS, RECORDS, groupRounds, roundsFor, scoreOf, spanText };
+  g.TLCompetitionRoom = api;
+  if (typeof module !== 'undefined') module.exports = api;
 })(window);

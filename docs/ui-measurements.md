@@ -1418,3 +1418,82 @@ Behaviour, measured in the browser on the real career:
 
 Sweep: 214 screens at 390, 768 and 1440 px, 0 horizontal overflow, nested scroll traps 41 / 38 / 38,
 smallest text 9 px.
+
+## 27. Phase 5, session 2: fixtures as rounds, not a 380-row scroll
+
+### 27.1 The problem
+
+The Fixtures view printed the whole national schedule: 380 fixtures in one column, **31.88 folds at 1440**
+and **59.27 at 390** (day 383, Zandora). There was no filter, no round grouping, no count and no price on
+it — a manager scrolled past 380 rows to find the round being played. Scores existed in the engine but were
+never printed, so a played match looked exactly like a future one.
+
+### 27.2 What the view is now
+
+| Before | Now |
+|---|---|
+| 380 rows, one column, no controls | One **round** at a time: `Round 1 · 13–14 Nov 2027 · 10 fixtures` with `Previous` / `Next` (words, not chevrons — the disclosure contract bans arrow glyphs in `src/`) |
+| No filter | `Upcoming 38 · Results 0 · All 38` counts **rounds**, and the default is the round being played or the next one |
+| No statement of where you are | `Round 1 of 38 · showing 10 of 380 fixtures · 38 rounds to come` (and `… 11 rounds played` in Results) |
+| No spotlight | `YOUR MATCH THIS ROUND` — the manager's own fixture, lifted out of the round with date and kick-off; `YOUR RESULT` with the score once the round is behind him, and the row itself carries a `YOUR CLUB` mark |
+| Scores stored but never shown | `Koroba Teachers v Kay FC 0–1` — the league's simulated result is joined to the fixture by the club pair it was played between |
+| Empty filters said nothing useful | `No results yet this season. The first round is still to be played.` on Results at day 383 |
+
+Rounds are the unit the engine already had (`fixtures()` returns an index per round) and a round is not a
+day: Zandora's first round runs Sat 13 and Sun 14 November, so the heading states a span and every row
+carries its own date. Rounds are numbered in date order rather than by index, so a postponed round is
+still "round 12" to a reader who walks the list.
+
+Three defects found and fixed while building it:
+
+- `district(n, day)` returns `results: []` — the scores only come back when the call also asks for
+  players. The first version of the panel joined an empty list and printed nothing; the fixtures view now
+  asks for the richer call and the table view keeps the cheap one.
+- The reading-measure rule (`:is(#clubPage, …) .org-agenda > p` at 72ch) was shrinking the round bar and
+  the range line into prose boxes, because it is scoped with an id and beat the new class rules. The
+  fixtures panel is UI, not prose, and now escapes the measure under the same `#clubPage` scope.
+- `‹` / `›` as stepper glyphs failed `test/disclosure-defaults.test.cjs`. The steps read `Previous` and
+  `Next`.
+
+### 27.3 Numbers
+
+| Contract | §26 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 72/72 | 72/72 |
+| Status chips | 78 | 78, 0 without words |
+| Tables without a phone mode | 0 of 22 | 0 of 22 |
+| Contrast failures | 0 | 0 |
+| Text under 11 px, not metadata | 545 | 545 |
+| Tests | 318 | 318 pass, 0 fail (5 new: `test/competition-fixtures.test.cjs`) |
+
+Depth on the Fixtures view, `scrollHeight / clientHeight`:
+
+| Fixtures view | Before | Now |
+|---|---:|---:|
+| Upcoming, 1440 | 31.88 | **1.88** (1,516 px) |
+| Upcoming, 390 | 59.27 | **3.15** (2,082 px) |
+| Results (empty, day 383), 1440 / 390 | 31.88 | 1.11 / 1.59 |
+| Results (11 rounds played, day 450), 1440 / 390 | — | 1.92 / 3.04 |
+
+Behaviour, measured in the browser:
+
+- Day 383: `Upcoming 38 · Results 0 · All 38`, `Round 1`, 10 rows, `Previous` disabled at the first round,
+  spotlight `Kintaba United v Kay FC · 15:00 · 13 Nov 2027`.
+- `Next` walks to `Round 2 · 20–21 Nov 2027` and the person's place in the list survives the redraw (focus
+  stays on the step button). Walking to round 38 disables `Next`; `Round 38 of 38`.
+- Mid-season (day 450, a copy of the career, tests only): `Upcoming 27 · Results 11 · All 38`, Results opens
+  on `Round 11 · 15–16 Jan 2028` with ten real scores (`0–2`, `1–1`, `1–2`, `0–0`, `2–1`, …), the
+  manager's own row marked and the spotlight reading `YOUR RESULT · Koroba Teachers v Kay FC · 0–1`.
+- Switching filter keeps focus on the pressed filter; a club name in a row opens that club's dossier
+  (`worldClub`, `Densari Railway`).
+- 0 horizontal overflow at both widths; no ISO date anywhere in the view.
+
+Sweep: 214 screens at 390, 768 and 1440 px, 0 horizontal overflow, nested scroll traps 41 / 38 / 38.
+
+### 27.4 What this session deliberately left
+
+- **Leaders** still has no filters, no page size and no phone mode (session 3: position, club and
+  minimum-appearances filters, 25 rows a page, visible count).
+- **Football Intelligence** still needs `Showing x–y of N` and Load more on every category (session 3).
+- The club's own **Matches** screen (`[data-hc-open="fixtures"]`) is the matchday hub — fixture card,
+  advance button, calendar — and was not part of this pass.
