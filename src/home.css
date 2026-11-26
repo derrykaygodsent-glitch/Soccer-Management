@@ -134,3 +134,18 @@
 .hc-nav-group>summary{position:sticky;top:0;z-index:2;background:var(--tl-side)}
 .hc-nav-button{min-height:30px}
 .hc-nav-button[aria-current=page]{box-shadow:inset 2px 0 0 var(--ui-lime)}
+
+/* ---- Phase 2 · list ranges ------------------------------------------------------------- */
+.tl-pager{display:flex;align-items:center;gap:var(--ui-space-3);flex-wrap:wrap;margin:var(--ui-space-3) 0 0}
+.tl-range{margin:0;color:var(--ui-dim);font-size:var(--ui-text-s)}
+.tl-more{appearance:none;min-height:36px;padding:0 var(--ui-space-4);border:1px solid var(--ui-edge-strong);border-radius:var(--ui-radius-pill);background:var(--ui-surface-3);color:var(--ui-ink);font:inherit;font-size:var(--ui-text-s);font-weight:650;cursor:pointer}
+.tl-more:hover{background:var(--ui-surface-4);border-color:var(--ui-edge-action)}
+.tl-more:focus-visible{outline:var(--ui-focus);outline-offset:var(--ui-focus-offset)}
+@media (max-width:720px){.tl-more{min-height:var(--ui-tap);flex:1;justify-content:center;display:inline-flex;align-items:center}}
+
+/* ---- Phase 2 · inbox lanes -------------------------------------------------------------- */
+.mail-lane{display:flex;align-items:center;gap:8px;margin:10px 0 4px;padding:4px 8px;border-radius:var(--ui-radius-s);font-size:var(--ui-text-micro);letter-spacing:var(--ui-tracking-label);text-transform:uppercase;font-weight:700;color:var(--ui-ink-2);background:var(--ui-surface-3);border:1px solid var(--ui-edge-soft)}
+.mail-lane b{font-variant-numeric:tabular-nums;color:var(--ui-ink);font-size:var(--ui-text-micro)}
+.mail-lane[data-lane=due]{color:var(--ui-state-due-ink);background:var(--ui-state-due-bg);border-color:var(--ui-state-due-line)}
+.mail-lane[data-lane=next]{color:var(--ui-state-next-ink);background:var(--ui-state-next-bg);border-color:var(--ui-state-next-line)}
+.mail-lane[data-lane=done]{color:var(--ui-dim)}

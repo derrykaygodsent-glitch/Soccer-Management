@@ -359,3 +359,51 @@ Tests: **313 pass, 0 fail**.
 
 Phase 1 is therefore **partly shipped**: the contracts every screen now meets are in, the visual
 shell redesign is not. Phase 2 (daily loop) can start on top of this without waiting for the palette.
+
+## 11. Phase 2, first pass (daily loop)
+
+### 11.1 The live screen was genuinely frozen
+
+The picture stopped while the work log kept moving, so the screen looked live when it was not.
+Cause: the viewer used a multipart MJPEG stream. A proxy in the path buffered it, the image never
+advanced, and the log (a normal fetch) looked fine. The viewer now polls single JPEG frames every
+220 ms and shows the age of the picture it is holding ("picture 0.4s old"). Checked by comparing five
+frames one second apart during a driven tour: five different images.
+
+### 11.2 Numbers after this pass
+
+| Contract | §10 | Now |
+|---|---:|---:|
+| Long lists without a range | 8 lists / 440 rows | **0 / 0** |
+| Page anchors | 70 / 70 | 70 / 70 |
+| One primary action | 70 / 70 | 70 / 70 |
+| Breadcrumbs | 70 / 70 | 70 / 70 |
+| Status chips | 68 | 68 |
+| Tables without a phone mode | 14 | 14 |
+| Text under 11 px, not metadata | 786 | 786 |
+| Contrast failures | 0 | **0** after the colour change |
+
+Sweep: 624 states, 0 errors, 0 contrast failures, 0 horizontal overflow at 390 / 768 / 1440,
+smallest text 9 px. Tests: 313 pass.
+
+### 11.3 What was built
+
+- **A pager for every long list** (`src/list-pager.js`). Lists of more than 25 rows state
+  "Showing 1 to 25 of 148" and reveal 25 more per click. Rows stay in the document, so reading more
+  never costs a redraw. Applied to the player dossier (120 results) and the social feed, and to the
+  inbox at 60 rows a page so the urgent lanes stay on screen.
+- **The calendar states what it shows.** The month grid is a layout, not a hidden list, so it now
+  says "Showing 1 to 30 of 30 days, whole month" and is marked `data-tl-grid`. The checker skips
+  declared grids, which removed two false positives at each width.
+- **Inbox lanes.** The message list opens as Needs response, New, Earlier, each with a count. A
+  chosen sort order turns the lanes off, because an explicit order is a request for one list. This
+  also kept an existing test honest.
+- **No gold.** The amber accent is now a cool periwinkle (`--ui-attention`), the same family as the
+  `due` status pair. National flags and star ratings keep their own colours because they are artwork.
+
+### 11.4 Tooling notes
+
+- The contract checker and the screenshot helper both had to survive a service worker reload during
+  a run. Both now wait for the rail to be complete and retry once.
+- `data-tl-list` marks a container as a list of records, `data-tl-grid` marks a layout. Those two
+  attributes are how the checker tells "hiding rows from me" apart from "drawing a month".

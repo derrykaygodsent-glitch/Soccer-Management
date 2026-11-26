@@ -41,7 +41,8 @@
   --ui-lime-soft: #2a3a1c;
   --ui-ice: #9ad2ff;
   --ui-teal: #91e2d4;
-  --ui-amber: #f2c389;
+  --ui-attention: #a8bdf5;   /* cool periwinkle: replaced the old gold at the user's request */
+  --ui-amber: var(--ui-attention); /* legacy name, same value */
   --ui-danger: #ff9f9f;
   --ui-danger-soft: #3d1f22;
   --ui-club-home: #7fd7ff;
@@ -49,7 +50,7 @@
 
   /* ---- status: state is a word first, colour second --------------------- */
   /* every pair below is ≥ 4.5:1 ink-on-bg */
-  --ui-state-due-ink: #ffdf9b;      --ui-state-due-bg: #3a2d10;      --ui-state-due-line: #6f5720;
+  --ui-state-due-ink: #d3ddff;      --ui-state-due-bg: #1b2340;      --ui-state-due-line: #3a4a7a;
   --ui-state-next-ink: #e6ffb0;     --ui-state-next-bg: #26331a;     --ui-state-next-line: #4d6b2a;
   --ui-state-pending-ink: #a8d9ff;  --ui-state-pending-bg: #142c40;  --ui-state-pending-line: #2c5478;
   --ui-state-safe-ink: #a9f0d2;     --ui-state-safe-bg: #10312a;     --ui-state-safe-line: #2b6355;

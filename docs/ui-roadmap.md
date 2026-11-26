@@ -79,8 +79,8 @@ short version — keep the status column honest.
 | B | Measured bugs | Header, title, Back, contrast, tables | 1 | ✅ done |
 | **0** | **Foundations** | Tokens, type ramp, status anatomy, contract checker | 2 | ✅ done |
 | 1 | Shell & navigation | Three-tier nav, one Back, breadcrumbs, palette, dock | 4 | ◐ **partly** — nav model + head contracts shipped, palette/dock open |
-| 2 | Daily loop | Home command centre, Inbox lanes, Calendar, planner | 4 | **next** |
-| 3 | Squad family | Squad hub, player context, phone roster, registration | 4 | |
+| 2 | Daily loop | Home command centre, Inbox lanes, Calendar, planner | 4 | ◐ **partly** — inbox lanes and list ranges shipped |
+| 3 | Squad family | Squad hub, player context, phone roster, registration | 4 | **next** |
 | 4 | Operations family | Operations hub, Staff split, Contracts, Scouting, Transfers, Finance | 6 | |
 | 5 | World intelligence | Breadcrumbs, Competition re-tab, Fixtures, Stats, Atlas | 4 | |
 | 6 | Tactics & matchday | Canonical tactics, prep rail, phone selection, Season Book | 5 | |
@@ -91,6 +91,9 @@ short version — keep the status column honest.
 **Where we are (25 Nov 2026):** audit done · browser toolchain works · live screen + game preview running ·
 sweep run twice on a real career (624 states each, 0 errors) · **Step B closed** (5 bugs fixed, 0 contrast
 failures). Results: [`docs/ui-measurements.md`](./ui-measurements.md).
+
+**Also written: [`fm26-alignment.md`](./fm26-alignment.md)** — what FM26 does, what we match, and the
+three remaining gaps (top navigation bar, bookmarks, one Portal hub).
 
 **Current phase: Phase 2 — Daily loop.** Phase 0 closed the tokens and the type floor. Phase 1 shipped
 the part of the shell that is measurable: a five-hub navigation model (`src/screen-head.js`, 35
@@ -194,6 +197,7 @@ No engine changes are in scope for Phases 0–6. Rendering support (canvas DPR c
 
 | Date | Phase | What changed | Next |
 |---|---|---|---|
+| 2026-11-25 | 2 | **Daily loop, first pass.** Live screen fixed (MJPEG buffered by the proxy, now polls JPEGs). Long lists now state a range and page: **8 lists / 440 rows hidden → 0**. Inbox opens in lanes (Needs response, New, Earlier) with the sort order winning when chosen. Gold removed from the palette. Calendar declares its month. FM26 comparison written (`fm26-alignment.md`). 70 screens, 0 errors, 0 contrast; 624-state sweep clean; 313 tests. | Phase 2 rest: Portal tiles on Overview, calendar and planner loop |
 | 2026-11-25 | 1 | **Shell contracts shipped.** `src/screen-head.js`: five hubs, 35 destinations (each once), `NEXT` table for the one dominant action. One head bar per screen with breadcrumb, `[data-tl-page]`, status chips and exactly one `[data-tl-action="primary"]`. Contracts: anchors **0→70/70**, primary **0→70/70**, breadcrumbs **70 missing→0**, chips **0→68**, h1 70/70, contrast 0, tiny text unchanged at 786. Sweep 624 states, 0 errors, 0 overflow, min text 9 px; 313 tests. Checker hardened against service-worker reloads (was reporting 61–63/70). Rail: sticky hub headings + fade instead of a sliced row. Open: palette, phone dock, tier-2/3 panel. | Phase 2: daily loop |
 | 2026-11-25 | — | Audit written (`docs/ui-ux-audit.md`); roadmap written; no product code touched | — |
 | 2026-11-25 | 0 | Foundations shipped: `src/tokens.css` (~90 tokens), palette mapped for `--tl-*` and `.cc-*`, **587 font-size declarations raised** (7 px → 9 px floor), `.tl-status` component, `ui-inventory.cjs` + `ui-contract.cjs` (70 screens). Sweep: 624 states, 0 errors, 0 contrast, 0 overflow, min text 9 px, 312 tests pass. Contract baseline: 0/70 page anchors, 0/70 primary actions, 0/70 breadcrumbs, 440 rows hidden by caps. | Phase 1: shell + nav |

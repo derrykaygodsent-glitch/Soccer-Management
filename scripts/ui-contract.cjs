@@ -59,6 +59,8 @@ const PROBE = () => {
   const longLists = [];
   for (const el of scope.querySelectorAll('ul, ol, tbody, [data-tl-list], main, section, div')) {
     if (!visible(el)) continue;
+    /* a month grid is a layout, not a list of records: nothing is hidden in it */
+    if (el.hasAttribute('data-tl-grid') || el.closest('[data-tl-grid]')) continue;
     const kids = [...el.children];
     const rows = kids.length;
     if (rows <= 25) continue;
@@ -68,7 +70,7 @@ const PROBE = () => {
     if (Math.max(...counts.values()) < rows * 0.8) continue;
     const box = el.closest('[data-tl-list]') || el.parentElement;
     const hasRange = !!box && (RANGE.test(textOf(box)) || box.querySelector('[data-tl-pager]'));
-    if (!hasRange) longLists.push({ tag: el.tagName.toLowerCase(), rows });
+    if (!hasRange) longLists.push({ tag: el.tagName.toLowerCase(), rows, cls: String(el.className).slice(0, 40) });
   }
 
   /* 4. tables must declare a phone mode */

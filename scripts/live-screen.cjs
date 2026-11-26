@@ -41,6 +41,7 @@ try {
 const { chromium: pw } = require('playwright');
 
 const state = {
+  lastPollAt: 0,
   frame: null,
   frameAt: 0,
   seq: 0,
@@ -55,6 +56,7 @@ const state = {
 const clients = new Set();
 let framesThisSecond = 0;
 let lastPush = 0;
+
 let activeCdp = null;
 let activePage = null;
 
@@ -129,7 +131,7 @@ function pageHtml() {
     <p class="sub">This is the actual headless browser this workspace drives — frames straight from Chrome, cursor from the last real mouse event.</p>
     <div class="bar"><span class="dot off" id="dot"></span><b id="live">connecting…</b><span id="tick">frame 0</span><span>updates every second, even when idle</span></div>
     <div class="stage" id="stage">
-      <img id="view" alt="Live view of the agent's browser" src="/stream">
+      <img id="view" alt="Live view of the agent's browser">
       <div class="ring" id="ring"></div>
       <div class="cursor" id="cursor"></div>
       <div class="fallback" id="fallback">Waiting for the first frame. Keep this tab open; the browser is starting.</div>
@@ -164,32 +166,26 @@ function pageHtml() {
   const dot = document.getElementById('dot');
   const liveEl = document.getElementById('live');
   const fallback = document.getElementById('fallback');
-  let lastSeq = -1, useStream = true, lastClick = 0;
+  let lastSeq = -1, lastClick = 0, lastImgAt = 0;
   const $ = id => document.getElementById(id);
 
-  const streamBroken = () => {
-    if (!useStream) return;
-    useStream = false;
-    img.removeAttribute('src');
-    fallback.style.display = 'block';
-    poll();
-  };
-  setTimeout(() => { if (lastSeq < 0) streamBroken(); }, 4000);
-  img.addEventListener('error', streamBroken);
-
-  let polling = null;
+  /* Poll single JPEGs instead of a multipart stream: every proxy in the path handles that, and a
+     stalled stream can never leave the picture frozen while the log keeps moving. */
+  let first = true;
   function poll() {
-    if (polling) return;
-    const tick = () => {
-      img.src = '/frame.jpg?t=' + Date.now();
-      polling = setTimeout(tick, 130);
-    };
-    tick();
+    img.src = '/frame.jpg?t=' + Date.now() + (first ? '' : '');
+    first = false;
+    setTimeout(poll, 220);
   }
   img.addEventListener('load', () => {
     fallback.style.display = 'none';
-    lastSeq = Math.max(lastSeq, 0);
+    lastImgAt = Date.now();
+    img.dataset.seq = String((Number(img.dataset.seq) || 0) + 1);
   });
+  img.addEventListener('error', () => {
+    setTimeout(poll, 600);
+  });
+  poll();
 
   async function state() {
     try {
@@ -200,7 +196,8 @@ function pageHtml() {
       $('seq').textContent = s.seq;
       $('fps').textContent = s.fps + ' fps';
       $('size').textContent = s.viewport.w + '×' + s.viewport.h;
-      $('tick').textContent = 'frame ' + s.seq + ' · ' + s.fps + ' fps';
+      const age = lastImgAt ? Math.round((Date.now() - lastImgAt) / 100) / 10 : null;
+      $('tick').textContent = 'frame ' + s.seq + ' · ' + s.fps + ' fps' + (age != null ? ' · picture ' + age + 's old' : ' · waiting for picture');
       const fresh = s.frameAgeMs < 4000;
       dot.className = 'dot' + (fresh ? '' : ' off');
       const age = s.lastActionTs ? Math.round((Date.now() - s.lastActionTs) / 1000) : null;
@@ -347,7 +344,8 @@ async function main() {
      picture goes quiet, capture a real screenshot instead of leaving the viewer on a stale
      frame — still the browser's own output, just asked for. */
   setInterval(async () => {
-    if (!activeCdp || !clients.size) return;
+    if (!activeCdp) return;
+    if (!clients.size && Date.now() - state.lastPollAt > 4000) return;
     if (Date.now() - state.frameAt < 1500) return;
     try {
       const shot = await activeCdp.send('Page.captureScreenshot', { format: 'jpeg', quality: QUALITY });
@@ -388,6 +386,7 @@ async function main() {
       return;
     }
     if (url.pathname === '/frame.jpg') {
+      state.lastPollAt = Date.now();
       if (!state.frame) { res.writeHead(204).end(); return; }
       res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Content-Length': state.frame.length });
       res.end(state.frame);

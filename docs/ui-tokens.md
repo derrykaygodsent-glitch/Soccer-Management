@@ -33,7 +33,9 @@ allowed to use, so Phase 1 onward cannot drift.
 | `--ui-dim` | `#8193ab` | metadata (≈4.6:1 on a card) |
 | `--ui-ghost` | `#6b7d94` | disabled only, never body text |
 | `--ui-lime` | `#d7f889` | **the only "you can act" colour** |
-| `--ui-ice` / `--ui-teal` / `--ui-amber` / `--ui-danger` | | secondary accents, warnings, danger |
+| `--ui-ice` / `--ui-teal` / `--ui-attention` / `--ui-danger` | | secondary accents, attention, danger |
+
+There is no gold in the interface. The old amber token is now a cool periwinkle (`--ui-attention: #a8bdf5`), the `--ui-amber` name is kept only so old rules keep working, and the `due` status pair moved to the same cool family (`#d3ddff` ink on `#1b2340`). National flags, club crests and star ratings keep their own colours: those are artwork, not chrome.
 
 **Lime is not decoration.** It marks state, focus and the next action. If a screen has lime in
 three places, two of them are wrong.

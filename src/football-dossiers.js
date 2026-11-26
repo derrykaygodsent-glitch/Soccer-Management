@@ -5,7 +5,7 @@ const esc=v=>g.TLClubUI?.esc?g.TLClubUI.esc(String(v??'')):String(v??'').replace
 const money=n=>g.TLManagerLife.money(Number(n)||0),date=(s,d)=>Number.isInteger(d)?g.TLManagerLife.date(d):'Not recorded';
 const btn=(label,action,value)=>`<button class="dossier-action" data-dossier-action="${esc(action)}" data-v="${esc(value)}">${esc(label)}</button>`;
 const card=(eyebrow,title,detail='',action='')=>`<button type="button" class="dossier-result" ${action}><small>${esc(eyebrow)}</small><strong>${esc(title)}</strong>${detail?`<span>${esc(detail)}</span>`:''}</button>`;
-const list=(rows)=>rows.length?`<div class="dossier-results">${rows.join('')}</div>`:'<article class="org-agenda"><h3>No records found</h3><p>Try another search term or switch dossier category. Information appears as the current career records it.</p></article>';
+const list=(rows)=>rows.length?`<div class="dossier-results" data-tl-list>${rows.join('')}</div>`:'<article class="org-agenda"><h3>No records found</h3><p>Try another search term or switch dossier category. Information appears as the current career records it.</p></article>';
 const section=(title,body)=>`<article class="org-agenda dossier-section"><h3>${esc(title)}</h3>${body}</article>`;
 const facts=rows=>`<dl class="dossier-facts">${rows.map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v??'Not recorded')}</dd></div>`).join('')}</dl>`;
 function categories(s,tab,q){const W=g.TLManagerLife,needle=q.trim().toLowerCase(),hit=(...v)=>!needle||v.some(x=>String(x??'').toLowerCase().includes(needle)),pool=W.pool||[],nationEntries=Object.entries(W.nations||{}),clubRows=nationEntries.flatMap(([nation,clubs])=>clubs.map((club,index)=>({club,nation,index}))),searchAction=(type,id)=>`data-dossier-open="${esc(type)}|${esc(id)}"`;
