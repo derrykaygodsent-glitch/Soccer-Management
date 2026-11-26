@@ -890,3 +890,6 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   .tc-route{display:none}
   .tc-route-line{display:block}
 }
+
+/* no club at the far end of a personal deal: a neutral badge, not a fake crest */
+.tc-club-none i{background:#2b3f47;color:#c6d6d0;font-weight:700}

@@ -124,8 +124,13 @@
       row.name ||
       (W.pool || []).find((p) => p.id === row.id)?.name ||
       "Former player";
-    const route = (row) =>
-      `${row.from || "Unattached"} ${ARROW} ${row.to || (row.from ? "Released" : "Manager’s project")}`;
+    /* A deal has two ends. A player with no club who joined by personal invitation did not move to a
+       "project": he joined the manager's amateur squad, which is what his record says. */
+    const sides = (row) => ({
+      from: row.from || "Unattached",
+      to: row.to || (row.personal ? "Your amateur squad" : row.from ? "Released" : "No club"),
+    });
+    const route = (row) => `${sides(row).from} ${ARROW} ${sides(row).to}`;
     const n =
         Object.keys(W.nations).find((k) => W.nations[k].includes(club)) ||
         s.profile.nation,
@@ -175,7 +180,7 @@
         name = nameOf(r),
         fresh = updates.some((x) => x.record?.id === r.id && x.record.day === r.day),
         amount = r.price == null ? "Undisclosed" : r.price === 0 ? "No fee" : m(r.price);
-      story = `<article class="tc-story"><header><small>${scope === "world" ? "MARKET WIRE" : "CLUB DEAL ROOM"}　/　${fmtDay(r.day)}</small><b>${fresh ? "New · " : ""}${e(r.status)}</b></header><div class="tc-signing"><div class="tc-face">${g.TLScoutCentre.face({ id: r.id })}</div><div><small>${e(r.type)}</small><h3>${e(name)}</h3>${p ? `<span>${e(p.pos)}　·　${e(p.nation)}</span>` : ""}</div></div><div class="tc-route" aria-label="Route: ${e(route(r))}">${badge(r.from, "From")}<span class="tc-arrow" aria-hidden="true">${ARROW}</span>${badge(r.to || (r.personal ? "Manager’s project" : null), "To")}</div><p class="tc-route-line">${e(route(r))}</p><div class="tc-terms"><div><small>${r.offer ? "Offer on table" : r.type === "Loan" ? "Loan fee" : "Transfer fee"}</small><strong>${amount}</strong></div>${r.wage != null ? `<div><small>Weekly wage</small><strong>${m(r.wage)}</strong></div>` : ""}${r.pending || r.offer ? `<div><small>${r.offer ? "Reply by" : "Registration due"}</small><strong>${fmtDay(r.deadline ?? r.due)}</strong></div>` : ""}</div><footer>${r.offer ? go("bids", "Review offer") : p ? `<button ${s.roster.includes(p.id) ? "data-squad-player" : "data-league-player"}="${e(p.id)}">Player file</button>` : ""}<span class="tc-deal-index">Deal ${i + 1} of ${rows.length}</span></footer></article>`;
+      story = `<article class="tc-story"><header><small>${scope === "world" ? "MARKET WIRE" : "CLUB DEAL ROOM"}　/　${fmtDay(r.day)}</small><b>${fresh ? "New · " : ""}${e(r.status)}</b></header><div class="tc-signing"><div class="tc-face">${g.TLScoutCentre.face({ id: r.id })}</div><div><small>${e(r.type)}</small><h3>${e(name)}</h3>${p ? `<span>${e(p.pos)}　·　${e(p.nation)}</span>` : ""}</div></div><div class="tc-route" aria-label="Route: ${e(route(r))}">${badge(r.from, "From")}<span class="tc-arrow" aria-hidden="true">${ARROW}</span>${r.to ? badge(r.to, "To") : `<div class="tc-club tc-club-none"><i aria-hidden="true">–</i><div><small>To</small><strong>${e(sides(r).to)}</strong></div></div>`}</div><p class="tc-route-line">${e(route(r))}</p><div class="tc-terms"><div><small>${r.offer ? "Offer on table" : r.type === "Loan" ? "Loan fee" : "Transfer fee"}</small><strong>${amount}</strong></div>${r.wage != null ? `<div><small>Weekly wage</small><strong>${m(r.wage)}</strong></div>` : ""}${r.pending || r.offer ? `<div><small>${r.offer ? "Reply by" : "Registration due"}</small><strong>${fmtDay(r.deadline ?? r.due)}</strong></div>` : ""}</div><footer>${r.offer ? go("bids", "Review offer") : p ? `<button ${s.roster.includes(p.id) ? "data-squad-player" : "data-league-player"}="${e(p.id)}">Player file</button>` : ""}<span class="tc-deal-index">Deal ${i + 1} of ${rows.length}</span></footer></article>`;
     } else
       story = `<article class="tc-empty"><small>DEAL ROOM</small><h3>${tab === "out" ? "No departures yet" : tab === "in" ? "No arrivals yet" : "The wire is quiet"}</h3><p>${tab === "in" ? "Scout a player or make an approach. Agreed deals will appear here before registration." : tab === "out" ? "Offers for your players, sales and loan returns appear here." : "Confirmed moves will appear as clubs do business."}</p>${go(scope === "world" ? "intelligence" : tab === "out" ? "squad" : "scouting", scope === "world" ? "Football intelligence" : tab === "out" ? "View squad" : "Open scouting")}</article>`;
     const payroll = Object.values(s.contracts || {}).reduce((n, c) => n + (c.wage || 0), 0);

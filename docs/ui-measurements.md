@@ -1213,6 +1213,7 @@ route existed as two labelled shields with no arrow between them, and the page p
 | Reaching deal 13 meant stepping an arrow on the deal card | A page, and the deal card follows the page: `Deal 13 of 17` is the first row of page two |
 | A deal card with Previous/Next and `1 / 17` | The card is a detail view for the selected row and says `Deal 3 of 15`; the browsing arrows are gone |
 | `FC From Unattached KF To Kay FC`, no arrow | `From Unattached → To Kay FC` with an arrow between the shields, and a written line `Unattached → Kay FC` |
+| A personal deal labelled `Manager’s project` at one end, which read `Unattached → Manager’s project` once an arrow was drawn between them | Both ends come from the record: the player was unattached, and if no club was recorded he joined `Your amateur squad`, announced with a neutral badge rather than a crest for a club that does not exist |
 | Every row "Unnamed player", status only | Name, fee, `From → To` and the status chip on every row; names resolve from the squad pool |
 | `2027-11-13`, `2027-11-20`, `2027-11-11` | `13 Nov 2027`, `20 Nov 2027`, `11 Nov 2027` |
 
@@ -1222,6 +1223,10 @@ left off.
 
 On a phone the two club shields shrink to their initials and the arrow has nothing to sit between, so at
 560 px and below the shields are hidden and the route is the written line instead of two stacked boxes.
+
+Thirteen of the seventeen arrivals on the real career have no destination club recorded — they are
+amateur invitations — so the route says `Unattached → Your amateur squad` and the `To` side carries a
+dash instead of invented initials. The other four read `Unattached → Kay FC`.
 
 The arrow is a text separator, not a disclosure icon: `test/disclosure-defaults.test.cjs` bans literal
 arrow glyphs in `src/`, so it is written as `\u2192` in a constant and rendered as content. The built
