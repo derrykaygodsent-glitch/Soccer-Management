@@ -79,10 +79,10 @@ test('AI half-time responses are bounded, score-based, and preserve the preferre
   assert.equal(ManagerAI.halfTimePlan({ style: 'balanced', tactics: { mentality: 2, press: 1 }, goalsFor: 2, goalsAgainst: 0, adaptability: 3, riskTolerance: 5 }), null,
     'risk-tolerant managers do not automatically shut down a two-goal lead');
 
-  const underPressure = ManagerAI.halfTimePlan({ style: 'press', tactics: { mentality: 2, line: 2, press: 2 }, goalsFor: 0, goalsAgainst: 0, adaptability: 4, riskTolerance: 1, xgFor: .2, xgAgainst: 1, shotsFor: 1, shotsAgainst: 4 });
+  const underPressure = ManagerAI.halfTimePlan({ style: 'press', tactics: { mentality: 2, line: 2, press: 2 }, goalsFor: 0, goalsAgainst: 0, adaptability: 4, riskTolerance: 1, xgFor: .08, xgAgainst: .30, shotsFor: 1, shotsAgainst: 4 });
   assert.deepEqual(underPressure.change, { line: 1, press: 1 }, 'sustained opposition threat prompts a deeper, less exposed shape');
   assert.match(underPressure.reason, /first-half danger/);
-  assert.equal(ManagerAI.halfTimePlan({ style: 'press', tactics: { line: 2 }, goalsFor: 0, goalsAgainst: 0, adaptability: 1, xgFor: .2, xgAgainst: .8, shotsAgainst: 3 }), null,
+  assert.equal(ManagerAI.halfTimePlan({ style: 'press', tactics: { line: 2 }, goalsFor: 0, goalsAgainst: 0, adaptability: 1, xgFor: .08, xgAgainst: .18, shotsAgainst: 3 }), null,
     'a low-adaptability manager waits for stronger evidence before responding to chance pressure');
 });
 

@@ -45,7 +45,7 @@
     // Respond to sustained chance pressure, not just the score. Better-adapting
     // managers need less evidence before asking the back line to protect space.
     const pressureGap = (Number(shotsAgainst) >= 0 ? Number(shotsAgainst) : 0) >= (adaptabilityRating <= 2 ? 4 : 2)
-      && (Number(xgAgainst) - Number(xgFor)) >= (adaptabilityRating <= 2 ? .7 : .45);
+      && (Number(xgAgainst) - Number(xgFor)) >= (adaptabilityRating <= 2 ? .20 : .15);
     const line = Number.isFinite(tactics.line) ? tactics.line : 1;
     if (pressureGap) {
       if (change.line == null && line > 0) {

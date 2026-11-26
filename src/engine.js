@@ -80,6 +80,8 @@
       this.shotMap = [];
       this.momentum = [];
       this.momT = 0;
+      this.touchlineCalls = [null, null];
+      this.lastBobbleAt = -Infinity;
       this.possTime = [0, 0];
       this.practiceSeconds = opts.practiceSeconds || 0;
       this.t = 0; this.half = 1; this.elapsed = 0; this.controlTeam = 0; this.brainIn = 0;
@@ -212,6 +214,18 @@
       const pool = TXT[type];
       const tpl = pool[(this.textRnd() * pool.length) | 0];
       return this.emit(type, { text: fmt(tpl, map), ...extra });
+    }
+    touchlineCall(team, call) {
+      const phrases = { demand: 'Demand More', tighten: 'Tighten Up', push: 'Push Higher' };
+      if (!Number.isInteger(team) || !this.teams[team] || !phrases[call]) return { ok: false, msg: 'Choose a valid touchline instruction.' };
+      const until = this.elapsed + 240;
+      this.touchlineCalls[team] = { call, until };
+      this.emit('shout', { team, call, until, text: `${phrases[call]} — the instruction is live for four minutes.` });
+      return { ok: true, until };
+    }
+    activeTouchlineCall(team) {
+      const active = this.touchlineCalls?.[team];
+      return active && this.elapsed < active.until ? active.call : null;
     }
     teamName(i) { return this.teams[i].club.name; }
     shortName(i) { return this.teams[i].club.short; }
@@ -905,10 +919,16 @@
       const arr = new Float32Array(ps.length * 2 + 4);
       for (let i = 0; i < ps.length; i++) { arr[2 * i] = ps[i].x; arr[2 * i + 1] = ps[i].y; }
       arr.set([b.x, b.y, b.z, ps.indexOf(this.ball.owner)], ps.length * 2);
-      return { t: this.t + (this.half === 2 ? 2700 : 0), elapsed: this.elapsed, half: this.half, n: ps.length, arr, ids: ps.map(p => p.id),
+      const directions = new Float32Array(ps.length), conditions = new Float32Array(ps.length);
+      for (let i = 0; i < ps.length; i++) { directions[i] = ps[i].dir || 0; conditions[i] = ps[i].cond ?? 1; }
+      return { t: this.t + (this.half === 2 ? 2700 : 0), elapsed: this.elapsed, half: this.half, n: ps.length, arr, ids: ps.map(p => p.id), directions, conditions,
         carried: b.carried || 0, dugouts: this.teams.map(t => t.dugout),
         referee: this.referee.pose(this), restartPose: this.restartPose() };
     }
+
+    // Fatigue has little tactical effect until the legs really go: below 60%
+    // condition, speed, turning and execution degrade on a smooth late curve.
+    fatigueLoad(p) { return Math.pow(clamp((.60 - (p.cond ?? 1)) / .60, 0, 1), 1.35); }
 
     // Blend anchors, not player coordinates. A turnover cannot teleport a full-back home.
     phaseWeight(team,p){const attacking=this.controlTeam===team.idx,age=this.elapsed-this.possessionTurn;
@@ -998,7 +1018,7 @@
     }
 
     speed(p) {
-      let v = (5.97 + p.attrs.pace * .107) * (.79 + .21 * p.cond);
+      let v = (5.97 + p.attrs.pace * .107) * (.79 + .21 * p.cond) * (1 - .17 * this.fatigueLoad(p));
       if (p.stunT > 0) v *= .46;
       if(p.readiness?.knock)v*=.90;if (p.injury) v *= .68;
       if (this.ball.owner === p) v *= .69 + p.attrs.dribbling * .0045 - clamp((4.1 - (p.pressure ?? 5)) * .046, 0, .18);
@@ -1032,7 +1052,16 @@
         const shapeDepth = d > 0 ? this.shapeX : L - this.shapeX;
         const shift = clamp((shapeDepth - 50) * (atk ? .36 : .48), -22, 26);
         let tx = home.x + d * (shift + (atk ? 2 + (ment - 1) * 2.4 : -4) + (back || role === 'DM' ? (line - 1) * 4.1 : 0));
-        let ty = CY + (home.y - CY) * (atk ? 1 : .83) + (this.shapeY - CY) * (wing ? .18 : .25);
+        const clubOrders = team.tactics.club || {};
+        const widthDial = clamp((team.tactics.fine?.width ?? team.tactics.width ?? 1) - 1, -1, 1);
+        let ty = CY + (home.y - CY) * (atk ? 1 + widthDial * .065 : .83 + widthDial * .045)
+          + (this.shapeY - CY) * (wing ? .18 : .25);
+        // Preserve the familiar base shell, then layer the selected instructions
+        // as modest offsets. A default side should not collapse into a narrow block.
+        if (!atk && clubOrders.block === 'High press') ty += (home.y - CY) * .06;
+        else if (!atk && clubOrders.block === 'Low block') ty -= (home.y - CY) * .06;
+        if (!atk && clubOrders.lost === 'Protect central areas') ty += (this.shapeY - CY) * (wing ? -.025 : .045);
+        if (!atk && clubOrders.lost === 'Protect wide channels') ty += (this.shapeY - CY) * (wing ? .06 : -.035);
         if (atk) {
           const flank = p.slotY < .5 ? -1 : 1;
           const pivot = progress > 28 && progress < 86;
@@ -1238,15 +1267,17 @@
           }
         }
         const dvx = vx - p.vx, dvy = vy - p.vy, change = Math.hypot(dvx, dvy);
-        const maxChange = (1+delta(p,'agility')*.014)*(p.iq?.acceleration?(.83+p.iq.acceleration*.015):1)*h * (distance < 2.2 ? 8.9 : 5.8 + p.attrs.pace * .072);
+        const fatigue = this.fatigueLoad(p);
+        const maxChange = (1+delta(p,'agility')*.014)*(p.iq?.acceleration?(.83+p.iq.acceleration*.015):1)*(1-.22*fatigue)*h * (distance < 2.2 ? 8.9 : 5.8 + p.attrs.pace * .072);
         const k = change > maxChange ? maxChange / change : 1;
         p.vx += dvx * k; p.vy += dvy * k;
         p.x = clamp(p.x + p.vx * h, -1.35, L + 1.35); p.y = clamp(p.y + p.vy * h, -1.35, W + 1.35);
         const speed = Math.hypot(p.vx, p.vy);
         if (speed > .24) {
           const turn = Math.atan2(p.vy, p.vx) - p.dir;
-          const delta = Math.atan2(Math.sin(turn), Math.cos(turn));
-          p.dir += clamp(delta, -h * 6.7, h * 6.7);
+          const angleDelta = Math.atan2(Math.sin(turn), Math.cos(turn));
+          const turnRate = 6.7 * clamp(1 + delta(p, 'agility') * .014, .82, 1.18) * (1 - .30 * fatigue);
+          p.dir += clamp(angleDelta, -h * turnRate, h * turnRate);
         }
         const drain = speed > 5.65 ? .00017 : speed > 2.3 ? .000068 : .000012;
         p.cond = Math.max(.43, p.cond - drain*h*(1-delta(p,'naturalFitness')*.018)*(1.30 - p.attrs.stamina * .029));
@@ -1335,11 +1366,16 @@
           }
           if (!hand && b.z > 1.28 && b.vz < -.55 && flight && this.aerialTouch(q, flight)) return;
           let chance = hand ? .93 : .68+delta(q,'firstTouch')*.012 + q.attrs.composure * .012 + (flight && flight.intended === q ? .085 : 0);
-          if (!hand) chance -= clamp((speed - 11.2) * .027, 0, .44) + Math.max(0, b.z - .53) * .15;
           if (!hand) {
-            const pressure = this.nearestOppDist(q);
+            chance -= this.fatigueLoad(q) * .18;
+            chance += ((q.attrs.firstTouch ?? 10) - 10) * .004 + ((q.attrs.technique ?? 10) - 10) * .003;
+            chance -= clamp((speed - 11.2) * .027, 0, .44) + Math.max(0, b.z - .53) * .15;
+          }
+          let touchPressure = Infinity;
+          if (!hand) {
+            touchPressure = this.nearestOppDist(q);
             const finalThird = (q.x - CX) * this.teams[q.team].attackDir > 19;
-            chance -= clamp((2.7 - pressure) * (finalThird ? .16 : .10), 0, .22);
+            chance -= clamp((2.7 - touchPressure) * (finalThird ? .16 : .10), 0, .22);
           }
           if (speed < 2.25 && b.z < .38) chance = .998;
           q.contactT = .19 + this.rnd() * .14;
@@ -1353,7 +1389,13 @@
           // A further attacking touch takes a new offside picture. An
           // involuntary ricochet off an opponent leaves the original one intact.
           if (offside?.team === q.team || flight?.team === q.team) this.setOffside(q, true);
-          this.brainIn = 0; return;
+          this.brainIn = 0;
+          if (touchPressure < 2.2 && this.elapsed - this.lastBobbleAt >= 120) {
+            this.lastBobbleAt = this.elapsed;
+            this.emit('bobble', { team: q.team, player: q,
+              text: `${q.name} cannot settle it under pressure — the ball squirts loose.` });
+          }
+          return;
         }
       }
       const o = b.owner;
@@ -1380,10 +1422,10 @@
         const behind = Math.cos(o.dir) * (q.x - o.x) + Math.sin(o.dir) * (q.y - o.y) < -.26;
         const commit = (inside ? .455 : [.39, .46, .54][team.tactics.press]) - (behind ? .17 : 0) + (team.tactics.club?.duels==='Get stuck in'?.056:team.tactics.club?.duels==='Stay on feet'?-.048:0);
         if (this.rnd() > commit) continue;
-        const foul = (1+(secret(q,'dirtiness')-secret(q,'sportsmanship')-secret(q,'temperament'))*.012+(habit(q,'Dives into tackles')?.15:0))*(.007 + q.attrs.aggression * .00275 + (behind ? .030 : 0)) * (inside ? .38 : 1) * (team.tactics.club?.duels==='Get stuck in'?1.25:1);
+        const foul = (1+(secret(q,'dirtiness')-secret(q,'sportsmanship')-secret(q,'temperament'))*.012+(habit(q,'Dives into tackles')?.15:0))*(.007 + q.attrs.aggression * .00275 + (behind ? .030 : 0)) * (inside ? .22 : 1) * (team.tactics.club?.duels==='Get stuck in'?1.25:1);
         const wins = clamp((delta(q,'strength')-delta(o,'balance'))*.006+(inside ? .61 : .50) + (q.attrs.tackling - o.attrs.dribbling) * .027 - (behind ? .13 : 0), .16, .84);
         const roll = this.rnd();
-        if (roll < foul) { this.foul(q, o); return; }
+        if (roll < foul) { this.foul(q, o, { behind, challengeSpeed: Math.hypot(q.vx - o.vx, q.vy - o.vy) }); return; }
         if (roll < foul + wins * (1 - foul)) {
           const angle = Math.atan2(q.y - b.y, q.x - b.x) + (this.rnd() - .5) * .86;
           const closingByline = this.goalDepth(q.team, b.x) < 5.9 && Math.abs(b.y - CY) > 6 && (q.x - o.x) * team.attackDir < -.12 && o.vx * team.attackDir < -.8;
@@ -1517,7 +1559,7 @@
       return Math.min(BOX_L - depth, BOX_HALF - Math.abs(y - CY));
     }
 
-    foul(p, victim) {
+    foul(p, victim, context = {}) {
       const b = this.ball, defending = this.teams[p.team];
       // The tackle model uses two player markers. Measure their contact point,
       // not the ball, which may already be on the other side of the box line.
@@ -1526,7 +1568,8 @@
       const observed = this.areaMargin(b.x, b.y, defending);
       const measured = this.areaMargin(x, y, defending);
       const lastMan = dist(victim.x, victim.y, defending.attackDir > 0 ? 0 : L, CY) < 25 && this.isLastDefender(p, victim);
-      const incident = { kind: 'area', p, victim, x, y, lastMan, roll: this.rnd(), fieldPenalty: observed >= -1e-8, actualPenalty: measured >= -1e-8 };
+      const incident = { kind: 'area', p, victim, x, y, lastMan, behind: !!context.behind, challengeSpeed: context.challengeSpeed || 0,
+        roll: this.rnd(), fieldPenalty: observed >= -1e-8, actualPenalty: measured >= -1e-8 };
       defending.stats.fouls++; p.stats.fouls++;
       this.adjust(p, -.06);
       b.owner = null; b.vx = b.vy = b.vz = b.ax = b.ay = 0; b.flight = b.offside = b.restart = null;
@@ -1542,13 +1585,20 @@
     }
 
     awardFoul(incident, reviewed = false) {
-      const { p, victim, x, y, lastMan, roll, actualPenalty } = incident;
+      const { p, victim, x, y, lastMan, roll, actualPenalty, behind } = incident;
       const cards = [];
       const reckless = (p.attrs.aggression - 12) * .005;
-      if ((actualPenalty && lastMan && roll < .065) || roll < .0035 || (lastMan && roll < .022)) cards.push({ kind: 'red', reason: 'serious foul' });
-      else if (roll < .135 + reckless || (p.yellow >= 1 && roll < .23 + reckless)) {
-        cards.push({ kind: 'yellow' });
-        if (p.yellow >= 1) cards.push({ kind: 'red', reason: 'second yellow' });
+      // A second caution needs a dangerous challenge or an established pattern;
+      // a routine foul by a booked player is not an automatic red-card lottery.
+      const seriousChallenge = behind && (incident.challengeSpeed > 12 || p.attrs.aggression >= 18 || habit(p, 'Dives into tackles'));
+      if ((actualPenalty && lastMan && roll < .025) || (lastMan && seriousChallenge && roll < .012) || roll < .0015) cards.push({ kind: 'red', reason: 'serious foul' });
+      else {
+        const cautionChance = .135 + reckless;
+        const repeatOffenderChance = seriousChallenge ? .14 + reckless : p.stats.fouls >= 4 ? .075 + reckless : .02 + reckless;
+        if (roll < (p.yellow >= 1 ? repeatOffenderChance : cautionChance)) {
+          cards.push({ kind: 'yellow' });
+          if (p.yellow >= 1) cards.push({ kind: 'red', reason: 'second yellow' });
+        }
       }
       const sp = this.startSetPiece(actualPenalty ? 'penalty' : 'freekick', victim.team, x, y,
         { incident, offender: p, reason: 'foul', cards, reviewed });
@@ -1653,10 +1703,13 @@
       const opts = [];
       let shot = -Infinity;
       const xg = dd < 28 ? this.estimateXG(b.x, b.y, gx, pressure) : 0;
-      if (dd < 26 && xg > .068) {
+      if (dd < 29 && xg > .05) {
         const lane = this.laneRisk(b.x, b.y, gx, CY, p.team, 1.5);
         shot = .038 + xg * (1.70 + p.attrs.shooting * .027) + (p.role === 'ST' ? .064 : 0)
           - lane * .43 - clamp((2.05 - pressure) * .10, 0, .14) + intent + p.reading.finish * .47;
+        // If the opening is genuinely valuable, prefer taking it over one more
+        // low-value circulation action; the bonus scales with chance quality.
+        shot += .105 + clamp((xg - .10) * .30, 0, .055);
         // The usable shooting window shrinks if the defender is already
         // leaning in. A clean early strike can beat that closing window.
         const set = clamp((face + .22) / 1.22, 0, 1);
@@ -1664,7 +1717,7 @@
         shot -= rush * (first ? .057 : .141) * (1.17 - set * .42);
         if (pressure < 1.12 && dd > 14) shot -= .19;
         if (first && face > .37 && xg > .17 && lane < .39) shot += .142 + rush * .048;
-        if (shot > .27) opts.push({ kind: 'shot', score: shot, first });
+        if (shot > .255) opts.push({ kind: 'shot', score: shot, first });
       }
       let safeOutlet = 0;
       for (const pass of this.passOptions(p, {}, read)) {
@@ -1677,8 +1730,9 @@
         if (pass.gain > 3 && depth > 72 && pass.opening > 4 && pass.risk < .29) score += .044;
         if (score >= .38-(ambitious?delta(p,'vision')*.006:0) && pass.risk < 1.03) {
           if (easy) safeOutlet = Math.max(safeOutlet, score);
-          const purpose = recycle ? 'recycle' : pass.through ? 'through' : pass.technique === 'cutback' ? 'cutback' : 'progress';
-          opts.push({ kind: 'pass', score, pass, first, purpose });
+          const purpose = pass.technique === 'switch' ? 'switch' : recycle ? 'recycle' : pass.through ? 'through' : pass.technique === 'cutback' ? 'cutback' : 'progress';
+          const family = pass.technique === 'switch' ? 'switch' : pass.gain < -1 ? 'backward' : easy || recycle ? 'safe' : 'progress';
+          opts.push({ kind: 'pass', family, score, pass, first, purpose });
         }
       }
       const carry = .574 + p.attrs.dribbling * .013 + clamp(space, 0, 13) * .022
@@ -1704,7 +1758,9 @@
       if (depth > 78.6 && Math.abs(b.y - CY) > 14) {
         const delivery = this.crossOption(p);
         if (delivery && delivery.merit > .13) {
-          const score = .442 + delivery.merit * .88 + rush * .032 + intent * .52 + (team.tactics.width - 1) * .028 - (1 - face) * .036;
+          // A genuinely available delivery should occasionally beat safe circulation;
+          // the merit and target quality still decide whether a cross is worthwhile.
+          const score = .48 + delivery.merit * .88 + rush * .032 + intent * .52 + (team.tactics.width - 1) * .028 - (1 - face) * .036;
           opts.push({ kind: 'cross', score, delivery });
         }
       }
@@ -1717,7 +1773,22 @@
       for(const o of opts){if(p.mind)o.score+=Mind.bias(p.mind,o,read);const build=team.tactics.club?.build;if(o.kind==='pass')o.score+=((team.tactics.fine?.passing??team.tactics.passing)-team.tactics.passing)*(o.purpose==='progress'||o.purpose==='through'?.09:-.09);if(o.kind==='shot')o.score+=build==='Shoot on sight'?.1:build==='Work ball into box'&&dd>15?-.12:0;}
       if(this.elapsed-this.possessionTurn<6&&p.assignment){const gain=p.assignment.response.gain||team.tactics.club?.won;
         for(const o of opts)if(o.kind==='pass'){const safe=o.purpose==='recycle'||o.pass.dist<16,vertical=o.pass.gain>7||o.pass.through;if(['Counter','Break forward','Play forward immediately'].includes(gain))o.score+=vertical?.12:0;else if(['Hold shape','Offer support','Retain possession','Slow the game down'].includes(gain))o.score+=safe?(gain==='Slow the game down'?.18:.12):vertical?-.06:0;}}
-      const phase=p.assignment?.attack||p.assignment,preferred=phase?.spec.action,pi=p.assignment?.instructions?.attack||{};if(preferred)for(const o of opts){const match=o.kind===preferred||(o.kind==='pass'&&(o.purpose===preferred||(preferred==='short'&&o.pass.dist<=18)));if(match)o.score+=.12*(phase?.skill||p.roleSkill)*((phase?.duty||p.attackDuty)==='Attack'&&['shot','carry','cross'].includes(o.kind)?1.2:1);}for(const o of opts){if(pi.risk==='Take more risks'&&o.kind==='pass'&&['through','progress'].includes(o.purpose))o.score+=.09;if(pi.risk==='Take fewer risks'&&o.kind==='pass'&&['recycle','safe'].includes(o.purpose))o.score+=.07;if(pi.shooting==='Shoot more often'&&o.kind==='shot')o.score+=.11;if(pi.shooting==='Shoot less often'&&o.kind==='shot')o.score-=.13;if(pi.dribbling==='Dribble more'&&o.kind==='carry')o.score+=.09;if(pi.dribbling==='Dribble less'&&o.kind==='carry')o.score-=.10;}
+      const phase=p.assignment?.attack||p.assignment,preferred=phase?.spec.action,pi=p.assignment?.instructions?.attack||{};if(preferred)for(const o of opts){const match=o.kind===preferred||(o.kind==='pass'&&(o.purpose===preferred||(preferred==='short'&&o.pass.dist<=18)));if(match)o.score+=.12*(phase?.skill||p.roleSkill)*((phase?.duty||p.attackDuty)==='Attack'&&['shot','carry','cross'].includes(o.kind)?1.2:1);}for(const o of opts){if(pi.risk==='Take more risks'&&o.kind==='pass'&&(['through','progress','switch'].includes(o.purpose)||o.family==='switch'))o.score+=.09;if(pi.risk==='Take fewer risks'&&o.kind==='pass'&&(['recycle','safe'].includes(o.purpose)||['safe','backward'].includes(o.family)))o.score+=.07;if(pi.shooting==='Shoot more often'&&o.kind==='shot')o.score+=.11;if(pi.shooting==='Shoot less often'&&o.kind==='shot')o.score-=.13;if(pi.dribbling==='Dribble more'&&o.kind==='carry')o.score+=.09;if(pi.dribbling==='Dribble less'&&o.kind==='carry')o.score-=.10;}
+      const shout = this.activeTouchlineCall(p.team);
+      if (shout) for (const o of opts) {
+        const pass = o.kind === 'pass' ? o.pass : null;
+        const progressive = pass && (pass.gain > 4 || pass.through || o.purpose === 'switch');
+        const safe = pass && (o.purpose === 'recycle' || o.purpose === 'safe' || pass.gain < 1);
+        if (shout === 'demand') {
+          if (o.kind === 'shot' || o.kind === 'cross' || o.kind === 'carry' || progressive) o.score += .085;
+        } else if (shout === 'tighten') {
+          if (safe) o.score += .105;
+          else if (progressive || o.kind === 'shot' || o.kind === 'cross') o.score -= .055;
+          if (o.kind === 'clear') o.score += .025;
+        } else if (shout === 'push') {
+          if (progressive || o.kind === 'carry' || o.kind === 'cross') o.score += .10;
+        }
+      }
       return opts;
     }
 
@@ -1767,6 +1838,15 @@
       const angle = clamp(opening / .58, .16, 1.23);
       const space = clamp(.73 + pressure * .062, .75, 1.04);
       return clamp(.68 * Math.exp(-dd / 13.6) * angle * space, .012, .77);
+    }
+
+    // Map the geometric shot-quality estimate onto observed goal frequency.
+    // Coefficients were fit to binned outcomes from the first 50-match audit;
+    // the audit script keeps an independent seed batch for validation.
+    calibrateXG(raw) {
+      const p = clamp(raw, 1e-6, 1 - 1e-6);
+      const logit = Math.log(p / (1 - p));
+      return clamp(1 / (1 + Math.exp(-(-1.73 + .49 * logit))), .01, .79);
     }
 
     spaceAhead(p) {
@@ -1849,11 +1929,18 @@
           if (q === this.lastPass?.player && this.elapsed - this.lastPass.t < 5.4 && gain < 4) score -= habit(p,'Plays one-twos')?.06:.24;
           if (opts.back) score += Math.min(.19, 1 / (dd + 1) * 1.9);
           if (read) {
-            const ambitious = through || dd > 22;
+            const ambitious = through || dd > 22 || technique === 'switch';
             const back = Math.max(0, -look);
             score -= (1 - look) * (through ? .071 : .015) + (ambitious ? back * .045 + read.rush * .082 : 0);
             if (swing) score += clamp((p.reading.vision - 9) * .009 * (1 - read.rush), 0, .08);
             if (through) score += (p.reading.vision - 12) * .012 + (style - 1) * .046 - Math.max(0, risk - .28) * .14;
+            if (technique === 'switch') {
+              // Reward the difficult diagonal only when there is a real outlet:
+              // vision spots the far-side space, while pressure and match intent
+              // decide whether the risk is worth taking now.
+              score += .045 + clamp((p.reading.vision - 11) * .009, -.04, .06)
+                + clamp((opening - 5) / 24, 0, .09) + read.rush * .055 + read.intent * .28;
+            }
           } else if (!opts.restart) score += (this.rnd() - .5) * (.136 - p.attrs.passing * .0032);
           candidates.push({ target: q, lead: { x: ax, y: ay }, score, through, technique, dist: dd, risk, opening, gain });
         }
@@ -1916,13 +2003,20 @@
       const technique = option.technique || (option.through ? 'through' : 'ground');
       const air = !['ground', 'through', 'cutback'].includes(technique);
       const dd = dist(b.x, b.y, option.lead.x, option.lead.y);
-      const variance = (p.readiness?1+(72-p.readiness.sharp)*.004:1)*(1-delta(p,'technique')*.02-(p.mind?.form||0)*.08)*(1+.36*this.footCost(p,pressure))*(1+(1-(p.assignment?.footFit??1))*(pressure<3?2:1))*(.24 + dd * .024) * (1.54 - p.attrs.passing * .054) * (pressure < 2.25 ? 1.37 : 1) * (air ? 1.16 : 1);
-      const tx = clamp(option.lead.x + (this.rnd() * 2 - 1) * variance, .72, L - .72);
-      const ty = clamp(option.lead.y + (this.rnd() * 2 - 1) * variance, .72, W - .72);
       const k = air ? {
         seconds: technique === 'chip' ? clamp(.72 + dd * .032, 1.02, 1.82) : clamp(.58 + dd * .042, 1.57, 3.12),
-        startZ: .084, bend: (this.rnd() - .5) * .68
+        startZ: .084, bend: 0
       } : { arrival: clamp(4.42 + dd * .111 + team.tactics.tempo * .58 + (technique === 'through' ? .84 : 0), 4.8, 10.75) };
+      const receiver = option.target;
+      const controlQuality = clamp(((receiver?.attrs?.firstTouch ?? 10) - 10) * .004
+        + ((receiver?.attrs?.technique ?? 10) - 10) * .003 + ((receiver?.attrs?.composure ?? 10) - 10) * .003, -.09, .09);
+      const executionSpread = clamp(1 + clamp((3.8 - pressure) / 3.8, 0, 1) * .025
+        + clamp((dd - 24) / 80, 0, .015) + (technique === 'switch' ? .01 : technique === 'through' ? .006 : 0)
+        - controlQuality * .45, .93, 1.12);
+      const variance = (p.readiness?1+(72-p.readiness.sharp)*.004:1)*(1-delta(p,'technique')*.02-(p.mind?.form||0)*.08)*(1+.36*this.footCost(p,pressure))*(1+(1-(p.assignment?.footFit??1))*(pressure<3?2:1))*(.24 + dd * .024) * (1.54 - p.attrs.passing * .054) * (pressure < 2.25 ? 1.37 : 1) * (air ? 1.16 : 1) * executionSpread;
+      const tx = clamp(option.lead.x + (this.rnd() * 2 - 1) * variance, .72, L - .72);
+      const ty = clamp(option.lead.y + (this.rnd() * 2 - 1) * variance, .72, W - .72);
+      if (air) k.bend = (this.rnd() - .5) * .68;
       const f = this.kick(p, tx, ty, { kind: 'pass', intended: option.target, technique, through: !!option.through, firstTime: !!opts.firstTime, purpose: opts.purpose, committedAt: opts.committedAt, offsideCheck: !opts.noOffside }, k);
       this.deliveryReleased(p, f);
     }
@@ -1957,15 +2051,21 @@
 
     crossOption(p, exempt = false) {
       const b = this.ball, team = this.teams[p.team], d = team.attackDir, gx = d > 0 ? L : 0;
-      const line = Math.max(this.offsideLine(team) * d, b.x * d, CX * d);
+      const line = Math.max(this.offsideLine(team) * d, b.x * d, CX * d), areaDepth = 20, areaHalfWidth = 16;
+      const boxAttackers = this.playersCache.filter(r => r.team === p.team && r !== p && r.role !== 'GK'
+        && r.x * d <= line + .24 && (gx - r.x) * d >= 0 && (gx - r.x) * d <= areaDepth && Math.abs(r.y - CY) < areaHalfWidth).length;
+      const boxDefenders = this.playersCache.filter(r => r.team !== p.team && r.role !== 'GK'
+        && (gx - r.x) * d >= 0 && (gx - r.x) * d <= areaDepth && Math.abs(r.y - CY) < areaHalfWidth).length;
+      const boxBalance = clamp((boxAttackers - boxDefenders) * .025, -.11, .075);
       let best = null;
       for (const q of this.playersCache) {
         const goal = (gx - q.x) * d;
         if (q.team !== p.team || q === p || q.role === 'GK' || (!exempt && q.x * d > line + .24) || goal < 1.4 || goal > 26 || Math.abs(q.y - CY) > 15.2 || Math.abs(q.y - b.y) < 8.5) continue;
         const width = this.nearestOppDist(q), head = q.role === 'ST' ? .084 : 0;
         if (!exempt && (q.stunT > .20 || width < 2.32 || goal > 20.0)) continue;
-        const merit = .015 + clamp((width - 1.75) / 7.6, 0, .8) * .20 + head + (goal < 13.8 ? .086 : 0);
-        if (!best || merit > best.merit) best = { target: q, merit };
+        // Reward a genuine attacking presence and penalize a box overload by defenders.
+        const merit = Math.max(.01, .015 + clamp((width - 1.75) / 7.6, 0, .8) * .20 + head + (goal < 13.8 ? .086 : 0) + boxBalance);
+        if (!best || merit > best.merit) best = { target: q, merit, boxAttackers, boxDefenders, boxBalance };
       }
       return best;
     }
@@ -1998,9 +2098,10 @@
       });
       const nearLine = this.laneRisk(b.x, b.y, gx, CY, p.team, 1.45);
       const coverage = keeper && (keeper.x - b.x) * d > 0 ? .82 : 1.04;
-      let xg = opts.pen ? .78 : clamp(this.estimateXG(b.x, b.y, gx, pressure) * coverage * clamp(1 - nearLine * .25, .45, 1), .014, .79);
-      if (opts.header) xg = Math.max(.018, xg * .68);
-      if (opts.fk) xg = Math.max(.018, xg * .64);
+      let modelXG = opts.pen ? .78 : clamp(this.estimateXG(b.x, b.y, gx, pressure) * coverage * clamp(1 - nearLine * .25, .45, 1), .014, .79);
+      if (opts.header) modelXG = Math.max(.018, modelXG * .68);
+      if (opts.fk) modelXG = Math.max(.018, modelXG * .64);
+      const xg = opts.pen ? modelXG : this.calibrateXG(modelXG);
       const keeperGap = Math.abs(keeper.x - gx);
       const lob = !opts.pen && !opts.fk && !opts.header && dd > 10 && dd < 28 && keeperGap > 4.4 && pressure > 2.3 && p.attrs.shooting >= 13 && this.rnd() < .27;
       let on = .242+delta(p,opts.header?'heading':dd>19?'longShots':'finishing')*.012 + p.attrs.shooting * .014 + xg * .62 - Math.max(0, dd - 14) * .0085 - (pressure < 2.05 ? .123 : 0) - (opts.header ? .095 : 0) - (opts.fk ? .085 : 0);
@@ -2035,7 +2136,7 @@
         ? side : this.rnd() < .5 ? -1 : 1;
       const f = this.kick(p, goalLine, y, {
         id: ++this.shotId, kind: 'shot', technique: lob ? 'lob' : opts.header ? 'header' : 'shot', shooter: p, firstTime: !!opts.firstTime,
-        xG: xg, goalX: gx, targetZ: z, onFrame, assist, shot, pen: !!opts.pen, header: !!opts.header, fk: !!opts.fk,
+        xG: xg, modelXG, goalX: gx, targetZ: z, onFrame, assist, shot, pen: !!opts.pen, header: !!opts.header, fk: !!opts.fk,
         wallIds: wall.map(q => q.id), screened, leap,
         guessY: CY + guessSide * (1.89 + this.rnd() * .69)
       }, flightTime < .49 && z < .38 && !opts.header && !lob ? { arrival: power * .91 } : {
@@ -2043,7 +2144,7 @@
         startZ: opts.header ? Math.max(1.28, b.z) : .093
       });
       this.adjust(p, .02); this.setOffside(p, !opts.pen);
-      if (lob) this.emit('chance', { text: `${p.name} tries to lift it over the keeper…`, team: p.team, key: xg > .20 });
+      if (lob) this.emit('chance', { text: `${p.name} tries to lift it over the keeper…`, team: p.team, key: xg > .08 });
       else if (dd > 24.5 && !opts.pen) this.say('longshot', { p: p.name }, { team: p.team });
       return f;
     }
@@ -2103,7 +2204,8 @@
         q.shotTried = f.id;
         const speed = Math.hypot(b.vx, b.vy);
         const room = 1 - gap / reach;
-        const chance = hand ? delta(q,'oneOnOnes')*.003+(f.pen ? .26 + room * .14 + (q.attrs.reflexes - 14) * .012 : .76 + room * .22 + (q.attrs.reflexes + q.attrs.handling - 28) * .014 - f.xG * .45 - Math.max(0, speed - 25) * .009) : .37 + q.attrs.positioning * .016 + room * .23 + (wall ? .12 : 0);
+        const modelXG = f.modelXG ?? f.xG;
+        const chance = hand ? delta(q,'oneOnOnes')*.003+(f.pen ? .34 + room * .14 + (q.attrs.reflexes - 14) * .012 : .70 + room * .22 + (q.attrs.reflexes + q.attrs.handling - 28) * .014 - modelXG * .45 - Math.max(0, speed - 25) * .009) : .37 + q.attrs.positioning * .016 + room * .23 + (wall ? .12 : 0);
         if (this.rnd() >= clamp(chance, .11, hand ? .94 : .88)) continue;
         b.x = x; b.y = y; b.z = z; b.flight = b.restart = null; b.ax = b.ay = 0;
         b.lastTouch = q; b.releaseT = this.elapsed; this.lastPass = null; this.brainIn = 0;
@@ -2115,12 +2217,24 @@
           const catches = this.rnd() < clamp(.22 + room * .51 + q.attrs.handling * .012 - speed * .010 - Math.max(0, z - 1.1) * .10, .14, .82);
           const tip = !catches && dxGoal < 6.7 && (z > 1.40 || Math.abs(y - CY) > 1.38 || stretched > .59)
             && this.rnd() < .54 + stretched * .29 && this.turnBehind(q, speed, z > 1.48 && Math.abs(y - CY) < 3.1);
+          const rebound = !f.pen && !catches && !tip && shotOnTarget && this.goalDepth(q.team, x) <= BOX_L
+            && Math.abs(y - CY) <= BOX_HALF && (stretched > .50 || speed > 22);
           if (f.pen) this.say('penmiss', { k: q.name, p: f.shooter.name }, { team: q.team, key: true });
-          else if (tip) this.emit('save', { text: `${q.name} gets a hand to it and tips it away.`, team: q.team, key: shotOnTarget && f.xG > .17 });
+          else if (tip) this.emit('save', { text: `${q.name} gets a hand to it and tips it away.`, team: q.team, key: shotOnTarget && f.xG > .075 });
+          else if (rebound) {
+            f.rebound = f.shot.rebound = true;
+            this.emit('save', { text: `${q.name} palms the shot into the box — the rebound is loose!`, team: q.team, key: true });
+          }
           else if (!shotOnTarget) this.emit('catch', { text: `${q.name} gets a hand to it.`, team: q.team });
-          else this.say(catches ? 'catch' : 'save', { p: f.shooter.name, k: q.name }, { team: q.team, key: f.xG > .17 });
+          else this.say(catches ? 'catch' : 'save', { p: f.shooter.name, k: q.name }, { team: q.team, key: f.xG > .075 });
           if (catches) { b.vx = b.vy = b.vz = 0; this.claim(q, 0, true); }
           else if (tip) this.deflection(q);
+          else if (rebound) {
+            const d = this.teams[q.team].attackDir, flank = y >= CY ? 1 : -1;
+            b.vx = d * (3.2 + this.rnd() * 3.4);
+            b.vy = flank * (2.8 + this.rnd() * 4.2);
+            b.vz = .72 + this.rnd() * 1.25;
+          }
           else {
             const d = this.teams[q.team].attackDir, flank = y > q.y ? 1 : -1;
             b.vx = d * (4.8 + this.rnd() * 5.5);
@@ -2133,7 +2247,7 @@
           if (dxGoal < 8.3 && Math.abs(y - CY) > 2.55 && this.rnd() < .61 && this.turnBehind(q, speed)) this.deflection(q);
           else { b.vx = Math.cos(wanted) * speed * .37; b.vy = Math.sin(wanted) * speed * .37; b.vz = 1.9 + this.rnd() * 2.1; }
           if (wall) this.emit('block', { text: `${q.name} blocks the free kick in the wall.`, team: q.team });
-          else this.say('block', { p: f.shooter.name, d: q.name }, { team: q.team, key: f.xG > .17 });
+          else this.say('block', { p: f.shooter.name, d: q.name }, { team: q.team, key: f.xG > .075 });
         }
         return true;
       }
@@ -2143,7 +2257,7 @@
     describeMiss(f, how) {
       this.adjust(f.shooter, -.044);
       const text = f.pen ? `${f.shooter.name} puts the penalty ${how}!` : how === 'over' ? `${f.shooter.name} sends it over the bar.` : `${f.shooter.name} sends the shot wide.`;
-      this.emit(f.pen ? 'penmiss' : 'miss', { text, team: f.shooter.team, key: f.pen || f.xG > .19 });
+      this.emit(f.pen ? 'penmiss' : 'miss', { text, team: f.shooter.team, key: f.pen || f.xG > .08 });
     }
 
     resolveShotLine(lineX, at = this.ball, before = this.ball, dt = 0) {

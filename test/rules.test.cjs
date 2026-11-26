@@ -281,8 +281,8 @@ test('a throw or indirect free kick cannot score directly without a second playe
 test('a second caution is shown to the offender, then the red, then the restart', () => {
   const m = match(), { foul, victim } = contact(m, 28);
   foul.yellow = 1; m.teams[1].stats.yellow = 1;
-  m.rnd = () => .18;
-  m.foul(foul, victim);
+  m.rnd = () => .10;
+  m.foul(foul, victim, { behind: true, challengeSpeed: 13 });
   assert.equal(m.teams[1].stats.yellow, 1);
   assert.equal(m.teams[1].stats.fouls, 1);
   assert.equal(m.playersCache.includes(foul), true);
@@ -305,6 +305,15 @@ test('a second caution is shown to the offender, then the red, then the restart'
   const orders = m.events.map(e => e.type);
   assert.deepEqual(orders.slice(orders.indexOf('foul')).filter(e => e !== 'longshot'), ['foul', 'yellow', 'red', 'dismissed', 'restartwhistle', 'restartkick']);
   assert.equal(events(m, 'red').at(-1).reason, 'second yellow');
+});
+
+test('a previously booked player is not dismissed for every ordinary foul', () => {
+  const m = match(), { foul, victim } = contact(m, 28);
+  foul.yellow = 1; m.teams[1].stats.yellow = 1; m.rnd = () => .18;
+  m.foul(foul, victim);
+  assert.equal(m.teams[1].stats.yellow, 1);
+  assert.equal(m.teams[1].stats.red, 0);
+  assert.equal(events(m, 'red').length, 0);
 });
 
 test('a VAR stop in added time is resolved before the half ends', () => {

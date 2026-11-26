@@ -54,6 +54,8 @@
       this.dpr = 1;
       this.drawn = [];
       this.touchline = [];
+      this.trails = [];
+      this.activeTrail = null;
       this.reduced = global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)');
       this.resize();
       if (typeof global.ResizeObserver === 'function') {
@@ -193,14 +195,19 @@
       }
     }
 
+    ballRadius(height) {
+      const base = clamp(this.scale * .37 + 1.3, 2.6, 4.25);
+      return base * (1 + Math.min(Math.max(0, height || 0), 9) * .018);
+    }
+
     ballProjection(x, y, height) {
       const s = this.scale, z = Math.max(0, height || 0), rise = z * s;
       const gx = this.ox + x * s, gy = this.oy + y * s;
       // Compress lift only at the very top edge: keep the ball in view without moving the pitch.
       const room = Math.max(0, gy - 6), lift = rise * .82, softLimit = room * .80;
       const vertical = lift <= softLimit ? lift : softLimit + (room - softLimit) * (1 - Math.exp(-(lift - softLimit) / Math.max(.01, room - softLimit)));
-      const shadowX = clamp(gx - rise * .12, this.ox + Math.min(0, x) * s, this.ox + Math.max(L, x) * s);
-      const shadowY = clamp(gy + rise * .24, this.oy + Math.min(0, y) * s, this.oy + Math.max(W, y) * s);
+      const shadowX = clamp(gx - rise * .14, this.ox + Math.min(0, x) * s, this.ox + Math.max(L, x) * s);
+      const shadowY = clamp(gy + rise * .29, this.oy + Math.min(0, y) * s, this.oy + Math.max(W, y) * s);
       return { x: gx + rise * .10, y: gy - vertical, shadowX, shadowY, z };
     }
 
@@ -360,6 +367,20 @@
       const s = this.scale, r = this.radius, alpha = options.alpha == null ? 1 : options.alpha;
       const toScreen = (x, y) => [this.ox + x * s, this.oy + y * s];
       this.drawDugouts(match, frame, options.managers, options.technical);
+      if (options.tacticalView && !frame && ball.flight?.kind === 'pass') {
+        const flight = ball.flight, progressive = flight.through || ['switch', 'through'].includes(flight.technique)
+          || ['progress', 'switch', 'through'].includes(flight.purpose) || flight.totalDist >= 20;
+        if (progressive && flight.from) {
+          const [sx, sy] = toScreen(flight.from.x, flight.from.y), [ex, ey] = toScreen(flight.targetX, flight.targetY);
+          const angle = Math.atan2(ey - sy, ex - sx), head = clamp(s * .85, 4, 8);
+          ctx.save(); ctx.setLineDash([Math.max(3, s * .55), Math.max(3, s * .72)]);
+          ctx.strokeStyle = flight.technique === 'switch' ? '#e5f0b45c' : '#e0f0da55'; ctx.lineWidth = 1.15;
+          ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke(); ctx.setLineDash([]);
+          ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex - Math.cos(angle - .48) * head, ey - Math.sin(angle - .48) * head);
+          ctx.lineTo(ex - Math.cos(angle + .48) * head, ey - Math.sin(angle + .48) * head); ctx.closePath();
+          ctx.fillStyle = '#e4f0cc8a'; ctx.fill(); ctx.restore();
+        }
+      }
       const positions = players.map(p => {
         let x = p.x, y = p.y;
         if (!frame && alpha < 1 && Number.isFinite(p.prevX) && Math.abs(x - p.prevX) + Math.abs(y - p.prevY) < 2.2) {
@@ -393,6 +414,18 @@
         const selected = p.id === options.selected;
         const carded = p.id === referee?.signal?.player;
         paint(ctx, x + (wall ? .35 : 1), y + (wall ? .9 : 1.65), r + (wall ? .55 : .95), 'rgba(8,18,12,.51)');
+        if (options.tacticalView && Number.isFinite(p.cond) && p.cond < .60) {
+          ctx.beginPath(); ctx.arc(x, y, r + 2.15, 0, TAU);
+          ctx.strokeStyle = p.cond < .45 ? '#ff7775e8' : '#f2c66de8'; ctx.lineWidth = 1.65; ctx.stroke();
+        }
+        if (options.tacticalView && Number.isFinite(p.dir)) {
+          const faceLength = r + 5.4;
+          ctx.beginPath(); ctx.moveTo(x + Math.cos(p.dir) * (r * .28), y + Math.sin(p.dir) * (r * .28));
+          ctx.lineTo(x + Math.cos(p.dir) * faceLength, y + Math.sin(p.dir) * faceLength);
+          ctx.strokeStyle = '#eef8d9d9'; ctx.lineWidth = 1.25; ctx.stroke();
+          const tipX = x + Math.cos(p.dir) * faceLength, tipY = y + Math.sin(p.dir) * faceLength;
+          ctx.beginPath(); ctx.arc(tipX, tipY, 1.35, 0, TAU); ctx.fillStyle = '#eef8d9e8'; ctx.fill();
+        }
         if (selected || (active && p.id === ownerId)) {
           ctx.beginPath(); ctx.arc(x, y, r + (selected ? 3.3 : 2.65), 0, TAU);
           ctx.strokeStyle = selected ? '#defaaf' : '#d9e8c9b0'; ctx.lineWidth = 1.1; ctx.stroke();
@@ -422,8 +455,11 @@
       const byGround = interpolate ? mix(ball.prevY, ball.y, alpha) : ball.y;
       const projection = this.ballProjection(bxGround, byGround, interpolate ? mix(ball.prevZ, ball.z, alpha) : ball.z);
       const { x: bx, y: by, shadowX, shadowY, z } = projection;
+      const trailNow = global.performance?.now?.() ?? Date.now();
+      this.updateTrail(ball, trailNow, !!options.tacticalView && !!options.live && !frame);
+      if (options.tacticalView && !frame) this.drawTrails(ctx, trailNow);
       const base = clamp(s * .37 + 1.3, 2.6, 4.25);
-      const radius = base * (1 + Math.min(z, 10) * .012);
+      const radius = this.ballRadius(z);
       if (z < .05) paint(ctx, bx + 1, by + 1.7, radius + 1.15, '#0c170d77');
       else {
         const spread = base + 1.25 + Math.min(2.85, z * .19);
@@ -475,6 +511,36 @@
       }
     }
 
+    updateTrail(ball, now, enabled) {
+      const flight = enabled && ball.flight && (ball.flight.kind === 'shot' || ball.flight.technique === 'switch') ? ball.flight : null;
+      if (!flight) { this.activeTrail = null; this.trails = this.trails.filter(trail => now - trail.last < 1600); return; }
+      if (this.activeTrail?.flight !== flight) {
+        this.activeTrail = { flight, kind: flight.kind === 'shot' ? 'shot' : 'switch', points: [], last: now };
+        this.trails.push(this.activeTrail);
+        if (this.trails.length > 4) this.trails.shift();
+      }
+      const trail = this.activeTrail, last = trail.points.at(-1);
+      const x = ball.x, y = ball.y;
+      if (!last || Math.hypot(x - last.x, y - last.y) > .42) trail.points.push({ x, y, at: now });
+      trail.last = now;
+      this.trails = this.trails.filter(item => now - item.last < 1600);
+    }
+
+    drawTrails(ctx, now) {
+      for (const trail of this.trails || []) {
+        const pts = trail.points;
+        for (let i = 1; i < pts.length; i++) {
+          const age = now - pts[i].at;
+          if (age > 1500) continue;
+          const a = pts[i - 1], b = pts[i], alpha = Math.max(0, .30 * (1 - age / 1500));
+          ctx.beginPath(); ctx.moveTo(this.ox + a.x * this.scale, this.oy + a.y * this.scale);
+          ctx.lineTo(this.ox + b.x * this.scale, this.oy + b.y * this.scale);
+          ctx.strokeStyle = trail.kind === 'shot' ? `rgba(255,216,146,${alpha})` : `rgba(210,239,179,${alpha})`;
+          ctx.lineWidth = trail.kind === 'shot' ? 1.8 : 1.35; ctx.stroke();
+        }
+      }
+    }
+
     pickPlayer(x, y) {
       let best = null, distance = Math.max(10, this.radius * 1.7);
       for (const item of this.drawn) {
@@ -485,5 +551,7 @@
     }
   }
 
-  global.TLRender = { Renderer };
+  const api = { Renderer };
+  global.TLRender = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -54,6 +54,8 @@ In the match centre, choose **Highlights** beneath the pitch, then press **Kick 
 
 Highlight modes save time by cutting between passages. The times above are rough guides from seeded fixtures, not limits; they exclude pauses and replays. All modes still simulate 90 in-game minutes plus stoppage time. The engine plays every tick and records all events and stats. With the same seed and instructions at the same match times, the four modes produce identical results.
 
+**Engine validation:** `npm test` runs the regression suite; `npm run test:sim` completes seeded match simulations. `node scripts/audit-match-realism.cjs 50 13` writes a detailed seeded distribution audit to stdout, including team and match statistics, scorelines, shot zones/xG, decision choices, discipline, penalties and event counts. `node scripts/audit-cross-box.cjs 12 731` runs paired same-seed matches comparing the live box-aware cross choice with the previous single-target rule. Both are diagnostics—not tuning targets or proof of equivalence with real football. See the [prioritized match-engine reality audit](docs/match-engine-reality-audit.md) for scope, evidence gates and open work. Small samples are noisy; compare large seed sets and named real-world competition baselines before calibration.
+
 Full Match has no automatic cuts. **Next highlight** jumps to the next qualifying passage when no important action is in progress, and **Stop here** ends a search without changing the mode. The game stops at halftime and full time. In the Touchline desk, changes take effect at the displayed effective time; they do not alter recorded buildup.
 
 ## Set pieces, offside and VAR

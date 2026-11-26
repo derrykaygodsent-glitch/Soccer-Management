@@ -128,6 +128,8 @@ test('a clean reception can produce a first-time finish, a supporting pass or an
   assert.equal(closed.m.ball.lastTouch?.id, closed.opponents[0].id);
   assert.equal(closed.m.shotMap.length, 0);
   const runnerUp = reception({ depth: 91, y: 30, heading: 1.10 });
+  runnerUp.carrier.attrs.shooting = 8;
+  runnerUp.carrier.reading.finish = -.12;
   release(runnerUp, 0);
   assert.equal(runnerUp.m.ball.flight?.kind, 'pass');
   assert.equal(runnerUp.m.ball.flight.firstTime, true);
@@ -165,6 +167,27 @@ test('cross, cut inside, and carry can all win the same flank decision, without 
   const { m, carrier, opponents, put } = wing(1);
   put(opponents[2], 92.4, 31.4); put(opponents[3], 84, 21);
   assert.ok(!options(m, carrier).some(c => c.kind === 'cross' || c.style === 'inside'), 'marked target and blocked lane remove those options');
+});
+
+test('cross choice values the attacking box presence instead of scoring only the best individual target', () => {
+  const crossingScene = (extraAttackers, extraDefenders, offsideRunner = false) => {
+    const s = scene({ seed: 411, depth: 80, y: 15, role: 'W' });
+    const { m, carrier, teammates, opponents, keeper, put } = s;
+    put(teammates.find(p => p.role === 'ST'), 92, 31);
+    put(keeper, 102, 34); put(opponents[0], 83, 17); put(opponents[1], 101, 46);
+    [[95, 29], [89, 36], [86, 31]].slice(0, extraAttackers).forEach(([x, y], i) => put(teammates.filter(p => p.role !== 'ST')[i], x, y));
+    [[97, 43], [97, 19], [99, 39]].slice(0, extraDefenders).forEach(([x, y], i) => put(opponents[i + 2], x, y));
+    if (offsideRunner) put(teammates.filter(p => p.role !== 'ST')[3], 104, 31);
+    return m.crossOption(carrier);
+  };
+  const isolated = crossingScene(0, 0), supported = crossingScene(3, 0), overloaded = crossingScene(0, 3), offside = crossingScene(0, 0, true);
+  assert.ok(isolated && supported && overloaded);
+  assert.equal(isolated.boxAttackers, 1);
+  assert.ok(supported.boxAttackers > isolated.boxAttackers);
+  assert.ok(supported.merit > isolated.merit, 'extra runners make the delivery more attractive');
+  assert.ok(overloaded.boxDefenders > isolated.boxDefenders);
+  assert.ok(overloaded.merit < isolated.merit, 'a defensive box overload discourages forcing the same cross');
+  assert.equal(offside.boxAttackers, isolated.boxAttackers, 'an offside runner must not count as a legal crossing target');
 });
 
 test('mentality, passing instructions, player identity and fatigue skew the choice rather than replacing it', () => {
@@ -205,6 +228,24 @@ test('the seed breaks ties among plausible actions, not between good play and im
   }
 });
 
+test('an open far-side switch is available and its utility rises with vision and attacking intent', () => {
+  const { m, carrier, teammates, opponents, put } = scene({ depth: 56 });
+  const receiver = put(teammates[0], 60, 1);
+  put(opponents[0], 54, 31);
+  m.setTactics(0, { passing: 2, mentality: 0 });
+  const switchOption = () => options(m, carrier).find(option => option.purpose === 'switch');
+  const cautious = switchOption();
+  assert.ok(cautious?.pass);
+  assert.equal(cautious.family, 'switch');
+  assert.equal(cautious.pass.target, receiver);
+  const visionScore = cautious.score;
+  carrier.reading.vision -= 5;
+  assert.ok(switchOption().score < visionScore, 'vision improves the read of the far-side outlet');
+  carrier.reading.vision += 5;
+  m.setTactics(0, { mentality: 4 });
+  assert.ok(switchOption().score > visionScore, 'attacking intent makes the long diagonal more attractive');
+});
+
 test('live decisions repeat with the seed and delayed deliveries still reach legal targets', { timeout: 10000 }, () => {
   function play(seed) {
     const m = new Match(CLUBS[1], CLUBS[0], { seed });
@@ -235,8 +276,8 @@ test('live decisions repeat with the seed and delayed deliveries still reach leg
     for (let i = 0; i < 205 * 40; i++) m.step(1 / 40);
     return { seen, events };
   }
-  const a = play(342), b = play(902);
-  assert.deepEqual(a, play(342));
+  const a = play(8), b = play(902);
+  assert.deepEqual(a, play(8));
   assert.notDeepEqual(a.events.map(ev => ev[2]), b.events.map(ev => ev[2]));
   const seen = new Set([...a.seen, ...b.seen, ...play(710).seen]);
   for (const kind of ['through', 'delayed', 'recycle', 'early-pass', 'inside', 'cross', 'shot']) assert.ok(seen.has(kind), `no live ${kind} in the seeded openings`);

@@ -68,6 +68,24 @@
         <div class="match-status" data-status="ready" id="matchStatus"><i></i><span id="phaseBadge">Ready</span></div>
         <span class="board-meta"><span class="meta-field">105 × 68 M</span><span class="meta-divider"></span><span>FULL PITCH</span></span>
       </div>
+      <div class="match-live-tools" aria-label="Live match tools">
+        <div class="momentum-widget">
+          <span class="momentum-title">MOMENTUM</span>
+          <span class="momentum-team" id="momentumHomeLabel">HOME</span>
+          <div class="momentum-track" id="momentumTrack" role="meter" aria-label="Match momentum" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="Even">
+            <span class="momentum-home-zone"></span><span class="momentum-away-zone"></span><i id="momentumMarker"></i>
+          </div>
+          <span class="momentum-team" id="momentumAwayLabel">AWAY</span>
+          <strong id="momentumValue">Even</strong>
+        </div>
+        <button class="button tactical-view-button" id="btnTacticalView" type="button" aria-pressed="false" title="Show stamina, facing and ball-flight trails"><svg class="icon" aria-hidden="true"><use href="#i-pitch"/></svg><span>Tactical View</span></button>
+        <div class="touchline-shouts" role="group" aria-label="Touchline shouts">
+          <span class="shouts-label">TOUCHLINE</span>
+          <button class="button shout-button" type="button" data-shout="demand" aria-pressed="false" disabled><span>Demand More</span><small></small></button>
+          <button class="button shout-button" type="button" data-shout="tighten" aria-pressed="false" disabled><span>Tighten Up</span><small></small></button>
+          <button class="button shout-button" type="button" data-shout="push" aria-pressed="false" disabled><span>Push Higher</span><small></small></button>
+        </div>
+      </div>
 
       <div id="pitchwrap" class="pitchwrap">
         <canvas id="pitch" role="img" aria-label="Fixed overhead football pitch. The referee wears an R. The technical areas have M markers for managers and numbered markers for substitutes."></canvas>
@@ -100,10 +118,11 @@
           <label class="speed-mode"><span>Speed</span><select id="playbackSpeed" aria-label="Playback speed"></select></label>
           <button class="button skip-button" id="btnSkip" type="button" disabled title="Next highlight (S)"><svg class="icon" aria-hidden="true"><use href="#i-skip"/></svg><span id="skipLabel">Next highlight</span></button>
         </div>
+        <label id="replayScrubberWrap" class="replay-scrubber" hidden><span>Replay scrub</span><input id="replayScrubber" type="range" min="0" max="1000" value="0" aria-label="Scrub replay"></label>
         <div class="view-controls">
           <label class="watch-mode"><span>Highlights</span><select id="highlightMode" aria-label="Highlights"></select></label>
           <button class="button view-button" id="btnNames" type="button" aria-label="Names" aria-pressed="false" title="Toggle all names (N)"><svg class="icon" aria-hidden="true"><use href="#i-names"/></svg><span>Names</span></button>
-          <button class="button view-button" id="btnReplay" type="button" aria-label="Replay" disabled title="Replay last goal (R)"><svg class="icon" aria-hidden="true"><use href="#i-replay"/></svg><span>Replay</span></button>
+          <button class="button view-button" id="btnReplay" type="button" aria-label="Replay" disabled title="Replay last highlight (R)"><svg class="icon" aria-hidden="true"><use href="#i-replay"/></svg><span>Replay</span></button>
           <button class="button view-button sound-button" id="btnSound" type="button" aria-pressed="false" aria-label="Stadium sound" title="Stadium sound"><svg class="icon" aria-hidden="true"><use id="soundIcon" href="#i-mute"/></svg><span>Sound</span></button>
         </div>
       </div>
@@ -143,7 +162,7 @@
       </div>
       <p class="help-text watch-detail" id="watchDetail"></p>
       <p class="help-text watch-note" id="watchNote">1× is real time. Highlights skip quiet play; footage keeps your chosen speed. Estimates exclude pauses and replays.</p>
-      <div class="setup-checks"><label><input type="checkbox" id="preReplay" checked> Auto goal replays</label><label><input type="checkbox" id="preSound"> Stadium sound</label></div>
+      <div class="setup-checks"><label><input type="checkbox" id="preReplay" checked> Auto goal and keeper-rebound replays</label><label><input type="checkbox" id="preSound"> Stadium sound</label></div>
       <p class="help-text" id="setupNote">Set your fixture and starting instructions.</p>
       <div class="dialog-actions"><button class="button" data-close="setupDialog" type="button">Cancel</button><button class="button primary" type="submit">Load fixture </button></div>
     </form>

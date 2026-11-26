@@ -60,8 +60,8 @@
     if (!shot || shot.outcome === 'pending' || shot.outcome === 'disallowed') return Infinity;
     // Key keeps decisive incidents and the clearest chances. Routine saves
     // still count in the match, but belong in the broader edits.
-    if (shot.pen || shot.outcome === 'goal' || shot.outcome === 'post' || shot.xg >= .33 || (shot.outcome === 'save' && shot.xg >= .285)) return 1;
-    if (shot.xg >= .14 || (shot.outcome === 'save' && shot.xg >= .095)) return 2;
+    if (shot.pen || shot.outcome === 'goal' || shot.outcome === 'post' || shot.xg >= .11 || (shot.outcome === 'save' && shot.xg >= .10)) return 1;
+    if (shot.xg >= .065 || (shot.outcome === 'save' && shot.xg >= .055)) return 2;
     return 3;
   }
 

@@ -117,6 +117,25 @@ h1{font:700 clamp(35px,4vw,45px)/.99 'Barlow Condensed','Arial Narrow',sans-seri
 #feedText{flex:1;min-width:0;color:#eef4e9;font-size:12px;line-height:1.35;font-weight:510;padding-block:6px}
 #feedTime{font-size:11px;font-weight:750;color:#c2d1bb;font-variant-numeric:tabular-nums;white-space:nowrap}
 .feed-button{width:31px;min-height:29px;background:#18261d99;border-color:#556554;border-radius:6px}.feed-button .icon{width:15px;height:15px}
+.match-live-tools{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:42px;padding:5px 12px;background:#111b22;border-top:1px solid #263840;border-bottom:1px solid #263840}
+.momentum-widget,.touchline-shouts{display:flex;align-items:center;gap:8px;min-width:0}
+.momentum-title,.shouts-label{color:#8fa6a8;font-size:8px;font-weight:850;letter-spacing:.13em;white-space:nowrap}
+.momentum-team{color:#c6d4d0;font-size:9px;font-weight:800;letter-spacing:.04em;white-space:nowrap}
+.momentum-track{position:relative;width:clamp(110px,15vw,205px);height:8px;border:1px solid #536364;border-radius:20px;background:#24323a;overflow:visible}
+.momentum-home-zone,.momentum-away-zone{position:absolute;inset:0;border-radius:20px}
+.momentum-home-zone{right:50%;background:linear-gradient(90deg,#527c69,#a4d487)}.momentum-away-zone{left:50%;background:linear-gradient(90deg,#cf9a69,#8a5b61)}
+.momentum-track::after{content:"";position:absolute;left:50%;top:-2px;height:10px;border-left:1px solid #ecf1e4a3}
+.momentum-track>i{position:absolute;z-index:1;top:50%;width:12px;height:12px;border:2px solid #f5f7e9;border-radius:50%;background:#18241e;box-shadow:0 0 0 2px #18241eaa;transform:translate(-50%,-50%);transition:left .45s cubic-bezier(.2,.75,.25,1)}
+#momentumValue{min-width:59px;color:#cfe7b4;font-size:9px;text-align:center;white-space:nowrap}
+.tactical-view-button{display:inline-flex;align-items:center;gap:6px;min-height:29px;padding:3px 9px;border-color:#536957;background:#1d2b2e;color:#dce8d7;font-size:9px;font-weight:780;white-space:nowrap}
+.tactical-view-button[aria-pressed=true]{border-color:#b7d787;background:#344834;color:#ecf7da;box-shadow:inset 0 0 0 1px #b7d78736}
+.tactical-view-button .icon{width:14px;height:14px}
+.touchline-shouts{gap:5px}.shout-button{position:relative;display:inline-flex;align-items:center;gap:5px;min-height:29px;padding:3px 8px;border-color:#3b5352;background:#18262c;color:#d4e1dc;font-size:9px;font-weight:740;white-space:nowrap}
+.shout-button[aria-pressed=true]{border-color:#b7d787;background:#344834;color:#ecf7da;box-shadow:inset 0 0 0 1px #b7d78736}
+.shout-button:disabled{opacity:.48}.shout-button small{color:#c8e69f;font-size:8px;font-variant-numeric:tabular-nums}
+.replay-scrubber{display:flex;align-items:center;gap:8px;flex:1;max-width:230px;min-width:115px;color:#c9d8c4;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.replay-scrubber input{width:100%;accent-color:#c7ea91;cursor:ew-resize}
+.replay-scrubber[hidden]{display:none}
 .controls{min-height:51px;padding:7px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#17221a}
 .playback,.view-controls{display:flex;align-items:center;gap:7px;min-width:0}
 .play-button{min-width:94px}
@@ -201,6 +220,10 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
 }
 @media(max-width:700px){
   .shell{width:calc(100% - 28px)}
+  .match-live-tools{flex-wrap:wrap;gap:6px;padding:7px 8px}
+  .momentum-widget,.touchline-shouts{width:100%;justify-content:center}
+  .momentum-track{width:min(42vw,190px)}
+  .touchline-shouts{gap:4px}.shout-button{flex:1;justify-content:center;padding-inline:5px;font-size:8px}
   .sitebar-inner{height:52px;gap:12px}.site-path{padding-left:12px}
   .main{padding-top:15px}.fixture-head{margin-bottom:13px;gap:8px}
   .pitchwrap{height:auto;aspect-ratio:1.475;max-height:max(150px,calc(100svh - 348px))}
@@ -227,6 +250,9 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
   .view-controls .view-button{flex:none;width:44px;padding-inline:0}.view-controls .view-button span{display:none}
 }
 @media(max-width:480px){
+  .broadcast-head{flex-wrap:wrap}.score-strip{flex:1 1 100%}.match-home{margin-left:auto}
+  .momentum-widget{gap:5px}.momentum-title,.momentum-team{max-width:65px;overflow:hidden;text-overflow:ellipsis}
+  .momentum-track{width:min(30vw,130px);min-width:86px}#momentumValue{min-width:43px;font-size:8px}
   .site-path{display:none}.identity{gap:7px}.view-label{padding-inline:7px;font-size:9px;letter-spacing:.08em}
   .fixture-title p{font-size:11px}.fixture-button{min-height:39px;padding-inline:8px;font-size:11px;gap:5px}.fixture-button .icon{width:14px;height:14px}
   h1{font-size:37px}.eyebrow{gap:6px;font-size:9px;letter-spacing:.115em}

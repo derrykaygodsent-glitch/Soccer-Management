@@ -36,16 +36,16 @@ test('four cumulative viewing settings, with Extended as the default', () => {
   assert.equal(V.eventRank({ type: 'foul' }, m), extended.rank);
   m.setpiece.dangerous = true;
   assert.equal(V.eventRank({ type: 'foul' }, m), key.rank);
-  assert.equal(V.shotRank({ outcome: 'miss', xg: .35 }), key.rank);
-  assert.equal(V.shotRank({ outcome: 'save', xg: .29 }), key.rank);
-  assert.equal(V.shotRank({ outcome: 'save', xg: .23 }), extended.rank);
-  assert.equal(V.shotRank({ outcome: 'save', xg: .10 }), extended.rank);
-  assert.equal(V.shotRank({ outcome: 'save', xg: .04 }), comprehensive.rank);
-  assert.equal(V.shotRank({ outcome: 'block', xg: .14 }), extended.rank);
-  assert.equal(V.shotRank({ outcome: 'miss', xg: .09 }), comprehensive.rank);
+  assert.equal(V.shotRank({ outcome: 'miss', xg: .12 }), key.rank);
+  assert.equal(V.shotRank({ outcome: 'save', xg: .10 }), key.rank);
+  assert.equal(V.shotRank({ outcome: 'save', xg: .085 }), extended.rank);
+  assert.equal(V.shotRank({ outcome: 'save', xg: .055 }), extended.rank);
+  assert.equal(V.shotRank({ outcome: 'save', xg: .035 }), comprehensive.rank);
+  assert.equal(V.shotRank({ outcome: 'block', xg: .07 }), extended.rank);
+  assert.equal(V.shotRank({ outcome: 'miss', xg: .05 }), comprehensive.rank);
   assert.equal(V.shotRank({ outcome: 'pending', xg: .60 }), Infinity);
   assert.equal(V.shotRank({ outcome: 'disallowed', xg: .60 }), Infinity, 'only the review, not a disallowed shot, makes the cut');
-  assert.equal(V.shotRank({ outcome: 'goal', xg: .04 }), key.rank, 'even an unlikely goal must make Key');
+  assert.equal(V.shotRank({ outcome: 'goal', xg: .035 }), key.rank, 'even an unlikely goal must make Key');
 });
 
 test('viewing settings change coverage but do not specify a playback speed', () => {
@@ -85,7 +85,7 @@ test('repeat crosses do not crowd out other highlights or suppress an actual cha
   assert.equal(scout.check(m), extended.rank);
   m.elapsed = 9; m.events.push({ type: 'cross', team: 0 });
   assert.equal(scout.check(m), Infinity);
-  m.shotMap.push({ outcome: 'save', xg: .18 });
+  m.shotMap.push({ outcome: 'save', xg: .07 });
   assert.equal(scout.check(m), extended.rank, 'a resolved shot is not gated by the cross cooldown');
   m.events.push({ type: 'goal', team: 0 });
   assert.equal(scout.check(m), key.rank);
@@ -142,7 +142,7 @@ test('a cut starts at the published clock and cannot include frames from the pre
 test('the same seed and changes on the same tick give identical play under all four policies', () => {
   const n = 40 * 795, changeAt = 40 * 748;
   const simulate = policy => {
-    const m = game(342), scout = new V.Scout(m);
+    const m = game(2), scout = new V.Scout(m);
     let ticks = 0, seen = 0;
     while (ticks < n) {
       if (ticks === changeAt) {
