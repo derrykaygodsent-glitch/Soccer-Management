@@ -15,6 +15,12 @@ run `bash scripts/bootstrap.sh --serve` and you are back where we are now.
 
 The live screen also needs the game on 4173. Start the game first, then the screen.
 
+The same picture is mirrored on the game port, `http://<game>/live`, because the preview proxy only
+exposes the ports a process announces while it starts, and the screen's own port can be missed when the
+browser launches first. `/live` serves a viewer, `/live/frame.jpg` and `/live/state` pass through to
+4180, so the live picture is always one reload away on a port that is already open. If the mirror says
+"The live screen is not running", the screen process died — restart it, do not restart the game.
+
 ```bash
 npm run build && node preview.cjs &                                   # game
 NODE_PATH=$PWD/node_modules LD_LIBRARY_PATH=/tmp/al2023/lib \

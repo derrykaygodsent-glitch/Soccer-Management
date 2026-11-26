@@ -10,6 +10,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
   throw new Error('PORT must be an integer between 1 and 65535.');
 }
 const index = join(__dirname, 'index.html');
+const LIVE_PORT = Number(process.env.LIVE_PORT || 4180);
 
 /* The build stamp: the page watches it and reloads itself when it changes, so a rebuild shows up
    without anyone pressing refresh. The service worker is dropped on reload so it cannot serve the
@@ -44,6 +45,46 @@ const LIVE_RELOAD = `<script>(function(){
   document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); });
 })();</script>`;
 
+const LIVE_VIEWER = `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live screen — the agent's browser</title>
+<style>
+  :root{--bg:#0a111b;--panel:#121d2a;--edge:#26374a;--ink:#e8f1fb;--dim:#93a7bd;--lime:#d7f889}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:16px}
+  h1{margin:0 0 4px;font-size:15px;letter-spacing:.05em;text-transform:uppercase;color:var(--lime)}
+  p{margin:0 0 12px;color:var(--dim);font-size:12px}
+  .bar{display:flex;gap:12px;align-items:center;margin:0 0 10px;color:var(--dim);font-size:12px;flex-wrap:wrap}
+  .dot{width:9px;height:9px;border-radius:50%;background:#c05a5a;display:inline-block}
+  .dot.on{background:var(--lime)}
+  .stage{border:1px solid var(--edge);border-radius:12px;overflow:hidden;background:#05090f;max-width:100%}
+  .stage img{display:block;width:100%;height:auto}
+  .stage .wait{padding:28px;text-align:center;color:var(--dim)}
+</style></head><body>
+<h1>Live screen</h1>
+<p>The browser this workspace drives, mirrored from port 4180 onto this one.</p>
+<div class="bar"><span class="dot" id="dot"></span><b id="live">connecting…</b><span id="tick">frame 0</span></div>
+<div class="stage"><img id="view" alt="Live view of the agent's browser"><div class="wait" id="wait">Waiting for the first frame…</div></div>
+<script>
+  var img = document.getElementById('view'), dot = document.getElementById('dot'),
+      live = document.getElementById('live'), tick = document.getElementById('tick'), wait = document.getElementById('wait');
+  img.hidden = true;
+  function pull() {
+    img.src = '/live/frame.jpg?t=' + Date.now();
+  }
+  img.addEventListener('load', function () {
+    img.hidden = false; wait.hidden = true; dot.className = 'dot on'; live.textContent = 'live';
+    tick.textContent = 'frame ' + (Number(img.dataset.n || 0) + 1);
+    img.dataset.n = String((Number(img.dataset.n) || 0) + 1);
+  });
+  img.addEventListener('error', function () { dot.className = 'dot'; live.textContent = 'reconnecting…'; });
+  pull();
+  setInterval(pull, 1000);
+  fetch('/live/state').then(function (r) { return r.json(); }).then(function (s) {
+    tick.textContent = 'frame ' + s.seq + ' · picture ' + Math.round(s.frameAgeMs / 1000) + 's old';
+  }).catch(function () {});
+</script></body></html>`;
+
 const server = createServer((request, response) => {
   response.setHeader('Cache-Control', 'no-store');
   if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -59,6 +100,30 @@ const server = createServer((request, response) => {
   if (path === '/__build') {
     response.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
     response.end(stamp || 'none');
+    return;
+  }
+  /* The live screen sits on its own port (4180). Some workspace proxies only expose the port a
+     process announces at startup, so the same picture is mirrored here, on the port that is
+     already open: /live is a viewer, /live/frame.jpg and /live/state pass straight through. */
+  if (path === '/live' || path === '/live/') {
+    const body = Buffer.from(LIVE_VIEWER);
+    response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Length': body.length });
+    response.end(request.method === 'HEAD' ? undefined : body);
+    return;
+  }
+  if (path === '/live/frame.jpg' || path === '/live/state') {
+    const upstream = require('node:http').get({ host: '127.0.0.1', port: LIVE_PORT, path: path.slice(5) }, up => {
+      response.writeHead(up.statusCode || 502, {
+        'Content-Type': up.headers['content-type'] || 'application/octet-stream',
+        'Cache-Control': 'no-store'
+      });
+      up.pipe(response);
+    });
+    upstream.on('error', () => {
+      response.writeHead(503, { 'Content-Type': 'text/plain; charset=utf-8' });
+      response.end('The live screen is not running. Start scripts/live-screen.cjs.');
+    });
+    upstream.setTimeout(10000, () => upstream.destroy());
     return;
   }
   if (path !== '/' && path !== '/index.html' && path !== '/offline-worker.js') {
