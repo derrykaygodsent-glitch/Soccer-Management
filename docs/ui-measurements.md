@@ -2019,3 +2019,60 @@ Tests **324 → 357** (their richer tactics suite; all pass). Contract **72/72**
 danger actions without preflight. Sweep **214 screens × 390 / 768 / 1440**, 0 horizontal overflow. Pages
 outside Tactics verified pixel-identical to the previous build at 1440 and 390 (Inbox, Squad, Club, Today,
 World, Life, and the phone header).
+
+---
+
+## §34 · The tactics desk: redesigned around the pitch, not through it
+
+The page is §33's copy of the tactics branch, with its chrome rebuilt. **The pitch is untouched** —
+`src/tactics-desk.css` is a new sheet whose every selector is scoped to
+`#homeScreen:has(.fm-tactics-workspace)`, and none of them selects `.shape-field`, `.fm-pitch-marker`,
+`.shirt-marker`, `.tactic-shirt`, `.board-lines`, `.fm-zone-overlay` or even `.fm-pitch-card`. Same grass,
+same lines, same docked markers with their ghost position labels, same pointer drag.
+
+Two things the owner asked for, kept literally: the three workspace tabs stay **at the top** on every
+width — they are now sticky, so they never scroll away — and the four phase views (`Combined · In
+Possession · Out of Possession · Both`) sit above the pitches in a toolbar. Nothing in this page is
+anchored to the bottom of a phone.
+
+### 34.1 What changed
+
+| | Before (§33 copy) | Now |
+|---|---|---|
+| Header | title + two bare percentages + status chip, library controls wrapping into three rows | hero: eyebrow, 32 px tactic name, three chips (`4-1-4-1 OOP` — `4-2-1-3 IP` — `Attacking mentality`), two metric tiles with bars, the review chip, and the library on its own row |
+| Tabs | a row of buttons in the flow | sticky at the top of the scroll area, underlined current tab, 150–232 px each |
+| Toolbar | phase switcher inside the pitch card, four selects loose above it | one toolbar: the four phase views and the four shape controls, aligned, stacking in two rows when the column is narrow |
+| Snapshot | four equal cards repeating the header | one strip, four facts, hairline separators, two lines of coaching note |
+| Team sheet | one flat eight-column table | GK / Defence / Midfield / Attack groups with counts, capped columns, role chips, fit and status pills; eight columns beside a pitch, six under it, and a phone row that is a two-line card |
+| Bench | a `SUBSTITUTES` divider and six rows, always open | a disclosure with its count, folded by default on a phone |
+| Library | always visible | one `Tactics library` button on a phone, always visible on desktop |
+| Instructions | three equal cards | visualiser card, contextual-instruction card, tactical-overview card, all with header bands |
+| Player instructions | eight-column rows squeezed into a 500 px panel | a picker rail (position, number, name, picker, fit) and a detail panel |
+
+The player list and the sheet share the same row markup, so the picker rail re-projects it
+(`.fm-player-list .fm-row`) rather than duplicating markup.
+
+### 34.2 Numbers
+
+| Fold | 390 | 768 | 1440 |
+|---|---|---|---|
+| Both | **4.11** (was 4.34) | 2.71 | 2.66 |
+| One phase | **3.66** | 2.92 | **2.09** |
+| Team Instructions | **3.47** | 2.48 | **1.87** |
+
+The phone is still above the plan's 3.0 gate in the `Both` view, and honestly so: two untouched pitches
+at 390 px are ~1,000 px before the header, and the shell contributes its breadcrumb, briefing and dock.
+Hiding the second pitch or shrinking it would be a pitch change, which was the one thing ruled out.
+
+### 34.3 Proof
+
+- **Drag:** a real pointer path on the built page — mid-drag the source carries `fm-drag-source`, the
+  destination `fm-drop-target`, the shirt `fm-snap-preview`; on release the marker's `left`/`bottom`
+  change. 0 page errors.
+- **Sticky tabs:** at 390, scrolled 1,200 px, `.fm-workspace-nav` sits at the top of `#clubPage` (offset 0).
+- **Bench:** the subhead is a button; on a phone it opens the six substitutes (`aria-expanded="true"`,
+  six rows measurable) and closes them again.
+- **Contracts:** 357 tests, contract **72/72**, 0 contrast failures, sweep **214 × 390 / 768 / 1440**,
+  0 horizontal overflow, tactics rows never wider than their panel (`scrollWidth == clientWidth`).
+- **Blast radius:** every rule in `src/tactics-desk.css` is scoped to the tactics screen; the sleeper
+  check is that Inbox, Squad, Club, Today, World and Life render pixel-identical to §33's build.

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="54777b46732f989610e7">
+  <meta name="tl-build" content="aee858cccf5826e80690">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -3579,6 +3579,782 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 @media(max-width:640px){
   #homeScreen:has(.fm-tactics-workspace) .fm-workspace-header{grid-template-columns:minmax(0,1fr)!important;gap:8px}
   #homeScreen:has(.fm-tactics-workspace) .fm-workspace-header .fm-header-metrics{flex-wrap:wrap;gap:10px 18px}
+}
+
+/* ============================================================================
+   Tactics · the desk
+   ----------------------------------------------------------------------------
+   The chrome around the pitch, rebuilt: a hero that names the shape, metric
+   tiles that only show what is not already in the hero, a three-tab bar that
+   stays at the top of the scroll, one toolbar for the phase view and the shape
+   controls, a line-grouped team sheet with a foldable bench, and instruction
+   cards that read top-down instead of three equal columns.
+
+   The pitch is deliberately absent from this file. Nothing here selects
+   .shape-field, .fm-pitch-marker, .shirt-marker, .tactic-shirt, .board-lines,
+   .fm-zone-overlay or .fm-pitch-card, so the pitch keeps rendering exactly as
+   the tactics branch draws it, drag included.
+   ========================================================================== */
+
+/* ---- the hero ------------------------------------------------------------ */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "title" "metrics" "library";
+  align-items: start;
+  gap: 12px 18px;
+  padding: 16px 18px 14px !important;
+  background: linear-gradient(180deg, #152435, #0f1a27) !important;
+  border: 0 !important;
+  border-bottom: 1px solid #2b4054 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+#homeScreen:has(.fm-tactics-workspace) .fm-title-group { grid-area: title; min-width: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-title-group > small {
+  display: block;
+  color: #7fd3c9;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-title-group h2 {
+  margin: 5px 0 7px;
+  color: #f1f6fa;
+  font-size: clamp(23px, 2.4vw, 32px);
+  line-height: 1.04;
+  letter-spacing: -.01em;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-title-group p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #a9bccb;
+  font-size: 11.5px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-title-group p > span,
+#homeScreen:has(.fm-tactics-workspace) .fm-title-group p > em {
+  padding: 3px 8px;
+  border: 1px solid #2b4257;
+  border-radius: 999px;
+  background: #10202e;
+  color: #dbe8ef;
+  font-style: normal;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-title-group p > em {
+  border-color: #3b5a4f;
+  background: #122a2b;
+  color: #a9e2cf;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-title-group p > i {
+  width: 12px;
+  height: 1px;
+  margin-inline: 1px;
+  background: #3f5a6e;
+}
+
+/* ---- the three facts that are not in the hero --------------------------- */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics {
+  grid-area: metrics;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics > span {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 5px;
+  min-width: 108px;
+  padding: 8px 10px;
+  border: 1px solid #26394c;
+  border-radius: 7px;
+  background: #0d1a27;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics > span > small {
+  color: #8aa0b4;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics > span > b {
+  color: #eef4f8;
+  font-size: 17px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics > span > i {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: #1c2e40;
+  overflow: hidden;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics > span > i > b {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #55c6c2, #93d9a4);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics .fm-status-chip {
+  display: grid;
+  place-items: center;
+  min-width: 128px;
+  padding: 8px 12px;
+  font-size: 11.5px;
+  font-weight: 750;
+  line-height: 1.25;
+  text-align: center;
+}
+
+/* ---- the tactics library ------------------------------------------------ */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls {
+  grid-area: library;
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: none !important;
+  padding: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls .sr-only,
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls input {
+  flex: 1 1 168px;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #2c4156;
+  border-radius: 6px;
+  background: #0b1826;
+  color: #eaf2f8;
+  font-size: 12px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls input::placeholder { color: #7b90a4; }
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls button,
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls select {
+  flex: 0 0 auto;
+  max-width: 280px;
+  white-space: nowrap;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #2c4156;
+  border-radius: 6px;
+  background: #122232;
+  color: #dfeaf1;
+  font-size: 11.5px;
+  font-weight: 650;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls button[data-library-action="save"] {
+  border-color: #3f7f6a;
+  background: #16403a;
+  color: #b9f0dc;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls button:disabled {
+  opacity: .45;
+  cursor: default;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-library-toggle {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #2c4156;
+  border-radius: 6px;
+  background: #101f2e;
+  color: #cfe0ea;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-library-toggle::after {
+  content: "+";
+  color: #7fd3c9;
+  font-size: 14px;
+  line-height: 1;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-header.is-library-open .fm-library-toggle::after { content: "−"; }
+
+@media (min-width: 760px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "title metrics" "library library";
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-save-controls { justify-content: flex-end; }
+}
+@media (min-width: 1240px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "title metrics" "library library";
+    align-items: center;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-save-controls input { flex: 1 1 240px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-save-controls { flex-wrap: nowrap; }
+}
+
+/* ---- the three tabs, pinned to the top of the scroll -------------------- */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav {
+  position: sticky;
+  top: 0;
+  z-index: 9;
+  display: grid !important;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(150px, 232px);
+  justify-content: start;
+  gap: 4px;
+  padding: 4px 14px !important;
+  background: #0b1521f2 !important;
+  backdrop-filter: blur(9px);
+  border-bottom: 1px solid #24384b !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button {
+  position: relative;
+  min-height: 40px;
+  padding: 0 10px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent;
+  color: #93a9bb;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: .01em;
+  white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button:hover { background: #142333; color: #e6eff5; }
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button[aria-current="page"] {
+  background: transparent;
+  color: #f2f8fb;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button[aria-current="page"]::after {
+  display: block;
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: #55c6c2;
+}
+
+/* ---- one toolbar for the phase view and the shape ---------------------- */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: end;
+  gap: 10px 14px;
+  padding: 10px 12px;
+  border: 1px solid #24384b;
+  border-radius: 8px;
+  background: #0f1c2a;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar .fm-shape-switch {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid #223449;
+  border-radius: 7px;
+  background: #0a1420;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar .fm-shape-switch button {
+  min-width: 104px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: #a8bccd;
+  font-size: 11.5px;
+  font-weight: 650;
+  line-height: 1.15;
+  white-space: nowrap;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar .fm-shape-switch button:hover { background: #14263a; color: #e6eff5; }
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar .fm-shape-switch button[aria-pressed="true"] {
+  border-color: #5fb3b6;
+  background: #1c4a52;
+  color: #eafafa;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar .fm-shape-controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar .fm-shape-controls label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  color: #8aa0b4;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar select {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid #2a3f55;
+  border-radius: 5px;
+  background: #0b1826;
+  color: #e8f1f7;
+  font-size: 11.5px;
+}
+
+@media (max-width: 900px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 8px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar .fm-shape-switch { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar .fm-shape-switch button { min-width: 0; min-height: 38px; white-space: normal; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar .fm-shape-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar select { height: 38px; font-size: 12px; }
+}
+
+/* ---- the shape workspace ------------------------------------------------ */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-main,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-side .fm-squad-panel { flex: 1 1 auto; }
+#homeScreen:has(.fm-tactics-workspace) .fm-both-view { display: flex; flex-direction: column; gap: 12px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-both-view > .fm-both-pitches { margin: 0; }
+
+/* the tactical snapshot: four facts on one strip, not four cards */
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-intel {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0 !important;
+  padding: 0 !important;
+  border: 1px solid #24384b;
+  border-radius: 8px;
+  background: #0f1c2a;
+  overflow: hidden;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-intel > div {
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  min-height: 0 !important;
+  min-width: 0;
+  padding: 9px 12px !important;
+  border: 0 !important;
+  border-left: 1px solid #1d3143 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-intel > div:first-child { border-left: 0 !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-intel small {
+  color: #7f97ab;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-intel b { color: #eaf2f7; font-size: 13px; font-weight: 750; }
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-intel span {
+  display: block;
+  overflow: hidden;
+  color: #9db0c1;
+  font-size: 10.5px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-intel > div:last-child span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+@media (max-width: 900px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-intel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-intel > div:nth-child(3) { border-left: 0 !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-intel > div:nth-child(n + 3) { border-top: 1px solid #1d3143 !important; }
+}
+
+/* ---- the team sheet ----------------------------------------------------- */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel {
+  border: 1px solid #24384b;
+  border-radius: 8px;
+  background: #0f1c2a;
+  overflow: hidden;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 13px;
+  border-bottom: 1px solid #22374b;
+  background: #122232;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head small {
+  color: #7fd3c9;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head h3 {
+  margin: 3px 0 2px;
+  color: #eef4f8;
+  font-size: 15px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head p {
+  margin: 0;
+  max-width: 62ch;
+  color: #91a6b8;
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head button {
+  flex: none;
+  height: 32px;
+  padding: 0 11px;
+  border: 1px solid #2f4a60;
+  border-radius: 6px;
+  background: #16283a;
+  color: #dce8f0;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-table { overflow-x: auto; overscroll-behavior-x: contain; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-columns,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row {
+  grid-template-columns: 40px minmax(104px, 196px) minmax(104px, 196px) 54px minmax(140px, 1fr) 78px 62px 50px !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel { max-width: 1120px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-both-view > .fm-squad-panel { align-self: flex-start; margin-inline: 0; }
+/* beside a pitch the sheet is narrower than its eight columns: drop the two that the
+   role cells and the condition dot already carry, before falling back to a scroll */
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-side,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-main { container-type: inline-size; }
+/* beside the sheet the pitch column is narrower than the toolbar wants in one row */
+@media (min-width: 901px) {
+  @container (max-width: 1180px) {
+    #homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+    #homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar .fm-shape-controls { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+}
+@media (min-width: 761px) {
+@container (max-width: 760px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-stars,
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-stat,
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-columns > span:nth-child(4),
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-columns > span:nth-child(8) { display: none !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-columns,
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row {
+    grid-template-columns: 34px minmax(88px, 1fr) minmax(88px, 1fr) minmax(104px, 1.25fr) 64px 56px !important;
+  }
+}
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-columns > span { overflow: hidden; white-space: nowrap; text-overflow: clip; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-columns {
+  align-items: center;
+  padding: 7px 10px !important;
+  border-bottom: 1px solid #22374b;
+  background: #0c1825;
+  color: #7f97ab;
+  font-size: 8.5px !important;
+  font-weight: 800;
+  letter-spacing: .1em;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row {
+  align-items: center;
+  min-height: 42px !important;
+  padding: 0 10px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #16283a !important;
+  background: transparent;
+  font-size: 11px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:hover { background: #132738; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row[aria-pressed="true"] {
+  background: #16323f !important;
+  box-shadow: inset 3px 0 #6bb7b5;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-pos {
+  color: #8fd9c9;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-role-cell button {
+  padding: 4px 7px;
+  border: 1px solid #2c455c;
+  border-radius: 5px;
+  background: #13273a;
+  color: #dcebf2;
+  font: 650 10px/1.2 system-ui, sans-serif;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-role-cell button:hover,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-role-cell button:focus-visible {
+  border-color: #6bb7b5;
+  background: #1a3546;
+  outline: none;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-role-cell small { color: #8aa0b4; font-size: 8.5px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-person .fm-player-name { font-size: 12px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-suitability {
+  justify-self: start;
+  padding: 2px 7px;
+  border: 1px solid #2b4459;
+  border-radius: 999px;
+  background: #10222f;
+  color: #cfe2ea;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-status {
+  color: #a9e2cf;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-stat { color: #b8c9d6; font-size: 10px; font-variant-numeric: tabular-nums; }
+
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-top: 1px solid #1c3143;
+  border-bottom: 1px solid #16283a;
+  background: #0b1a27;
+  color: #7fd3c9;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-group small { color: #93aabf; font-weight: 700; letter-spacing: .04em; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-table .fm-squad-group:first-of-type { border-top: 0; }
+
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-subhead {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px !important;
+  border: 0 !important;
+  border-top: 1px solid #1c3143 !important;
+  border-bottom: 1px solid #16283a !important;
+  background: #0b1a27 !important;
+  color: #93a9bb !important;
+  font: 800 9px/1.2 system-ui, sans-serif !important;
+  letter-spacing: .15em !important;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-subhead small {
+  color: #7fd3c9;
+  font-size: 9.5px;
+  letter-spacing: .04em;
+  text-transform: none;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-subhead:hover { color: #dbe8ef !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub { min-height: 36px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub .fm-person span { color: #d9e6ee; font-size: 11.5px; }
+
+/* ---- team instructions -------------------------------------------------- */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace {
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, .95fr) minmax(0, .82fr);
+  gap: 12px;
+  align-items: start;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual,
+#homeScreen:has(.fm-tactics-workspace) .fm-context-controls,
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview {
+  border: 1px solid #24384b;
+  border-radius: 8px;
+  background: #0f1c2a;
+  padding: 0 0 10px;
+}
+/* the visualiser lets its docked markers sit on the card edge, as the pitch does */
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual { overflow: visible; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual > header,
+#homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header,
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header { border-radius: 8px 8px 0 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual > header,
+#homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header,
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header {
+  padding: 11px 13px 9px !important;
+  border-bottom: 1px solid #22374b !important;
+  background: #122232;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual > header small,
+#homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header small,
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header small { color: #7fd3c9; font-size: 9px; letter-spacing: .16em; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual > header h3,
+#homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header h3,
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header h3 { margin: 3px 0 2px; font-size: 15px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual > header p,
+#homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header p { margin: 0; color: #91a6b8; font-size: 10.5px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-phase { margin: 10px 12px 8px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .fm-zone-analysis { margin: 8px 12px 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-context-control-list { padding: 8px 12px 0; display: grid; gap: 6px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-context-control-list label,
+#homeScreen:has(.fm-tactics-workspace) .fm-context-control-list > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: center; gap: 10px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-context-control-list select { height: 34px; background: #0b1826; border: 1px solid #2a3f55; border-radius: 5px; color: #e8f1f7; font-size: 11.5px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-context { margin: 10px 12px 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview dl { padding: 6px 13px 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-player-detail { border: 1px solid #24384b; border-radius: 8px; background: #0f1c2a; }
+
+@media (max-width: 1100px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace { grid-template-columns: minmax(0, 1fr) !important; }
+}
+
+/* ---- player instructions ------------------------------------------------ */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace {
+  grid-template-columns: minmax(280px, .85fr) minmax(0, 1.4fr);
+  gap: 12px;
+  align-items: start;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-detail {
+  border: 1px solid #24384b;
+  border-radius: 8px;
+  background: #0f1c2a;
+  overflow: hidden;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list > header {
+  padding: 11px 13px;
+  border-bottom: 1px solid #22374b;
+  background: #122232;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list > header small { color: #7fd3c9; font-size: 9px; letter-spacing: .16em; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list > header h3 { margin: 3px 0 2px; font-size: 15px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list > header p { margin: 0; color: #91a6b8; font-size: 10.5px; }
+/* the player tab's list is a picker, not the eight-column team sheet */
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row {
+  grid-template-columns: 34px minmax(0, 1fr) auto !important;
+  min-width: 0 !important;
+  gap: 8px !important;
+  padding: 0 10px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #16283a !important;
+  min-height: 44px !important;
+  align-items: center;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-role-cell,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-stars,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-status,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-stat { display: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-suitability { display: block !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-person { gap: 8px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row.on,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row[aria-pressed="true"] {
+  background: #16323f !important;
+  box-shadow: inset 3px 0 #6bb7b5;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row:hover { background: #132738; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor { border: 0; background: transparent; padding: 0 12px 12px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head { padding: 12px 2px 10px; border-bottom: 1px solid #1d3143; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head small { color: #7fd3c9; font-size: 9px; letter-spacing: .16em; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-phase { border: 1px solid #22374b; border-radius: 7px; background: #0d1a27; padding: 10px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-phase > header { border-bottom: 1px solid #1d3143; padding-bottom: 7px; margin-bottom: 8px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-instruction-grid label { color: #93a9bb; font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-instruction-grid select { height: 34px; background: #0b1826; border: 1px solid #2a3f55; border-radius: 5px; color: #e8f1f7; font-size: 11.5px; }
+
+@media (max-width: 1100px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-player-workspace { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---- the phone ---------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav {
+    display: flex !important;
+    grid-auto-columns: auto;
+    gap: 4px;
+    padding: 6px 8px !important;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button { flex: 1 1 0; min-width: 0; min-height: 42px; padding: 0 6px !important; font-size: 11px !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-library-toggle { display: inline-flex; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-header:not(.is-library-open) .fm-save-controls { display: none !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-header { padding: 13px 12px 11px !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-title-group h2 { font-size: 26px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-header-metrics { gap: 6px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-header-metrics > span { flex: 1 1 0; min-width: 0; padding: 7px 8px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-header-metrics .fm-status-chip { flex: 1 1 100%; min-width: 0; padding: 7px 10px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head { flex-wrap: wrap; gap: 8px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head p { font-size: 10px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-columns { display: none !important; }
+  /* a phone row is a two-line card: who and how ready, then the two roles */
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row {
+    grid-template-columns: 34px minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      "pos person status"
+      "pos person cond"
+      "ip  ip     oop";
+    row-gap: 4px !important;
+    align-items: center;
+    min-height: 0 !important;
+    padding: 9px 10px !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-pos { grid-area: pos; align-self: start; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-person { grid-area: person; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-status { grid-area: status; justify-self: end; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-stat { grid-area: cond; justify-self: end; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-role-cell:first-of-type { grid-area: ip; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-role-cell:last-of-type { grid-area: oop; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-role-cell::before {
+    content: "Out of possession";
+    color: #7f97ab;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-role-cell:first-of-type::before { content: "In possession"; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-role-cell button { min-height: 32px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-role-cell small { font-size: 9px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-person .fm-player-picker { flex: 0 0 92px; width: 92px !important; min-width: 0; max-width: 92px; height: 30px; font-size: 10px; padding: 2px 4px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-person .fm-player-name { flex: 1 1 auto; min-width: 0; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-stars,
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-suitability { display: none !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel:not(.is-bench-open) .fm-row.fm-sub { display: none !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-intel { display: none !important; }
 }
 </style>
 </head>
@@ -13753,7 +14529,7 @@ const api={scheme,overrides,sheet,update,active,score,formation,freeze,lineup,le
 
 ;
 /* ===== board-room.js ===== */
-(function(g){'use strict';let selected=null,selectedBench=null,context='',workspaceTab='shape',rolePicker=null;const B=()=>g.TLMatchBoard,e=x=>g.TLClubUI.esc(String(x??''));
+(function(g){'use strict';let selected=null,selectedBench=null,context='',workspaceTab='shape',rolePicker=null,benchOpen=false,libraryOpen=false;const B=()=>g.TLMatchBoard,e=x=>g.TLClubUI.esc(String(x??''));
 // Match coordinates describe compact playing positions. Stretch the lines on the chalkboard
 // without changing the underlying tactic, and invert the same projection for touch placement.
 const depth=[[0,5],[.035,8],[.10,24],[.32,41],[.45,56],[.59,72],[.75,89],[1,95]];
@@ -13835,7 +14611,10 @@ function render(s,players){
     return `<div class="fm-row${selected===i?' on':''}" role="button" tabindex="0" data-slot="${i}" data-player-id="${e(p?.id||'')}" data-player-pos="${e(p?.pos||'')}" aria-pressed="${selected===i}"><span class="fm-pos">${e(pos)}</span>${roleCell(slot,i,'attack')}${roleCell(slot,i,'defense')}${starsOf(p)}<span class="fm-person"><i class="fm-number">${p?e(numbers[p.id]??p.num??defaults[i]??'—'):'—'}</i><span class="fm-player-name" title="${e(p?.name||'Open position')}">${e(p?.name||'Open')}</span>${playerPicker(slot,i)}${p?.id===captain?'<b title="Match captain">(c)</b>':''}</span><span class="fm-suitability" title="${e(fitTitle)}">${p?shownFit:'—'}</span><span class="fm-status">${status(p)}</span><span class="fm-stat">${ready?.fitness!=null?ready.fitness+'%':'—'}</span></div>`;
   };
   const subRow=(p,i)=>`<button type="button" class="fm-row fm-sub${selectedBench===p.id?' on':''}" data-player-id="${e(p.id)}" data-player-pos="${e(p.pos)}" data-board="${selected!=null?`pick|${selected}|${e(p.id)}`:`bench|${e(p.id)}`}" aria-pressed="${selectedBench===p.id}"><span class="fm-pos">S${i+1}</span><span class="fm-role-cell">—</span><span class="fm-role-cell">—</span>${starsOf(p)}<span class="fm-person"><i class="fm-number">${e(numbers[p.id]??p.num??'—')}</i><span>${e(p.name)}</span></span><span class="fm-suitability">${e(p.pos)}</span><span class="fm-status">${status(p)}</span><span class="fm-stat">${readiness[p.id]?.fitness!=null?readiness[p.id].fitness+'%':'—'}</span></button>`;
-  const squad=(title='First-team selection')=>`<aside class="fm-squad-panel" id="tactic-roles"><header class="fm-panel-head"><div><small>TEAM SHEET</small><h3>${title}</h3><p>${slots.filter(x=>x.player).length} starters · ${bench.length} substitutes · role settings belong to each tactical position; click a role to inspect its guide</p></div><button type="button" data-board="bestXI">Auto-pick best XI</button></header><div class="fm-squad-table"><div class="fm-squad-columns"><span>POS</span><span>IN POSSESSION ROLE</span><span>OUT OF POSSESSION ROLE</span><span>ABILITY</span><span>PLAYER</span><span>FIT · IP / OOP</span><span>STATUS</span><span>COND.</span></div>${slots.map(row).join('')}<div class="fm-squad-subhead">SUBSTITUTES</div>${bench.map(subRow).join('')||'<p class="fm-empty">No substitutes available.</p>'}</div>${selected!=null?instructionEditor(slots[selected]):''}</aside>`;
+  const lineOf=position=>{const p=String(position||'');if(p==='GK')return 'goalkeeper';if(/^(SW|CB|DC|LB|RB|LWB|RWB|FB|WB)$/.test(p))return 'defence';if(/^(DM|CM|AM|LM|RM|ML|MR)$/.test(p))return 'midfield';return 'attack';};
+  const LINE_TITLES={goalkeeper:'Goalkeeper',defence:'Defence',midfield:'Midfield',attack:'Attack'},LINE_ORDER={goalkeeper:0,defence:1,midfield:2,attack:3};
+  const groupedSlots=()=>{const lines=slots.map((slot,index)=>({slot,index,line:lineOf(slot.position)})).sort((a,b)=>LINE_ORDER[a.line]-LINE_ORDER[b.line]||a.index-b.index),counts={};for(const v of lines)counts[v.line]=(counts[v.line]||0)+1;let shown=null;return lines.map(({slot,index,line})=>{const heading=line===shown?'':`<div class="fm-squad-group"><span>${LINE_TITLES[line]}</span><small>${counts[line]}</small></div>`;shown=line;return heading+row(slot,index);}).join('');};
+  const squad=(title='First-team selection')=>`<aside class="fm-squad-panel${benchOpen?' is-bench-open':''}" id="tactic-roles"><header class="fm-panel-head"><div><small>TEAM SHEET</small><h3>${title}</h3><p>${slots.filter(x=>x.player).length} starters · ${bench.length} substitutes · role settings belong to each tactical position; click a role to inspect its guide</p></div><button type="button" data-board="bestXI">Auto-pick best XI</button></header><div class="fm-squad-table"><div class="fm-squad-columns" aria-hidden="true"><span>POS</span><span>IN POSSESSION ROLE</span><span>OUT OF POSSESSION ROLE</span><span>ABILITY</span><span>PLAYER</span><span>FIT · IP / OOP</span><span>STATUS</span><span>COND.</span></div>${groupedSlots()}<button type="button" class="fm-squad-subhead" data-bench-toggle aria-expanded="${benchOpen}"><span>SUBSTITUTES · ${bench.length}</span><small>${benchOpen?'Hide':'Show'}</small></button>${bench.map(subRow).join('')||'<p class="fm-empty">No substitutes available.</p>'}</div>${selected!=null?instructionEditor(slots[selected]):''}</aside>`;
   const roleDialog=rolePicker?(()=>{const {slot:index,phase:phaseName}=rolePicker,slot=slots[index];if(!slot)return '';const attack=phaseName==='attack',position=attack?(slot.attackPosition||slot.position):slot.position,current=attack?slot.attackJob[0]:slot.job[0],candidates=Z.choices(position).map(name=>({name,fit:slot.player?Z.fit(slot.player,position,name,s.boardReps?.[slot.player.id]):null,info:Z.roleInfo(name)})).sort((a,b)=>a.fit==null?0:b.fit==null?-1:b.fit-a.fit||a.name.localeCompare(b.name));return `<div class="fm-role-dialog-backdrop"><section class="fm-role-dialog" role="dialog" aria-modal="true" aria-labelledby="fm-role-dialog-title"><header><div><small>TOUCHLINE ROLE GUIDE · ${attack?'IN POSSESSION':'OUT OF POSSESSION'}</small><h2 id="fm-role-dialog-title">Choose a role for ${e(slot.player?.name||position)}</h2><p>${e(position)} position · roles are saved to this tactical position, so a replacement inherits its instructions.</p></div><button type="button" data-role-picker-close aria-label="Close role guide">×</button></header><div class="fm-role-dialog-list">${candidates.map(({name,fit,info})=>`<button type="button" class="fm-role-option${current===name?' is-current':''}" data-role-choice="${e(name)}" data-role-choice-slot="${index}" data-role-choice-phase="${phaseName}" aria-pressed="${current===name}"><span class="fm-role-option-head"><b>${e(name)}</b><strong>${fit==null?'Player fit shown after selection':`${Z.fitRating(fit)}/5 · ${Z.fitBand(fit)} (${fit}%)`}</strong></span><span>${e(info.description)}</span><small>Key attributes · ${e(info.attributes.join(' · '))}</small><small>Tactical behaviour · ${e(info.behaviour)}</small>${current===name?'<i>Current role</i>':'<em>Select role</em>'}</button>`).join('')}</div></section></div>`;})():'';
   const phaseButtons=()=>`<div class="fm-shape-switch" role="group" aria-label="Team shape view">${[['combined','Combined'],['attack','In Possession'],['base','Out of Possession'],['both','Both']].map(([v,label])=>`<button type="button" data-board="phase|0|${v}" aria-pressed="${phase===v}">${label}</button>`).join('')}</div>`;
   const defenseOptions=[...Object.keys(D.FORMATIONS),'Custom'],attackChoices=B().phaseFormationOptions();
@@ -13844,7 +14623,8 @@ function render(s,players){
   const viewSummary=`<div class="fm-phase-caption"><span>${phase==='attack'?'IN POSSESSION':phase==='both'?'PHASE COMPARISON':phase==='combined'?'AVERAGE POSITIONS':'OUT OF POSSESSION'}</span><b>${e(defenseLabel)} OOP · ${e(attackLabel)} IP</b></div>`;
   const reviewText=warnings[0]?.text||'The current shape is ready for the next rehearsal.';
   const shapeIntel=`<section class="fm-shape-intel" aria-label="Tactical snapshot"><div><small>ACTIVE PAIR</small><b>${e(defenseLabel)} OOP</b><span>${e(attackLabel)} IP</span></div><div><small>MENTALITY</small><b>${e(s.mentality||'Balanced')}</b><span>${e(inst.club?.trigger||inst.trigger||'System default')} press</span></div><div><small>FAMILIARITY</small><b>${familiarity.position}%</b><span>${familiarity.role}% role fit · ${familiarity.coordination}% coordination</span></div><div><small>COACHING NOTE</small><b>${warnings.length?'Needs review':'Ready to rehearse'}</b><span title="${e(reviewText)}">${e(reviewText)}</span></div></section>`;
-  const shapeContent=phase==='both'?`<div class="fm-both-view">${phaseButtons()}${shapeIntel}${shapeFormationControls}<div class="fm-both-pitches"><section class="fm-pitch-card"><header><b>Out of Possession</b><small>${e(defenseLabel)}</small></header>${field('defense','wide')}</section><section class="fm-pitch-card"><header><b>In Possession</b><small>${e(attackLabel)}</small></header>${field('attack','wide')}</section></div>${squad()}${quickSelect}</div>`:`<div class="fm-shape-workspace"><section class="fm-pitch-card fm-primary-pitch"><header><div><small>TACTICAL SHAPE</small><h3>${phase==='attack'?'In Possession':phase==='combined'?'Combined · average player positions':'Out of Possession'}</h3></div><span>${phase==='combined'?'Drag to adjust both phases together':'Drag a shirt to adjust positions'}</span></header>${viewSummary}${shapeIntel}${phaseButtons()}${shapeFormationControls}${field(phase==='attack'?'attack':phase==='combined'?'combined':'defense')}<div class="fm-pitch-legend"><span>Selected player remains linked to the squad</span><span>${phase==='combined'?'Combined movement shifts both shapes together':'Drag a player marker to adjust this phase'}</span></div>${quickSelect}</section>${squad()}</div>`;
+  const shapeToolbar=`<div class="fm-shape-toolbar">${phaseButtons()}${shapeFormationControls}</div>`;
+  const shapeContent=phase==='both'?`<div class="fm-both-view">${shapeToolbar}${shapeIntel}<div class="fm-both-pitches"><section class="fm-pitch-card"><header><b>Out of Possession</b><small>${e(defenseLabel)}</small></header>${field('defense','wide')}</section><section class="fm-pitch-card"><header><b>In Possession</b><small>${e(attackLabel)}</small></header>${field('attack','wide')}</section></div>${squad()}${quickSelect}</div>`:`<div class="fm-shape-workspace"><div class="fm-shape-main">${shapeToolbar}<section class="fm-pitch-card fm-primary-pitch"><header><div><small>TACTICAL SHAPE</small><h3>${phase==='attack'?'In Possession':phase==='combined'?'Combined · average player positions':'Out of Possession'}</h3></div><span>${phase==='combined'?'Drag to adjust both phases together':'Drag a shirt to adjust positions'}</span></header>${viewSummary}${shapeIntel}${field(phase==='attack'?'attack':phase==='combined'?'combined':'defense')}<div class="fm-pitch-legend"><span>Selected player remains linked to the squad</span><span>${phase==='combined'?'Combined movement shifts both shapes together':'Drag a player marker to adjust this phase'}</span></div>${quickSelect}</section></div><aside class="fm-shape-side">${squad()}</aside></div>`;
   const selectedZoneLabel=zoneCells.find(z=>z.id===selectedZone)?.label||'Middle third · Centre';
   const zoneLabel=(row,col)=>`${zoneNames[row]} · ${zoneSide[col]}`;
   const selectedZonePositions=slots.filter((v,i)=>zoneOf((phase==='attack'?v.attack||v:v),i)===selectedZone);
@@ -13870,7 +14650,7 @@ function render(s,players){
   const library=B().presetLibrary(s),savedOptions=library.map(x=>`<option value="${e(x.id)}"${s.activeTacticPreset===x.id?' selected':''}>${e(x.name)}</option>`).join('');
   const nav=[['shape','Team Shape'],['instructions','Team Instructions'],['players','Player Instructions']];
   const reviewLabel=warnings.length?`Needs review · ${warnings.length}`:'Ready for review',reviewHelp=warnings.length?warnings.map(w=>w.text).join('\n'):'No structural risks are currently flagged.';
-  const header=`<header class="fm-workspace-header"><div class="fm-title-group"><small>TACTICS · ${e(s.club?.name||'FIRST TEAM')}</small><h2>${e(plan.system||s.style||'Balanced shape')}</h2><p>${e(defenseLabel)} OOP · ${e(attackLabel)} IP · ${e(s.mentality||'Balanced')} mentality</p></div><div class="fm-header-metrics"><span><small>Familiarity</small><b>${familiarity.position}%</b><i><b style="width:${familiarity.position}%"></b></i></span><span><small>Intensity</small><b>${intensity}%</b><i><b style="width:${intensity}%"></b></i></span><span class="fm-status-chip ${warnings.length?'has-risks':'is-clear'}" role="status" title="${e(reviewHelp)}">${e(reviewLabel)}</span></div><div class="fm-save-controls"><label class="sr-only" for="fm-tactic-name">Saved tactic name</label><input id="fm-tactic-name" type="text" data-preset-name maxlength="48" placeholder="Name this tactic"><button type="button" data-library-action="save">Save tactic</button><select aria-label="Load saved tactic" data-preset-select><option value="">Saved tactics</option>${savedOptions}</select><button type="button" data-library-action="load" ${library.length?'':'disabled'}>Load</button></div></header>`;
+  const header=`<header class="fm-workspace-header${libraryOpen?' is-library-open':''}"><div class="fm-title-group"><small>TACTICS · ${e(s.club?.name||'FIRST TEAM')}</small><h2>${e(plan.system||s.style||'Balanced shape')}</h2><p><span>${e(defenseLabel)} OOP</span><i aria-hidden="true"></i><span>${e(attackLabel)} IP</span><em>${e(s.mentality||'Balanced')} mentality</em></p></div><div class="fm-header-metrics"><span><small>Familiarity</small><b>${familiarity.position}%</b><i><b style="width:${familiarity.position}%"></b></i></span><span><small>Intensity</small><b>${intensity}%</b><i><b style="width:${intensity}%"></b></i></span><span class="fm-status-chip ${warnings.length?'has-risks':'is-clear'}" role="status" title="${e(reviewHelp)}">${e(reviewLabel)}</span></div><button type="button" class="fm-library-toggle" data-library-toggle aria-expanded="${libraryOpen}">Tactics library</button><div class="fm-save-controls"><label class="sr-only" for="fm-tactic-name">Saved tactic name</label><input id="fm-tactic-name" type="text" data-preset-name maxlength="48" placeholder="Name this tactic"><button type="button" data-library-action="save">Save tactic</button><select aria-label="Load saved tactic" data-preset-select><option value="">Saved tactics</option>${savedOptions}</select><button type="button" data-library-action="load" ${library.length?'':'disabled'}>Load</button></div></header>`;
   const workspaceNav=`<nav class="fm-workspace-nav" aria-label="Tactical workspace">${nav.map(([id,label])=>`<button type="button" data-workspace-tab="${id}" aria-current="${workspaceTab===id?'page':'false'}">${label}</button>`).join('')}</nav>`;
   const content=workspaceTab==='instructions'?instructionContent:workspaceTab==='players'?playerContent:shapeContent;
   const oppFixture=g.TLLeagueMatchday?.fixture(s),oppName=oppFixture?(oppFixture.own===0?oppFixture.host:oppFixture.team):'',oppPlayers=oppName?W.pool.filter(p=>p.club===oppName):[],oppKey=oppPlayers.slice().sort((a,b)=>D.ROLE_WEIGHTS[b.pos](b.attrs)-D.ROLE_WEIGHTS[a.pos](a.attrs)).slice(0,3),oppBacks=oppPlayers.filter(p=>['DC','FB','WB'].includes(p.pos)),oppPace=oppBacks.length?Math.round(oppBacks.reduce((n,p)=>n+(p.attrs.pace||0),0)/oppBacks.length):null;
@@ -13914,6 +14694,8 @@ function bind(root,change,draw){
   if(field&&!ev.target.closest('.shape-field [data-slot],.shape-field [data-role-target],.fm-zone-overlay,.fm-pitch-marker')){if(selected!==null||selectedBench){selected=null;selectedBench=null;draw();}return;}
   const row=ev.target.closest('.fm-row[data-slot]');
   const b=ev.target.closest('button');
+  if(b?.hasAttribute('data-bench-toggle')){benchOpen=!benchOpen;const panel=root.querySelector('.fm-squad-panel');panel?.classList.toggle('is-bench-open',benchOpen);b.setAttribute('aria-expanded',String(benchOpen));const hint=b.querySelector('small');if(hint)hint.textContent=benchOpen?'Hide':'Show';return;}
+  if(b?.hasAttribute('data-library-toggle')){libraryOpen=!libraryOpen;root.querySelector('.fm-workspace-header')?.classList.toggle('is-library-open',libraryOpen);b.setAttribute('aria-expanded',String(libraryOpen));if(libraryOpen)root.querySelector('#fm-tactic-name')?.focus?.();return;}
   if(b?.hasAttribute('data-role-picker-open')){rolePicker={slot:Number(b.dataset.rolePickerOpen),phase:b.dataset.rolePickerPhase==='attack'?'attack':'defense'};draw();root.querySelector('[data-role-picker-close]')?.focus?.();return;}
   if(b?.hasAttribute('data-role-picker-close')){const target=rolePicker;rolePicker=null;draw();root.querySelector(`[data-role-picker-open="${target?.slot}"][data-role-picker-phase="${target?.phase}"]`)?.focus?.();return;}
   if(b?.hasAttribute('data-role-choice')){const slot=b.dataset.roleChoiceSlot,phase=b.dataset.roleChoicePhase,job=b.dataset.roleChoice;rolePicker=null;act(`phaseJob|${phase}|${slot}|${job}`);draw();root.querySelector(`[data-role-picker-open="${slot}"][data-role-picker-phase="${phase}"]`)?.focus?.();return;}
