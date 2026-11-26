@@ -79,7 +79,7 @@ short version — keep the status column honest.
 | B | Measured bugs | Header, title, Back, contrast, tables | 1 | ✅ done |
 | **0** | **Foundations** | Tokens, type ramp, status anatomy, contract checker | 2 | ✅ done |
 | 1 | Shell & navigation | Three-tier nav, one Back, breadcrumbs, palette, dock | 4 | ✅ **done** (2 sessions) |
-| 2 | Daily loop | Home command centre, Inbox lanes, Calendar, planner | 4 | ◐ **partly** — lanes and ranges shipped, Portal tiles and planner open |
+| 2 | Daily loop | Home command centre, Inbox lanes, Calendar, planner | 4 | ✅ **done** (3 sessions) |
 | 3 | Squad family | Squad hub, player context, phone roster, registration | 4 | **next** |
 | 4 | Operations family | Operations hub, Staff split, Contracts, Scouting, Transfers, Finance | 6 | |
 | 5 | World intelligence | Breadcrumbs, Competition re-tab, Fixtures, Stats, Atlas | 4 | |
@@ -197,6 +197,7 @@ No engine changes are in scope for Phases 0–6. Rendering support (canvas DPR c
 
 | Date | Phase | What changed | Next |
 |---|---|---|---|
+| 2026-11-25 | 2 | **Phase 2 closed.** Game preview reloads itself on rebuild (`/__build` watcher, service worker dropped). Live screen: placeholder instead of a broken frame, idle grabber always on, picture age shown. Calendar day bar with next item and a dot legend; planner states booked and free hours. 70 screens, 0 errors, 0 contrast, chips 68 to 76; 624-state sweep clean, 0 overflow; 313 tests. | Phase 3: squad family |
 | 2026-11-25 | 2 | **Shell bugs fixed and Portal band added.** Tactics no longer forces the rail open (`reading.css`), hub panels close when a screen is picked, the drawer hides deterministically. Overview now opens with a Needs you band. 70 screens, 0 errors, 0 contrast; 624-state sweep clean; 313 tests. | Phase 2 rest: calendar and planner |
 | 2026-11-25 | 1 | **Phase 1 closed.** Sections moved to a top strip (FM26 retired the sidebar), hub panels, pinned screens, command palette (Ctrl/Cmd-K), phone dock, tab rail hidden on a phone. Back verified by driving it. 70 screens, 0 errors, 0 contrast; 624-state sweep clean, 0 overflow; 313 tests. | Phase 2 rest: Portal tiles on Overview, calendar and planner |
 | 2026-11-25 | 2 | **Daily loop, first pass.** Live screen fixed (MJPEG buffered by the proxy, now polls JPEGs). Long lists now state a range and page: **8 lists / 440 rows hidden → 0**. Inbox opens in lanes (Needs response, New, Earlier) with the sort order winning when chosen. Gold removed from the palette. Calendar declares its month. FM26 comparison written (`fm26-alignment.md`). 70 screens, 0 errors, 0 contrast; 624-state sweep clean; 313 tests. | Phase 2 rest: Portal tiles on Overview, calendar and planner loop |

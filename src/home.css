@@ -223,3 +223,16 @@
 @media (max-width:720px){.tl-portal-row{min-height:var(--ui-tap)}}
 .tl-screen-top{display:grid;gap:var(--ui-space-3);min-width:0}
 .tl-screen-top{grid-column:1/-1;width:100%}
+
+/* ---- Phase 2 · the day, stated ---------------------------------------------------------- */
+.tl-daybar{display:flex;align-items:center;gap:var(--ui-space-3);flex-wrap:wrap;padding:var(--ui-space-2) var(--ui-space-3);border:1px solid var(--ui-edge-soft);border-radius:var(--ui-radius-m);background:var(--ui-surface-2)}
+.tl-daybar-next{margin:0;color:var(--ui-ink-2);font-size:var(--ui-text-m);min-width:0}
+.tl-legend{display:flex;gap:var(--ui-space-3);flex-wrap:wrap;margin:0 0 0 auto;padding:0;list-style:none;color:var(--ui-dim);font-size:var(--ui-text-s)}
+.tl-legend li{display:inline-flex;align-items:center;gap:5px}
+.tl-legend i{width:7px;height:7px;border-radius:50%;background:var(--ui-ink-2)}
+.tl-legend .dot-training{background:var(--ui-teal)}
+.tl-legend .dot-match{background:var(--ui-lime)}
+.tl-legend .dot-work{background:var(--ui-ice)}
+.tl-legend .dot-life{background:var(--ui-attention)}
+.tl-legend .dot-medical{background:var(--ui-danger)}
+@media (max-width:720px){.tl-legend{margin-left:0}}

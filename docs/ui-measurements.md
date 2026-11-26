@@ -490,3 +490,48 @@ on one screen.
 Numbers after this pass: 70 screens, 0 errors, anchors 70/70, one primary 70/70, breadcrumbs 70/70,
 long lists hiding rows 0, contrast 0. Sweep: 624 states, 0 errors, 0 contrast, 0 overflow,
 smallest text 9 px. Tests: 313 pass.
+
+## 14. Phase 2 closed (the daily loop)
+
+### 14.1 The game preview now updates itself
+
+The game preview (`preview.cjs`, port 4173) serves a build stamp at `/__build` and injects a small
+watcher into every page. When `index.html` changes, the page drops its service worker registration
+and reloads once. No refresh, and no stale build from the offline cache.
+
+Checked by driving it: load the page, record `performance.timeOrigin`, touch `index.html`, wait.
+The page reloaded on its own in under two seconds.
+
+### 14.2 The live screen, again
+
+The earlier freeze was the MJPEG stream. Two more holes were closed:
+
+- `/frame.jpg` returned `204` before the first frame existed, which the browser drew as a broken
+  image. It now returns a small placeholder that says "starting the browser".
+- The idle frame grabber only ran while an MJPEG client was attached, so a polling viewer could
+  receive the same still image forever. It now runs whenever a CDP page exists.
+
+The viewer also prints the age of the picture it is holding, so a still frame cannot look live.
+
+### 14.3 Calendar and planner
+
+- Every calendar day states itself: `2 booked` chip, the next item with its time, and a legend for
+  the coloured dots (Match, Personal, Training, Paid work, Medical). Until now the dots were
+  unexplained and the day had no summary.
+- The office planner states its load: `N booked` and `M free hours` out of the 06:00 to 22:00 day.
+
+### 14.4 Numbers
+
+| Contract | §13 | Now |
+|---|---:|---:|
+| Status chips | 68 | **76** |
+| Long lists hiding rows | 0 | 0 |
+| Page anchors / primary / breadcrumbs | 70/70 | 70/70 |
+| Contrast failures | 0 | 0 |
+| Text under 11 px, not metadata | 786 | 786 |
+| Tables without a phone mode | 14 | 14 (Phase 4) |
+
+Sweep: 624 states, 0 errors, 0 contrast failures, 0 horizontal overflow at 390 / 768 / 1440,
+smallest text 9 px. Tests: 313 pass.
+
+Phase 2 is complete: home queue, inbox lanes, list ranges, calendar summary, planner load.

@@ -345,7 +345,6 @@ async function main() {
      frame — still the browser's own output, just asked for. */
   setInterval(async () => {
     if (!activeCdp) return;
-    if (!clients.size && Date.now() - state.lastPollAt > 4000) return;
     if (Date.now() - state.frameAt < 1500) return;
     try {
       const shot = await activeCdp.send('Page.captureScreenshot', { format: 'jpeg', quality: QUALITY });
@@ -387,7 +386,13 @@ async function main() {
     }
     if (url.pathname === '/frame.jpg') {
       state.lastPollAt = Date.now();
-      if (!state.frame) { res.writeHead(204).end(); return; }
+      if (!state.frame) {
+        /* An empty 204 shows a broken image icon. A small placeholder explains itself instead. */
+        const wait = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760"><rect width="1200" height="760" fill="#0b1420"/><text x="600" y="380" fill="#8193ab" font-family="sans-serif" font-size="20" text-anchor="middle">starting the browser</text></svg>');
+        res.writeHead(200, { 'Content-Type': 'image/svg+xml', 'Content-Length': wait.length, 'Cache-Control': 'no-store' });
+        res.end(wait);
+        return;
+      }
       res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Content-Length': state.frame.length });
       res.end(state.frame);
       return;
