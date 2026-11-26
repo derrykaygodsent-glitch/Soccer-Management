@@ -316,3 +316,13 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
   .sq-compare-rows>div{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr);gap:6px}
   .sq-compare-rows>div>b{font-size:13px}
 }
+
+/* ---- Phase 3 · squad health ------------------------------------------------------------
+   Five facts, no adjectives. A fact that needs a decision is marked watch; the rest are quiet.
+   --------------------------------------------------------------------------------------- */
+.sq-health{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(120px,100%),1fr));gap:8px}
+.sq-health>div{background:#1a2735;border:1px solid #364957;border-radius:10px;padding:9px 11px}
+.sq-health small{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#a7bcc9;font-weight:700}
+.sq-health b{display:block;font-size:19px;margin-top:3px;font-variant-numeric:tabular-nums;color:#eaf4ff}
+.sq-health>div[data-state=watch]{border-color:#4d5f86;background:#1e2a3d}
+.sq-health>div[data-state=watch] b{color:var(--ui-attention)}

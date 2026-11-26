@@ -80,7 +80,7 @@ short version — keep the status column honest.
 | **0** | **Foundations** | Tokens, type ramp, status anatomy, contract checker | 2 | ✅ done |
 | 1 | Shell & navigation | Three-tier nav, one Back, breadcrumbs, palette, dock | 4 | ✅ **done** (2 sessions) |
 | 2 | Daily loop | Home command centre, Inbox lanes, Calendar, planner | 4 | ✅ **done** (3 sessions) |
-| 3 | Squad family | Squad hub, player context, phone roster, registration | 4 | **in progress** (2 of 4) |
+| 3 | Squad family | Squad hub, player context, phone roster, registration | 4 | **in progress** (3 of 4) |
 | 4 | Operations family | Operations hub, Staff split, Contracts, Scouting, Transfers, Finance | 6 | |
 | 5 | World intelligence | Breadcrumbs, Competition re-tab, Fixtures, Stats, Atlas | 4 | |
 | 6 | Tactics & matchday | Canonical tactics, prep rail, phone selection, Season Book | 5 | |
@@ -98,7 +98,7 @@ failures). Results: [`docs/ui-measurements.md`](./ui-measurements.md).
 **Also written: [`fm26-alignment.md`](./fm26-alignment.md)** — what FM26 does, what we match, and the
 three remaining gaps (top navigation bar, bookmarks, one Portal hub).
 
-**Current phase: Phase 3 — Squad family (2 of 4 sessions done).** Phase 0 closed the tokens and the type floor. Phase 1 shipped
+**Current phase: Phase 3 — Squad family (3 of 4 sessions done).** Phase 0 closed the tokens and the type floor. Phase 1 shipped
 the part of the shell that is measurable: a five-hub navigation model (`src/screen-head.js`, 35
 destinations, each in one hub), a single head bar per screen carrying the breadcrumb, the page anchor,
 the queues that are due and exactly one primary action. Contracts: anchors 70/70, one primary 70/70,
@@ -200,6 +200,7 @@ No engine changes are in scope for Phases 0–6. Rendering support (canvas DPR c
 
 | Date | Phase | What changed | Next |
 |---|---|---|---|
+| 2026-11-25 | 3 | **Phase 3, session 3.** The player in focus: open a player and a bar under the screen head keeps name, role, condition and value on every other screen, with one click back and one click to clear (364 px, 77 px tall, 0 overflow at 390). Squad health strip states five facts, 2 of them watch-toned in the attention blue. Found and fixed a real bug: the squad table said Available for the two players with no shirt number because `kitScope` is null; both screens now resolve the list through one helper. 70 screens, contrast 0, 313 tests, sweep 208 x 3, 0 overflow. | Phase 3, session 4: squad hub priorities |
 | 2026-11-25 | 3 | **Phase 3, session 2.** Every table in the game now declares a phone mode: 0 of 14 (was 14 at the start of the phase). Standings become three labelled lines per club, training readiness and scouting results become cards, the club snapshot becomes one line per club. Player page gains a COMPARE panel (8 rows, 364 px on a phone). Registration states the gap by name: "2 players have no number: Nico Koroma, Haru Vico". 70 screens, contrast 0, 313 tests, sweep 208 x 3 widths, 0 overflow. | Phase 3, session 3: persistent player context, squad hub |
 | 2026-11-25 | 3 | **Phase 3, session 1.** Squad table becomes a phone card list (nothing hidden, 14 to 8 tables without a phone mode). Phone sort select and direction button; table views save to localStorage and come back after a reload. Player page gains ROLE FIT (best role 13/20 on Ari Serra, key attributes marked in the lists) and FORM AND AVAILABILITY. Registration list is a card list at 390 px; the squad screen links to it. 70 screens, 0 contrast, 313 tests, sweep 208 screens x 3 widths, 0 overflow. | Phase 3, session 2: compare, shirt gaps, every table on a phone |
 | 2026-11-25 | 2 | **Phase 2 closed.** Game preview reloads itself on rebuild (`/__build` watcher, service worker dropped). Live screen: placeholder instead of a broken frame, idle grabber always on, picture age shown. Calendar day bar with next item and a dot legend; planner states booked and free hours. 70 screens, 0 errors, 0 contrast, chips 68 to 76; 624-state sweep clean, 0 overflow; 313 tests. | Phase 3: squad family |

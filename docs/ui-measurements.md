@@ -676,3 +676,72 @@ Tests: 313 pass, 0 fail.
 - Season book and honours archives do not print player tables in a phone mode yet (they use
   summaries, not tables, so the contract is satisfied; the deeper archive work belongs to Phase 8).
 - Club, training and scouting card heights are not enforced equal; a long club name adds a line.
+
+## 17. Phase 3, third session: the player in focus and squad health
+
+Date: 25 November 2026. Kay FC, 13 November 2027, 17 players.
+
+### 17.1 The player in focus
+
+Open a player, then leave the player page. A bar under the screen head keeps the player with you on
+every other screen: name, position, age, nation, best role with its score out of 20, condition, and
+value. One click reopens the player page, one click clears the bar.
+
+Measured by driving the browser:
+
+| Step | Result |
+|---|---|
+| Open Haru Vico, go to Training | bar shown: `IN FOCUS Haru Vico · Holding midfielder · 18 · Zandora · Role Anchor 13 · Condition 100% · Value ₥138,900` |
+| Go to Club profile at 390 px | bar 364 px wide, 77 px tall, 0 px page overflow, both buttons 44 px or taller |
+| Press Clear | bar removed, `[data-player-context-clear]` no longer in the page |
+| Bar on the player page itself | not drawn, so nothing is stated twice |
+
+The role and condition use the same rating and dynamics sources as the player page, so the bar
+cannot disagree with the page it links to.
+
+### 17.2 Squad health
+
+The first team screen now states five facts above the table.
+
+| Fact | Value on the real save | Watch tone |
+|---|---|---|
+| Registered | 17 players | no |
+| In recovery | 0 | only when above zero |
+| No shirt number | 2 | yes |
+| Outside the XI | 6 | no |
+| Thinnest unit | Goalkeepers 1 | no |
+
+The watch tone uses `--ui-attention` (a blue), not an amber: the palette rule against gold holds.
+
+### 17.3 A real bug found by the strip
+
+The squad table printed `Available` for every player, including the two with no shirt number. The
+cause: `register()` looked up the filed list with `s.kitScope`, and `s.kitScope` is null in this
+career, so no list was found and everyone counted as available.
+
+Both the squad screen and the registration page now resolve the list through one helper,
+`s.kitScope || TLKit.league`. After the fix: `No shirt number 2` on the squad screen, and the
+two players show `Not filed` in the Inf column, which matches the registration page sentence
+`2 players have no number: Nico Koroma, Haru Vico`.
+
+### 17.4 Numbers
+
+| Contract | §16 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 70/70 | 70/70 |
+| Status chips | 76 | 76, 0 without words |
+| Tables without a phone mode | 0 | 0 of 14 |
+| Contrast failures | 0 | 0 |
+| Text under 11 px, not metadata | 762 | 762 |
+
+Sweep: 208 screens at 390, 768 and 1440 px, 0 horizontal overflow, 0 contrast failures, smallest
+text 9 px. Nested scroll areas: 40 at 390 px, 38 at 768 and 1440 px.
+
+Tests: 313 pass, 0 fail.
+
+### 17.5 What is still open in Phase 3
+
+- The squad hub is a screen of facts plus links; a dedicated hub screen with priorities is not
+  built, and the four phase-3 sessions are now used.
+- The player bar holds one player at a time. A short recent list is not built.
+- Nested scroll areas (40 screens at 390 px) are still the largest remaining sweep finding.

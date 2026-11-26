@@ -71,3 +71,10 @@ frame and the numbers in [`ui-measurements.md` §15](./ui-measurements.md).
 | Compare two players | A COMPARE panel on the player page: one row per measure, two values, chosen from a select | The rows are group averages and the best-role score, so the panel answers "who is better for this job" rather than printing forty numbers. A missing value says "Not recorded" |
 | League table with many columns | On a phone each club is three lines: rank, club and points; the seven numbers on one labelled line; form under them | Every number keeps its own label (`GS 12`, `GC 9`), so nothing has to be guessed from column position |
 | Registration deadlines and eligibility | The list states `2 players have no number: Nico Koroma, Haru Vico` above the cards, and the window card states the deadline and the cap | The gap is stated by name, not only as a count, so the next action is obvious |
+
+## 7. Phase 3, third pass: a player that follows you
+
+| FM26 pattern | Touchline now | Beyond FM26 |
+|---|---|---|
+| A selected player stays in context while you browse | The player in focus bar under the screen head on every other screen: name, position, age, nation, best role with score, condition, value. One click to reopen, one to clear | The bar states the two facts that decide a selection (role and condition) instead of repeating the dossier, and it never appears on the player page itself, so nothing is stated twice |
+| A squad overview before the list | Five facts above the table: registered, in recovery, no shirt number, outside the XI, thinnest unit | Only facts that need a decision are toned, and the tone uses the palette's attention blue, not a gold or an amber |
