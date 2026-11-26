@@ -290,3 +290,72 @@ SVG `<text>` was being counted as text (the Atlas map labels sit at 3.6 user uni
 scale with their drawing, so they are not a typographic choice; the sweep and the contract checker
 now skip anything inside `<svg>`. Without that, the "smallest text" number could never reach the
 floor, no matter how well the CSS was written.
+
+## 10. Phase 1 — Shell and navigation (first pass)
+
+Measured with `node scripts/ui-contract.cjs --live --career=.audit/career.json` (70 screens = 35
+destinations × 1440/390) and `node scripts/ui-sweep.cjs --career=.audit/career.json` (624 states).
+
+### 10.1 The contracts that moved
+
+| Contract | §9 baseline | Now | Target |
+|---|---:|---:|---:|
+| Page anchors `[data-tl-page]` | 0 / 70 | **70 / 70** | 70 / 70 |
+| Exactly one primary action | 0 / 70 | **70 / 70** | 70 / 70 |
+| Screens without a breadcrumb | 70 / 70 | **0 / 70** | 0 / 70 |
+| Status chips on screen | 0 | **68** | grows as states are marked |
+| Exactly one `h1` | 70 / 70 | 70 / 70 | keep |
+| Duplicate Back controls | 0 | 0 | keep |
+| Contrast failures | 0 | 0 | keep |
+| Text under 11 px, not metadata | 786 | 786 | 0 (Phases 2–7) |
+| Long lists without a range | 8 lists / 440 rows | 8 / 440 | 0 (Phase 2) |
+| Tables without a phone mode | 14 | 14 | 0 (Phase 4) |
+
+Sweep after the change: **624 states, 0 runtime errors, 0 contrast failures, 0 horizontal overflow**
+at 390 / 768 / 1440, smallest text **9 px** at all three widths. Widest fold 15.17 / 10.17 / 11.59
+viewports (was 15.07 / 10.11 / 11.53 — the head adds ~20 px above the fold on a phone).
+
+Tests: **313 pass, 0 fail**.
+
+### 10.2 What was built
+
+- **`src/screen-head.js` — the navigation model.** Five hubs (Today 4, Squad 9, Club 13, World 5,
+  Life 4) covering all 35 destinations exactly once (asserted in the file's own smoke check), plus a
+  `NEXT` table naming the one dominant action per screen. `rail()` returns the shape the desk
+  renderer already knew, so replacing the old three-group literal was a one-line change in
+  `manager-desk.js`.
+- **One bar per screen**: `hub / screen` breadcrumb, `[data-tl-page]` anchor, status chips for queues
+  already known to the desk (`1 unread in Inbox`, `2 to review · Registration deadline`), and exactly
+  one `[data-tl-action="primary"]`. The bar carries no title of its own — the screen's heading already
+  states it — so nothing is repeated twice above the fold.
+- **Primary actions are honest about what they do.** `home` runs the real command
+  (`data-tl-do="continue"`, same handler as the header's Continue). The other 34 declare the screen
+  where the decision is finished and label it as a jump ("Open the transfer desk"). Phase 3 replaces
+  them with in-place commands as each screen is rebuilt — the contract stays green either way because
+  it measures *presence*, not intent.
+- **The rail says where you are**: sticky hub headings, a fade at the scroll edge instead of a row
+  sliced mid-height, and a lime inset marker on the current item.
+
+### 10.3 Two things that were wrong in the tooling
+
+1. **The checker was flaky in `--live` mode** — 3 of 5 runs reported 61–63 of 70 screens because the
+   service worker reloaded the tab and destroyed the execution context mid-click. It now waits for
+   the rail to be complete (reloading once if it is not) and retries a destroyed probe by reopening
+   the same destination. Five consecutive runs: 70/70, 0 errors.
+2. **`›` is banned** by `test/disclosure-defaults` (no arrow glyphs anywhere). The crumb separator is
+   now `.tl-crumb-sep::before { content: '/' }` in CSS — the same rule the audit asked for, expressed
+   without a glyph.
+
+### 10.4 What is still open in Phase 1
+
+| Item | State |
+|---|---|
+| Five-hub rail model | ✅ done |
+| Breadcrumb + page anchor + one primary | ✅ done (70/70) |
+| One Back that returns to `from` | ◐ kept the app's own history stack; it already returns to the previous screen and there are 0 duplicate controls. A deterministic `from` stack is scheduled with the phone dock. |
+| Command palette (`Ctrl/⌘-K`) | ⬜ not started |
+| Phone dock (Today / Inbox / Squad / Tactics / Continue) | ⬜ not started |
+| Tier-2 panel and tier-3 tab rail as designed | ⬜ the rail is still one scrolling column of five hubs |
+
+Phase 1 is therefore **partly shipped**: the contracts every screen now meets are in, the visual
+shell redesign is not. Phase 2 (daily loop) can start on top of this without waiting for the palette.

@@ -101,3 +101,36 @@
 /* The page title takes programmatic focus on navigation; the lime focus ring reads as a
    text highlight, so it is suppressed on this non-interactive heading only. */
 #homeTitle:focus,#homeTitle:focus-visible{outline:none}
+
+/* ---- Phase 1 · screen head ---------------------------------------------------------------
+   Every destination declares where it sits (hub / screen), an anchor the contract can read,
+   the queues that are already due, and exactly one primary action.
+   ----------------------------------------------------------------------------------------- */
+.tl-head{display:flex;align-items:center;gap:var(--ui-space-2) var(--ui-space-4);flex-wrap:wrap;min-width:0;padding:0 0 var(--ui-space-3);border-bottom:1px solid var(--ui-edge-soft)}
+.tl-crumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:22px;min-width:0}
+.tl-crumb-link{appearance:none;background:none;border:0;padding:1px 0;cursor:pointer;color:var(--ui-ink-2);font:inherit;font-size:var(--ui-text-s);letter-spacing:var(--ui-tracking-label);text-transform:uppercase;font-weight:650}
+.tl-crumb-link:hover{color:var(--ui-ink);text-decoration:underline;text-underline-offset:2px}
+.tl-crumb-sep{color:var(--ui-muted);font-size:var(--ui-text-s)}
+.tl-crumb-sep::before{content:'/'}
+.tl-crumb-here{color:var(--ui-ink);font-size:var(--ui-text-s);letter-spacing:var(--ui-tracking-label);text-transform:uppercase;font-weight:650}
+.tl-head-side{display:flex;align-items:center;gap:var(--ui-space-2);flex-wrap:wrap;margin-left:auto}
+.tl-primary{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 var(--ui-space-4);border:1px solid var(--ui-edge-action);border-radius:var(--ui-radius-pill);background:var(--ui-lime);color:var(--ui-lime-ink);font:inherit;font-size:var(--ui-text-s);font-weight:700;letter-spacing:.01em;cursor:pointer;transition:background var(--ui-motion-fast) var(--ui-ease),transform var(--ui-motion-fast) var(--ui-ease)}
+.tl-primary:hover{background:var(--ui-lime-soft)}
+.tl-primary:active{transform:translateY(1px)}
+.tl-primary:focus-visible{outline:var(--ui-focus);outline-offset:var(--ui-focus-offset)}
+@media (max-width:720px){
+  .tl-head{gap:var(--ui-space-2)}
+  .tl-head-side{margin-left:0;width:100%;justify-content:flex-start}
+  .tl-primary{min-height:var(--ui-tap);flex:1;justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){.tl-primary{transition:none}.tl-primary:active{transform:none}}
+
+/* ---- Phase 1 · rail --------------------------------------------------------------------
+   Thirty-five destinations need a rail that says which hub you are in and shows that it
+   keeps going, instead of slicing the last row at the scroll edge.
+   ----------------------------------------------------------------------------------------- */
+#homeNav{-webkit-mask-image:linear-gradient(#000 calc(100% - 22px),transparent);mask-image:linear-gradient(#000 calc(100% - 22px),transparent)}
+.hc-nav-group>p{position:sticky;top:0;z-index:2;background:var(--tl-side);padding-block:5px 4px;margin-block:0 3px}
+.hc-nav-group>summary{position:sticky;top:0;z-index:2;background:var(--tl-side)}
+.hc-nav-button{min-height:30px}
+.hc-nav-button[aria-current=page]{box-shadow:inset 2px 0 0 var(--ui-lime)}

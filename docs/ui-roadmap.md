@@ -78,8 +78,8 @@ short version — keep the status column honest.
 | M | Measure | Sweep + real-career numbers | 2 | ✅ done |
 | B | Measured bugs | Header, title, Back, contrast, tables | 1 | ✅ done |
 | **0** | **Foundations** | Tokens, type ramp, status anatomy, contract checker | 2 | ✅ done |
-| 1 | Shell & navigation | Three-tier nav, one Back, breadcrumbs, palette, dock | 4 | **next** |
-| 2 | Daily loop | Home command centre, Inbox lanes, Calendar, planner | 4 | |
+| 1 | Shell & navigation | Three-tier nav, one Back, breadcrumbs, palette, dock | 4 | ◐ **partly** — nav model + head contracts shipped, palette/dock open |
+| 2 | Daily loop | Home command centre, Inbox lanes, Calendar, planner | 4 | **next** |
 | 3 | Squad family | Squad hub, player context, phone roster, registration | 4 | |
 | 4 | Operations family | Operations hub, Staff split, Contracts, Scouting, Transfers, Finance | 6 | |
 | 5 | World intelligence | Breadcrumbs, Competition re-tab, Fixtures, Stats, Atlas | 4 | |
@@ -92,10 +92,13 @@ short version — keep the status column honest.
 sweep run twice on a real career (624 states each, 0 errors) · **Step B closed** (5 bugs fixed, 0 contrast
 failures). Results: [`docs/ui-measurements.md`](./ui-measurements.md).
 
-**Current phase: Phase 1 — Shell and navigation.** Phase 0 is closed: tokens shipped, type floor at
-9 px (from 7), 0 contrast failures, contract checker running on 70 screens. Numbers and the contract
-baseline: [`ui-measurements.md` §9](./ui-measurements.md). Next work: five-hub rail, panel, tab rail,
-one Back, breadcrumbs, command palette, phone dock (see §4 Phase 1 of the rebuild plan).
+**Current phase: Phase 2 — Daily loop.** Phase 0 closed the tokens and the type floor. Phase 1 shipped
+the part of the shell that is measurable: a five-hub navigation model (`src/screen-head.js`, 35
+destinations, each in one hub), a single head bar per screen carrying the breadcrumb, the page anchor,
+the queues that are due and exactly one primary action. Contracts: anchors 70/70, one primary 70/70,
+breadcrumbs 70/70, 68 status chips, 0 contrast failures, 313 tests. Numbers:
+[`ui-measurements.md` §10](./ui-measurements.md). Still open in Phase 1: command palette, phone dock,
+and the tier-2/tier-3 panel — the rail is still one scrolling column.
 
 ## 2. Step M — measure (M1 and M2 done)
 
@@ -191,6 +194,7 @@ No engine changes are in scope for Phases 0–6. Rendering support (canvas DPR c
 
 | Date | Phase | What changed | Next |
 |---|---|---|---|
+| 2026-11-25 | 1 | **Shell contracts shipped.** `src/screen-head.js`: five hubs, 35 destinations (each once), `NEXT` table for the one dominant action. One head bar per screen with breadcrumb, `[data-tl-page]`, status chips and exactly one `[data-tl-action="primary"]`. Contracts: anchors **0→70/70**, primary **0→70/70**, breadcrumbs **70 missing→0**, chips **0→68**, h1 70/70, contrast 0, tiny text unchanged at 786. Sweep 624 states, 0 errors, 0 overflow, min text 9 px; 313 tests. Checker hardened against service-worker reloads (was reporting 61–63/70). Rail: sticky hub headings + fade instead of a sliced row. Open: palette, phone dock, tier-2/3 panel. | Phase 2: daily loop |
 | 2026-11-25 | — | Audit written (`docs/ui-ux-audit.md`); roadmap written; no product code touched | — |
 | 2026-11-25 | 0 | Foundations shipped: `src/tokens.css` (~90 tokens), palette mapped for `--tl-*` and `.cc-*`, **587 font-size declarations raised** (7 px → 9 px floor), `.tl-status` component, `ui-inventory.cjs` + `ui-contract.cjs` (70 screens). Sweep: 624 states, 0 errors, 0 contrast, 0 overflow, min text 9 px, 312 tests pass. Contract baseline: 0/70 page anchors, 0/70 primary actions, 0/70 breadcrumbs, 440 rows hidden by caps. | Phase 1: shell + nav |
 | 2026-11-25 | Plan | Stored the supplied visual/UX audit (`ui-audit-synthesis.md`) with a cross-check against our numbers, and wrote the execution plan (`ui-rebuild-plan.md`): six markup contracts, 9 phases, 12 measurement gates, ≈38 sessions. Phase 0 is next. | Phase 0: tokens + type ramp + contract checker |

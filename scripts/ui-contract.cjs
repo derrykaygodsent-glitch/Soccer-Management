@@ -190,6 +190,17 @@ const PROBE = () => {
     await page.goto(GAME, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(900);
 
+    /* The service worker can take over and reload the tab on first load, which destroys the
+       execution context mid-run. Wait for the rail to be complete, and reload if it never is. */
+    const railReady = async () => page.waitForFunction(
+      () => document.querySelectorAll('#homeNav [data-hc-open]').length >= 30,
+      null, { timeout: 8000 }).then(() => true).catch(() => false);
+    if (!(await railReady())) {
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(1200);
+      await railReady();
+    }
+
     const pages = await page.evaluate(() => [...new Set([...document.querySelectorAll('#homeNav [data-hc-open]')].map(b => b.dataset.hcOpen))]);
     for (const id of pages) {
       const clicked = await page.evaluate((pid) => {
@@ -200,12 +211,20 @@ const PROBE = () => {
       }, id);
       if (!clicked) continue;
       await page.waitForTimeout(320);
-      try {
-        const result = await page.evaluate(PROBE);
-        rows.push({ width, page: id, ...result });
-      } catch (error) {
-        errors.push({ width, page: id, message: error.message.slice(0, 160) });
+      let result = null;
+      for (let attempt = 0; attempt < 3 && !result; attempt++) {
+        try {
+          result = await page.evaluate(PROBE);
+        } catch (error) {
+          if (attempt === 2) { errors.push({ width, page: id, message: error.message.slice(0, 160) }); break; }
+          /* A reload wiped the context: settle, then reopen the same destination. */
+          await page.waitForLoadState('domcontentloaded').catch(() => {});
+          await page.waitForTimeout(700);
+          await page.evaluate(pid => document.querySelector(`#homeNav [data-hc-open="${pid}"]`)?.click(), id).catch(() => {});
+          await page.waitForTimeout(350);
+        }
       }
+      if (result) rows.push({ width, page: id, ...result });
     }
     await page.close();
   }
