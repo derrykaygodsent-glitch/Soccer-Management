@@ -105,6 +105,14 @@
   const chip = (state, small, words) =>
     `<span class="tl-status" data-tl-status="${state}"><small>${esc(small)}</small>${esc(words)}</span>`;
 
+  /* Sections along the top, each opening a panel. Every destination stays in the document, so
+     search, badges and the contract walker can reach it without opening anything. */
+  function topbar() {
+    const hubs = HUBS.map(h => `<button type="button" class="tl-hub" data-hub="${h.id}" aria-expanded="false" aria-controls="tl-hub-${h.id}"><span>${h.label}</span><small class="desk-badge" hidden></small></button>`).join('');
+    const panels = HUBS.map(h => `<div class="tl-hub-panel" id="tl-hub-${h.id}" data-hub-panel="${h.id}" hidden>${h.items.map(([id, label]) => `<button type="button" class="tl-hub-item" data-hc-open="${esc(id)}"><span>${esc(label)}</span><small class="desk-badge" hidden></small></button>`).join('')}</div>`).join('');
+    return `<div class="tl-hubs">${hubs}</div><div class="tl-pins" data-tl-pins aria-label="Pinned screens"></div><div class="tl-hub-panels">${panels}</div>`;
+  }
+
   /* One bar: where you are on the left, what needs doing and the one primary action on the right.
      The screen's own heading carries the title, so this line never repeats it. */
   function html(page, ctx) {
@@ -119,10 +127,10 @@
       : '';
     return `<section class="tl-head" data-tl-page="${esc(page)}" aria-label="Screen header">
 <nav class="tl-crumb" data-tl-breadcrumb aria-label="Breadcrumb">${crumbs}</nav>
-<div class="tl-head-side">${chips(page, ctx)}${action}</div>
+<div class="tl-head-side">${chips(page, ctx)}<button type="button" class="tl-pin-btn" data-tl-pin="${esc(page)}" title="Pin or unpin this screen" aria-label="Pin or unpin this screen">Pin</button>${action}</div>
 </section>`;
   }
 
-  g.TLScreenHead = { HUBS, NEXT, rail, html, hubOf, titles: () => new Map(TITLES) };
+  g.TLScreenHead = { HUBS, NEXT, rail, topbar, html, hubOf, titles: () => new Map(TITLES) };
   if (typeof module !== 'undefined') module.exports = g.TLScreenHead;
 })(typeof window === 'undefined' ? globalThis : window);

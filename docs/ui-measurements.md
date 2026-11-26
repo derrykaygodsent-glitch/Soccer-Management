@@ -407,3 +407,46 @@ smallest text 9 px. Tests: 313 pass.
   a run. Both now wait for the rail to be complete and retry once.
 - `data-tl-list` marks a container as a list of records, `data-tl-grid` marks a layout. Those two
   attributes are how the checker tells "hiding rows from me" apart from "drawing a month".
+
+## 12. Phase 1 finished (the shell)
+
+Measured the same way as §10 and §11. The six contracts stayed green while the shell changed shape.
+
+### 12.1 What shipped
+
+| Item | State |
+|---|---|
+| Five hubs | ✅ Today, Squad, Club, World, Life. 35 destinations, each in one hub, all still in the document. |
+| Sections along the top | ✅ `#homeNav` moved into a `.tl-topnav` strip under the header. Each hub button opens a panel with that hub's screens. The left rail is now a drawer at every width, opened by the menu button. |
+| Pinned screens | ✅ Three defaults (Inbox, First team, Tactics), plus the `Pin` button in every screen head. Stored in `localStorage` as `touchline.pins.v2`. |
+| Command palette | ✅ `Ctrl` or `Cmd` and `K`. Type to filter, arrow keys to move, `Enter` to go, `Esc` to close. |
+| Phone dock | ✅ Today, Inbox, Squad, Tactics, Continue. Hidden above 720 px. The section tab rail hides on a phone, so the phone shows one navigation row, not three. |
+| One Back that returns to where you came from | ✅ Verified by driving it: palette to Squad / Tactics, then Back returns to Today / Overview. One Back control, zero duplicates. |
+
+### 12.2 Verification (driven, not assumed)
+
+At 1440: 35 destinations in the top bar, 5 hubs, panel opens with 9 items, palette opens on
+`Ctrl-K`, typing "tac" lands on Squad / Tactics, Back returns to Today / Overview, dock hidden,
+0 page errors.
+At 390: same, plus the dock is visible, tapping Squad lands on Squad / First team, 0 page errors.
+
+### 12.3 Numbers
+
+| Contract | Now |
+|---|---:|
+| Page anchors | 70 / 70 |
+| One primary action | 70 / 70 |
+| Breadcrumbs | 70 / 70 |
+| Long lists hiding rows | 0 |
+| Duplicate Back | 0 |
+| Contrast failures | 0 |
+| Text under 11 px, not metadata | 786 (Phases 3 to 7) |
+| Tables without a phone mode | 14 (Phase 4) |
+
+Sweep: 624 states, 0 errors, 0 contrast failures, 0 horizontal overflow at 390 / 768 / 1440,
+smallest text 9 px. Widest fold 13.06 / 9.82 / 11.20 viewports. Tests: 313 pass.
+
+### 12.4 Still open from Phase 1
+
+Nothing. The palette, the dock, the panels and the Back behaviour are in.
+The rail is now a drawer rather than a column, which is what FM26 did with it.

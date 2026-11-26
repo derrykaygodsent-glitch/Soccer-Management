@@ -149,3 +149,65 @@
 .mail-lane[data-lane=due]{color:var(--ui-state-due-ink);background:var(--ui-state-due-bg);border-color:var(--ui-state-due-line)}
 .mail-lane[data-lane=next]{color:var(--ui-state-next-ink);background:var(--ui-state-next-bg);border-color:var(--ui-state-next-line)}
 .mail-lane[data-lane=done]{color:var(--ui-dim)}
+
+/* ---- Phase 1 · the shell: sections along the top ---------------------------------------
+   FM26 retired the sidebar and put the sections along the top of the screen. The rail keeps
+   its job on a phone (a drawer) and its content is reachable from the menu button at any width.
+   ----------------------------------------------------------------------------------------- */
+.hc-shell{grid-template-columns:minmax(0,1fr)}
+.hc-sidebar{position:fixed;inset:0 auto 0 0;z-index:22;width:min(265px,calc(100% - 58px));visibility:hidden;transform:translateX(-100%);transition:transform .19s ease-out,visibility .19s;box-shadow:10px 0 38px #050a14aa;opacity:1}
+.hc-sidebar.hc-open{visibility:visible;transform:translateX(0)}
+.hc-mobile-menu{display:grid}
+
+.tl-topnav{position:relative;z-index:3;background:var(--ui-surface-1);border-bottom:1px solid var(--ui-edge)}
+.tl-topnav #homeNav{display:flex;align-items:center;gap:var(--ui-space-2);width:100%;min-width:0;padding:5px var(--ui-page-inset);overflow:visible;flex:none;mask-image:none;-webkit-mask-image:none}
+.tl-hubs{display:flex;align-items:center;gap:2px;min-width:0;overflow:auto;scrollbar-width:none}
+.tl-hubs::-webkit-scrollbar{display:none}
+.tl-hub{appearance:none;display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 var(--ui-space-3);border:1px solid transparent;border-radius:var(--ui-radius-s);background:none;color:var(--ui-ink-2);font:inherit;font-size:var(--ui-text-m);font-weight:650;letter-spacing:.01em;cursor:pointer;white-space:nowrap}
+.tl-hub:hover{background:var(--ui-surface-3);color:var(--ui-ink)}
+.tl-hub[aria-expanded=true]{background:var(--ui-surface-3);border-color:var(--ui-edge-action);color:var(--ui-ink)}
+.tl-hub:focus-visible{outline:var(--ui-focus);outline-offset:-2px}
+.tl-pins{display:flex;align-items:center;gap:4px;margin-left:auto;min-width:0}
+.tl-pin{appearance:none;min-height:30px;padding:0 10px;border:1px solid var(--ui-edge-soft);border-radius:var(--ui-radius-pill);background:var(--ui-surface-2);color:var(--ui-muted);font:inherit;font-size:var(--ui-text-s);cursor:pointer;white-space:nowrap}
+.tl-pin:hover{color:var(--ui-ink);border-color:var(--ui-edge-strong)}
+.tl-hub-panels{position:absolute;top:100%;left:0;right:0}
+.tl-hub-panel{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:2px;max-height:min(60vh,420px);overflow:auto;padding:var(--ui-space-3) var(--ui-page-inset);background:var(--ui-surface-2);border:1px solid var(--ui-edge);border-top:0;border-radius:0 0 var(--ui-radius-l) var(--ui-radius-l);box-shadow:0 18px 44px #050a14cc}
+.tl-hub-panel[hidden]{display:none}
+.tl-hub-item{appearance:none;display:flex;align-items:center;gap:8px;min-height:36px;padding:0 10px;border:0;border-radius:var(--ui-radius-s);background:none;color:var(--ui-ink-2);font:inherit;font-size:var(--ui-text-m);text-align:left;cursor:pointer}
+.tl-hub-item:hover{background:var(--ui-surface-4);color:var(--ui-ink)}
+.tl-hub-item[aria-current=page]{color:var(--ui-lime);font-weight:700}
+.tl-hub-item .desk-badge,.tl-hub .desk-badge{margin-left:auto}
+.tl-pin-btn{appearance:none;min-height:30px;padding:0 10px;border:1px solid var(--ui-edge-soft);border-radius:var(--ui-radius-pill);background:none;color:var(--ui-dim);font:inherit;font-size:var(--ui-text-s);cursor:pointer}
+.tl-pin-btn:hover{color:var(--ui-ink);border-color:var(--ui-edge-strong)}
+.tl-pin-btn[aria-pressed=true]{color:var(--ui-lime);border-color:var(--ui-edge-action)}
+
+/* command palette */
+.tl-palette{position:fixed;inset:0;z-index:60;display:grid;place-items:start center;padding-top:12vh;background:#050a14cc;backdrop-filter:blur(2px)}
+.tl-palette[hidden]{display:none}
+.tl-palette-box{width:min(560px,calc(100% - 24px));border:1px solid var(--ui-edge-strong);border-radius:var(--ui-radius-l);background:var(--ui-surface-2);box-shadow:0 30px 80px #050a14e6;overflow:hidden}
+.tl-palette-field{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--ui-edge)}
+.tl-palette-field input{flex:1;min-height:38px;border:0;background:none;color:var(--ui-ink);font:inherit;font-size:var(--ui-text-l);outline:none}
+.tl-palette-list{list-style:none;margin:0;padding:6px;max-height:52vh;overflow:auto}
+.tl-palette-list li[aria-selected=true] .tl-palette-row,.tl-palette-row:hover{background:var(--ui-surface-4)}
+.tl-palette-row{appearance:none;display:flex;align-items:center;width:100%;min-height:38px;padding:0 10px;border:0;border-radius:var(--ui-radius-s);background:none;color:var(--ui-ink-2);font:inherit;font-size:var(--ui-text-m);text-align:left;cursor:pointer}
+.tl-palette-empty{padding:14px 12px;color:var(--ui-dim);font-size:var(--ui-text-m)}
+
+/* phone dock */
+.tl-dock{display:none}
+@media (max-width:720px){
+  .tl-pins{display:none}
+  .tl-hub{min-height:var(--ui-tap);padding:0 10px}
+  .tl-hub-panel{grid-template-columns:1fr;max-height:70vh}
+  .tl-hub-item{min-height:var(--ui-tap)}
+  .tl-dock{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:30;gap:2px;padding:4px 4px calc(4px + env(safe-area-inset-bottom));background:var(--ui-surface-1);border-top:1px solid var(--ui-edge)}
+  .tl-dock-item,.tl-dock-continue{appearance:none;flex:1;min-height:var(--ui-tap);border:1px solid transparent;border-radius:var(--ui-radius-s);background:none;color:var(--ui-muted);font:inherit;font-size:var(--ui-text-s);font-weight:650;cursor:pointer}
+  .tl-dock-item[aria-current]{color:var(--ui-ink);background:var(--ui-surface-3);border-color:var(--ui-edge-strong)}
+  .tl-dock-continue{background:var(--ui-lime);color:var(--ui-lime-ink);border-color:var(--ui-edge-action);flex:1.2}
+  #clubPage{padding-bottom:calc(var(--ui-tap) + 16px)}
+}
+
+/* A phone shows one navigation row, not three: the dock carries the four screens a manager
+   needs, so the section tabs step aside. */
+@media (max-width:720px){.hc-tabs{display:none}.hc-location h1{font-size:var(--ui-text-l)}}
+.tl-palette-field input:focus-visible{outline:none}
+.tl-palette-box:focus-within{border-color:var(--ui-edge-action)}
