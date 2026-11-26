@@ -1497,3 +1497,66 @@ Sweep: 214 screens at 390, 768 and 1440 px, 0 horizontal overflow, nested scroll
 - **Football Intelligence** still needs `Showing x–y of N` and Load more on every category (session 3).
 - The club's own **Matches** screen (`[data-hc-open="fixtures"]`) is the matchday hub — fixture card,
   advance button, calendar — and was not part of this pass.
+
+## 28. Phase 5, session 3: leaders you can filter, and dossiers that tell the truth about their totals
+
+### 28.1 The problem
+
+Two lists lied about their size. **Leaders** printed every player with a goal, no filters, no page and no
+phone mode — a five-column table in a horizontal scroller. **Football Intelligence** sliced its categories
+at 120 players, 100 clubs and 100 managers, and then printed `Showing 1 to 25 of 120` on top of a pool of
+**3,888 players**: the range was counting the slice, not the records. Forty-two clubs could not be reached
+at all.
+
+### 28.2 What the two screens are now
+
+| Before | After |
+|---|---|
+| Leaders: one table, no controls | `Position` (All / Goalkeepers / Defenders / Midfielders / Forwards), `Club` (all twenty), and `At least 1 · 2 · 3 · 5` in the ranked category |
+| No page, no count | 25 rows a page with `Showing 1 to 25 of 119 players`, `Page 1 of 5`, `Previous` / `Next`, and the page reset when a filter or category changes |
+| Five columns in a horizontal scroller on a phone | `data-tl-table="cards"`: rank, name, value and position on one line, club beneath, every row a card |
+| `9 players ranked by goals` at a glance | The count is the filtered count and it says what it ranks: `119 players ranked by goals`, `26 players ranked by assists` |
+| Dossiers sliced at 120 / 100 / 100 | No slice. `Showing 1 to 25 of 3888` players, `of 142` clubs, `of 100` managers, `Show 25 more` growing the page 25 at a time |
+| A dossier range that could not be trusted | The total is the filtered total, the module owns the paging, and the shared list pager is told to stand down (`data-tl-grid`) so there is exactly one pager and one range on the screen |
+
+Appearances are not modelled: the league records **goals, assists and clean sheets** per player, and no
+appearance count exists on a player record. The plan asked for a minimum-appearances filter; printing one
+would mean inventing a number, so the "at least" filter counts the category being ranked — `At least 3
+assists` — and the note beside it names the unit (`goal`, `goal`, `clean sheet` when the minimum is 1).
+
+### 28.3 Numbers
+
+| Contract | §27 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 72/72 | 72/72 |
+| Status chips | 78 | 78, 0 without words |
+| Long lists without a range | 0 | 0 |
+| Tables without a phone mode | 0 of 22 | 0 of 22 |
+| Contrast failures | 0 | 0 |
+| Tests | 318 | 319 pass, 0 fail (one new: position groups) |
+
+Leaders depth, `scrollHeight / clientHeight`: **1.63 at 1440** and **3.09 at 390** on the day-383 career
+(9 ranked players, one page). Mid-season (day 450 copy, tests only) **2.36 / 5.53** — twenty-five rows, which
+is the page size the phase asked for.
+
+Behaviour, measured in the browser:
+
+- Day 383: `9 players ranked by goals`, `Showing 1 to 9 of 9 players`, `Page 1 of 1`, both pager buttons
+  disabled; `Goalkeepers` with `At least 1 goal` is honestly empty and says so.
+- Day 450: `119 players ranked by goals`, 25 rows, `Showing 1 to 25 of 119`, `Page 1 of 5`; `Next` gives
+  `Showing 26 to 50 of 119`, first row `26 · Sergio Andersen · Kintaba Teachers · ST · 4`, and focus stays on
+  the pager button. `At least 3 assists` → `26 players`, every value 3 or more.
+- Football Intelligence: players `Showing 1 to 25 of 3888`; `Show 25 more` twice → `Showing 1 to 75 of 3888`
+  with focus kept on the button; switching category resets to 25; `Agents` (four records) shows no range at
+  all because there is no second page; searching `Koroma` gives `Showing 1 to 25 of 70`.
+- Clubs `Showing 1 to 25 of 142` — the 42 clubs the old cap hid are now reachable.
+- 0 horizontal overflow at 1440 and 390 on both screens.
+
+Sweep: 214 screens at 390, 768 and 1440 px, 0 horizontal overflow, nested scroll traps 41 / 38 / 38.
+
+### 28.4 What this leaves for session 4
+
+The phase gate is "no sliced list without a range; every dossier reachable ≤ 2 taps with a breadcrumb". The
+ranges are done; the reachability half is not: **Atlas** still opens on the map rather than a browsable
+country list, and club and manager dossiers still have their own layouts instead of one hero → KPI → action
+rail → archive shape with the trail above it.

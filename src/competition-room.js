@@ -13,6 +13,12 @@
   /* The leader categories a manager actually ranks players by. */
   const METS = [['goals', 'Scorers'], ['assists', 'Assists'], ['sheets', 'Clean sheets']];
   const NOUN = { goals: 'goals', assists: 'assists', sheets: 'clean sheets' };
+  /* Positions the league records, grouped the way a manager asks about them. */
+  const POS_GROUPS = [['', 'All positions'], ['GK', 'Goalkeepers'], ['DEF', 'Defenders'], ['MID', 'Midfielders'], ['FWD', 'Forwards']];
+  const POS_OF = { DEF: ['DC', 'FB'], MID: ['DM', 'CM', 'AM'], FWD: ['W', 'ST'] };
+  const inGroup = (pos, group) => !group || (group === 'GK' ? pos === 'GK' : (POS_OF[group] || []).includes(pos));
+  const LEADER_PAGE = 25;
+  const SING = { goals: 'goal', assists: 'assist', sheets: 'clean sheet' };
 
   /* Dates read as a person writes them: 13 Nov 2027, never 2027-11-13. */
   const dayText = iso => { const d = new Date(String(iso) + 'T12:00:00Z'); return Number.isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }); };
@@ -106,14 +112,32 @@
     } else if (cups) {
       panel = g.TLCups.render(s, n);
     } else if (stats) {
-      panel = `<div class="comp-board"><header class="comp-panel-head"><h3>Leaders</h3><small>${ranked.length} ${ranked.length === 1 ? 'player' : 'players'} ranked by ${e(NOUN[metric] || metric)}</small></header><nav class="comp-metrics" aria-label="Leader category">${METS.map(([value, label]) => `<button type="button" data-comp-metric="${value}" aria-pressed="${value === metric}">${label}</button>`).join('')}</nav>${ranked.length ? `<div class="directory-scroll"><table class="player-directory" data-sort-table="leaders-${e(metric)}"><thead><tr><th>Rank</th><th>Name</th><th>Club</th><th>Position</th><th data-first="desc">${e(metric)}</th></tr></thead><tbody>${ranked.map((p, i) => `<tr><td>${i + 1}</td><th scope="row">${W.pool.some(x => x.id === p.id) ? `<button data-league-player="${e(p.id)}">${e(p.name)}</button>` : `<strong>${e(p.name)}</strong>`}</th><td><button data-world-club="${e(p.club)}">${e(p.club)}</button></td><td>${e(p.pos)}</td><td>${p[metric]}</td></tr>`).join('')}</tbody></table></div>` : '<p>No records in this category yet.</p>'}</div>`;
+      const pos = ui.leaderPos && POS_GROUPS.some(([k]) => k === ui.leaderPos) ? ui.leaderPos : '';
+      const clubPick = ui.leaderClub && base.rows.some(r => r.name === ui.leaderClub) ? ui.leaderClub : '';
+      const min = Math.max(1, Math.min(5, Number(ui.leaderMin) || 1));
+      /* The league records goals, assists and clean sheets per player — never appearances — so the
+         "at least" filter counts the category being ranked. */
+      const ranked = (field.players || [])
+        .filter(p => inGroup(p.pos, pos) && (!clubPick || p.club === clubPick) && (metric !== 'sheets' || p.pos === 'GK') && (p[metric] || 0) >= min)
+        .sort((a, b) => b[metric] - a[metric] || String(a.name).localeCompare(String(b.name)));
+      const pages = Math.max(1, Math.ceil(ranked.length / LEADER_PAGE));
+      const pageIdx = Math.min(pages - 1, Math.max(0, Number(ui.leaderPage) || 0));
+      const shown = ranked.slice(pageIdx * LEADER_PAGE, pageIdx * LEADER_PAGE + LEADER_PAGE);
+      const from = ranked.length ? pageIdx * LEADER_PAGE + 1 : 0, to = pageIdx * LEADER_PAGE + shown.length;
+      const opts = (list, current, blank) => list.map(([value, label]) => `<option value="${e(value)}"${value === current ? ' selected' : ''}>${e(label)}</option>`).join('');
+      const clubs = [...new Set(base.rows.map(r => r.name))].sort((a, b) => a.localeCompare(b));
+      const filters = `<div class="lead-filters" role="group" aria-label="Filter leaders"><label>Position<select data-leader="pos">${opts(POS_GROUPS, pos)}</select></label><label>Club<select data-leader="club"><option value="">All clubs</option>${clubs.map(c => `<option value="${e(c)}"${c === clubPick ? ' selected' : ''}>${e(c)}</option>`).join('')}</select></label><label>At least<select data-leader="min">${opts([['1', '1'], ['2', '2'], ['3', '3'], ['5', '5']], String(min))}</select></label><span class="lead-min-note">${e(min === 1 ? (SING[metric] || metric) : (NOUN[metric] || metric))}</span></div>`;
+      const table = shown.length
+        ? `<div class="directory-scroll"><table class="player-directory comp-leaders" data-tl-table="cards"><caption>${e(n)} leaders by ${e(NOUN[metric] || metric)}</caption><thead><tr><th data-col="rank">#</th><th data-col="name">Name</th><th data-col="club">Club</th><th data-col="pos">Position</th><th data-col="value" data-first="desc">${e(metric)}</th></tr></thead><tbody>${shown.map((p, i) => `<tr><td data-col="rank">${from + i}</td><th scope="row" data-col="name">${W.pool.some(x => x.id === p.id) ? `<button data-league-player="${e(p.id)}">${e(p.name)}</button>` : `<strong>${e(p.name)}</strong>`}</th><td data-col="club"><button data-world-club="${e(p.club)}">${e(p.club)}</button></td><td data-col="pos">${e(p.pos)}</td><td data-col="value">${p[metric]}</td></tr>`).join('')}</tbody></table></div>`
+        : '<p class="cp-muted">No player reaches that mark in this category. Lower the minimum or widen the filter.</p>';
+      panel = `<div class="comp-board"><header class="comp-panel-head"><h3>Leaders</h3><small>${ranked.length} ${ranked.length === 1 ? 'player' : 'players'} ranked by ${e(NOUN[metric] || metric)}</small></header><nav class="comp-metrics" aria-label="Leader category">${METS.map(([value, label]) => `<button type="button" data-comp-metric="${value}" aria-pressed="${value === metric}">${label}</button>`).join('')}</nav>${filters}${table}${ranked.length ? `<p class="tl-range" data-tl-meta>Showing ${from} to ${to} of ${ranked.length} ${ranked.length === 1 ? 'player' : 'players'}</p><div class="lead-pager"><button type="button" data-leader-page="-1" ${pageIdx <= 0 ? 'disabled' : ''}>Previous</button><span>Page ${pageIdx + 1} of ${pages}</span><button type="button" data-leader-page="1" ${pageIdx >= pages - 1 ? 'disabled' : ''}>Next</button></div>` : ''}</div>`;
     } else {
       panel = `<div class="comp-board"><header><small>LEAGUE STANDINGS</small><span>Round ${rounds} · ${base.rows.length} clubs · ${dayText(W.date(s.day))}</span></header><div class="comp-scroll" tabindex="0" aria-label="District standings, scroll for all statistics"><table data-sort-table="standings" data-tl-table="cards" data-tl-layout="table"><thead><tr>${['#', 'Club', 'GP', 'W', 'D', 'L', 'GS', 'GC', 'GD', 'Pts', 'Last five'].map(k => `<th${k === '#' ? ' data-col="rank"' : k === 'Club' ? ' data-col="club"' : k === 'Pts' ? ' data-col="pts" data-label="Pts"' : k === 'Last five' ? ' data-col="form"' : ` data-label="${k}"`}>${k}</th>`).join('')}</tr></thead><tbody>${field.rows.map((r, i) => `${r.tier && r.rank === 1 ? `<tr class="tier-heading"><th colspan="11">${r.tier === 1 ? 'DIVISION ONE · Championship' : 'DIVISION TWO · Promotion race'}</th></tr>` : ''}<tr><td data-col="rank" class="${r.p ? (i === 0 ? 'top' : i === field.rows.length - 1 ? 'low' : '') : ''}">${r.rank || i + 1}</td><th scope="row" data-col="club">${g.TLWorldGuide.club(n, r.name)}</th>${['p', 'w', 'd', 'l', 'gs', 'gc', 'gd', 'pts'].map(k => k === 'pts' ? `<td data-col="pts">${r[k]}</td>` : `<td data-label="${k.toUpperCase()}">${k === 'gd' && r[k] > 0 ? '+' : ''}${r[k]}</td>`).join('')}<td data-col="form">${r.form.slice(-5).map(v => `<i class="form-${v}">${v}</i>`).join('') || '–'}</td></tr>`).join('')}</tbody></table></div><p>🟢 Leader　 🟠 Bottom place <small>${field.rows[0]?.tier ? 'Division Two winners go up. Last in Division One goes down.' : 'Qualifying season: the top three earn Division One places next campaign.'}</small></p></div>`;
     }
 
     return `<section class="comp-room" style="--nation:hsl(${h} 72% 72%);--deep:hsl(${h} 40% 22%)"><header class="comp-hero">${art(cups ? 'silverware' : 'terrace')}<div><small>${e(country?.continent || 'MERIDIAN')}　 /　 COMPETITION CENTRE</small><h2>${e(n)}<br>${competition}</h2><span>${cups ? 'Competition directory' : base.rows.length + ' clubs　·　Round ' + rounds}</span></div><b>${e(code)}</b></header>${trail}<div class="comp-tools"><label>Association <select data-comp-country>${Object.keys(W.nations).map(x => `<option ${x === n ? 'selected' : ''}>${e(x)}${g.TLFASeason.major(s, x, season) ? ' · major league' : ''}</option>`).join('')}</select></label><button data-life="go" data-v="atlas">Atlas</button></div><p class="org-agenda comp-note"><small data-offline-status>${e(g.TLOffline?.status() || 'Local competition data')}</small>${s.atlasLeagueFrom > season ? ` · Major leagues begin in July ${s.atlasLeagueFrom} in this save.` : ''}</p><nav class="comp-tabs" aria-label="Competition views"><div class="comp-tabs-main" role="group" aria-label="Views">${tabs(VIEWS, tab)}</div><div class="comp-tabs-records" role="group" aria-label="Records"><span class="comp-tabs-label">Records</span>${tabs(RECORDS, tab)}</div></nav>${panel}</section>`;
   }
-  const api = { render, VIEWS, RECORDS, groupRounds, roundsFor, scoreOf, spanText };
+  const api = { render, VIEWS, RECORDS, groupRounds, roundsFor, scoreOf, spanText, inGroup, POS_GROUPS };
   g.TLCompetitionRoom = api;
   if (typeof module !== 'undefined') module.exports = api;
 })(window);

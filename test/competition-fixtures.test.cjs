@@ -50,3 +50,18 @@ test('a one-day round reads as one date, a two-day round as a span', () => {
   assert.equal(C.spanText('2027-11-13', '2027-11-14'), '13–14 Nov 2027');
   assert.equal(C.spanText('2027-11-28', '2027-12-02'), '28 Nov 2027 – 2 Dec 2027');
 });
+
+test('positions group the way a manager asks about them', () => {
+  assert.equal(C.inGroup('GK', 'GK'), true);
+  assert.equal(C.inGroup('CB', 'GK'), false);
+  assert.equal(C.inGroup('DC', 'DEF'), true);
+  assert.equal(C.inGroup('FB', 'DEF'), true);
+  assert.equal(C.inGroup('DM', 'MID'), true);
+  assert.equal(C.inGroup('AM', 'MID'), true);
+  assert.equal(C.inGroup('W', 'FWD'), true);
+  assert.equal(C.inGroup('ST', 'FWD'), true);
+  assert.equal(C.inGroup('ST', 'DEF'), false);
+  // no filter means everyone
+  assert.equal(C.inGroup('ST', ''), true);
+  assert.deepEqual(C.POS_GROUPS.map(([k]) => k), ['', 'GK', 'DEF', 'MID', 'FWD']);
+});
