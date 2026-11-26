@@ -91,7 +91,7 @@
   const RAIL_LABEL = { squad: 'First team' };
   /* Screens reached from a row rather than the rail still sit inside a hub, so the breadcrumb
      names their hub instead of printing the raw page id. */
-  const HUB_ALIAS = { squadPlayer: { hub: 'squad', label: 'Player profile' } };
+  const HUB_ALIAS = { squadPlayer: { hub: 'squad', label: 'Player profile' }, worldClub: { hub: 'world', label: 'Club dossier', go: 'atlas' }, worldManager: { hub: 'world', label: 'Manager dossier', go: 'atlas' } };
   const hubOf = page => HUBS.find(h => h.items.some(([id]) => id === page));
 
   /* The rail keeps the shape the desk renderer already knows: [groupLabel, [[id, label], …]] */
@@ -149,7 +149,7 @@
     const title = RAIL_LABEL[page] || (alias && alias.label) || TITLES.get(page) || String(page || '');
     const next = NEXT[page];
     const crumbs = hub
-      ? `<button type="button" class="tl-crumb-link" data-hc-open="${esc(hub.items[0][0])}">${esc(hub.label)}</button><span class="tl-crumb-sep" aria-hidden="true"></span><span class="tl-crumb-here" aria-current="page">${esc(title)}</span>`
+      ? `<button type="button" class="tl-crumb-link" data-hc-open="${esc((alias && alias.go) || hub.items[0][0])}">${esc(hub.label)}</button><span class="tl-crumb-sep" aria-hidden="true"></span><span class="tl-crumb-here" aria-current="page">${esc(title)}</span>`
       : `<span class="tl-crumb-here" aria-current="page">${esc(title)}</span>`;
     const action = next
       ? `<button type="button" class="tl-primary" data-tl-action="primary" ${next.do ? `data-tl-do="${esc(next.do)}"` : `data-hc-open="${esc(next.go)}"`}>${esc(next.label)}</button>`

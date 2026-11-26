@@ -1560,3 +1560,115 @@ The phase gate is "no sliced list without a range; every dossier reachable ≤ 2
 ranges are done; the reachability half is not: **Atlas** still opens on the map rather than a browsable
 country list, and club and manager dossiers still have their own layouts instead of one hero → KPI → action
 rail → archive shape with the trail above it.
+
+## 29. Phase 5, session 4: an atlas you can read, and one dossier shape — the phase close
+
+### 29.1 The problem
+
+The World screen was a poster, not an index. **Atlas** opened on a passport card, a drawn map and five
+continent cards — **8,105 px at 1440 (10.04 folds)** and **8,910 px at 390 (13.46 folds)** — and the
+twenty nations existed only as pins on a picture. You could not read the list of countries the game
+actually models (20 nations, 142 registered clubs, 5 continents) without hunting for it.
+
+The dossiers were two different pages with no way back. **Club dossier** and **manager dossier** had
+their own headers, no trail, and no way to move between club, manager, league and world. A club's squad
+was a four-column table in a horizontal scroller on a phone (invisible columns, no caption, no count),
+records printed raw ISO dates, and pressing a club's name inside a league table opened **the atlas**
+instead of the club: the fast route to a club dossier did not exist at all.
+
+### 29.2 The atlas is now a country list
+
+| Before | After |
+|---|---|
+| Opens on a passport card, a map poster and five continent cards | Opens on the `Countries` / `Map` toggle, with the list pressed first: `20 nations · 142 registered clubs · 5 continents` |
+| Twenty nations as map pins | Five continent groups (`Europa Champions Cup`…), one row per nation: flag, name, `CODE · capital X`, `N clubs`, a `Major league` chip where the season layer says so, and a `League` button |
+| No filters | Continent pills carrying their own counts — `All 20`, `Europa 4`, `Afrania 4`… — that hide the other groups in place without a redraw, so focus and scroll stay put |
+| The map is the screen | `Map` is the enhancement: the pick line names `nation · continent · capital`, the passport sits under it, and `Back to all 20 countries` returns to the index |
+| A country is a poster | A country page states `Continental competition`, the league (one press to `Open the X competition`) and `Registered clubs` — `19 across 5 settlements` for Zandora — plus the division blueprint |
+
+The copy was corrected while doing it: the header says **`142 registered clubs`**, not `founding
+clubs`. One hundred clubs are founding clubs; the other forty-two were created in careers (Zandora alone
+has nineteen members), and the atlas must not claim a total it does not have.
+
+### 29.3 One dossier shape
+
+Both dossiers are now, in order: **trail → hero → KPIs → action rail → archive**.
+
+| Part | Club dossier | Manager dossier |
+|---|---|---|
+| Trail | `World / Zandora / Kintaba United` — World opens the atlas list, the nation opens that country's map, the club is the current page | `World / Zandora / Kintaba United / Mara Rivas` — every step up is a press, including the club |
+| Hero | crest art, `WORLD CLUB DOSSIER · ZANDORA`, name, `Independent club ownership · #6 in Zandora` | the same cover, `WORLD MANAGER DOSSIER · ZANDORA`, the coach and the club |
+| KPIs | Nation · League record · First-team pool · Board target | the same four-cell rail (club, record, squad, board reading) |
+| Action rail | `Open the league` · `Open the manager` · `Open the atlas` | `Open the club` · `Open the league` · `Open the atlas` |
+| Archive | dugout and benches, ownership, `First-team players` (captioned table, phone cards, `data-tl-table="cards"`) | career record, appointment history, links out |
+
+Three supporting fixes came with it:
+
+- The head bar no longer prints raw page ids: `worldClub` reads **`Club dossier`** and `worldManager`
+  **`Manager dossier`**, each under a `World` crumb that goes to the atlas.
+- Records are written, not dumped: `1 Aug 2027`, never `2027-08-01` (verified: 0 ISO dates left in either
+  dossier).
+- A club's name in the league table opens **the club**. The guide's country/place jump was handled before
+  the club handler, so a club row in a league table, in the World wire standings, or on a passport opened
+  the atlas map instead of the dossier. The dossier handler now runs first; country jumps still work from
+  the buttons that are only country jumps.
+
+### 29.4 Numbers
+
+Atlas depth, `scrollHeight / clientHeight` on the day-383 career:
+
+| | Before | After |
+|---|---:|---:|
+| Atlas @1440 | 10.04 (8,105 px) | **2.16 (1,745 px)** |
+| Atlas @390 | 13.46 (8,910 px) | **3.99 (2,644 px)** |
+| Atlas filtered to one continent | n/a | **1.00 / 1.37** |
+| Atlas map view | 10.04 / 13.46 (it was the only view) | **3.76 / 5.06** |
+| Club dossier | 1.63 / 2.70 (1,312 / 1,789 px) | 1.80 / 4.18 |
+| Manager dossier | 1.00 / 1.39 (807 / 918 px) | 1.00 / 1.45 |
+
+The club dossier is deeper on a phone than it was (2.70 → 4.18). That is deliberate: the old page hid the
+squad's position, age and nation columns inside a horizontal scroller. The roster is now a captioned table
+that turns into 24 phone cards of 62 px — legible, and `0` horizontal overflow — and the trail and the
+44 px rail add about one more fold's worth of chrome at the top.
+
+Reachability, measured in the browser at 1440 and 390:
+
+- League table → club dossier: **2 taps** (`Competitions`, then the club name). It was 3 taps before,
+  and the middle one used to land on the atlas.
+- Club dossier → manager dossier → back to the club: **1 tap each**, on the rail.
+- Club dossier → `World` → the atlas list of 20 rows: **1 tap**; → the nation → that country's map: **1 tap**.
+- Trail steps keep their `data-` payloads, so the trail is navigation, not decoration: `World` carries
+  `data-life="go" data-v="atlas"`, the nation carries `data-atlas-choose="ZAN"`, the club carries
+  `data-world-club`.
+- 0 horizontal overflow on all four screens at both widths.
+
+| Contract | §28 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 72/72 | 72/72 |
+| Status chips | 78 | 78, 0 without words |
+| Long lists without a range | 0 | 0 |
+| Tables without a phone mode | 0 of 22 | 0 of 22 |
+| Contrast failures | 0 | 0 |
+| Tests | 319 | **324 pass, 0 fail** |
+
+Five new tests: four for the atlas (row-per-nation inside continent groups, pill counts that match the
+data, the major chip appearing only where the season layer says so — and *nothing* where it does not, the
+map view naming its nation and offering the list back, and the explicit code winning over the manager's
+home nation), and one that walks both dossiers asserting the same trail, rail and archive order, the
+captioned phone-mode roster and the absence of ISO dates.
+
+Sweep: 214 screens at 390, 768 and 1440 px, **0 horizontal overflow**, nested scroll traps 40 / 38 / 38.
+
+### 29.5 Phase 5 is closed
+
+The phase gate was two statements. Both hold:
+
+- **No sliced list without a range.** Sessions 1–3 removed the sliced lists (`Showing x–y of N` on
+  Leaders, Football Intelligence, the dossiers and the competition tables); this session added no list
+  without one — the atlas is 20 rows that fit, and the two dossier archives are full, not capped.
+- **Every dossier reachable ≤ 2 taps with a breadcrumb.** Every dossier now carries the trail, and the
+  two-tap route exists from the league table, from the atlas map's passport, from a club's own page and
+  from the manager dossier's rail.
+
+Out of scope, still: the club's own **Matches** screen (`[data-hc-open="fixtures"]`, the matchday hub) was
+not touched — it belongs to Phase 6, with tactics and the Season Book.

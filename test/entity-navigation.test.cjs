@@ -56,3 +56,34 @@ test('world club and manager files expose cross-links to their related entities'
     assert.match(fallback, new RegExp(`data-guide-country="${guideOnly.country.code}"`));
   }
 });
+
+test('club and manager dossiers open with the same trail, action rail and archive shape', () => {
+  const s = career();
+  const nation = 'Valdoria';
+  const club = W.nations[nation][1];
+  const office = T.office(s, club, nation, W.nations[nation]);
+  const code = meridian.countries.find(c => c.name === nation).code;
+
+  for (const [label, html] of [
+    ['club', clubProfile.renderWorld(s, club)],
+    ['manager', managerProfile.renderWorld(s, office.coach.id, club)],
+  ]) {
+    assert.match(html, /<nav class="tl-trail" aria-label="Trail">/, `${label} opens with a trail`);
+    assert.match(html, /class="tl-trail-link" data-life="go" data-v="atlas"[^>]*>World</, `${label} trail starts at the world`);
+    assert.match(html, new RegExp(`class="tl-trail-link" data-atlas-choose="${code}"[^>]*>${nation}<`), `${label} trail names the nation`);
+    assert.match(html, /<span class="tl-trail-here" aria-current="page">[^<]+<\/span><\/nav>/, `${label} trail ends on the page itself`);
+    assert.equal((html.match(/tl-trail-here/g) || []).length, 1, `${label} trail has one current step`);
+    assert.match(html, /<div class="dossier-rail" role="group" aria-label="Dossier actions">/, `${label} carries one action rail`);
+    assert.match(html, /dossier-rail[\s\S]*Open the league[\s\S]*Open the atlas/, `${label} rail reaches the league and the atlas`);
+    assert.equal((html.match(/class="dossier-rail"/g) || []).length, 1, `${label} has exactly one rail`);
+    assert.ok(html.indexOf('dossier-rail') < html.indexOf('cp-grid'), `${label} rail sits between the KPIs and the archive`);
+    const here = html.match(/tl-trail-here" aria-current="page">([^<]+)</)[1];
+    assert.equal(here, label === 'club' ? club : office.coach.name, `${label} trail ends on the person or club it describes`);
+    if (label === 'manager') assert.match(html, new RegExp(`class="tl-trail-link" data-world-club="${club}"`), 'the manager trail is walked back through the club');
+  }
+
+  const clubHtml = clubProfile.renderWorld(s, club);
+  assert.match(clubHtml, /data-tl-table="cards"/, 'the squad table declares its phone layout');
+  assert.match(clubHtml, /<caption>/, 'the squad table names its size');
+  assert.doesNotMatch(clubHtml, /(?:19|20)\d\d-\d\d-\d\d/, 'records are written as dates, not ISO strings');
+});
