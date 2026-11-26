@@ -78,3 +78,10 @@ frame and the numbers in [`ui-measurements.md` §15](./ui-measurements.md).
 |---|---|---|
 | A selected player stays in context while you browse | The player in focus bar under the screen head on every other screen: name, position, age, nation, best role with score, condition, value. One click to reopen, one to clear | The bar states the two facts that decide a selection (role and condition) instead of repeating the dossier, and it never appears on the player page itself, so nothing is stated twice |
 | A squad overview before the list | Five facts above the table: registered, in recovery, no shirt number, outside the XI, thinnest unit | Only facts that need a decision are toned, and the tone uses the palette's attention blue, not a gold or an amber |
+
+## 8. Phase 3, fourth pass: the local hub
+
+| FM26 pattern | Touchline now | Beyond FM26 |
+|---|---|---|
+| A squad area with its own nav | Four views inside the squad screen: Roster, Availability, Registration, Development. Banner and unit counts stay above the nav | Availability is ordered by what stops a selection (recovery, then condition, then sharpness) and says the order in words, so the first name is the first decision |
+| Registration with deadlines and a queue | Each competition list states `15 of 25 selected`, names the players with no number, and offers a search that reports `Showing 3 of 17 players` | The gap is a sentence with names, not a red badge |

@@ -745,3 +745,81 @@ Tests: 313 pass, 0 fail.
   built, and the four phase-3 sessions are now used.
 - The player bar holds one player at a time. A short recent list is not built.
 - Nested scroll areas (40 screens at 390 px) are still the largest remaining sweep finding.
+
+## 18. Phase 3, fourth session: the squad hub and the registration queue
+
+Date: 25 November 2026. Kay FC, 13 November 2027, 17 players.
+
+### 18.1 One local nav inside the squad
+
+The first team screen keeps its banner and the four unit counts, then a local nav of four views.
+Only the panel below changes, so the player never loses the squad.
+
+| View | What it answers | What it showed on the real save |
+|---|---|---|
+| Roster | who is in the squad and where they play | 17 cards, register table, health strip, sort control |
+| Availability | who needs attention, worst first | `9 players need attention`; Kofi Vico `Needs rest`, condition 58%, sharpness 77% |
+| Registration | who has no shirt number | `2 players have no number`; League `15 of 25 filed`, names listed |
+| Development | who moved this season | `No attribute movement recorded yet` (honest: no season review yet in this save) |
+
+Availability sorts by state and then by the lowest condition, so recovery comes first. The text
+above the list says the order, and the numbers are the ones the training screen uses.
+
+### 18.2 Registration: search that states its range
+
+Each competition list on the registration screen now has a search box and a range:
+
+| State | Reads |
+|---|---|
+| Empty | `Showing all 17 players` |
+| Typing `serra` | `Showing 3 of 17 players` |
+| Cleared | `Showing all 17 players` |
+
+The list also states `15 of 25 selected` and `2 players have no number: Nico Koroma, Haru Vico`
+above it. Each competition filters on its own, so one list never hides rows on another.
+
+### 18.3 Phone tap targets (Phase 3 gate)
+
+Measured at 390 px on the squad screen, counting every button and select inside `.sq-room`:
+
+| Control | Height |
+|---|---|
+| Squad tabs (4) | 44 px |
+| Player name in a roster card | 44 px |
+| Shirt number select | 44 px |
+| Sort select and direction button | 44 px |
+| Secondary buttons (registration, planner) | 44 px |
+
+Inline entity links inside a fact line stay text sized but get a 24 px taller hit area
+(`::after` overlay), so a 16 px word is not a 16 px target.
+
+### 18.4 Numbers
+
+| Contract | §17 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 70/70 | 70/70 |
+| Status chips | 76 | 76, 0 without words |
+| Tables without a phone mode | 0 | 0 of 14 |
+| Contrast failures | 0 | 0 |
+| Text under 11 px, not metadata | 762 | 762 |
+
+Sweep: 208 screens at 390, 768 and 1440 px, 0 horizontal overflow, smallest text 9 px.
+Sub-44 px targets on the registration screen fell from 111 to 93 with the taller shirt selects.
+Tests: 313 pass.
+
+### 18.5 Phase 3 status
+
+Done: phone roster cards, table modes for all 14 tables, sort and saved views, player page with
+role fit, form, compare and grouped attributes, player in focus across screens, squad health, the
+squad hub with four views, registration gaps by name and a searchable registration queue.
+
+Not done, and therefore the phase is not closed:
+
+- A pinned "selected list" on the registration screen. The count and the gaps are stated, but the
+  chosen players are not shown as a list of their own.
+- Inline registration conflicts (a player filed by another club) are stated in the table but not
+  raised as a queue above it.
+- Medical and dynamics urgency outside the squad: training still lists readiness without an
+  urgent-first grouping.
+
+Those three carry into the next session rather than being called complete.
