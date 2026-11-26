@@ -160,6 +160,19 @@
 </section>`;
   }
 
-  g.TLScreenHead = { HUBS, NEXT, rail, topbar, html, portal, hubOf, titles: () => new Map(TITLES) };
+  /* A trail inside a screen names the world it sits in — World / Nation / Competition — where the
+     head crumb names the hub. Each step that is not the current one carries the attributes of the
+     control that opens it, so a trail is navigation, not decoration. */
+  function trail(items) {
+    const steps = (items || []).filter(it => it && it.label);
+    if (!steps.length) return '';
+    return `<nav class="tl-trail" aria-label="Trail">${steps.map((it, i) => {
+      const sep = i ? '<span class="tl-crumb-sep" aria-hidden="true"></span>' : '';
+      if (it.here) return `${sep}<span class="tl-trail-here" aria-current="page">${esc(it.label)}</span>`;
+      return `${sep}<button type="button" class="tl-trail-link" ${it.attrs || ''}>${esc(it.label)}</button>`;
+    }).join('')}</nav>`;
+  }
+
+  g.TLScreenHead = { HUBS, NEXT, rail, topbar, html, portal, hubOf, titles: () => new Map(TITLES), trail };
   if (typeof module !== 'undefined') module.exports = g.TLScreenHead;
 })(typeof window === 'undefined' ? globalThis : window);

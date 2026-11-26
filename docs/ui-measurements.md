@@ -1351,3 +1351,70 @@ Phase 4 gate, all four items:
 
 Sweep: 214 screens at 390, 768 and 1440 px, 0 horizontal overflow, nested scroll traps 41 / 38 / 38,
 smallest text 9 px.
+
+## 26. Phase 5, session 1: a trail through the world, and four views instead of seven
+
+### 26.1 The problem
+
+Competitions opened with seven tabs of equal weight — League table, Player stats, Cups, Fixtures,
+Dugouts, Trophy room, Season book — laid out in one strip, each 38 px tall, so the weekly four and the
+three record books looked like the same kind of thing. The head crumb read `Club / Competitions`: the
+country the screen is about (Zandora) lived only inside the hero, and nothing on the page could take you
+up to the world. Dates printed raw (`2027-10-29`, `2027-08-01`, and the standings header's `2027-11-13`),
+and the Leaders panel described its count as "9 players with a goals".
+
+### 26.2 What the screen is now
+
+| Before | Now |
+|---|---|
+| Seven same-weight tabs, 38 px | **Four views** — `Table · Fixtures · Leaders · Cups` — and a separate **Records** group holding `Dugouts · Trophy room · Season book`, every button 44 px |
+| `Club / Competitions` only; the nation appeared in the hero and nowhere else | A trail inside the screen: `World / Zandora / Premier League`, where **World** opens the atlas, **Zandora** opens that country's atlas page, and the competition is `aria-current="page"` |
+| Nothing above the league table but the table | `Round 1 · 20 clubs · 13 Nov 2027` in the standings header — a real round, a real count and a written date |
+| `2027-10-29`, `2027-08-01`, `2027-11-13` | `29 Oct 2027`, `1 Aug 2027`, `13 Nov 2027` — the whole screen, all seven views, no ISO dates left |
+| `Leaders` counted players "with a goals" | `9 players ranked by goals` (and `by assists`, `by clean sheets` when the category changes) |
+| Fixtures headed by a flavour sentence about the association | `Zandora fixtures` with `380 fixtures this season`, the association line beneath it as context |
+| Pressing a tab moved focus to `<body>` | The pressed tab keeps focus across the redraw — Enter and Space both work, and the same is true of the leader categories |
+
+The trail is one component (`TLScreenHead.trail`), not a one-off: each step that is not the current one
+carries the attributes of the control that opens it, so the trail is navigation rather than decoration,
+and the competition page is the first caller. Phase 5 will use it for dossiers.
+
+### 26.3 Numbers
+
+| Contract | §25 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 72/72 | 72/72 |
+| Status chips | 78 | 78, 0 without words |
+| Tables without a phone mode | 0 of 22 | 0 of 22 |
+| Contrast failures | 0 | 0 |
+| Text under 11 px, not metadata | 545 | 545 |
+| Tests | 313 | 313 pass, 0 fail |
+
+Depth, `scrollHeight / clientHeight`: **2.50 at 1440** (2,017 px) and **4.37 at 390** (2,890 px) on the
+Table view, against 2.44 / 4.25 before — a trail and a second tab row, paid for by 44 px tabs.
+Leaders is 1.44 / 1.86 and the Trophy room 1.61 / 3.86.
+
+Behaviour, measured in the browser on the real career:
+
+- Tab press → the view changes and the pressed button keeps focus (`Trophy room` focused after Enter,
+  `Assists` focused after Enter on a leader category).
+- Trail **World** → atlas, head crumb `World / Atlas`. Trail **Zandora** → the atlas on that country
+  (`Kintaba, Zandora`), and coming back to Competitions returns to the same nation and the same view
+  (`Leaders`), because the view is part of the desk's history state.
+- Seven views verified one by one: Table 20 rows, Fixtures `380 fixtures this season`, Leaders 9 rows
+  `ranked by goals`, Cups (`Round 1 · 29 Oct 2027`), Dugouts, Trophy room, Season book — 0 horizontal
+  overflow at both widths, no `20xx-xx-xx` anywhere in the rendered text.
+- Sub-44 px buttons on this screen are inline text links in rows (34 club links in the standings,
+  the club names inside fixture rows), not primary controls; the sweep's worst screens are unchanged
+  (`atlas` 386, `social` 220, `kitOffice` 121).
+
+### 26.4 What this session deliberately left
+
+- **Fixtures still prints every one of the 380 fixtures** — 31.9 folds at 1440, 59.3 at 390. Grouping by
+  round or month with `Upcoming / Results / All` and a current-matchday spotlight is session 2, and it is
+  the reason that list is not in the sweep's tab walk yet.
+- **Leaders has no filters, no page size and no phone mode** — 25 rows a page with position, club and
+  minimum-appearances filters is session 3, along with `Showing x–y of N` on Football Intelligence.
+
+Sweep: 214 screens at 390, 768 and 1440 px, 0 horizontal overflow, nested scroll traps 41 / 38 / 38,
+smallest text 9 px.

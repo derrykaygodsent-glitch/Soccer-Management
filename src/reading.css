@@ -945,3 +945,29 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   .lm-table[data-tl-table=cards] td[data-col=out]:before{content:"Out ";font-size:11px;color:#9fc0b5;font-weight:700}
 }
 .lm-window{color:#a9c0c2;font-weight:600;letter-spacing:.04em}
+
+/* ---- Phase 5 · world intelligence: the in-screen trail and the competition tab groups ---- */
+.tl-trail{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 2px 2px;min-height:22px}
+.comp-room .tl-trail-link,.tl-trail-link{appearance:none;background:none;border:0;border-radius:0;padding:6px 0;min-height:32px;cursor:pointer;color:#b9cfc9;font:inherit;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.tl-trail-link:hover{color:#eaf7ea;text-decoration:underline;text-underline-offset:3px}
+.tl-trail-link:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+.tl-trail-here{color:#eaf7ea;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:750}
+.comp-tabs{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:4px 0 10px;border-bottom:1px solid #35485a}
+.comp-tabs-main,.comp-tabs-records{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
+.comp-tabs-label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#9fc0b5;font-weight:700}
+.comp-room .comp-tabs button,.comp-room .comp-metrics button{min-height:44px;padding:0 14px;border:1px solid #46606b;border-radius:8px;background:#20343f;color:#dbeae4;font:inherit;font-weight:650;cursor:pointer}
+.comp-room .comp-tabs-main button[aria-pressed=true]{background:#294942;border-color:#88ac87;color:#def6a7}
+.comp-room .comp-tabs-records button[aria-pressed=true]{background:#2c3b4d;border-color:#7fa0c8;color:#dbe8ff}
+.comp-room .comp-metrics{display:flex;flex-wrap:wrap;gap:6px;padding:0 0 10px}
+.comp-room .comp-metrics button[aria-pressed=true]{background:#294942;border-color:#88ac87;color:#def6a7}
+.comp-panel-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;justify-content:space-between}
+.comp-panel-head h3{margin:0}
+.comp-panel-head small{font-size:11.5px;color:#a9c0c2}
+.comp-round{margin:2px 0 8px;font-size:11.5px;color:#bcd3cd}
+.comp-note{margin:2px 0 0}
+@media(max-width:520px){
+  .comp-tabs{gap:6px}
+  .comp-tabs-records{width:100%;gap:6px}
+  .comp-tabs-label{flex:1 1 100%}
+  .comp-room .comp-tabs button,.comp-room .comp-metrics button{padding:0 10px;font-size:13px}
+}
