@@ -3,7 +3,7 @@
   'use strict';
   const {M,U,workspaceBanner,player,shirt,condition,pitch,pitchLines,phaseSketch}=global.TLMatchdayUI;
   const {C,esc,icon,tabs,btn,link,tag,stars,select,table,tr,rank,meter,empty}=U;
-  const S=global.TLSeasonState;
+  const S=global.TLSeasonState, Z=global.TLZones;
   const phases=[
     ['possession','In Possession','ball',['passing','tempo','build']],
     ['transition','In Transition','swap',['lost','won','target','delivery']],
@@ -21,20 +21,18 @@
     const expanded=c.ui.tacticLayout!=='compact';
     return `<div class="md-tactics-controls"><div class="md-preset-group" aria-label="Tactical presets">${M.presets.map((p,i)=>btn(i+1,'tactic-preset',i,{pressed:presetIndex(c)===i,label:`Preset ${i+1}: ${p.name}`})).join('')}<strong>${s.name}</strong></div><div class="md-tactics-meter md-intensity"><span>Intensity</span>${meter(32+(M.choices.tempo.indexOf(s.tempo)+M.choices.press.indexOf(s.press))*12,'Instruction intensity')}</div>${c.r.tab==='overview'?btn(expanded?'Compact view':'Expand tactics','tactic-layout',expanded?'compact':'expanded',{icon:expanded?'i-bars':'i-pitch'}):link('tactics','Formation','overview',null,'solid')}</div>`;
   }
-  const dutyClass=duty=>duty==='Attack'?'attack':duty==='Defend'?'defend':'support';
   function roster(c,sheet){
     const state=c.season.value, stats=S.playerStats(state);
     const filter=c.ui.tacticFilter||'all';
     const {xi,bench,out}=sheet;
-    const rows=[...xi.map(slot=>[slot.player,slot.label,'xi',slot.role]),...bench.map((p,i)=>[p,`S${i+1}`,'bench',p.pos]),...out.map(p=>[p,'–','out',p.pos])].filter(([, ,group])=>filter==='all'||filter===group);
-    const body=rows.map(([p,slot,group,r])=>{
-      const [role,desc,duty]=xi.find(x=>x.player.id===p.id)?.job||M.roleNames[r], isOut=group==='out';
+    const rows=[...xi.map(slot=>({player:slot.player,label:slot.label,group:'xi',slot})),...bench.map((player,i)=>({player,label:`S${i+1}`,group:'bench'})),...out.map(player=>({player,label:'–',group:'out'}))].filter(row=>filter==='all'||row.group===filter);
+    const body=rows.map(({player:p,label,group,slot})=>{
+      const isOut=group==='out',attackRole=slot?.attackJob?.[0]||'—',defenseRole=slot?.engineJob?.[0]||slot?.job?.[1]||'—',ipFit=slot?Z.fit(p,slot.attackPosition||slot.position,attackRole,state.plan.tactics.phaseRoles?.[state.plan.xi.indexOf(p.id)]?.attack):null,oopFit=slot?Z.fit(p,slot.position,defenseRole,state.plan.tactics.phaseRoles?.[state.plan.xi.indexOf(p.id)]?.defense):null;
       const {today,risk}=S.availability(state,p.id), current=stats[p.id];
-      return tr([`<b class="md-slot">${slot}</b>`,`<span class="md-duty md-duty-${dutyClass(duty)}" title="${desc} · ${duty}"><b>${role}</b><small>${duty}</small></span>`,
-        `<span class="md-person-shirt">${shirt(p,M.home.id)}${player(p.id)}</span>`,stars(p.ability),current.goals,condition(today),isOut?tag('Out','bad'):risk!=='Low'?tag('Load','warn'):'<span aria-label="Available" class="cc-dot cc-good"></span>',rank(current.rating)],isOut?'md-unavailable':group==='bench'?'md-reserve':'');
+      return tr([`<b class="md-slot">${label}</b>`,`<span class="md-phase-role"><b>${attackRole}</b>${ipFit==null?'':`<small>${Z.fitRating(ipFit)}/5 · ${esc(Z.fitBand(ipFit))}</small>`}</span>`,`<span class="md-phase-role"><b>${defenseRole}</b>${oopFit==null?'':`<small>${Z.fitRating(oopFit)}/5 · ${esc(Z.fitBand(oopFit))}</small>`}</span>`,`<span class="md-person-shirt">${shirt(p,M.home.id)}${player(p.id)}</span>`,stars(p.ability),current.goals,condition(today),isOut?tag('Out','bad'):risk!=='Low'?tag('Load','warn'):'<span aria-label="Available" class="cc-dot cc-good"></span>',rank(current.rating)],isOut?'md-unavailable':group==='bench'?'md-reserve':'');
     });
     return `<section class="md-roster"><div class="md-roster-tools"><div><h2 class="cc-title">Selection</h2><p>${xi.length} starters · ${bench.length} substitutes</p></div>${select('tacticFilter','Squad filter',squadViews,filter)}${btn('Selection advice','tactic-advice','',{icon:'team'})}</div>
-      ${body.length?table('Tactical selection',['Pos','Role / Duty','Player','Role ability','Gls','Con','Info','Av Rat'],body,'tactic-roster','md-roster-table'):empty('No players in this group.')}
+      ${body.length?table('Tactical selection',['Pos','In Possession role','Out of Possession role','Player','Role ability','Gls','Con','Info','Av Rat'],body,'tactic-roster','md-roster-table'):empty('No players in this group.')}
       <div class="md-roster-foot">${link('squad','Senior squad','overview')}<span class="cc-muted">Competitive appearances and ratings</span></div></section>`;
   }
   function overview(c,s){

@@ -281,7 +281,7 @@
 
     setPlayerInstruction(ti,{id,phase='attack',group,value}={}) {
       const team=this.teams[ti],slot=team?.slots.find(s=>s.player?.id===id);
-      if(!slot||!['attack','defense'].includes(phase)||!Z.individualInstructions[group]?.includes(value))return {ok:false,msg:'Invalid player instruction.'};
+      if(!slot||!['attack','defense'].includes(phase)||!Z.individualInstructionAllowed(phase,group,value))return {ok:false,msg:'Invalid player instruction.'};
       const tactical=team.tactics.tactical||{},all={...(tactical.playerInstructions||{})},player={...(all[id]||{})},instructions={...(player[phase]||{})};
       if(value==='Team default')delete instructions[group];else instructions[group]=value;player[phase]=instructions;all[id]=player;team.tactics.tactical={...tactical,playerInstructions:all};slot.instructions=all[id];
       this.careerAssignment(slot.player,slot,team);this.brainIn=0;this.recordTacticalChange?.(ti,{player:id,phase,group,value});return {ok:true};
@@ -290,7 +290,7 @@
     refreshPhaseAssignments(ti) {
       const team=this.teams[ti],M=global.TLMatchdayData;if(!team||!team.tactics.tactical&&!team.slots.some(s=>s.engineJob||s.attackJob||s.instructions))return;
       const tactical=team.tactics.tactical||{},Board=global.TLMatchBoard||(typeof require==='function'?require('./match-board.js'):null),targets=Board?.phaseTargets?.(team.slots,team.tactics.attackFormation||tactical.attackFormation)||{};
-      for(const slot of team.slots){const p=slot.player,position=slot.position||Z.zone(slot.x,slot.y,slot.role==='GK'),phase=tactical.phaseJobs?.[p.id]||{};slot.position=position;
+      for(const [index,slot] of team.slots.entries()){const p=slot.player,position=slot.position||Z.zone(slot.x,slot.y,slot.role==='GK'),phase={...(tactical.phaseJobs?.[p.id]||{}),...(tactical.phaseRoles?.[index]||{})};slot.position=position;
         const defenseChoices=Z.choices(position)||[];if(phase.defense?.job&&defenseChoices.includes(phase.defense.job)){slot.engineJob=[phase.defense.job,null,Z.duty(phase.defense.job,phase.defense.duty)];slot.defenseJob=slot.engineJob;}else if(!defenseChoices.includes(slot.engineJob?.[0])){const job=defenseChoices[0];slot.engineJob=[job,null,Z.duty(job,slot.job?.[2])];slot.defenseJob=slot.engineJob;}
         const point=tactical.attackByPlayer?.[p.id]||targets[p.id];slot.attack=point?{x:point.x,y:point.y}:undefined;slot.attackPosition=point?.role||Z.zone(point?.x??slot.x,point?.y??slot.y,slot.role==='GK');p.attackSlot=slot.attack;
         const attackChoices=Z.choices(slot.attackPosition)||[];if(phase.attack?.job&&attackChoices.includes(phase.attack.job))slot.attackJob=[phase.attack.job,null,Z.duty(phase.attack.job,phase.attack.duty)];else if(!attackChoices.includes(slot.attackJob?.[0])){const job=attackChoices[0];slot.attackJob=[job,null,Z.duty(job,slot.job?.[2])];}

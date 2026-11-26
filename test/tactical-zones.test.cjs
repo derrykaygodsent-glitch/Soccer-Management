@@ -40,3 +40,15 @@ test('individual phase instructions change actual match-engine target positionin
  const run=instruction=>{const s={tactic:'4-3-3',boardPhase:'attack'},apply=v=>B.update(s,v,players);apply('attackFormation|0|3-2-5');let slots=B.sheet(s.tactic,B.active(s),players).slots;const i=slots.findIndex(v=>v.attackPosition==='LW'||v.attackPosition==='RW');a.ok(i>1);if(instruction)apply(`individual|attack|${slots[i].player.id}|position|${instruction}`);const lineup=B.lineup(s.tactic,B.freeze(s,players),players),m=new E.Match(...D.CLUBS.slice(0,2),{seed:94,squads:[players],lineups:[lineup]});m.begin();for(let tick=0;tick<400;tick++)m.step(1/40);m.phase='open';m.controlTeam=0;m.teams[0].possession=true;m.possessionTurn=m.elapsed-8;m.ball.owner=m.teams[0].slots.find(v=>v.player.id!==slots[i].player.id).player;m.ball.x=42;m.ball.y=34;m.computeTargets();return m.teams[0].players.find(p=>p.id===slots[i].player.id).tx;};
  const base=run(null),advanced=run('Get further forward');a.ok(advanced>base+2,'the player’s actual in-possession target advances when instructed');
 });
+
+test('individual instructions are limited to the possession phase where the match engine applies them',()=>{
+ a.deepEqual(Z.individualInstructionPhases,{attack:['position','risk','shooting','dribbling'],defense:['position','pressing']});
+ a.ok(Z.individualInstructionAllowed('attack','risk','Take more risks'));a.ok(Z.individualInstructionAllowed('defense','pressing','Press more'));
+ for(const [phase,group,value] of [['attack','pressing','Press more'],['attack','position','Hold defensive position'],['defense','risk','Take fewer risks'],['defense','position','Get further forward']])a.equal(Z.individualInstructionAllowed(phase,group,value),false,`${phase} ${group} ${value} is not an engine-supported instruction`);
+ const players=D.genSquad(D.CLUBS[0],151),s={tactic:'4-3-3'},run=value=>B.update(s,value,players),id=B.sheet(s.tactic,B.active(s),players).slots[6].player.id;
+ run(`individual|attack|${id}|pressing|Press more`);run(`individual|defense|${id}|risk|Take fewer risks`);a.equal(B.active(s).playerInstructions?.[id],undefined,'invalid phase/group pairs cannot enter the saved plan');
+ run(`individual|attack|${id}|risk|Take more risks`);run(`individual|defense|${id}|pressing|Press less`);const restored=JSON.parse(JSON.stringify(s)),lineup=B.lineup(restored.tactic,B.freeze(restored,players),players),m=new E.Match(...D.CLUBS.slice(0,2),{seed:151,squads:[players],lineups:[lineup]}),enginePlayer=m.teams[0].players.find(p=>p.id===id);
+ a.equal(enginePlayer.assignment.instructions.attack.risk,'Take more risks');a.equal(enginePlayer.assignment.instructions.defense.pressing,'Press less');
+ a.equal(m.setPlayerInstruction(0,{id,phase:'attack',group:'pressing',value:'Press more'}).ok,false);a.equal(m.setPlayerInstruction(0,{id,phase:'defense',group:'risk',value:'Take fewer risks'}).ok,false);
+ a.equal(m.setPlayerInstruction(0,{id,phase:'defense',group:'pressing',value:'Press more'}).ok,true);a.equal(enginePlayer.assignment.instructions.defense.pressing,'Press more','valid defensive pressing instruction updates the live player assignment');
+});

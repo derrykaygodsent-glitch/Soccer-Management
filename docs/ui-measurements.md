@@ -1955,3 +1955,67 @@ release to decide move-or-swap — now runs everywhere.
 Two things were noticed and deliberately left alone, because this is the page as it was: the goalkeeper
 (slot 0) cannot be moved — the board keeps him where he is — and there is no keyboard or non-pointer way to
 move a marker.
+
+---
+
+## §33 · Tactics is now the page from the other Arena branch
+
+§32 described this branch's page with its drag restored. That was still not the page the owner meant, so
+the page itself was **copied from `origin/arena/ac97a20f-soccer-management`** (PR #112, tip `8c38b02`,
+"Improve match realism and tactical decision-making", 2026-11-26). Nothing else on this branch was
+redesigned, re-laid-out or re-worded.
+
+### 33.1 What was carried over
+
+| File | Change | Why |
+|---|---|---|
+| `src/board-room.js` | theirs (+204) | the workbook: header, three tabs, summary bar, Both view, marker cards |
+| `src/match-board.js` | theirs (+162) | the plan: phase formations, role/instruction commands, presets |
+| `src/tactical-zones.js` | theirs (+33) | phase-local destinations and the instruction allow-list |
+| `src/club-tactics.js` | theirs (+14) | the projection the page renders from |
+| `src/reading.css` | three-way merge (base `b8ca8d6`) | their 142 lines of tactics CSS against our 630 lines of other-screen CSS; three conflicts — the tactics block (theirs), the shell grid rule (ours: no pinned rail on this branch), the mixed tail (both) |
+| `src/data.js` | theirs (+46/−2) | the recognised-formation catalogue the Phase pickers and the matcher both list |
+| `src/engine.js` | two functions | `setPlayerInstruction` now validates against `Z.individualInstructionAllowed`; `refreshPhaseAssignments` reads index-keyed `phaseRoles` as well as player-keyed `phaseJobs` |
+| `test/tactics-board.test.cjs`, `test/tactical-zones.test.cjs` | theirs | their 43 tests replace this branch's 5 tests for the old page |
+
+### 33.2 What it measures
+
+| | This branch before | Now (copied page) | Their branch |
+|---|---|---|---|
+| Fold @1440, Both view | 2.55 | **2.65** | 2.45 |
+| Fold @390 | 4.27 | **4.34** | 3.90 |
+| Pitches at 1440 | one primary pitch | **two, side by side** (`Out of Possession` 4-1-4-1 · `In Possession` 4-2-1-3) | two, side by side |
+| Markers | 11 per pitch, no docked names | **22** `.fm-pitch-marker`s with role code, surname and the hidden-position ghost labels (`LW`, `DM`, `ST` …) | same |
+| View switcher | `Combined · In Possession · Out of Possession · Both` | same four, same order | same |
+| Tabs | `Team Shape · Team Instructions · Player Instructions` | same three, same words | same |
+| Page errors | 0 | **0** | 0 |
+
+The 1440 difference to their branch is the shell: this branch's page keeps its breadcrumb, desk briefing and
+`Pinned · Open the next match` strip, and has no 215 px rail.
+
+### 33.3 The drag, measured by pointer events
+
+A real pointer path on the built page (mouse down on a shirt, twelve moves onto a role marker, release):
+
+- mid-drag: the source carries `fm-drag-source`, the pitch carries `fm-dragging`, the destination marker
+  carries `fm-drop-target`, and the shirt shows `fm-snap-preview` (it previews the snap instead of
+  following the pointer 1:1);
+- after release: the marker's `left`/`bottom` coordinates change and the plan is written to the career;
+- `0` page errors, and no `draggable` attribute anywhere on the page (their board owns the pointer).
+
+### 33.4 The two places this branch had to differ
+
+1. **Phone header.** Their header metrics use 9–10 px labels; this branch's run 11 px, so at 390 px the
+   `1fr | auto` header left the title a 12 px sliver and `TACTICS · Kay FC` wrapped one character per line.
+   One guarded block at `max-width:640px` stacks the header (`minmax(0,1fr)`) and lets the metrics wrap.
+2. **The shell test.** Their file asserts a 215 px rail that collapses (`hc-rail-collapsed`). This branch's
+   shell has no rail at any width — the drawer is the navigation everywhere — so that test now asserts the
+   drawer itself (off-canvas rules, `toggleDrawer` state, scrim click), and asserts that Tactics does *not*
+   resurrect a pinned rail.
+
+### 33.5 Gates
+
+Tests **324 → 357** (their richer tactics suite; all pass). Contract **72/72**, 0 contrast failures, 0
+danger actions without preflight. Sweep **214 screens × 390 / 768 / 1440**, 0 horizontal overflow. Pages
+outside Tactics verified pixel-identical to the previous build at 1440 and 390 (Inbox, Squad, Club, Today,
+World, Life, and the phone header).
