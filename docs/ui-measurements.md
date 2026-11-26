@@ -1675,6 +1675,12 @@ not touched — it belongs to Phase 6, with tactics and the Season Book.
 
 ## 30. Phase 6, session 1: one screen, one job — and codes that say their own name
 
+> **Reverted 2026-11-25.** The tactics page was returned to exactly its pre-Phase-6 state at the owner's
+> request, so that the page can be reviewed together before any of this goes back in. Everything below
+> records what was built and measured; none of it is in the page right now. The work is preserved in
+> `16a51bc` (§30), `76a7d5a` (§31) and `366e62f` (§31.5) and can be brought back piece by piece.
+
+
 ### 30.1 The problem
 
 The tactics page was two screens pretending to be one. The head said `SQUAD / TACTICS`; a strip above
@@ -1762,6 +1768,12 @@ role/duty/condition editor". That is also where the 4.28 folds get cut to under 
 ---
 
 ## §31 · Phase 6, session 2 — the phone gets a phone layout
+
+> **Reverted 2026-11-25.** The tactics page was returned to exactly its pre-Phase-6 state at the owner's
+> request, so that the page can be reviewed together before any of this goes back in. Everything below
+> records what was built and measured; none of it is in the page right now. The work is preserved in
+> `16a51bc` (§30), `76a7d5a` (§31) and `366e62f` (§31.5) and can be brought back piece by piece.
+
 
 Session 1 left the screen at **4.28 folds at 390 px**, with the gate at ≤ 3.0. The budget said the phone
 was carrying a desktop's worth of chrome: a 240 px header with three stacked rows, a 549 px pitch, a

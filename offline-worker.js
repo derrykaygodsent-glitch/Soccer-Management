@@ -1,5 +1,5 @@
 // Only cache the self-contained public game. Never intercept cloud APIs or store career data.
-const prefix = 'touchline-shell-', cacheName = prefix + '53e86929d11024b531b4';
+const prefix = 'touchline-shell-', cacheName = prefix + 'ee42b04bf5384f7946b7';
 const shell = new URL('./index.html', self.registration.scope).href;
 self.addEventListener('install', event => event.waitUntil((async () => {
   const page = await fetch(shell, {cache:'reload'});

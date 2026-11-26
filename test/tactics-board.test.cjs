@@ -28,7 +28,7 @@ const career = () => ({
 
 test('tactics workspace gives shape, squad and instructions dedicated space', () => {
   const s = career(), html = TLBoardRoom.render(s, pool);
-  for (const needle of ['fm-workspace-header', 'fm-workspace-nav', 'Team Shape', 'Team Instructions', 'Player Instructions', 'fm-shape-workspace', 'fm-primary-pitch', 'fm-squad-panel', 'Out of possession', 'In possession', 'fm-sticky-summary', 'fm-code-legend', 'Average positions', 'Side by side', 'Save tactic', 'Familiarity', 'Intensity', 'data-slot="0"', 'data-board="bestXI"'])
+  for (const needle of ['fm-workspace-header', 'fm-workspace-nav', 'Team Shape', 'Team Instructions', 'Player Instructions', 'fm-shape-workspace', 'fm-primary-pitch', 'fm-squad-panel', 'Out of Possession', 'In Possession', 'Combined', 'Both', 'Save tactic', 'Familiarity', 'Intensity', 'data-slot="0"', 'data-board="bestXI"'])
     a.ok(html.includes(needle), 'missing ' + needle);
   a.equal((html.match(/class="fm-row(?: on)?"/g) || []).length, 11, 'eleven starters share selection rows');
   a.ok((html.match(/class="fm-row fm-sub"/g) || []).length >= 1, 'actual substitutes are listed');
@@ -41,7 +41,7 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   a.match(both, /data-phase-view="defense"/);
   a.match(both, /data-phase-view="attack"/);
   s.boardPhase = 'combined';
-  a.match(TLBoardRoom.render(s, pool), /Average positions/);
+  a.match(TLBoardRoom.render(s, pool), /Combined · average player positions/);
 
   const handlers = {}, root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, querySelector: () => null };
   let draws = 0;
@@ -124,132 +124,4 @@ test('saved and imported tactic presets survive career JSON reload with validate
   a.equal(restored.tacticLibrary.at(-1).name,'Imported shape');
   a.equal(TLMatchBoard.active(restored).untrusted,undefined);
   a.throws(()=>TLMatchBoard.update(restored,'importPreset|0|bad',pool),/valid tactic JSON/i);
-});
-
-test('every pitch code is named in words beside it, and the team sheet names each position', () => {
-  const s = career(); s.id = 'c-codes';
-  const html = TLBoardRoom.render(s, pool);
-  const legend = html.match(/<ul class="fm-code-legend"[\s\S]*?<\/ul>/);
-  a.ok(legend, 'the pitch carries a code key');
-  const items = [...legend[0].matchAll(/<li><b>([^<]+)<\/b> <span>([A-Za-z ]+?)(?:<em class="fm-duty">, ([a-z]+)<\/em>)?<\/span><\/li>/g)]
-    .map(m => ({ code: m[1], words: m[2] + (m[3] ? ', ' + m[3] : ''), duty: m[3] || '' }));
-  a.ok(items.length >= 5, 'each distinct assignment on the pitch appears once');
-  for (const item of items) {
-    a.match(item.code, /^[A-Za-z]+-(At|De|Su)$/, `${item.code} is a role-duty code`);
-    a.match(item.words, /^[A-Z][a-z].*, (attacking|defending|supporting)$/, `${item.code} is named in words: ${item.words}`);
-    a.match(item.duty, /^(attacking|defending|supporting)$/, `${item.code} keeps its duty in its own element, so a narrow screen can drop the verb without losing the code or the role`);
-    a.equal(new Set(items.map(i => i.code)).size, items.length, 'no code is explained twice');
-  }
-  a.match(html, /<abbr title="Left-back">LB<\/abbr>/, 'a position code carries its plain name');
-  a.match(html, /<span class="fm-role"><b>GK-De<\/b><small>Goalkeeper<\/small><\/span>/, 'the team sheet names the role under its code');
-  a.doesNotMatch(html, /<span class="fm-role"><b>[^<]+<\/b><small>[A-Z][a-z]+-[A-Z]/, 'role names are written in sentence case, not as codes');
-});
-
-test('the summary stays on screen through every workspace tab and says what needs a decision', () => {
-  const s = career();
-  const html = TLBoardRoom.render(s, pool);
-  const summary = html.match(/<div class="fm-sticky-summary" role="status" aria-label="Tactic summary">[\s\S]*?<\/div>/);
-  a.ok(summary, 'the tactic summary is part of the workspace, not of one tab');
-  for (const words of [/Out of possession/, /In possession/, /Mentality/, /Familiarity/]) a.match(summary[0], words);
-  a.match(summary[0], /class="fm-sticky-state (is-clear|has-risks)">(?:Shape checked|\d+ to review)</, 'the state is either checked or counted in words');
-  a.ok(html.indexOf('fm-sticky-summary') < html.indexOf('fm-workspace-content'), 'the summary sits above the tab content it summarises');
-});
-
-test('the four shape views are named in words and one command picks the XI', () => {
-  const s = career(); s.id = 'c-views';
-  const html = TLBoardRoom.render(s, pool);
-  const views = html.match(/<div class="fm-shape-switch"[\s\S]*?<\/div>/)[0];
-  const labels = [...views.matchAll(/<button[^>]*>([^<]+)<\/button>/g)].map(m => m[1].trim());
-  a.deepEqual(labels, ['Out of possession', 'In possession', 'Average positions', 'Side by side']);
-  a.equal((html.match(/data-board="bestXI"/g) || []).length, 1, 'one auto-pick command, not two');
-  a.match(html, /<small>TACTIC DESIGN · Kay FC<\/small>/, 'the screen names the job it does');
-  a.doesNotMatch(html, /MATCH PREPARATION/, 'prep is not this screen');
-});
-
-test('the team sheet reads as named lines, and every starter sits in exactly one of them', () => {
-  const s = career(); s.id = 'c-lines'; s.boardPhase = 'base';
-  const html = TLBoardRoom.render(s, pool);
-  const sheet = html.slice(html.indexOf('<div class="fm-squad-table">'), html.indexOf('class="fm-bench-toggle"'));
-  const lines = [...sheet.matchAll(/<div class="fm-line"><div class="fm-line-head"><b>([A-Za-z]+)<\/b><small>(\d+)<\/small><\/div>([\s\S]*?)<\/div>/g)]
-    .map(m => ({ name: m[1], count: +m[2], rows: (m[3].match(/class="fm-row"/g) || []).length }));
-  a.deepEqual(lines.map(l => l.name), ['Goalkeeper', 'Defence', 'Midfield', 'Attack'], 'the XI is grouped keeper, defence, midfield, attack');
-  for (const line of lines) a.equal(line.rows, line.count, `${line.name} heading counts the rows under it`);
-  a.equal(lines.reduce((n, l) => n + l.rows, 0), 11, 'all eleven starters are listed, and only once');
-  for (let i = 0; i < 11; i++) a.equal((sheet.match(new RegExp(`class="fm-row(?: on)?" data-slot="${i}"`, 'g')) || []).length, 1, `slot ${i} appears in one line`);
-  a.match(lines[0].name === 'Goalkeeper' ? sheet : /$^/, /data-slot="0"/, 'the keeper opens the keeper line');
-});
-
-test('the substitutes fold behind one labelled control that opens on demand', () => {
-  const s = career(); s.id = 'c-bench'; s.boardPhase = 'base';
-  a.match(TLBoardRoom.render(s, pool), /<button type="button" class="fm-bench-toggle" data-bench-toggle aria-expanded="false" aria-controls="fm-bench"><span>Substitutes · \d+<\/span><em class="fm-bench-cue" aria-hidden="true"><\/em><\/button>/, 'the bench has a labelled control and starts closed');
-  const bench = TLBoardRoom.render(s, pool).match(/<div class="fm-bench" id="fm-bench">([\s\S]*?)<\/div>/)[1];
-  a.ok((bench.match(/fm-row fm-sub/g) || []).length >= 1, 'the substitutes are in the document, not fetched when asked for');
-
-  const handlers = {}, root = { addEventListener: (k, fn) => { handlers[k] = fn; }, querySelector: () => null };
-  let draws = 0;
-  TLBoardRoom.bind(root, () => {}, () => draws++);
-  const seen = [], panel = { classList: { toggle: (name, on) => seen.push([name, on]) } };
-  const toggle = { dataset: {}, hasAttribute: n => n === 'data-bench-toggle', closest: () => panel, setAttribute: (n, v) => seen.push([n, v]) };
-  handlers.click({ target: { closest: sel => sel === 'button' ? toggle : null } });
-  a.deepEqual(seen, [['bench-open', true], ['aria-expanded', 'true']], 'the control opens the bench in place');
-  a.equal(draws, 0, 'opening the bench does not rebuild the screen');
-  a.match(TLBoardRoom.render(s, pool), /class="fm-squad-panel bench-open"/, 'and it stays open through the next render');
-});
-
-test('each starter row names the player in words, not only inside the picker', () => {
-  const s = career(); s.id = 'c-rows'; s.boardPhase = 'base';
-  const html = TLBoardRoom.render(s, pool);
-  a.equal((html.match(/<span class="fm-name">/g) || []).length, 11, 'every starter row carries a readable name');
-  a.match(html, /<span class="fm-name">[A-Z][a-zA-Z'’.\- ]+<\/span>/, 'the name is a name');
-  a.doesNotMatch(html, /fm-name">(?:undefined|null|Open position<\/span><\/span>)/, 'a filled slot names a person');
-  a.match(html, /<select class="fm-player-picker" data-player-pick="0"/, 'the picker is still the control beside it');
-});
-
-test('the phone rules that make this fit are the ones the docs measure', () => {
-  const css = fs.readFileSync(path.join(__dirname, '../src/reading.css'), 'utf8');
-  const phone = css.slice(css.indexOf('@media(max-width:700px){'), css.length);
-  a.match(phone, /\.fm-squad-panel \.fm-player-editor\{position:fixed/, 'the player editor becomes a sheet on a phone');
-  a.match(phone, /\.fm-squad-panel \.fm-bench\{display:none\}/, 'the bench folds on a phone');
-  a.match(phone, /\.fm-squad-panel\.bench-open \.fm-bench\{display:block\}/, 'and unfolds when its control says so');
-  a.match(phone, /\.fm-duty\{display:none\}/, 'the key keeps codes and roles on a phone');
-  a.match(phone, /\.fm-squad-panel \.fm-row> \.fm-stars/, 'the row drops the columns the sheet now owns');
-});
-
-test('the pitch markers are dragged by the board, not by the browser', () => {
-  const s = career(); s.id = 'c-drag'; s.boardPhase = 'base';
-  const html = TLBoardRoom.render(s, pool);
-  a.equal((html.match(/<button type="button" title="[^"]*" data-slot=/g) || []).length, 11, 'eleven markers are rendered');
-  a.doesNotMatch(html, /draggable="true"/, 'no marker starts a native drag, which cancels the pointer drag the board implements');
-  const src = fs.readFileSync(path.join(__dirname, '../src/board-room.js'), 'utf8');
-  a.match(src, /setPointerCapture/, 'the board captures the pointer on the marker');
-  a.match(src, /lostpointercapture/, 'and gives the drag up when the capture is lost');
-});
-
-test('a shirt tap selects, and on a phone the editor is opened by a team-sheet row', () => {
-  const s = career(); s.id = 'c-sheet';
-  const handlers = {}, root = { addEventListener: (k, fn) => { handlers[k] = fn; }, querySelector: () => null };
-  let draws = 0;
-  TLBoardRoom.bind(root, () => {}, () => draws++);
-  const button = slot => ({ dataset: slot == null ? {} : { slot: String(slot) }, hasAttribute: n => n === 'data-slot' || n === 'data-clear-slot' && slot == null });
-  const click = (target, zone) => handlers.click({ target: { closest: sel => sel === 'button' ? target
-    : sel === '.shape-field' ? (zone === 'field' ? {} : null)
-    : sel === '.fm-squad-panel' ? (zone === 'panel' ? {} : null) : null } });
-  const clear = { dataset: {}, hasAttribute: n => n === 'data-clear-slot' };
-  click(clear, null);
-  globalThis.matchMedia = () => ({ matches: true });
-  try {
-    click(button(3), 'field');
-    let html = TLBoardRoom.render(s, pool);
-    a.doesNotMatch(html, /fm-squad-panel sheet-open/, 'a shirt tap on a phone leaves the pitch in view');
-    click(button(4), 'panel');
-    html = TLBoardRoom.render(s, pool);
-    a.match(html, /class="fm-squad-panel[^"]* sheet-open"/, 'a team-sheet row opens the sheet on a phone');
-    a.match(html, /<section class="fm-player-editor">/, 'the sheet is the editor itself');
-    globalThis.matchMedia = () => ({ matches: false });
-    click(button(5), 'panel');
-    html = TLBoardRoom.render(s, pool);
-    a.doesNotMatch(html, /sheet-open/, 'a desktop keeps the editor inline and has no sheet state');
-    a.match(html, /<section class="fm-player-editor">/, 'the inline editor still describes the selected player');
-    a.ok(draws >= 4, 'each of those taps redrew the board');
-  } finally { delete globalThis.matchMedia; }
 });
