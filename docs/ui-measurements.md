@@ -450,3 +450,43 @@ smallest text 9 px. Widest fold 13.06 / 9.82 / 11.20 viewports. Tests: 313 pass.
 
 Nothing. The palette, the dock, the panels and the Back behaviour are in.
 The rail is now a drawer rather than a column, which is what FM26 did with it.
+
+## 13. Two shell bugs found on the phone preview
+
+Reported from the running game preview at about 641 px wide. Both were real and reproduced first.
+
+### 13.1 The sidebar was pinned open on Tactics only
+
+`src/reading.css` carried a block from the old shell that forced the rail back into the layout
+whenever the tactics workspace was on screen:
+
+```
+#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-sidebar{display:flex!important;position:relative!important;visibility:visible!important;transform:none!important}
+```
+
+With the rail replaced by a drawer, that meant Tactics kept a 265 px panel over the content that
+could not be closed. Removed, the shell is now one column on Tactics like everywhere else, and the
+drawer keeps its normal open and close behaviour.
+
+### 13.2 A hub panel stayed open after choosing a screen
+
+The click handler closed the panel only when the click landed outside the top bar. Choosing a
+destination is a click *inside* it, so the panel stayed open over the new screen. Picking a screen
+now closes the panel and refreshes the dock and the pin strip.
+
+The drawer also hid late (visibility transitioned with the same timing as the slide). It now hides
+deterministically: `transition: transform .19s ease-out, visibility 0s linear .19s`.
+
+Verified at 641 px by driving it: open the drawer, pick Tactics, drawer closed and hidden; open the
+Squad hub, pick First team, panel closed, dock marks Squad, breadcrumb `Squad / First team`.
+
+### 13.3 Portal band on the Overview
+
+The Overview now opens with a **Needs you** band: one row per queue that is actually open, each a
+status chip and a name ("1 unread Inbox", "2 to review Registration deadline"), and one click to
+the screen that resolves it. The head no longer repeats the same chip, so nothing is stated twice
+on one screen.
+
+Numbers after this pass: 70 screens, 0 errors, anchors 70/70, one primary 70/70, breadcrumbs 70/70,
+long lists hiding rows 0, contrast 0. Sweep: 624 states, 0 errors, 0 contrast, 0 overflow,
+smallest text 9 px. Tests: 313 pass.

@@ -181,6 +181,11 @@
       else go(dockItem.dataset.dock);
       return;
     }
+    if (event.target.closest('[data-hub-panel] [data-hc-open]')) {
+      closeHub();
+      setTimeout(() => { paintPins(); markDock(); }, 0);
+      return;
+    }
     if (!event.target.closest('.tl-topnav')) closeHub();
     /* any navigation refreshes which screen is marked as current */
     if (event.target.closest('[data-hc-open]')) setTimeout(() => { paintPins(); markDock(); }, 0);

@@ -97,7 +97,8 @@
   function chips(page, ctx) {
     const out = [];
     const unread = Number(ctx && ctx.counts && ctx.counts.inbox) || 0;
-    if (unread && page !== 'inbox') out.push(chip('due', unread + ' unread', 'in Inbox'));
+    /* the Overview carries the same queue in its portal band, so it is not repeated here */
+    if (unread && page !== 'inbox' && page !== 'home') out.push(chip('due', unread + ' unread', 'in Inbox'));
     const due = Number(ctx && ctx.actions && ctx.actions[page]) || 0;
     if (due) out.push(chip('risk', due + ' to review', WHY[page] || 'Action needed'));
     return out.join('');
@@ -111,6 +112,28 @@
     const hubs = HUBS.map(h => `<button type="button" class="tl-hub" data-hub="${h.id}" aria-expanded="false" aria-controls="tl-hub-${h.id}"><span>${h.label}</span><small class="desk-badge" hidden></small></button>`).join('');
     const panels = HUBS.map(h => `<div class="tl-hub-panel" id="tl-hub-${h.id}" data-hub-panel="${h.id}" hidden>${h.items.map(([id, label]) => `<button type="button" class="tl-hub-item" data-hc-open="${esc(id)}"><span>${esc(label)}</span><small class="desk-badge" hidden></small></button>`).join('')}</div>`).join('');
     return `<div class="tl-hubs">${hubs}</div><div class="tl-pins" data-tl-pins aria-label="Pinned screens"></div><div class="tl-hub-panels">${panels}</div>`;
+  }
+
+  /* The queue a manager lands on. Named reasons, one click each, nothing hidden. */
+  const PORTAL_WHY = {
+    create: 'Club entry deadline',
+    home: 'Board interview',
+    kitOffice: 'Registration deadline',
+    bids: 'Transfer talks',
+    neighbourhood: 'Community invitation'
+  };
+  const PORTAL_GO = { home: 'interviewDesk' };
+
+  function portal(ctx) {
+    const rows = [];
+    const unread = Number(ctx && ctx.counts && ctx.counts.inbox) || 0;
+    if (unread) rows.push({ state: 'next', small: unread + ' unread', words: 'Inbox', go: 'inbox' });
+    for (const [key, value] of Object.entries((ctx && ctx.actions) || {})) {
+      if (!value) continue;
+      rows.push({ state: 'due', small: value + ' to review', words: PORTAL_WHY[key] || key, go: PORTAL_GO[key] || key });
+    }
+    if (!rows.length) return '';
+    return `<section class="tl-portal" aria-label="Needs you"><h2 class="tl-portal-title">Needs you</h2><ul>${rows.slice(0, 4).map(row => `<li><button type="button" class="tl-portal-row" data-hc-open="${esc(row.go)}"><span class="tl-status" data-tl-status="${row.state}"><small>${esc(row.small)}</small>${esc(row.words)}</span><span class="tl-portal-go">Open</span></button></li>`).join('')}</ul></section>`;
   }
 
   /* One bar: where you are on the left, what needs doing and the one primary action on the right.
@@ -131,6 +154,6 @@
 </section>`;
   }
 
-  g.TLScreenHead = { HUBS, NEXT, rail, topbar, html, hubOf, titles: () => new Map(TITLES) };
+  g.TLScreenHead = { HUBS, NEXT, rail, topbar, html, portal, hubOf, titles: () => new Map(TITLES) };
   if (typeof module !== 'undefined') module.exports = g.TLScreenHead;
 })(typeof window === 'undefined' ? globalThis : window);

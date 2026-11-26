@@ -155,8 +155,8 @@
    its job on a phone (a drawer) and its content is reachable from the menu button at any width.
    ----------------------------------------------------------------------------------------- */
 .hc-shell{grid-template-columns:minmax(0,1fr)}
-.hc-sidebar{position:fixed;inset:0 auto 0 0;z-index:22;width:min(265px,calc(100% - 58px));visibility:hidden;transform:translateX(-100%);transition:transform .19s ease-out,visibility .19s;box-shadow:10px 0 38px #050a14aa;opacity:1}
-.hc-sidebar.hc-open{visibility:visible;transform:translateX(0)}
+.hc-sidebar{position:fixed;inset:0 auto 0 0;z-index:22;width:min(265px,calc(100% - 58px));visibility:hidden;transform:translateX(-100%);transition:transform .19s ease-out,visibility 0s linear .19s;box-shadow:10px 0 38px #050a14aa;opacity:1}
+.hc-sidebar.hc-open{visibility:visible;transform:translateX(0);transition:transform .19s ease-out,visibility 0s linear 0s}
 .hc-mobile-menu{display:grid}
 
 .tl-topnav{position:relative;z-index:3;background:var(--ui-surface-1);border-bottom:1px solid var(--ui-edge)}
@@ -211,3 +211,15 @@
 @media (max-width:720px){.hc-tabs{display:none}.hc-location h1{font-size:var(--ui-text-l)}}
 .tl-palette-field input:focus-visible{outline:none}
 .tl-palette-box:focus-within{border-color:var(--ui-edge-action)}
+
+/* ---- Phase 2 · the queue a manager lands on -------------------------------------------- */
+.tl-portal{display:grid;gap:6px;padding:var(--ui-space-3);border:1px solid var(--ui-edge-strong);border-radius:var(--ui-radius-l);background:linear-gradient(160deg,var(--ui-surface-3),var(--ui-surface-2))}
+.tl-portal-title{margin:0;color:var(--ui-ink);font-family:var(--ui-font-display);font-size:var(--ui-text-l);letter-spacing:var(--ui-tracking-title)}
+.tl-portal ul{display:grid;gap:4px;margin:0;padding:0;list-style:none}
+.tl-portal-row{appearance:none;display:flex;align-items:center;gap:var(--ui-space-3);width:100%;min-height:40px;padding:4px 8px;border:1px solid transparent;border-radius:var(--ui-radius-s);background:var(--ui-surface-inset);color:var(--ui-ink);font:inherit;text-align:left;cursor:pointer}
+.tl-portal-row:hover{border-color:var(--ui-edge-action);background:var(--ui-surface-4)}
+.tl-portal-row:focus-visible{outline:var(--ui-focus);outline-offset:var(--ui-focus-offset)}
+.tl-portal-go{margin-left:auto;color:var(--ui-dim);font-size:var(--ui-text-s);white-space:nowrap}
+@media (max-width:720px){.tl-portal-row{min-height:var(--ui-tap)}}
+.tl-screen-top{display:grid;gap:var(--ui-space-3);min-width:0}
+.tl-screen-top{grid-column:1/-1;width:100%}

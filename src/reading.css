@@ -650,15 +650,16 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 @media(max-width:700px){#homeScreen:has(.fm-tactics-workspace) .fm-player-list,#homeScreen:has(.fm-tactics-workspace) .fm-player-detail{min-height:0}#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace{min-height:0}}
 
 /* Navigation remains available on Tactics: retain the career rail and header while keeping the tactical module expansive. */
-#homeScreen.hc-shell:has(.fm-tactics-workspace){display:grid!important;grid-template-columns:215px minmax(0,1fr)!important;width:100%!important;max-width:none!important}
-#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-sidebar{display:flex!important;position:relative!important;inset:auto!important;width:auto!important;visibility:visible!important;transform:none!important;box-shadow:none!important}
+/* The shell no longer has a fixed rail: Tactics keeps the same column as every other screen. */
+#homeScreen.hc-shell:has(.fm-tactics-workspace){display:flex!important;flex-direction:column!important;width:100%!important;max-width:none!important}
+/* the sidebar stays a drawer on Tactics, exactly as everywhere else */
 #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-main{display:flex!important;flex-direction:column!important;width:auto!important;min-width:0!important;height:100dvh!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-bar{display:flex!important;flex:none!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-tabs{display:flex!important;flex:none!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) #homeFrame{width:auto!important;max-width:none!important;height:auto!important;min-height:0!important;flex:1 1 0!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) #clubPage{height:100%!important;max-height:none!important;min-width:0!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) #clubPage>.life-desk{width:100%!important;max-width:none!important}
-@media(max-width:980px){#homeScreen.hc-shell:has(.fm-tactics-workspace){display:flex!important;flex-direction:column!important}#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-sidebar{position:fixed!important;display:flex!important}#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-main{width:100%!important}}
+@media(max-width:980px){#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-main{width:100%!important}}
 
 
 /* --- B5 (UI audit): squad & directory tables must not scroll sideways --- */
