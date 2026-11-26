@@ -37,6 +37,21 @@ NODE_PATH=$PWD/node_modules LD_LIBRARY_PATH=/tmp/al2023/lib \
 Routes: `/` viewer · `/stream` MJPEG · `/frame.jpg` latest frame · `/state` JSON ·
 `/log?text=` note · `/health`.
 
+### The rule that makes it show real work
+
+**Anything the agent does in a browser runs through this browser.** The sweep and the contract
+checker take `--live`, which attaches to CDP :9222, reuses the streamed context and narrates every
+page in the work log:
+
+```bash
+node scripts/ui-sweep.cjs --career=.audit/career.json --live
+node scripts/ui-contract.cjs --live
+node scripts/say.cjs "now editing the squad table"     # any note, any time
+```
+
+Without `--live`, those scripts open a private browser — fast, but invisible. That is why an idle
+screen does not mean nothing happened: check the work log and the "last action" clock first.
+
 ### Driving the same browser
 
 ```js

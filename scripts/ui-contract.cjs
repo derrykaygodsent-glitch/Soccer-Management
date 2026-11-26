@@ -20,6 +20,12 @@ const { chromium: pw } = require('playwright');
 
 const ROOT = path.resolve(__dirname, '..');
 const STRICT = process.argv.includes('--strict');
+const LIVE = process.argv.includes('--live');
+const say = (text) => {
+  if (!LIVE) return;
+  const req = require('node:http').get({ host: '127.0.0.1', port: 4180, path: '/log?text=' + encodeURIComponent(text) }, res => res.resume());
+  req.on('error', () => {});
+};
 const careerArg = process.argv.find(a => a.startsWith('--career='));
 const careerFile = careerArg ? path.resolve(ROOT, careerArg.slice(9)) : path.join(ROOT, '.audit', 'career.json');
 const GAME = process.env.GAME_URL || 'http://127.0.0.1:4173';
@@ -154,19 +160,23 @@ const PROBE = () => {
 };
 
 (async () => {
-  const executablePath = await chromium.executablePath().catch(() => '/tmp/chromium');
-  const browser = await pw.launch({
-    executablePath,
-    args: [...chromium.args, '--no-sandbox', '--disable-gpu', '--hide-scrollbars'],
-    env: { ...process.env, LD_LIBRARY_PATH: process.env.LD_LIBRARY_PATH || '/tmp/al2023/lib' },
-    headless: true
-  });
+  const browser = LIVE
+    ? await pw.connectOverCDP(process.env.CDP_URL || 'http://127.0.0.1:9222')
+    : await pw.launch({
+      executablePath: await chromium.executablePath().catch(() => '/tmp/chromium'),
+      args: [...chromium.args, '--no-sandbox', '--disable-gpu', '--hide-scrollbars'],
+      env: { ...process.env, LD_LIBRARY_PATH: process.env.LD_LIBRARY_PATH || '/tmp/al2023/lib' },
+      headless: true
+    });
+  const liveContext = LIVE ? (browser.contexts()[0] || await browser.newContext()) : null;
+  if (LIVE) say('contract check · ' + WIDTHS.join('/') + 'px');
 
   const rows = [];
   const errors = [];
 
   for (const width of WIDTHS) {
-    const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 }, deviceScaleFactor: 1 });
+    const viewport = { width, height: width === 390 ? 844 : 900 };
+    const context = LIVE ? liveContext : await browser.newContext({ viewport, deviceScaleFactor: 1 });
     if (fs.existsSync(careerFile)) {
       const save = JSON.parse(fs.readFileSync(careerFile, 'utf8')).career;
       await context.addInitScript((c) => {
@@ -175,6 +185,7 @@ const PROBE = () => {
       }, save);
     }
     const page = await context.newPage();
+    if (LIVE) await page.setViewportSize(viewport);
     page.on('pageerror', e => errors.push({ width, message: e.message.slice(0, 160) }));
     await page.goto(GAME, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(900);
@@ -196,10 +207,11 @@ const PROBE = () => {
         errors.push({ width, page: id, message: error.message.slice(0, 160) });
       }
     }
-    await context.close();
+    await page.close();
   }
 
-  await browser.close();
+  if (!LIVE) await browser.close();
+  else say('contract check finished');
 
   const sum = rows.reduce((a, r) => {
     a.pageAnchors += r.pageAnchors ? 1 : 0;
@@ -257,6 +269,8 @@ const PROBE = () => {
     process.exit(failing ? 1 : 0);
   }
   console.log('  baseline mode — contracts are reported, not enforced yet.\n');
+  /* a CDP connection keeps the event loop alive; end the script, not the browser */
+  if (LIVE) process.exit(0);
 })().catch(error => {
   console.error('contract check failed:', error.message);
   process.exit(1);

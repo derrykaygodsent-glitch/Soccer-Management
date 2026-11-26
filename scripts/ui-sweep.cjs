@@ -182,22 +182,41 @@ function measure() {
   };
 }
 
+const LIVE = process.argv.includes('--live');
+const say = (text) => {
+  if (!LIVE) return;
+  const req = require('node:http').get({ host: '127.0.0.1', port: 4180, path: '/log?text=' + encodeURIComponent(text) }, r => r.resume());
+  req.on('error', () => {});
+};
+
 (async () => {
   fs.mkdirSync(path.join(OUT, CAREER ? 'shots-career' : 'shots'), { recursive: true });
-  const browser = await pw.launch({
-    executablePath: '/tmp/chromium',
-    args: [...chromium.args, '--no-sandbox', '--disable-gpu', '--font-render-hinting=none'],
-    env: { ...process.env, LD_LIBRARY_PATH: '/tmp/al2023/lib' },
-    headless: true
-  });
+  /* --live attaches to the browser the live screen is streaming, so the work is visible. */
+  const browser = LIVE
+    ? await pw.connectOverCDP(process.env.CDP_URL || 'http://127.0.0.1:9222')
+    : await pw.launch({
+      executablePath: '/tmp/chromium',
+      args: [...chromium.args, '--no-sandbox', '--disable-gpu', '--font-render-hinting=none'],
+      env: { ...process.env, LD_LIBRARY_PATH: '/tmp/al2023/lib' },
+      headless: true
+    });
+  /* Reuse the live screen's own context: its screencast listener only sees pages that
+     belong to that context, which is what makes the work visible. */
+  const liveContext = LIVE ? (browser.contexts()[0] || await browser.newContext()) : null;
+  if (LIVE) say('sweep started · ' + WIDTHS.join('/') + 'px');
 
   const rows = [];
   const errors = [];
 
   for (const width of WIDTHS) {
-    const page = await browser.newPage({
-      viewport: { width, height: width <= 480 ? 844 : width <= 1024 ? 1024 : 900 }
-    });
+    const viewport = { width, height: width <= 480 ? 844 : width <= 1024 ? 1024 : 900 };
+    const page = LIVE
+      ? await (async () => {
+        const p = await liveContext.newPage();
+        await p.setViewportSize(viewport);
+        return p;
+      })()
+      : await browser.newPage({ viewport });
     page.on('pageerror', e => errors.push(`${width}px pageerror: ${e.message.slice(0, 120)}`));
     page.on('console', m => { if (m.type() === 'error') errors.push(`${width}px console: ${m.text().slice(0, 120)}`); });
 
@@ -243,6 +262,7 @@ function measure() {
 
     const pages = await page.$$eval('#homeNav [data-hc-open]', els => [...new Set(els.map(e => e.dataset.hcOpen))]);
     for (const id of pages) {
+      say(`${width}px · ${id}`);
       /* Navigate in-page: on phones the sidebar is a closed drawer, so a real
          click can't reach it. HTMLElement.click() still fires the delegated handler. */
       await page.evaluate(sel => document.querySelector(sel)?.click(), `#homeNav [data-hc-open="${id}"]`);
@@ -271,7 +291,8 @@ function measure() {
     console.log(`done ${width}px — ${rows.filter(r => r.width === width).length} screens`);
   }
 
-  await browser.close();
+  if (!LIVE) await browser.close();
+  else say('sweep finished');
   fs.writeFileSync(path.join(OUT, CAREER ? 'sweep-career.json' : 'sweep.json'), JSON.stringify({ rows, errors, career: CAREER ? { id: CAREER.id, day: CAREER.day, club: CAREER.club?.name, roster: CAREER.roster?.length } : null }, null, 1));
 
   /* console summary */
@@ -289,4 +310,6 @@ function measure() {
     console.log(`   most sub-44px targets: ${worst.map(w => `${w.page}/${w.tab}:${w.smallTargets}`).join(', ')}`);
   }
   if (errors.length) console.log(`\n${errors.length} runtime errors (first 5):\n  ` + [...new Set(errors)].slice(0, 5).join('\n  '));
+  /* a CDP connection keeps the event loop alive; end the script, not the browser */
+  if (LIVE) process.exit(0);
 })().catch(e => { console.error('SWEEP FAILED', e.message); process.exit(1); });

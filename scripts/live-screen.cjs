@@ -56,6 +56,7 @@ const clients = new Set();
 let framesThisSecond = 0;
 let lastPush = 0;
 let activeCdp = null;
+let activePage = null;
 
 function pushFrame(buf) {
   state.frame = buf;
@@ -73,7 +74,7 @@ function pushFrame(buf) {
 }
 
 const note = (text) => {
-  const line = { at: new Date().toISOString().slice(11, 19), text: String(text).slice(0, 240) };
+  const line = { at: new Date().toISOString().slice(11, 19), ts: Date.now(), text: String(text).slice(0, 240) };
   state.log.push(line);
   if (state.log.length > 40) state.log.shift();
   console.log(`[${line.at}] ${line.text}`);
@@ -106,7 +107,8 @@ function pageHtml() {
   .ring{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;border:2px solid var(--lime);opacity:0;pointer-events:none;z-index:2}
   .ring.go{animation:pulse .5s ease-out}
   @keyframes pulse{0%{opacity:.95;transform:scale(.4)}100%{opacity:0;transform:scale(1.35)}}
-  .badge{position:absolute;right:10px;top:10px;z-index:4;display:flex;gap:6px;align-items:center;padding:4px 8px;border-radius:999px;background:#05090fcc;border:1px solid var(--edge);font-size:11px;color:var(--dim)}
+  .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 8px;padding:5px 9px;border:1px solid var(--edge);border-radius:999px;background:var(--panel);font-size:11.5px;color:var(--dim);width:fit-content}
+  .bar b{color:var(--ink);font-weight:650}
   .dot{width:7px;height:7px;border-radius:50%;background:var(--lime)}
   .dot.off{background:#ef7184}
   aside{display:grid;align-content:start;gap:10px;min-width:0}
@@ -125,8 +127,8 @@ function pageHtml() {
   <main>
     <h1>Live screen</h1>
     <p class="sub">This is the actual headless browser this workspace drives — frames straight from Chrome, cursor from the last real mouse event.</p>
+    <div class="bar"><span class="dot off" id="dot"></span><b id="live">connecting…</b><span id="tick">frame 0</span><span>updates every second, even when idle</span></div>
     <div class="stage" id="stage">
-      <div class="badge"><span class="dot off" id="dot"></span><span id="live">connecting…</span></div>
       <img id="view" alt="Live view of the agent's browser" src="/stream">
       <div class="ring" id="ring"></div>
       <div class="cursor" id="cursor"></div>
@@ -198,9 +200,11 @@ function pageHtml() {
       $('seq').textContent = s.seq;
       $('fps').textContent = s.fps + ' fps';
       $('size').textContent = s.viewport.w + '×' + s.viewport.h;
+      $('tick').textContent = 'frame ' + s.seq + ' · ' + s.fps + ' fps';
       const fresh = s.frameAgeMs < 4000;
       dot.className = 'dot' + (fresh ? '' : ' off');
-      liveEl.textContent = fresh ? 'live' : 'waiting';
+      const age = s.lastActionTs ? Math.round((Date.now() - s.lastActionTs) / 1000) : null;
+      liveEl.textContent = (fresh ? 'live' : 'waiting') + (age != null ? ' · last action ' + age + 's ago' : '');
       const log = $('log');
       log.innerHTML = s.log.slice().reverse().map(l => '<li><time>' + l.at + '</time><span>' + l.text.replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c])) + '</span></li>').join('') || '<li><time>—</time><span>idle</span></li>';
 
@@ -274,10 +278,13 @@ async function main() {
     const cdp = await context.newCDPSession(page).catch(() => null);
     if (!cdp) return;
     cdp.on('Page.screencastFrame', async ({ data, sessionId }) => {
-      pushFrame(Buffer.from(data, 'base64'));
+      /* Only the page being watched feeds the stream, so a background tab cannot takeover. */
+      if (!activePage || page === activePage) pushFrame(Buffer.from(data, 'base64'));
       try { await cdp.send('Page.screencastFrameAck', { sessionId }); } catch { /* page closed */ }
     });
     activeCdp = cdp;
+    activePage = page;
+    page.on('close', () => { if (activePage === page) activePage = null; });
     /* Page.enable must come first: starting the screencast before the Page domain is up
        yields zero frames on this Chromium build. */
     await cdp.send('Page.enable').catch(() => {});
@@ -309,8 +316,10 @@ async function main() {
   note('Live screen ready');
 
   const readState = async () => {
+    const target = activePage;
+    if (!target) return;
     try {
-      const info = await page.evaluate(() => ({
+      const info = await target.evaluate(() => ({
         x: window.__tlCursor?.x ?? -1,
         y: window.__tlCursor?.y ?? -1,
         at: window.__tlCursor?.at ?? 0,
@@ -373,6 +382,7 @@ async function main() {
         url: state.url,
         title: state.title,
         viewport: state.viewport,
+        lastActionTs: state.log.length ? state.log[state.log.length - 1].ts : 0,
         log: state.log.slice(-14)
       }));
       return;
