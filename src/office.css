@@ -293,3 +293,26 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
   .sq-pass{flex-direction:column;align-items:flex-start;gap:10px}
   .sq-photo{width:96px}
 }
+
+/* ---- Phase 3 · compare two players ------------------------------------------------------
+   One row per measure, two values. Group averages keep it short enough to read on a phone;
+   every number says which player it belongs to and "Not recorded" is never printed as zero.
+   ----------------------------------------------------------------------------------------- */
+.sq-compare{background:#182634;border:1px solid #364957;border-radius:12px;padding:14px}
+.sq-compare small{letter-spacing:.12em;color:#b6d9cc;font-size:11px;font-weight:700}
+.sq-compare h3{font-size:19px;margin:6px 0 8px}
+.sq-compare>p{max-width:62ch;line-height:1.5;color:var(--ui-muted,#a6b3c5)}
+.sq-compare-pick{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ui-muted,#a6b3c5);margin:6px 0 10px;flex-wrap:wrap}
+.sq-compare-pick select{min-height:38px;background:#1d2c3b;color:inherit;border:1px solid #364957;border-radius:8px;padding:0 10px;font:inherit;font-size:14px;max-width:100%}
+.sq-compare-rows{display:grid;gap:2px}
+.sq-compare-rows>div{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:baseline;padding:6px 0;border-bottom:1px solid #2b3b48}
+.sq-compare-rows>div>span{font-size:12px;color:var(--ui-muted,#a6b3c5)}
+.sq-compare-rows>div>b{font-size:14px;text-align:right;font-variant-numeric:tabular-nums;color:#e4f0f8}
+.sq-compare-head>span,.sq-compare-head>b{font-size:11px;letter-spacing:.06em;color:#9fb3c4;font-weight:700}
+.sq-compare-rows b.sq-none{color:var(--ui-muted,#a6b3c5);font-weight:600}
+.kit-gap{margin:6px 0 10px;color:var(--ui-muted,#a6b3c5);font-size:12.5px;line-height:1.45}
+.kit-gap b{color:#e4f0f8}
+@media (max-width:520px){
+  .sq-compare-rows>div{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr);gap:6px}
+  .sq-compare-rows>div>b{font-size:13px}
+}

@@ -602,3 +602,77 @@ Tests: 313 pass, 0 fail.
   two players are not built.
 - Shirt numbers: the page states the deadline and the list cap, but there is no plain "who is
   missing a number" count yet.
+
+## 16. Phase 3, second session: compare, shirt numbers, every table on a phone
+
+Date: 25 November 2026. Same career: Kay FC, 13 November 2027, 17 players.
+
+### 16.1 Every table declares a phone mode
+
+| Table | Screen | Phone treatment |
+|---|---|---|
+| Squad register (7 columns) | First team | Card per player, sortable from a select |
+| Registration lists (4) | Registration & numbers | Card per player with the shirt select inside the card |
+| Scouting results (8) | Scouting centre | Card per player: name, value, position, age, nation, club, role fit, grade |
+| Training readiness (4) | Training | Card per player: name and minutes, then `Sharp 75%`, `Fit 100%`, status |
+| League snapshot (5) | Club | One line per club: rank, club, `P 1`, `Pts 3`, form |
+| League standings (11) | Competitions | Three lines per club: rank, club, points; then `P W D L GS GC GD` with labels; then form |
+
+Count: **0 of 14 tables without a phone mode** (was 14 at the start of Phase 3, 8 after session 1).
+
+The standings cards use a grid of eight columns so the seven numbers sit on one labelled line under
+the club, and the form sits under that. Every number keeps its own label, so `GB 12` cannot be
+confused with `GC 9`.
+
+### 16.2 Compare two players
+
+New panel on the player page. A select chooses the second player; the panel then shows one row per
+measure with both values:
+
+| Measure | Haru | Kofi |
+|---|---:|---:|
+| Age | 18 | 23 |
+| Best role | Anchor 13 | Advanced playmaker 16 |
+| Technical average | 9.6 | 13.6 |
+| Mental average | 12.6 | 13.4 |
+| Physical average | 8.0 | 11.1 |
+| Condition | 100% | 58% |
+| Value | ₥138,900 | ₥561,300 |
+
+Eight rows, 364 px wide on a phone, 0 px page overflow. A missing number prints "Not recorded",
+never a zero. The panel says in words what a group average is.
+
+Every number comes from the same 1 to 20 rating source the rest of the page uses, so the comparison
+cannot drift away from the attribute lists.
+
+### 16.3 Shirt numbers: who has none
+
+The registration list now states the gap above the cards:
+
+- `2 players have no number: Nico Koroma, Haru Vico` (league list, 15 of 25 selected)
+- `Every registered player has a number.` when the list is complete
+- `N filed by another club` when a player cannot be picked at all
+
+Measured in the browser at 390 px; the same sentence appears in both competition lists.
+
+### 16.4 Numbers
+
+| Contract | §15 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 70/70 | 70/70 |
+| Status chips | 76 | 76, 0 without words |
+| Tables without a phone mode | 8 | **0** of 14 |
+| Contrast failures | 0 | 0 |
+| Text under 11 px, not metadata | 777 | 762 |
+
+Sweep: 208 screens at 390, 768 and 1440 px, 0 horizontal overflow, 0 contrast failures, smallest
+text 9 px. Nested scroll areas: 40 at 390 px (was 42), still led by Atlas and Social.
+
+Tests: 313 pass, 0 fail.
+
+### 16.5 What is still open in Phase 3
+
+- A persistent player context across screens (the player page is still reached from the list only).
+- Season book and honours archives do not print player tables in a phone mode yet (they use
+  summaries, not tables, so the contract is satisfied; the deeper archive work belongs to Phase 8).
+- Club, training and scouting card heights are not enforced equal; a long club name adds a line.

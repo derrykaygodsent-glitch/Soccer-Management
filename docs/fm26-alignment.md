@@ -63,3 +63,11 @@ frame and the numbers in [`ui-measurements.md` §15](./ui-measurements.md).
 | Player condition and form | "FORM AND AVAILABILITY" box: place in the last five practice XIs, appearances, minutes, condition, sharpness | Missing numbers print "Not recorded" instead of a zero |
 | Sort and choose columns | Any column sorts, columns can be hidden and extra player columns added (`src/table-headings.js`) | The choice survives a reload (`touchline.tables.v1`), so a view saved once opens the same way next time |
 | A table on a phone | Card per player: position tag, name, value on one line, position, age, nation and availability underneath. Nothing is dropped | A "Sort by" select and one direction button sit above the cards, because the header row is gone on a phone |
+
+## 6. Phase 3, second pass: tables and comparison
+
+| FM26 pattern | Touchline now | Beyond FM26 |
+|---|---|---|
+| Compare two players | A COMPARE panel on the player page: one row per measure, two values, chosen from a select | The rows are group averages and the best-role score, so the panel answers "who is better for this job" rather than printing forty numbers. A missing value says "Not recorded" |
+| League table with many columns | On a phone each club is three lines: rank, club and points; the seven numbers on one labelled line; form under them | Every number keeps its own label (`GS 12`, `GC 9`), so nothing has to be guessed from column position |
+| Registration deadlines and eligibility | The list states `2 players have no number: Nico Koroma, Haru Vico` above the cards, and the window card states the deadline and the cap | The gap is stated by name, not only as a count, so the next action is obvious |
