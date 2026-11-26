@@ -214,3 +214,42 @@ test('the phone rules that make this fit are the ones the docs measure', () => {
   a.match(phone, /\.fm-duty\{display:none\}/, 'the key keeps codes and roles on a phone');
   a.match(phone, /\.fm-squad-panel \.fm-row> \.fm-stars/, 'the row drops the columns the sheet now owns');
 });
+
+test('the pitch markers are dragged by the board, not by the browser', () => {
+  const s = career(); s.id = 'c-drag'; s.boardPhase = 'base';
+  const html = TLBoardRoom.render(s, pool);
+  a.equal((html.match(/<button type="button" title="[^"]*" data-slot=/g) || []).length, 11, 'eleven markers are rendered');
+  a.doesNotMatch(html, /draggable="true"/, 'no marker starts a native drag, which cancels the pointer drag the board implements');
+  const src = fs.readFileSync(path.join(__dirname, '../src/board-room.js'), 'utf8');
+  a.match(src, /setPointerCapture/, 'the board captures the pointer on the marker');
+  a.match(src, /lostpointercapture/, 'and gives the drag up when the capture is lost');
+});
+
+test('a shirt tap selects, and on a phone the editor is opened by a team-sheet row', () => {
+  const s = career(); s.id = 'c-sheet';
+  const handlers = {}, root = { addEventListener: (k, fn) => { handlers[k] = fn; }, querySelector: () => null };
+  let draws = 0;
+  TLBoardRoom.bind(root, () => {}, () => draws++);
+  const button = slot => ({ dataset: slot == null ? {} : { slot: String(slot) }, hasAttribute: n => n === 'data-slot' || n === 'data-clear-slot' && slot == null });
+  const click = (target, zone) => handlers.click({ target: { closest: sel => sel === 'button' ? target
+    : sel === '.shape-field' ? (zone === 'field' ? {} : null)
+    : sel === '.fm-squad-panel' ? (zone === 'panel' ? {} : null) : null } });
+  const clear = { dataset: {}, hasAttribute: n => n === 'data-clear-slot' };
+  click(clear, null);
+  globalThis.matchMedia = () => ({ matches: true });
+  try {
+    click(button(3), 'field');
+    let html = TLBoardRoom.render(s, pool);
+    a.doesNotMatch(html, /fm-squad-panel sheet-open/, 'a shirt tap on a phone leaves the pitch in view');
+    click(button(4), 'panel');
+    html = TLBoardRoom.render(s, pool);
+    a.match(html, /class="fm-squad-panel[^"]* sheet-open"/, 'a team-sheet row opens the sheet on a phone');
+    a.match(html, /<section class="fm-player-editor">/, 'the sheet is the editor itself');
+    globalThis.matchMedia = () => ({ matches: false });
+    click(button(5), 'panel');
+    html = TLBoardRoom.render(s, pool);
+    a.doesNotMatch(html, /sheet-open/, 'a desktop keeps the editor inline and has no sheet state');
+    a.match(html, /<section class="fm-player-editor">/, 'the inline editor still describes the selected player');
+    a.ok(draws >= 4, 'each of those taps redrew the board');
+  } finally { delete globalThis.matchMedia; }
+});

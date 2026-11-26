@@ -1173,7 +1173,8 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
  #homeScreen:has(.fm-tactics-workspace) .fm-bench-cue:after{content:"Show"}
  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel.bench-open .fm-bench-cue:after{content:"Hide"}
  /* the editor is a sheet you pull up, not a panel buried under seventeen rows */
- #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-player-editor{position:fixed;inset:auto 0 0 0;z-index:40;max-height:82dvh;overflow:auto;margin:0;padding:12px 14px 18px;background:#0d1a27;border:0;border-top:2px solid #55c6c2;border-radius:12px 12px 0 0;box-shadow:0 -14px 34px #000000a6}
+ #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel:not(.sheet-open) .fm-player-editor{display:none}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-player-editor{position:fixed;inset:auto 0 0 0;z-index:40;max-height:82dvh;overflow:auto;margin:0;padding:12px 14px 18px;background:#0d1a27;border:0;border-top:2px solid #55c6c2;border-radius:12px 12px 0 0;box-shadow:0 -14px 34px #000000a6}
  #homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start;padding-bottom:6px;border-bottom:1px solid #263c4f}
  #homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head .fm-editor-close{grid-column:2;grid-row:1}
  #homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head .fm-player-readiness{grid-column:1/-1;justify-content:flex-start}

@@ -1872,3 +1872,39 @@ Phase 6 has five sessions; this was the second. What remains is the match side o
 rail with one primary action per step, the live-match tray closed by default, and the Season Book archive
 with its index and filters. The tactics screen now opens on one shape at ≤ 3.0 folds on a phone; if a later
 session wants `Side by side` on a phone to fit the same gate, the two pitches have to stop being 219 px each.
+
+### 31.5 Drag, and what the sheet was covering
+
+Two things were wrong with the pitch, found while checking whether session 2 had touched it. Neither was
+introduced by the layout work, but both were live on the screen this phase owns.
+
+**The shirts could not be dragged — in any session, at any width.** Every marker was rendered
+`draggable="true"`, and there is no `dragstart` or `drop` handler anywhere in `src/`. So as soon as the
+pointer travelled the 7 px threshold, Chromium began a *native* drag, which releases the pointer capture
+the board depends on: `lostpointercapture` fired, `finish(ev, true)` treated it as a cancel, and `carried`
+was never applied. The pitch card had been printing `drag a shirt to adjust positions` the whole time.
+Served session 1's build on a second port and replayed the same pointer sequence: byte-identical event log
+(`pointerdown` → one `pointermove` → `lostpointercapture`), identical stillness. The attribute is gone. The
+board's own drag now runs — capture on the marker, 7 px threshold, the shirt carried under the pointer with
+`translate`, a FLIP animation on drop, and the post-drag click swallowed by the existing `suppressUntil`
+guard so it does not also select the player and open the editor.
+
+| | Before | After |
+|---|---|---|
+| Drag at 390 (slot 5, dropped on grass) | nothing moved, `81.5% / 28.6%` | `34.88% / 41%` |
+| Drag at 1440 | nothing moved | `50% / 56%` |
+| The new point after switching tabs and back | — | kept, so it is a stored command and not a paint |
+| CDP touch drag at 390 (`touch-action:none` was already on the markers) | — | carried and dropped in the same place, no sheet |
+
+**The sheet opened on every selection**, which on a phone covered the pitch. Tapping Close to see the pitch
+again cleared the selection the sheet had just made, so a two-tap swap was impossible on a phone, and a
+drag popped the sheet over the pitch it had just rearranged. Now a shirt tap only selects; a **team-sheet
+row** is what opens the sheet, and Close clears both (`sheet-open` on the panel, hidden by
+`:not(.sheet-open)` below 701 px). Desktop is unchanged — the editor stays inline whenever a player is
+selected, and a drag selects the player it moved.
+
+Neither change moves the fold: 390 **2.92** (2,002 px) and 1440 **1.99**, with `Side by side` at 3.27 and
+2.66. The gates: drag **18/18** at both widths (carry, drop, survival through a tab switch, tap selects,
+two-tap swap, sheet from a row, close), session 2 **28/28**, session 1 **32/32**. Tests **331 → 333**: a
+marker is not natively draggable while the board still captures the pointer, and a shirt tap selects while
+a row opens the sheet on a phone and a desktop keeps the editor inline.
