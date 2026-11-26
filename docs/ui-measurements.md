@@ -1920,3 +1920,38 @@ Neither change moves the fold: 390 **2.92** (2,002 px) and 1440 **1.99**, with `
 two-tap swap, sheet from a row, close), session 2 **28/28**, session 1 **32/32**. Tests **331 → 333**: a
 marker is not natively draggable while the board still captures the pointer, and a shirt tap selects while
 a row opens the sheet on a phone and a desktop keeps the editor inline.
+
+---
+
+## §32 · The tactics page as found, with the drag restored
+
+The page is `0a5b0d3` with exactly one attribute changed. Nothing from §30 or §31 is back: no pitch key, no
+sticky summary, no line headings, no folded bench, no sheet, no renamed views, no resized header. The four
+view chips still read `Combined · In Possession · Out of Possession · Both`, the team sheet is still
+seventeen flat rows with a `SUBSTITUTES` subhead, and the pitch is the big one — 439 px tall at 390, 494 px
+at 1440, eleven jersey markers in a 4-1-4-1 with shirt numbers, role codes and surnames.
+
+### 32.1 The one change
+
+Every marker was rendered `draggable="true"`, and `src/` has never contained a `dragstart`, `dragover` or
+`drop` handler — `git log -S'dragstart' --all` returns nothing. So in Chromium the first 7 px of a drag
+started a *native* drag, which releases the pointer capture the board depends on: `lostpointercapture`
+fired, `finish(ev, true)` treated it as a cancel, and the shirt never followed the pointer. Browsers that
+ignore `draggable` on a `<button>` (mobile Safari among them) ran the board's own drag instead, which is
+why the same page could feel draggable on one device and dead on another.
+
+The attribute is gone; nothing else was touched. The board's drag — capture on the marker, a 7 px
+threshold, the shirt following the pointer with `translate` and a `.carried` shadow, `elementFromPoint` on
+release to decide move-or-swap — now runs everywhere.
+
+| | Before (as found) | After |
+|---|---|---|
+| Drag a shirt at 390 | the shirt never moved | carried under the pointer, dropped at `34.88% / 41%` |
+| Drag a shirt at 1440 | the shirt never moved | carried, dropped at `34.88% / 41%` |
+| Ask a shirt to move by click (select, then click grass) | worked | still works (`81.5% / 28.6%` → `50% / 56%`) |
+| Depth @390 / @1440 | 4.27 (2,932 px) / 2.55 (2,055 px) | **unchanged** 4.27 / 2.55 |
+| Tests, contracts | 324, 72/72 | 324, 72/72 |
+
+Two things were noticed and deliberately left alone, because this is the page as it was: the goalkeeper
+(slot 0) cannot be moved — the board keeps him where he is — and there is no keyboard or non-pointer way to
+move a marker.

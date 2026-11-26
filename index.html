@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="e90e959c3c4fbf9a27f3">
+  <meta name="tl-build" content="2104ff303755f5f3a713">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -13471,7 +13471,7 @@ function render(s,players){
     const markers=slots.map((v,i)=>{
       const {point,role,job}=location(v,i,mode),p=v.player,n=numbers[p?.id]??p?.num??defaults[i]??'–',label=p?.name||'Open position';
       const left=wide?project(point.x):8+84*point.y,bottom=wide?8+84*(1-point.y):project(point.x);
-      return `<button type="button" draggable="true" title="Drag ${e(label)} to change position" data-slot="${i}" class="shirt-marker${i===0?' keeper':''}${p?'':' vacant'}${selected===i?' selected':''}" aria-label="Select ${e(role)} · ${e(label)} · shirt ${e(n)}" aria-pressed="${selected===i}" style="left:${left}%;bottom:${bottom}%">${jersey(n)}<b>${e(code(role,job?.[0],job?.[2]))}</b><small>${e(p?label.split(' ').at(-1):'Open')}</small></button>`;
+      return `<button type="button" title="Drag ${e(label)} to change position" data-slot="${i}" class="shirt-marker${i===0?' keeper':''}${p?'':' vacant'}${selected===i?' selected':''}" aria-label="Select ${e(role)} · ${e(label)} · shirt ${e(n)}" aria-pressed="${selected===i}" style="left:${left}%;bottom:${bottom}%">${jersey(n)}<b>${e(code(role,job?.[0],job?.[2]))}</b><small>${e(p?label.split(' ').at(-1):'Open')}</small></button>`;
     }).join('');
     const fieldSvg=wide?`<svg class="board-lines" viewBox="0 0 140 100" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width=".6"><rect x="1" y="1" width="138" height="98"/><path d="M70 1v98M1 20h21V80H1M1 37h8v26H1M139 20h-21v60h21m0-43h-8v26h8"/><circle cx="70" cy="50" r="11"/></g></svg>`:fieldLines;
     const markersInZone=withZones?`<div class="fm-zone-overlay" aria-label="Select a tactical pitch zone">${zoneCells.map(z=>`<button type="button" data-board="zone|0|${z.id}" aria-label="${e(z.label)}" aria-pressed="${zone===z.id}"></button>`).join('')}</div>`:'';
