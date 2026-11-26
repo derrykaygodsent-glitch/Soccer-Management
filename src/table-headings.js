@@ -1,6 +1,9 @@
 /* Football-manager-style sortable, resizable and configurable table columns. */
 (function (g) {
   'use strict';
+  const STORE = 'touchline.tables.v1';
+  const readStore = () => { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch { return {}; } };
+  const writeStore = (key, value) => { try { const all = readStore(); all[key] = value; localStorage.setItem(STORE, JSON.stringify(all)); } catch { /* storage full or blocked */ } };
   const memory = new Map(), compare = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }),
     positions = ['GK', 'DC', 'FB', 'WB', 'DM', 'CM', 'AM', 'W', 'ST'];
   let openMenu = null, stopOutside = null;
@@ -24,7 +27,9 @@
       const head = table.tHead?.rows?.[0], body = table.tBodies?.[0];
       if (!head || !body) continue;
       let headers = Array.from(head.cells), labels = headers.map(h => h.textContent.trim());
-      const key = JSON.stringify([career, page, table.dataset.sortTable]), prior = memory.get(key) || {},
+      const key = JSON.stringify([career, page, table.dataset.sortTable]);
+      if (!memory.has(key)) { const saved = readStore()[key]; if (saved) memory.set(key, saved); }
+      const prior = memory.get(key) || {},
         hidden = new Set(prior.hidden || []), added = new Set(prior.added || []), widths = { ...(prior.widths || {}) }, groups = [];
       let group = [];
       for (const row of Array.from(body.rows)) {
@@ -35,7 +40,11 @@
       const extraEnabled = table.dataset.columnOptions === 'player' ? playerColumns : [];
       const tablePlayer = row => g.TLManagerLife.pool?.find(p => p.id === row.dataset.playerId);
 
-      function persist() { memory.set(key, { ...memory.get(key), hidden: [...hidden], added: [...added], widths: { ...widths } }); }
+      function persist(extra = {}) {
+        const value = { ...memory.get(key), hidden: [...hidden], added: [...added], widths: { ...widths }, ...extra };
+        memory.set(key, value);
+        writeStore(key, value);
+      }
       function applyWidths() {
         const visible = [];
         headers.forEach((header, col) => {
@@ -87,7 +96,7 @@
         header.replaceChildren(button);
         button.onclick = () => {
           const previous = memory.get(key) || {}, dir = previous.col === col ? -previous.dir : header.dataset.first === 'desc' ? -1 : 1;
-          memory.set(key, { ...previous, col, dir, hidden: [...hidden], added: [...added], widths: { ...widths } });
+          persist({ col, dir });
           sortBy(col, dir);
         };
         button.onkeydown = event => {
@@ -133,13 +142,13 @@
         const title = document.createElement('strong'); title.textContent = 'Customize table'; menu.append(title);
         menuButton((isHidden ? 'Show' : 'Hide') + ' column: ' + current, () => {
           if (isHidden) hidden.delete(col); else if (hidden.size < headers.length - 1) hidden.add(col);
-          persist(); applyVisibility();
+          persist(); applyVisibility(); phoneBar?.fill();
         }, !isHidden && hidden.size >= headers.length - 1);
         const extras = extraEnabled.filter(spec => !added.has(spec.key) && !labels.includes(spec.label));
         const hiddenCols = headers.map((header, index) => ({ header, index })).filter(x => hidden.has(x.index));
         if (hiddenCols.length || extras.length) {
           const sub = document.createElement('small'); sub.textContent = 'Add a column'; menu.append(sub);
-          for (const item of hiddenCols) menuButton('Restore: ' + labels[item.index], () => { hidden.delete(item.index); persist(); applyVisibility(); });
+          for (const item of hiddenCols) menuButton('Restore: ' + labels[item.index], () => { hidden.delete(item.index); persist(); applyVisibility(); phoneBar?.fill(); });
           for (const spec of extras) menuButton('Add: ' + spec.label, () => addExtra(spec));
         }
         menuButton('Reset columns and widths', reset, false);
@@ -171,7 +180,7 @@
           if (numeric != null && Number.isFinite(Number(numeric))) cell.dataset.key = String(numeric);
           row.append(cell);
         }
-        if (save) { persist(); applyVisibility(); }
+        if (save) { persist(); applyVisibility(); phoneBar?.fill(); }
       }
       function reset() {
         for (let col = headers.length - 1; col >= 0; col--) {
@@ -186,13 +195,52 @@
         for (const row of Array.from(body.rows)) for (const cell of Array.from(row.cells)) cell.style.width = '';
         table.style.width = ''; table.style.tableLayout = '';
         for (const header of headers) { const col = headers.indexOf(header); addSorter(header, col); addResizeHandle(header, col); }
-        memory.set(key, { col: Number(table.dataset.initial || 0), dir: table.dataset.direction === 'desc' ? -1 : 1 }); applyVisibility();
+        memory.set(key, { col: Number(table.dataset.initial || 0), dir: table.dataset.direction === 'desc' ? -1 : 1 }); applyVisibility(); phoneBar?.fill();
       }
       for (const header of headers) {
         const col = headers.indexOf(header); addSorter(header, col); addResizeHandle(header, col);
         header.addEventListener('contextmenu', event => { event.preventDefault(); showMenu(col, header, event); });
       }
       for (const spec of extraEnabled) if (added.has(spec.key)) addExtra(spec, false);
+      function phoneSortBar() {
+        if (table.dataset.phoneSort === 'off' || table.closest('.tl-table-sort')) return;
+        const bar = document.createElement('div');
+        bar.className = 'tl-table-sort';
+        const label = document.createElement('label');
+        const text = document.createElement('span');
+        text.textContent = 'Sort by';
+        label.append(text);
+        const select = document.createElement('select');
+        const dir = document.createElement('button');
+        dir.type = 'button';
+        const fill = () => {
+          select.replaceChildren();
+          headers.forEach((header, index) => {
+            if (header.hidden) return;
+            const option = document.createElement('option');
+            option.value = String(index);
+            option.textContent = labels[index] || 'Column ' + (index + 1);
+            select.append(option);
+          });
+          const current = memory.get(key) || {};
+          select.value = String(current.col ?? 0);
+          dir.textContent = current.dir === -1 ? 'High to low' : 'Low to high';
+          dir.setAttribute('aria-label', 'Reverse the sort order');
+        };
+        const run = (col, direction) => {
+          persist({ col, dir: direction });
+          sortBy(col, direction);
+          fill();
+        };
+        select.onchange = () => run(Number(select.value), (memory.get(key) || {}).dir ?? 1);
+        dir.onclick = () => run(Number(select.value), (memory.get(key) || {}).dir === -1 ? 1 : -1);
+        label.append(select);
+        bar.append(label, dir);
+        table.parentElement.insertBefore(bar, table);
+        fill();
+        return { fill };
+      }
+      const phoneBar = table.dataset.tlTable === 'cards' ? phoneSortBar() : null;
       const initial = memory.get(key) || { col: Number(table.dataset.initial || 0), dir: table.dataset.direction === 'desc' ? -1 : 1 };
       if (!memory.has(key)) memory.set(key, initial);
       sortBy(initial.col, initial.dir); applyVisibility();

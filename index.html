@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="5813f061a1d09c4ca555">
+  <meta name="tl-build" content="0a891a09006b9c16f501">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -669,6 +669,40 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
 .tl-legend .dot-life{background:var(--ui-attention)}
 .tl-legend .dot-medical{background:var(--ui-danger)}
 @media (max-width:720px){.tl-legend{margin-left:0}}
+
+/* ---- Phase 3 · the squad on a phone ----------------------------------------------------
+   A seven column table cannot survive 390px. It becomes a card per player: position, name and
+   value first, the rest as a quiet line underneath. Nothing is dropped.
+   ----------------------------------------------------------------------------------------- */
+
+/* Phone sorting for card tables: the header row is gone on a phone, so the same choice is
+   offered as one select and one button above the cards. */
+.tl-table-sort{display:none}
+@media (max-width:720px){
+  .tl-table-sort{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px}
+  .tl-table-sort label{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ui-muted);min-width:0;flex:0 0 auto}
+  .tl-table-sort label>span{white-space:nowrap}
+  .tl-table-sort select{min-height:34px;max-width:100%;background:var(--ui-surface-2);color:var(--ui-ink);border:1px solid var(--ui-edge-soft);border-radius:var(--ui-radius-s);padding:0 8px;font:inherit;font-size:13px}
+  .tl-table-sort button{min-height:34px;padding:0 12px;background:var(--ui-surface-2);color:var(--ui-ink);border:1px solid var(--ui-edge-soft);border-radius:var(--ui-radius-s);font:inherit;font-size:13px;cursor:pointer}
+}
+@media (max-width:720px){
+  table[data-tl-table=cards]{display:block;width:100%;border-collapse:collapse}
+  table[data-tl-table=cards] thead{display:none}
+  table[data-tl-table=cards] tbody{display:grid;gap:6px}
+  table[data-tl-table=cards] tr{display:flex;flex-wrap:wrap;align-items:center;gap:1px 7px;padding:8px 10px;border:1px solid var(--ui-edge-soft);border-radius:var(--ui-radius-s);background:var(--ui-surface-2)}
+  table[data-tl-table=cards] td,table[data-tl-table=cards] th{display:block;border:0;padding:0;text-align:left;white-space:normal;min-width:0}
+  table[data-tl-table=cards] [hidden]{display:none}
+  table[data-tl-table=cards] td[data-col=pkd]{order:0;flex:0 0 auto}
+  table[data-tl-table=cards] th[data-col=name]{order:1;flex:1 1 auto;font-size:var(--ui-text-m);font-weight:700}
+  table[data-tl-table=cards] th[data-col=name] button{width:100%;min-height:24px;text-align:left}
+  table[data-tl-table=cards] td[data-col=value]{order:2;flex:0 0 auto;color:var(--ui-ink-2);font-variant-numeric:tabular-nums}
+  table[data-tl-table=cards] td[data-col=pos],
+  table[data-tl-table=cards] td[data-col=age],
+  table[data-tl-table=cards] td[data-col=nation]{order:3;flex:0 0 auto;color:var(--ui-muted)}
+  table[data-tl-table=cards] td[data-col=pos]::after,
+  table[data-tl-table=cards] td[data-col=age]::after{content:' \B7';color:var(--ui-muted)}
+  table[data-tl-table=cards] td[data-col=inf]{order:4;flex:0 0 auto;margin-left:auto;color:var(--ui-teal);white-space:nowrap}
+}
 
 /* FM-style management pages in the existing Touchline club shell. */
 .cc-workspace{--cc-under:var(--ui-surface-2);--cc-card:var(--ui-surface-3);--cc-raise:var(--ui-surface-4);--cc-edge:var(--ui-edge);--cc-cyan:#43eaf1;--cc-ink:var(--ui-ink);--cc-soft:var(--ui-muted);--cc-blue:#a8d5fb;--cc-green:#58ed9a;--cc-amber:var(--ui-amber);--cc-red:var(--ui-danger);--cc-purple:#d2a3ed;--cc-lime:#dbef69;--cc-teal:#7ce5e0;background:radial-gradient(ellipse 110% 65% at 30% 0,#18222f 0,var(--ui-surface-1) 70%);color:var(--cc-ink);gap:11px}
@@ -1985,6 +2019,55 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
 @media (min-width:701px) and (max-width:1050px){.inbox .mail-layout{grid-template-columns:minmax(166px,28%) minmax(0,46%) minmax(150px,26%);display:grid}.inbox-context-rail{grid-column:auto;display:grid;grid-template-columns:1fr;max-height:72vh;overflow:auto}.inbox-titlebar{padding:12px 15px}.inbox-titlebar h2{font-size:24px}.inbox-reader .dispatch-paper{padding:14px}.inbox-reader .dispatch-columns{grid-template-columns:minmax(0,1fr)}.inbox-reader .dispatch-rail{display:none}.press-brief-grid{grid-template-columns:1fr}.press-match-context{grid-column:auto}.press-response-footer{display:block}.press-response-actions{justify-content:start;margin-top:8px}}
 @media (min-width:701px){.inbox .mail-layout{display:grid!important;grid-template-columns:minmax(166px,28%) minmax(0,1fr) minmax(150px,26%)!important;grid-auto-flow:row}.inbox .mail-layout>.inbox-context-rail{grid-column:3!important;grid-row:1!important;display:grid!important;align-self:stretch!important;min-width:0!important}}
 
+/* ---- Phase 3 · role fit and form on the player page -------------------------------------
+   The manager picks a role, not a spreadsheet. Each role shows a score out of 20 built from
+   three key attributes, the best fit is marked, and those same attributes are highlighted
+   lower down the page so the number and the evidence sit together.
+   ----------------------------------------------------------------------------------------- */
+.sq-roles,.sq-form{background:#182634;border:1px solid #364957;border-radius:12px;padding:14px}
+.sq-roles small,.sq-form small{letter-spacing:.12em;color:#b6d9cc;font-size:11px;font-weight:700}
+.sq-roles h3,.sq-form h3{font-size:19px;margin:6px 0 8px}
+.sq-roles>p,.sq-hint{max-width:62ch;line-height:1.5;color:var(--ui-muted,#a6b3c5)}
+.sq-roles>p b{color:#e4f3ff}
+.sq-role-list{display:grid;gap:6px;margin:10px 0 8px}
+.sq-role-list>div{display:grid;grid-template-columns:minmax(0,13rem) minmax(60px,1fr) 2.2rem;gap:10px;align-items:center;font-size:14px}
+.sq-role-list>div>span{min-width:0;overflow-wrap:anywhere}
+.sq-role-list>div>i{display:block;height:6px;border-radius:4px;background:#2c3c49;overflow:hidden}
+.sq-role-list>div>i>i{display:block;height:100%;background:#7fbfc9;border-radius:4px}
+.sq-role-list>div>b{text-align:right;font-variant-numeric:tabular-nums;color:#cfe3ef}
+.sq-role-list>div[data-best="1"]>span{font-weight:800;color:#ffffff}
+.sq-role-list>div[data-best="1"]>i>i{background:#b7e08b}
+.sq-role-list>div[data-best="1"]>b{color:#d8f0a6}
+.sq-hint{font-size:12px;margin:0}
+.sq-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(110px,100%),1fr));gap:10px;margin-top:8px}
+.sq-form-grid>div{background:#1d2c3b;border:1px solid #334454;border-radius:8px;padding:8px 10px}
+.sq-form-grid small{letter-spacing:0;font-weight:600;color:#9fb3c4;font-size:11px}
+.sq-form-grid b{display:block;font-size:18px;margin-top:2px;font-variant-numeric:tabular-nums}
+.rec-attr[data-key]{box-shadow:inset 2px 0 0 #b7e08b;background:#1f3140;border-radius:4px}
+
+.sq-brief{display:grid;gap:12px;align-items:start}
+.sq-brief .sq-roles,.sq-brief .sq-form{height:100%}
+.sq-analysis{grid-template-columns:minmax(0,1fr);align-items:start}
+.sq-side{display:grid;gap:12px;align-content:start;min-width:0}
+.sq-attr{min-width:0}
+.sq-attr>small{letter-spacing:.12em;color:#b6d9cc;font-size:11px;font-weight:700;display:block;margin-bottom:6px}
+.sq-attr .rec-groups{grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));align-content:start}
+@media (min-width:900px){
+  .sq-brief{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+  .sq-analysis{grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:12px}
+}
+@media (max-width:720px){
+  .sq-banner{min-height:132px;padding:14px}
+  .sq-room .sq-banner h2{font-size:clamp(26px,8vw,34px)}
+  .sq-strip{padding:9px 2px}
+  .sq-strip strong{font-size:19px}
+  .sq-strip small{font-size:11px}
+  .sq-role-list>div{grid-template-columns:minmax(0,1fr) 3.2rem}
+  .sq-role-list>div>i{grid-column:1/-1;grid-row:2}
+  .sq-pass{flex-direction:column;align-items:flex-start;gap:10px}
+  .sq-photo{width:96px}
+}
+
 /* Shared reading rhythm. Never change the typeface, size, match canvas, table rows or HUD. */
 :root{--read-gap:.85rem;--read-line:1.58;--read-edge:#9bbdc029;--read-wash:#9fc3c409}
 :is(#careerEntry,#clubPage,#homeMain,#matchScreen,dialog) :where(p:not(:empty)){line-height:var(--read-line);overflow-wrap:break-word}
@@ -2656,12 +2739,13 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 .player-directory th[scope=row] button{white-space:normal}
 @media(max-width:1000px){
   /* Availability, Age and Nation fold away first: name, position and value stay. */
-  .player-directory th:nth-child(2),.player-directory td:nth-child(2),
-  .player-directory th:nth-child(5),.player-directory td:nth-child(5),
-  .player-directory th:nth-child(6),.player-directory td:nth-child(6){display:none}
+  /* Older tables hide columns on a phone. A table that declares a card mode keeps every cell. */
+  .player-directory:not([data-tl-table]) th:nth-child(2),.player-directory:not([data-tl-table]) td:nth-child(2),
+  .player-directory:not([data-tl-table]) th:nth-child(5),.player-directory:not([data-tl-table]) td:nth-child(5),
+  .player-directory:not([data-tl-table]) th:nth-child(6),.player-directory:not([data-tl-table]) td:nth-child(6){display:none}
 }
 @media(max-width:620px){
-  .player-directory th:nth-child(7),.player-directory td:nth-child(7){display:none}
+  .player-directory:not([data-tl-table]) th:nth-child(7),.player-directory:not([data-tl-table]) td:nth-child(7){display:none}
   .player-directory{font-size:.8rem}
   .player-directory td,.player-directory th{padding:.32rem .35rem}
 }
@@ -12705,7 +12789,7 @@ function windowCard(s,c,date){
  const open=windowOpen(s,c),label=open?(s.day<c.first?'Registration open':'Changes open'):s.day<c.first-63?'Opens soon':'List locked';
  return `<section class="kit-window"><header><strong>Squad registration</strong><span class="kit-state ${open?'is-open':''}">${label}</span></header><dl><div><dt>Squad places</dt><dd>Up to ${c.cap} players</dd></div><div><dt>Register players</dt><dd>${fmt(c.first-63)} – ${fmt(c.first-1)}</dd></div>${c.reopen?`<div><dt>Make changes</dt><dd>${fmt(c.reopen)} – ${fmt(c.close)}</dd></div>`:'<div><dt>Cup eligibility</dt><dd>One club per player</dd></div>'}</dl></section>`;
 }
-function render(s,pool){const W=g.TLManagerLife,e=g.TLClubUI.esc;if(!s.club)return '<section class="org-agenda"><h2>Registration office</h2><p>Get a club licence or take a manager job first. You can still recruit amateurs.</p></section>';const ps=pool.filter(p=>s.roster.includes(p.id)),y=Y.season(s.day),cs=contests(s,pool);return `<section class="kit-office"><header class="org-cover">${g.TLClubUI.art('dressing')}<div><small>TEAM ADMINISTRATION</small><h2>Lists &amp; shirt numbers</h2><p>${e(s.club.name)} · ${y}/${y+1}</p></div></header><p>Shirt changes are saved as a draft as you go. Choose Review &amp; file list to make them official. Choose a shirt number to include a player, or choose No shirt to leave them off this list. If you don’t file, the office keeps existing numbers where possible and files a default list at the deadline.</p>${cs.map((c,i)=>{const rec=history(s,s.club.name,y,c.title).at(-1),nums=editList(s,pool,c),open=windowOpen(s,c);return `<details open class="org-agenda"><summary>${e(c.title)} · ${rec?'Filed':'Provisional'}</summary>${windowCard(s,c,W.date)}<div data-kit-list="${e(c.title)}" data-cap="${c.cap}"><strong data-kit-count>${Object.keys(nums).length} of ${c.cap} selected</strong> <small role="status" data-kit-status></small><div class="directory-scroll"><table class="player-directory" data-sort-table="kit-${e(c.title)}"><thead><tr><th>Name</th><th>Position</th><th>Request</th><th>Shirt</th></tr></thead><tbody>${ps.map(p=>`<tr><th scope="row">${e(p.name)}</th><td>${e(p.pos)}</td><td>${!eligible(s,s.club.name,y,c.title,p.id)?'Filed by another club':`Prefers #${wanted(p)}`}</td><td><select aria-label="Shirt number for ${e(p.name)}" data-kit-id="${e(p.id)}" ${open&&eligible(s,s.club.name,y,c.title,p.id)?'':'disabled'}><option value="">No shirt</option>${Array.from({length:99},(_,i)=>i+1).map(n=>`<option value="${n}" ${nums[p.id]===n?'selected':Object.values(nums).includes(n)?'disabled':''}>${n}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>${open?'<button class="cc-btn" data-file-kit>Review &amp; file list</button>':'<small>Filing closed</small>'}</div>${(rec?.changes||[]).filter(v=>v.impact<0&&!v.explained&&s.roster.includes(v.id)).map(v=>`<p>${e(v.name)}: ${e(v.text)}</p>${['rotation','selection'].map(why=>`<button class="cc-btn" data-life="kitExplain" data-v="${e([c.title,v.id,why].join('|'))}">${why==='rotation'?'Discuss rotation':'Explain sporting reasons'}</button>`).join('')}`).join('')}</details>`;}).join('')}<details open class="org-agenda"><summary>Registration history</summary>${Object.values(s.kitRegister||{}).flat().filter(r=>r.club===s.club.name).sort((a,b)=>b.day-a.day).map(r=>`<details open><summary>${W.date(r.day)} · ${e(r.title)} · ${Object.keys(r.numbers).length} filed</summary><p>${Object.entries(r.numbers).sort((a,b)=>a[1]-b[1]).map(([id,n])=>'#'+n+' '+e(r.names[id])).join(' · ')}</p></details>`).join('')||'No filed lists yet.'}</details></section>`;}
+function render(s,pool){const W=g.TLManagerLife,e=g.TLClubUI.esc;if(!s.club)return '<section class="org-agenda"><h2>Registration office</h2><p>Get a club licence or take a manager job first. You can still recruit amateurs.</p></section>';const ps=pool.filter(p=>s.roster.includes(p.id)),y=Y.season(s.day),cs=contests(s,pool);return `<section class="kit-office"><header class="org-cover">${g.TLClubUI.art('dressing')}<div><small>TEAM ADMINISTRATION</small><h2>Lists &amp; shirt numbers</h2><p>${e(s.club.name)} · ${y}/${y+1}</p></div></header><p>Shirt changes are saved as a draft as you go. Choose Review &amp; file list to make them official. Choose a shirt number to include a player, or choose No shirt to leave them off this list. If you don’t file, the office keeps existing numbers where possible and files a default list at the deadline.</p>${cs.map((c,i)=>{const rec=history(s,s.club.name,y,c.title).at(-1),nums=editList(s,pool,c),open=windowOpen(s,c);return `<details open class="org-agenda"><summary>${e(c.title)} · ${rec?'Filed':'Provisional'}</summary>${windowCard(s,c,W.date)}<div data-kit-list="${e(c.title)}" data-cap="${c.cap}"><strong data-kit-count>${Object.keys(nums).length} of ${c.cap} selected</strong> <small role="status" data-kit-status></small><div class="directory-scroll"><table class="player-directory" data-sort-table="kit-${e(c.title)}" data-tl-table="cards"><thead><tr><th data-col="name">Name</th><th data-col="pos">Position</th><th data-col="req">Request</th><th data-col="shirt">Shirt</th></tr></thead><tbody>${ps.map(p=>`<tr><th scope="row" data-col="name">${e(p.name)}</th><td data-col="pos">${e(p.pos)}</td><td data-col="req">${!eligible(s,s.club.name,y,c.title,p.id)?'Filed by another club':`Prefers #${wanted(p)}`}</td><td data-col="shirt"><select aria-label="Shirt number for ${e(p.name)}" data-kit-id="${e(p.id)}" ${open&&eligible(s,s.club.name,y,c.title,p.id)?'':'disabled'}><option value="">No shirt</option>${Array.from({length:99},(_,i)=>i+1).map(n=>`<option value="${n}" ${nums[p.id]===n?'selected':Object.values(nums).includes(n)?'disabled':''}>${n}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>${open?'<button class="cc-btn" data-file-kit>Review &amp; file list</button>':'<small>Filing closed</small>'}</div>${(rec?.changes||[]).filter(v=>v.impact<0&&!v.explained&&s.roster.includes(v.id)).map(v=>`<p>${e(v.name)}: ${e(v.text)}</p>${['rotation','selection'].map(why=>`<button class="cc-btn" data-life="kitExplain" data-v="${e([c.title,v.id,why].join('|'))}">${why==='rotation'?'Discuss rotation':'Explain sporting reasons'}</button>`).join('')}`).join('')}</details>`;}).join('')}<details open class="org-agenda"><summary>Registration history</summary>${Object.values(s.kitRegister||{}).flat().filter(r=>r.club===s.club.name).sort((a,b)=>b.day-a.day).map(r=>`<details open><summary>${W.date(r.day)} · ${e(r.title)} · ${Object.keys(r.numbers).length} filed</summary><p>${Object.entries(r.numbers).sort((a,b)=>a[1]-b[1]).map(([id,n])=>'#'+n+' '+e(r.names[id])).join(' · ')}</p></details>`).join('')||'No filed lists yet.'}</details></section>`;}
 const api={editList,remember,refreshNumbers,playerHistory,defaultLoss,current,poolAt,matchNumbers,league,at,contests,draft,windowOpen,file,remind,seal,explain,render};g.TLKit=api;if(typeof module!=='undefined')module.exports=api;})(typeof window==='undefined'?globalThis:window);
 
 ;
@@ -13430,7 +13514,7 @@ const posXY={GK:[11,50],DC:[24,50],FB:[28,19],DM:[41,50],CM:[54,50],AM:[70,50],W
 function face(x){const seed=g.TLData.seedFor(x.id);return g.TLCareerEntry.portrait({skin:W.skins[seed%4],face:W.faces[(seed>>>3)%3],build:['Medium','Lean','Broad'][(seed>>>5)%3],attire:'Training top'}).replace('Manager illustration','Player portrait');}
 function status(s,x){return s.roster.includes(x.id)?'With your squad':s.people?.[x.id]?.until>s.day?'Away on trial':s.plans.some(e=>e.kind==='reply'&&e.id===x.id)?'Reply pending':s.approached[x.id]&&!(s.revisit?.[x.id]<=s.day)?(s.revisit?.[x.id]?'Check back '+W.date(s.revisit[x.id]):'Declined'):x.club?'Registered · '+x.club:'Available';}
 function profilePlot(x){const axes=x.pos==='GK'?['handling','reflexes','positioning','passing','composure','pace']:['pace','shooting','passing','dribbling','tackling','positioning'];const pt=(i,r)=>[140+Math.sin(i*Math.PI/3)*r,98-Math.cos(i*Math.PI/3)*r],poly=rs=>rs.map((r,i)=>pt(i,r).join(',')).join(' ');return `<section class="rec-box rec-plot"><small>SCOUT ANALYSIS</small><h3>Player signature</h3><svg viewBox="0 0 280 196" role="img" aria-label="${axes.map(k=>label(k)+' '+x.attrs[k]+' out of 20').join(', ')}">${[15,30,45,60].map(r=>`<polygon points="${poly(axes.map(()=>r))}"/>`).join('')}${axes.map((k,i)=>`<line x1="140" y1="98" x2="${pt(i,60)[0]}" y2="${pt(i,60)[1]}"/>`).join('')}<polygon class="signature" points="${poly(axes.map(k=>3*(x.attrs[k]||0)))}"/>${axes.map((k,i)=>{const [a,b]=pt(i,81);return `<text x="${a}" y="${b}" text-anchor="${i===0||i===3?'middle':i<3?'start':'end'}">${label(k)}<tspan x="${a}" dy="13">${x.attrs[k]??'–'}</tspan></text>`}).join('')}</svg></section>`;}
-function attributePanels(x,reps,s={}){const mind=g.TLPlayerMind.read(x),growth=s.playerGrowth?.[x.id],labels={Technical:'First touch helps a player control the delivery. Passing and technique decide how accurately the next ball leaves his foot.',Mental:'Vision helps spot a run. Decisions and composure matter when a defender closes the space.',Physical:'Acceleration gets a player moving. Pace sets his top speed; natural fitness helps him sustain it.',Goalkeeping:'Rushing out changes when the keeper meets an attacker. Reflexes and aerial reach affect what he can stop.'};return g.TLZones.report(x,reps)+Object.entries(g.TLPlayerMind.groups).filter(([k])=>k!=='Goalkeeping'||x.pos==='GK').map(([title,list])=>`<section class="rec-box rec-attribute-group"><h3>${title}</h3><p>${labels[title]}</p>${list.split(' ').map(k=>{const value=mind.ratings[k],seasonDelta=Number(x.change?.[k]||0),recentDelta=(growth?.log||[]).filter(row=>row.attribute===k&&Number.isFinite(s.day)&&s.day>=row.day&&s.day-row.day<=30).reduce((sum,row)=>sum+Number(row.delta??1),0),delta=seasonDelta+recentDelta,trend=delta>0?'up':delta<0?'down':'steady',level=value>=16?'elite':value>=13?'strong':value>=10?'developing':'low',mark=delta>0?'+'+delta:delta<0?'−'+Math.abs(delta):'',note=delta?`; ${delta>0?'improved':'declined'} ${Math.abs(delta)} this season`:'';return `<div class="rec-attr" data-level="${level}" data-trend="${trend}" title="${label(k)} ${value}${note}"><span>${label(k).replace(/([a-z])([A-Z])/g,'$1 $2')}</span><i><i style="width:${5*value}%"></i></i><b>${value}<span class="rec-trend">${mark}</span></b></div>`;}).join('')}</section>`).join('');}
+function attributePanels(x,reps,s={},focus=[],opt={}){const mind=g.TLPlayerMind.read(x),growth=s.playerGrowth?.[x.id],labels={Technical:'First touch helps a player control the delivery. Passing and technique decide how accurately the next ball leaves his foot.',Mental:'Vision helps spot a run. Decisions and composure matter when a defender closes the space.',Physical:'Acceleration gets a player moving. Pace sets his top speed; natural fitness helps him sustain it.',Goalkeeping:'Rushing out changes when the keeper meets an attacker. Reflexes and aerial reach affect what he can stop.'};return (opt.zones===false?'':g.TLZones.report(x,reps))+Object.entries(g.TLPlayerMind.groups).filter(([k])=>k!=='Goalkeeping'||x.pos==='GK').map(([title,list])=>`<section class="rec-box rec-attribute-group"><h3>${title}</h3><p>${labels[title]}</p>${list.split(' ').map(k=>{const value=mind.ratings[k],seasonDelta=Number(x.change?.[k]||0),recentDelta=(growth?.log||[]).filter(row=>row.attribute===k&&Number.isFinite(s.day)&&s.day>=row.day&&s.day-row.day<=30).reduce((sum,row)=>sum+Number(row.delta??1),0),delta=seasonDelta+recentDelta,trend=delta>0?'up':delta<0?'down':'steady',level=value>=16?'elite':value>=13?'strong':value>=10?'developing':'low',mark=delta>0?'+'+delta:delta<0?'−'+Math.abs(delta):'',note=delta?`; ${delta>0?'improved':'declined'} ${Math.abs(delta)} this season`:'';return `<div class="rec-attr" data-level="${level}" data-trend="${trend}"${focus.includes(k)?' data-key="1"':''} title="${label(k)} ${value}${note}"><span>${label(k).replace(/([a-z])([A-Z])/g,'$1 $2')}</span><i><i style="width:${5*value}%"></i></i><b>${value}<span class="rec-trend">${mark}</span></b></div>`;}).join('')}</section>`).join('');}
 function render(s,ui){const field=g.TLFieldwork,areas=[s.profile.nation,...Object.keys(s.fieldNotes||{})],nation=areas.includes(ui.nation)?ui.nation:s.profile.nation,fare=n=>n===s.profile.nation?0:s.profile.job==='Former footballer'?30:120,short=s.shortlist||[];
  const x=W.pool.find(p=>p.id===ui.id);if(x&&field.known(s,x)){const [px,py]=posXY[x.pos],keys=ranked(x),how=status(s,x),strong=keys[0],weak=keys.at(-1);
  const attrs=attributePanels(x,s.boardReps?.[x.id],s);
@@ -13443,9 +13527,14 @@ g.TLScoutCentre={render,attributePanels,profilePlot,face,names};})(window);
 ;
 /* ===== squad-room.js ===== */
 (function(g){'use strict';const U=g.TLClubUI,{esc:e,art}=U,S=g.TLScoutCentre,units={Goalkeepers:['GK'],Defenders:['DC','FB'],Midfielders:['DM','CM','AM'],Forwards:['W','ST']};const go=(page,label)=>`<button class="cc-btn" data-life="go" data-v="${page}">${label} </button>`;
-function register(s,roster){const B=g.TLMatchBoard,list=g.TLKit?.current(s).find(r=>r.title===s.kitScope),eligible=list?roster.filter(p=>list.numbers[p.id]):roster,slots=B?B.sheet(s.tactic,B.active(s),eligible).slots:[],rank=['GK','DC','FB','WB','DM','CM','AM','W','ST'];return `<div class="directory-scroll"><table class="player-directory" data-sort-table="squad" data-column-options="player"><thead><tr><th title="Picked position in the active tactics plan">Pkd</th><th title="Availability">Inf</th><th>Name</th><th>Position</th><th>Age</th><th>Nation</th><th data-first="desc">Value</th></tr></thead><tbody>${roster.map(p=>{const i=slots.findIndex(x=>x.player?.id===p.id),injured=s.dressing?.people?.[p.id]?.injuredUntil>s.day,info=injured?'Injured':list&&!list.numbers[p.id]?'Not filed':'Available';return `<tr data-player-id="${e(p.id)}"><td data-key="${i<0?99:i}"><span class="position-tag ${i<0?'reserve':''}">${i<0?'Reserve':e(slots[i].position)}</span></td><td>${info}</td><th scope="row"><button data-squad-player="${e(p.id)}">${e(p.name)}</button></th><td data-key="${rank.indexOf(p.pos)}">${e(p.pos)}</td><td>${p.age}</td><td>${e(p.nation)}</td><td data-key="${p.value}">${g.TLManagerLife.money(p.value)}</td></tr>`;}).join('')}</tbody></table></div>`;}
-function render(s,roster,id){const x=roster.find(p=>p.id===id),team=s.club?.name||'Independent manager';if(x){const apps=(s.practices||[]).filter(r=>r.xi?.includes(x.id)).length;return `<section class="sq-room"><button class="cc-btn" data-life="go" data-v="squad"> Squad list</button><header class="sq-pass"><div class="sq-photo">${S.face(x)}</div><div><small>FIRST TEAM　/　PLAYER FILE</small><h2>${e(x.name)}</h2><p>${e(S.names[x.pos])} · ${x.age} years</p><b>${e(x.nation)}</b></div></header><div class="sq-strip"><div><small>Squad</small><b>${e(team)}</b></div><div><small>Estimated value</small><b>${g.TLManagerLife.money(x.value)}</b></div><div><small>District practice XI</small><b>${apps} ${apps===1?'selection':'selections'}</b></div></div>${g.TLKit?.playerHistory(s,x.id)||''}${g.TLSeasonBook?.record?.(s,x)||''}${g.TLSeasonBook?.growth(x)||''}<div class="sq-analysis">${S.profilePlot(x)}<div><small>PLAYER ATTRIBUTES　 /　 OUT OF 20</small><div class="rec-groups">${S.attributePanels(x,s.boardReps?.[x.id])}</div></div></div></section>`;}
-const pending=s.plans.filter(p=>p.kind==='reply').length;return `<section class="sq-room"><header class="sq-banner">${art('dressing')}<div><small>${e(team.toUpperCase())}　 /　 SQUAD REGISTER</small><h2>First team</h2><span>${roster.length} players　·　${e(s.tactic)}</span></div></header><div class="sq-strip">${Object.entries(units).map(([k,ps])=>`<div><small>${k}</small><strong>${roster.filter(p=>ps.includes(p.pos)).length}</strong></div>`).join('')}</div>${!roster.length?`<article class="sq-empty"><small>RECRUITMENT</small><h3>The first shirt is still open.</h3><p>${pending?`${pending} player ${pending===1?'reply':'replies'} pending. Check your inbox when the scouting decisions arrive.`:'Scout a local player and send an invitation. Only players who join your squad appear here.'}</p>${go('scouting','Find players')} ${pending?go('inbox','View inbox'):go('day','Open diary')}</article>`:register(s,roster)}</section>`;}
+function register(s,roster){const B=g.TLMatchBoard,list=g.TLKit?.current(s).find(r=>r.title===s.kitScope),eligible=list?roster.filter(p=>list.numbers[p.id]):roster,slots=B?B.sheet(s.tactic,B.active(s),eligible).slots:[],rank=['GK','DC','FB','WB','DM','CM','AM','W','ST'];return `<div class="directory-scroll"><table class="player-directory" data-sort-table="squad" data-column-options="player" data-tl-table="cards"><thead><tr><th data-col="pkd" title="Picked position in the active tactics plan">Pkd</th><th data-col="inf" title="Availability">Inf</th><th data-col="name">Name</th><th data-col="pos">Position</th><th data-col="age">Age</th><th data-col="nation">Nation</th><th data-col="value" data-first="desc">Value</th></tr></thead><tbody>${roster.map(p=>{const i=slots.findIndex(x=>x.player?.id===p.id),injured=s.dressing?.people?.[p.id]?.injuredUntil>s.day,info=injured?'Injured':list&&!list.numbers[p.id]?'Not filed':'Available';return `<tr data-player-id="${e(p.id)}"><td data-col="pkd" data-key="${i<0?99:i}"><span class="position-tag ${i<0?'reserve':''}">${i<0?'Reserve':e(slots[i].position)}</span></td><td data-col="inf">${info}</td><th data-col="name" scope="row"><button data-squad-player="${e(p.id)}">${e(p.name)}</button></th><td data-col="pos" data-key="${rank.indexOf(p.pos)}">${e(p.pos)}</td><td data-col="age">${p.age}</td><td data-col="nation">${e(p.nation)}</td><td data-col="value" data-key="${p.value}">${g.TLManagerLife.money(p.value)}</td></tr>`;}).join('')}</tbody></table></div>`;}
+const roleKeys={GK:[['Goalkeeper',['handling','reflexes','commandOfArea']],['Sweeper keeper',['rushingOut','oneOnOnes','kicking']]],DC:[['Central defender',['tackling','marking','strength']],['Ball-playing defender',['passing','technique','composure']],['No-nonsense defender',['heading','bravery','positioning']]],FB:[['Full-back',['marking','tackling','stamina']],['Wing-back',['crossing','stamina','workRate']],['Inverted full-back',['passing','positioning','technique']]],DM:[['Anchor',['positioning','tackling','concentration']],['Ball-winning midfielder',['tackling','workRate','aggression']],['Deep-lying playmaker',['passing','vision','technique']]],CM:[['Central midfielder',['passing','workRate','stamina']],['Box-to-box midfielder',['stamina','workRate','strength']],['Advanced playmaker',['passing','vision','technique']]],AM:[['Attacking midfielder',['passing','dribbling','vision']],['Shadow striker',['finishing','offTheBall','composure']],['Advanced playmaker',['passing','vision','technique']]],W:[['Winger',['crossing','pace','dribbling']],['Inside forward',['dribbling','finishing','acceleration']],['Inverted winger',['dribbling','passing','technique']]],ST:[['Advanced forward',['finishing','offTheBall','acceleration']],['Poacher',['finishing','anticipation','composure']],['Pressing forward',['workRate','stamina','aggression']],['Deep-lying forward',['passing','technique','firstTouch']]]};
+const attrName=k=>({workRate:'Work rate',offTheBall:'Off the ball',firstTouch:'First touch',longShots:'Long shots',commandOfArea:'Command of area',oneOnOnes:'One on ones',rushingOut:'Rushing out',jumpingReach:'Jumping reach',naturalFitness:'Natural fitness',aerialReach:'Aerial reach',teamwork:'Teamwork',vision:'Vision',decisions:'Decisions',technique:'Technique',anticipation:'Anticipation',concentration:'Concentration'}[k]||k[0].toUpperCase()+k.replace(/[A-Z]/g,m=>' '+m.toLowerCase()));
+function roleRows(x){const mind=g.TLPlayerMind.read(x).ratings;return (roleKeys[x.pos]||roleKeys.CM).map(([name,keys])=>{const vals=keys.map(k=>Number(mind[k])||10);return {name,keys,vals,score:Math.round(vals.reduce((a,b)=>a+b,0)/vals.length)};}).sort((a,b)=>b.score-a.score);}
+function roleFit(x){const rows=roleRows(x),best=rows[0];return `<section class="sq-roles"><small>ROLE FIT　 /　 OUT OF 20</small><h3>Best role: ${e(best.name)}</h3><p>Key attributes: ${best.keys.map((k,i)=>`<b>${e(attrName(k))} ${best.vals[i]}</b>`).join(' · ')}</p><div class="sq-role-list">${rows.map((r,i)=>`<div${i===0?' data-best="1"':''}><span>${e(r.name)}</span><i><i style="width:${r.score*5}%"></i></i><b>${r.score}</b></div>`).join('')}</div><p class="sq-hint">Role fit is the average of three key attributes. It guides training and does not change team selection.</p></section>`;}
+function formPanel(s,x){const w=s.dressing?.workload?.[x.id]||{},past=(s.practices||[]).slice(-5),picked=past.filter(r=>r.xi?.includes(x.id)).length,live=g.TLDynamics&&g.TLDynamics.state?g.TLDynamics.state(s,x):{},out=live.knock||s.dressing?.people?.[x.id]?.injuredUntil>s.day,pct=v=>Number.isFinite(v)?Math.round(v)+'%':'Not recorded',fitness=Number.isFinite(live.fitness)?pct(live.fitness):Number.isFinite(x.fitness)?pct(x.fitness<=1?x.fitness*100:x.fitness):'Not recorded',sharp=Number.isFinite(live.sharp)?pct(live.sharp):'Not recorded';return `<section class="sq-form"><small>FORM AND AVAILABILITY</small><h3>${out?'In recovery':picked>=3?'In the plans':past.length?'Working for a place':'No practice yet'}</h3><div class="sq-form-grid"><div><small>Last 5 practice XIs</small><b>${picked} of ${past.length}</b></div><div><small>Appearances</small><b>${w.appearances??0}</b></div><div><small>Minutes</small><b>${w.minutes??0}</b></div><div><small>Condition</small><b>${fitness}</b></div><div><small>Sharpness</small><b>${sharp}</b></div></div></section>`;}
+function render(s,roster,id){const x=roster.find(p=>p.id===id),team=s.club?.name||'Independent manager';if(x){const apps=(s.practices||[]).filter(r=>r.xi?.includes(x.id)).length;return `<section class="sq-room"><button class="cc-btn" data-life="go" data-v="squad"> Squad list</button><header class="sq-pass"><div class="sq-photo">${S.face(x)}</div><div><small>FIRST TEAM　/　PLAYER FILE</small><h2>${e(x.name)}</h2><p>${e(S.names[x.pos])} · ${x.age} years</p><b>${e(x.nation)}</b></div></header><div class="sq-strip"><div><small>Squad</small><b>${e(team)}</b></div><div><small>Estimated value</small><b>${g.TLManagerLife.money(x.value)}</b></div><div><small>District practice XI</small><b>${apps} ${apps===1?'selection':'selections'}</b></div></div>${g.TLKit?.playerHistory(s,x.id)||''}${g.TLSeasonBook?.record?.(s,x)||''}${g.TLSeasonBook?.growth(x)||''}<div class="sq-brief">${roleFit(x)}${formPanel(s,x)}</div><div class="sq-analysis"><aside class="sq-side">${S.profilePlot(x)}${g.TLZones?.report?g.TLZones.report(x,s.boardReps?.[x.id]):''}</aside><div class="sq-attr"><small>PLAYER ATTRIBUTES　 /　 OUT OF 20</small><div class="rec-groups">${S.attributePanels(x,s.boardReps?.[x.id],s,roleRows(x)[0].keys,{zones:false})}</div></div></div></section>`;}
+const pending=s.plans.filter(p=>p.kind==='reply').length;return `<section class="sq-room"><header class="sq-banner">${art('dressing')}<div><small>${e(team.toUpperCase())}　 /　 SQUAD REGISTER</small><h2>First team</h2><span>${roster.length} players　·　${e(s.tactic)}</span></div></header><div class="sq-strip">${Object.entries(units).map(([k,ps])=>`<div><small>${k}</small><strong>${roster.filter(p=>ps.includes(p.pos)).length}</strong></div>`).join('')}</div><p class="sq-links"><button class="cc-btn" data-life="go" data-v="kitOffice">Shirt numbers and registration</button><button class="cc-btn" data-life="go" data-v="planner">Squad planner</button></p>${!roster.length?`<article class="sq-empty"><small>RECRUITMENT</small><h3>The first shirt is still open.</h3><p>${pending?`${pending} player ${pending===1?'reply':'replies'} pending. Check your inbox when the scouting decisions arrive.`:'Scout a local player and send an invitation. Only players who join your squad appear here.'}</p>${go('scouting','Find players')} ${pending?go('inbox','View inbox'):go('day','Open diary')}</article>`:register(s,roster)}</section>`;}
 function planner(s,roster){const shape=g.TLData.FORMATIONS[s.tactic]||g.TLData.FORMATIONS['4-4-2'],slots=[{role:'GK',x:0,y:.5},...shape],used=new Set();const line=slots.map(q=>{const p=roster.find(p=>p.pos===q.role&&!used.has(p.id));if(p)used.add(p.id);return {q,p};});return `<section class="sq-room"><header class="sq-banner">${art('training')}<div><small>TECHNICAL AREA · ${e(s.club?.name||'Independent manager')}</small><h2>Squad planner</h2><span>${e(s.tactic)} · ${roster.length} registered</span></div></header><div class="depth-layout"><article class="depth-board"><h3>Which positions have players?</h3><div class="depth-field">${line.map(({q,p})=>`<div style="left:${10+q.y*80}%;bottom:${5+q.x*80}%"><b>${e(q.role)}</b><small>${p?e(p.name.split(' ').at(-1)):'Open'}</small></div>`).join('')}</div></article><article class="sq-unit"><small>RECRUITMENT DESK</small><h3>${used.size} of 11 roles covered</h3><p>This shows where your players usually play. It does not change who starts the match.</p>${Object.entries(units).map(([unit,pos])=>`<p><b>${unit}</b> · ${roster.filter(p=>pos.includes(p.pos)).length} available</p>`).join('')}${go('scouting','Find players')} ${go('squad','Open squad')}</article></div></section>`;}
 g.TLSquadRoom={render,planner};})(window);
 
@@ -13759,6 +13848,9 @@ const showMoney=n=>(g.TLLuma||require('./luma')).format(n);
 /* Football-manager-style sortable, resizable and configurable table columns. */
 (function (g) {
   'use strict';
+  const STORE = 'touchline.tables.v1';
+  const readStore = () => { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch { return {}; } };
+  const writeStore = (key, value) => { try { const all = readStore(); all[key] = value; localStorage.setItem(STORE, JSON.stringify(all)); } catch { /* storage full or blocked */ } };
   const memory = new Map(), compare = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }),
     positions = ['GK', 'DC', 'FB', 'WB', 'DM', 'CM', 'AM', 'W', 'ST'];
   let openMenu = null, stopOutside = null;
@@ -13782,7 +13874,9 @@ const showMoney=n=>(g.TLLuma||require('./luma')).format(n);
       const head = table.tHead?.rows?.[0], body = table.tBodies?.[0];
       if (!head || !body) continue;
       let headers = Array.from(head.cells), labels = headers.map(h => h.textContent.trim());
-      const key = JSON.stringify([career, page, table.dataset.sortTable]), prior = memory.get(key) || {},
+      const key = JSON.stringify([career, page, table.dataset.sortTable]);
+      if (!memory.has(key)) { const saved = readStore()[key]; if (saved) memory.set(key, saved); }
+      const prior = memory.get(key) || {},
         hidden = new Set(prior.hidden || []), added = new Set(prior.added || []), widths = { ...(prior.widths || {}) }, groups = [];
       let group = [];
       for (const row of Array.from(body.rows)) {
@@ -13793,7 +13887,11 @@ const showMoney=n=>(g.TLLuma||require('./luma')).format(n);
       const extraEnabled = table.dataset.columnOptions === 'player' ? playerColumns : [];
       const tablePlayer = row => g.TLManagerLife.pool?.find(p => p.id === row.dataset.playerId);
 
-      function persist() { memory.set(key, { ...memory.get(key), hidden: [...hidden], added: [...added], widths: { ...widths } }); }
+      function persist(extra = {}) {
+        const value = { ...memory.get(key), hidden: [...hidden], added: [...added], widths: { ...widths }, ...extra };
+        memory.set(key, value);
+        writeStore(key, value);
+      }
       function applyWidths() {
         const visible = [];
         headers.forEach((header, col) => {
@@ -13845,7 +13943,7 @@ const showMoney=n=>(g.TLLuma||require('./luma')).format(n);
         header.replaceChildren(button);
         button.onclick = () => {
           const previous = memory.get(key) || {}, dir = previous.col === col ? -previous.dir : header.dataset.first === 'desc' ? -1 : 1;
-          memory.set(key, { ...previous, col, dir, hidden: [...hidden], added: [...added], widths: { ...widths } });
+          persist({ col, dir });
           sortBy(col, dir);
         };
         button.onkeydown = event => {
@@ -13891,13 +13989,13 @@ const showMoney=n=>(g.TLLuma||require('./luma')).format(n);
         const title = document.createElement('strong'); title.textContent = 'Customize table'; menu.append(title);
         menuButton((isHidden ? 'Show' : 'Hide') + ' column: ' + current, () => {
           if (isHidden) hidden.delete(col); else if (hidden.size < headers.length - 1) hidden.add(col);
-          persist(); applyVisibility();
+          persist(); applyVisibility(); phoneBar?.fill();
         }, !isHidden && hidden.size >= headers.length - 1);
         const extras = extraEnabled.filter(spec => !added.has(spec.key) && !labels.includes(spec.label));
         const hiddenCols = headers.map((header, index) => ({ header, index })).filter(x => hidden.has(x.index));
         if (hiddenCols.length || extras.length) {
           const sub = document.createElement('small'); sub.textContent = 'Add a column'; menu.append(sub);
-          for (const item of hiddenCols) menuButton('Restore: ' + labels[item.index], () => { hidden.delete(item.index); persist(); applyVisibility(); });
+          for (const item of hiddenCols) menuButton('Restore: ' + labels[item.index], () => { hidden.delete(item.index); persist(); applyVisibility(); phoneBar?.fill(); });
           for (const spec of extras) menuButton('Add: ' + spec.label, () => addExtra(spec));
         }
         menuButton('Reset columns and widths', reset, false);
@@ -13929,7 +14027,7 @@ const showMoney=n=>(g.TLLuma||require('./luma')).format(n);
           if (numeric != null && Number.isFinite(Number(numeric))) cell.dataset.key = String(numeric);
           row.append(cell);
         }
-        if (save) { persist(); applyVisibility(); }
+        if (save) { persist(); applyVisibility(); phoneBar?.fill(); }
       }
       function reset() {
         for (let col = headers.length - 1; col >= 0; col--) {
@@ -13944,13 +14042,52 @@ const showMoney=n=>(g.TLLuma||require('./luma')).format(n);
         for (const row of Array.from(body.rows)) for (const cell of Array.from(row.cells)) cell.style.width = '';
         table.style.width = ''; table.style.tableLayout = '';
         for (const header of headers) { const col = headers.indexOf(header); addSorter(header, col); addResizeHandle(header, col); }
-        memory.set(key, { col: Number(table.dataset.initial || 0), dir: table.dataset.direction === 'desc' ? -1 : 1 }); applyVisibility();
+        memory.set(key, { col: Number(table.dataset.initial || 0), dir: table.dataset.direction === 'desc' ? -1 : 1 }); applyVisibility(); phoneBar?.fill();
       }
       for (const header of headers) {
         const col = headers.indexOf(header); addSorter(header, col); addResizeHandle(header, col);
         header.addEventListener('contextmenu', event => { event.preventDefault(); showMenu(col, header, event); });
       }
       for (const spec of extraEnabled) if (added.has(spec.key)) addExtra(spec, false);
+      function phoneSortBar() {
+        if (table.dataset.phoneSort === 'off' || table.closest('.tl-table-sort')) return;
+        const bar = document.createElement('div');
+        bar.className = 'tl-table-sort';
+        const label = document.createElement('label');
+        const text = document.createElement('span');
+        text.textContent = 'Sort by';
+        label.append(text);
+        const select = document.createElement('select');
+        const dir = document.createElement('button');
+        dir.type = 'button';
+        const fill = () => {
+          select.replaceChildren();
+          headers.forEach((header, index) => {
+            if (header.hidden) return;
+            const option = document.createElement('option');
+            option.value = String(index);
+            option.textContent = labels[index] || 'Column ' + (index + 1);
+            select.append(option);
+          });
+          const current = memory.get(key) || {};
+          select.value = String(current.col ?? 0);
+          dir.textContent = current.dir === -1 ? 'High to low' : 'Low to high';
+          dir.setAttribute('aria-label', 'Reverse the sort order');
+        };
+        const run = (col, direction) => {
+          persist({ col, dir: direction });
+          sortBy(col, direction);
+          fill();
+        };
+        select.onchange = () => run(Number(select.value), (memory.get(key) || {}).dir ?? 1);
+        dir.onclick = () => run(Number(select.value), (memory.get(key) || {}).dir === -1 ? 1 : -1);
+        label.append(select);
+        bar.append(label, dir);
+        table.parentElement.insertBefore(bar, table);
+        fill();
+        return { fill };
+      }
+      const phoneBar = table.dataset.tlTable === 'cards' ? phoneSortBar() : null;
       const initial = memory.get(key) || { col: Number(table.dataset.initial || 0), dir: table.dataset.direction === 'desc' ? -1 : 1 };
       if (!memory.has(key)) memory.set(key, initial);
       sortBy(initial.col, initial.dir); applyVisibility();

@@ -50,3 +50,16 @@ Sources read on 25 November 2026:
 2. Screens stay tile and card based. No new nested menu trees.
 3. Every list a manager opens states its size.
 4. When a behaviour must differ, it is written down here with the reason.
+
+## 5. Squad family: player page and phone roster
+
+One row per FM26 pattern we copied and one row per thing we added. Evidence is the rendered
+frame and the numbers in [`ui-measurements.md` §15](./ui-measurements.md).
+
+| FM26 pattern | Touchline now | Beyond FM26 |
+|---|---|---|
+| Attributes in three groups (technical, mental, physical) on a 1 to 20 scale | `src/player-intelligence.js` rates every attribute 1 to 20 and `src/scout-centre.js` prints them in named groups, goalkeeping only for keepers | Every row also carries the season trend (+1, -2) and the panel says what each group is for in one sentence |
+| Role suitability, with key attributes highlighted | "ROLE FIT" box: each role for the position scored out of 20 from three key attributes, best role marked and named in the heading | The same three attributes are marked in the lists below with a light rail, so the score and the evidence sit on one page. The box also says the score is a training guide and does not change selection |
+| Player condition and form | "FORM AND AVAILABILITY" box: place in the last five practice XIs, appearances, minutes, condition, sharpness | Missing numbers print "Not recorded" instead of a zero |
+| Sort and choose columns | Any column sorts, columns can be hidden and extra player columns added (`src/table-headings.js`) | The choice survives a reload (`touchline.tables.v1`), so a view saved once opens the same way next time |
+| A table on a phone | Card per player: position tag, name, value on one line, position, age, nation and availability underneath. Nothing is dropped | A "Sort by" select and one direction button sit above the cards, because the header row is gone on a phone |

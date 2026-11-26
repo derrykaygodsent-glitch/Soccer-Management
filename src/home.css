@@ -236,3 +236,37 @@
 .tl-legend .dot-life{background:var(--ui-attention)}
 .tl-legend .dot-medical{background:var(--ui-danger)}
 @media (max-width:720px){.tl-legend{margin-left:0}}
+
+/* ---- Phase 3 · the squad on a phone ----------------------------------------------------
+   A seven column table cannot survive 390px. It becomes a card per player: position, name and
+   value first, the rest as a quiet line underneath. Nothing is dropped.
+   ----------------------------------------------------------------------------------------- */
+
+/* Phone sorting for card tables: the header row is gone on a phone, so the same choice is
+   offered as one select and one button above the cards. */
+.tl-table-sort{display:none}
+@media (max-width:720px){
+  .tl-table-sort{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px}
+  .tl-table-sort label{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ui-muted);min-width:0;flex:0 0 auto}
+  .tl-table-sort label>span{white-space:nowrap}
+  .tl-table-sort select{min-height:34px;max-width:100%;background:var(--ui-surface-2);color:var(--ui-ink);border:1px solid var(--ui-edge-soft);border-radius:var(--ui-radius-s);padding:0 8px;font:inherit;font-size:13px}
+  .tl-table-sort button{min-height:34px;padding:0 12px;background:var(--ui-surface-2);color:var(--ui-ink);border:1px solid var(--ui-edge-soft);border-radius:var(--ui-radius-s);font:inherit;font-size:13px;cursor:pointer}
+}
+@media (max-width:720px){
+  table[data-tl-table=cards]{display:block;width:100%;border-collapse:collapse}
+  table[data-tl-table=cards] thead{display:none}
+  table[data-tl-table=cards] tbody{display:grid;gap:6px}
+  table[data-tl-table=cards] tr{display:flex;flex-wrap:wrap;align-items:center;gap:1px 7px;padding:8px 10px;border:1px solid var(--ui-edge-soft);border-radius:var(--ui-radius-s);background:var(--ui-surface-2)}
+  table[data-tl-table=cards] td,table[data-tl-table=cards] th{display:block;border:0;padding:0;text-align:left;white-space:normal;min-width:0}
+  table[data-tl-table=cards] [hidden]{display:none}
+  table[data-tl-table=cards] td[data-col=pkd]{order:0;flex:0 0 auto}
+  table[data-tl-table=cards] th[data-col=name]{order:1;flex:1 1 auto;font-size:var(--ui-text-m);font-weight:700}
+  table[data-tl-table=cards] th[data-col=name] button{width:100%;min-height:24px;text-align:left}
+  table[data-tl-table=cards] td[data-col=value]{order:2;flex:0 0 auto;color:var(--ui-ink-2);font-variant-numeric:tabular-nums}
+  table[data-tl-table=cards] td[data-col=pos],
+  table[data-tl-table=cards] td[data-col=age],
+  table[data-tl-table=cards] td[data-col=nation]{order:3;flex:0 0 auto;color:var(--ui-muted)}
+  table[data-tl-table=cards] td[data-col=pos]::after,
+  table[data-tl-table=cards] td[data-col=age]::after{content:' \B7';color:var(--ui-muted)}
+  table[data-tl-table=cards] td[data-col=inf]{order:4;flex:0 0 auto;margin-left:auto;color:var(--ui-teal);white-space:nowrap}
+}

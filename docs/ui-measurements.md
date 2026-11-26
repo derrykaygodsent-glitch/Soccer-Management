@@ -535,3 +535,70 @@ Sweep: 624 states, 0 errors, 0 contrast failures, 0 horizontal overflow at 390 /
 smallest text 9 px. Tests: 313 pass.
 
 Phase 2 is complete: home queue, inbox lanes, list ranges, calendar summary, planner load.
+
+---
+
+## 15. Phase 3, first session: the squad family
+
+Date: 25 November 2026. Career: Kay FC, day 13 November 2027, 17 players.
+
+## 15.1 What changed
+
+| Area | Before | Now |
+|---|---|---|
+| Squad table on a phone (390 px) | A seven column table; three columns hidden by an old phone rule | Card per player: `position tag · name · value` then `position · age · nation · availability`. Every cell renders, nothing is hidden |
+| Sorting on a phone | Only the header row sorted, and the header row is not drawn in card mode | "Sort by" select plus one "Low to high / High to low" button above the cards |
+| Saved table views | Kept in memory only, lost on reload | Written to `localStorage` under `touchline.tables.v1`, keyed by career, screen and table |
+| Player page | Attributes, a radar plot and a scouting report | Adds a "ROLE FIT" box and a "FORM AND AVAILABILITY" box, and the key attributes of the best role are marked in the lists |
+| Registration & numbers | A four column table at 390 px | Card per player, with the shirt select inside the card |
+| Moving between squad work | No link from the squad screen | "Shirt numbers and registration" and "Squad planner" buttons under the position counts |
+
+## 15.2 The render, looked at
+
+- `.audit/look-390-squad.png`: cards at 390 px. Row reads `GK Ari Serra ₥432,000 GK · 25 · Zandora Available`.
+- `.audit/phase3-squad-phone-sorted.png`: same screen after sorting by value.
+- `.audit/phase3-player.png`: role fit, form, radar, scouting panel, then the four attribute groups.
+- `.audit/phase3-player-phone.png`: the same page at 390 px, stacked, no sideways scroll.
+- `.audit/phase3-kit-phone.png`: registration at 390 px, 34 cards, 34 shirt selects, 0 px overflow.
+
+Role fit and form, measured on Ari Serra (GK, 25): best role Goalkeeper **13 / 20** from Handling 15,
+Reflexes 14, Command of area 9. Sweeper keeper 10. Condition 87%, sharpness 94%,
+1 of the last 1 practice XI, 1 appearance, 90 minutes.
+
+## 15.3 Sorting and saved views, measured
+
+Driving the browser through CDP at 390 px on the squad screen:
+
+| Step | First card | Sort control reads |
+|---|---|---|
+| Default | Ari Serra | Pkd · Low to high |
+| Sort by Value | Adan Keita | Value · Low to high |
+| Reverse | Nico Koroma | Value · High to low |
+| Sort by Age, then reload the page and reopen the squad | Haru Vico, ages 18, 20, 23 | Age · Low to high |
+
+The last row is the saved view: the same sort comes back after a full reload.
+
+## 15.4 Numbers
+
+| Contract | §14 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 70/70 | 70/70 |
+| Status chips | 76 | 76, 0 without words |
+| Long lists hiding rows | 0 | 0 |
+| Tables without a phone mode | 14 | **8** |
+| Contrast failures | 0 | 0 |
+| Text under 11 px, not metadata | 786 | 777 |
+
+Sweep: 208 screens at 390, 768 and 1440 px. 0 horizontal overflow. 0 contrast failures.
+Smallest text 9 px. 38 screens still contain a nested scroll area (atlas, social, kitOffice lead
+it); that is the next sweep target, not a new regression from this session.
+
+Tests: 313 pass, 0 fail.
+
+## 15.5 What is still open in Phase 3
+
+- 8 tables still have no phone mode (competition standings, season book, world tables).
+- The player page is reached from the squad list only. A persistent player context and compare
+  two players are not built.
+- Shirt numbers: the page states the deadline and the list cap, but there is no plain "who is
+  missing a number" count yet.

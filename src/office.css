@@ -244,3 +244,52 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
 /* Keep the FM26 three-panel workspace intact at tablet-sized preview widths. */
 @media (min-width:701px) and (max-width:1050px){.inbox .mail-layout{grid-template-columns:minmax(166px,28%) minmax(0,46%) minmax(150px,26%);display:grid}.inbox-context-rail{grid-column:auto;display:grid;grid-template-columns:1fr;max-height:72vh;overflow:auto}.inbox-titlebar{padding:12px 15px}.inbox-titlebar h2{font-size:24px}.inbox-reader .dispatch-paper{padding:14px}.inbox-reader .dispatch-columns{grid-template-columns:minmax(0,1fr)}.inbox-reader .dispatch-rail{display:none}.press-brief-grid{grid-template-columns:1fr}.press-match-context{grid-column:auto}.press-response-footer{display:block}.press-response-actions{justify-content:start;margin-top:8px}}
 @media (min-width:701px){.inbox .mail-layout{display:grid!important;grid-template-columns:minmax(166px,28%) minmax(0,1fr) minmax(150px,26%)!important;grid-auto-flow:row}.inbox .mail-layout>.inbox-context-rail{grid-column:3!important;grid-row:1!important;display:grid!important;align-self:stretch!important;min-width:0!important}}
+
+/* ---- Phase 3 · role fit and form on the player page -------------------------------------
+   The manager picks a role, not a spreadsheet. Each role shows a score out of 20 built from
+   three key attributes, the best fit is marked, and those same attributes are highlighted
+   lower down the page so the number and the evidence sit together.
+   ----------------------------------------------------------------------------------------- */
+.sq-roles,.sq-form{background:#182634;border:1px solid #364957;border-radius:12px;padding:14px}
+.sq-roles small,.sq-form small{letter-spacing:.12em;color:#b6d9cc;font-size:11px;font-weight:700}
+.sq-roles h3,.sq-form h3{font-size:19px;margin:6px 0 8px}
+.sq-roles>p,.sq-hint{max-width:62ch;line-height:1.5;color:var(--ui-muted,#a6b3c5)}
+.sq-roles>p b{color:#e4f3ff}
+.sq-role-list{display:grid;gap:6px;margin:10px 0 8px}
+.sq-role-list>div{display:grid;grid-template-columns:minmax(0,13rem) minmax(60px,1fr) 2.2rem;gap:10px;align-items:center;font-size:14px}
+.sq-role-list>div>span{min-width:0;overflow-wrap:anywhere}
+.sq-role-list>div>i{display:block;height:6px;border-radius:4px;background:#2c3c49;overflow:hidden}
+.sq-role-list>div>i>i{display:block;height:100%;background:#7fbfc9;border-radius:4px}
+.sq-role-list>div>b{text-align:right;font-variant-numeric:tabular-nums;color:#cfe3ef}
+.sq-role-list>div[data-best="1"]>span{font-weight:800;color:#ffffff}
+.sq-role-list>div[data-best="1"]>i>i{background:#b7e08b}
+.sq-role-list>div[data-best="1"]>b{color:#d8f0a6}
+.sq-hint{font-size:12px;margin:0}
+.sq-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(110px,100%),1fr));gap:10px;margin-top:8px}
+.sq-form-grid>div{background:#1d2c3b;border:1px solid #334454;border-radius:8px;padding:8px 10px}
+.sq-form-grid small{letter-spacing:0;font-weight:600;color:#9fb3c4;font-size:11px}
+.sq-form-grid b{display:block;font-size:18px;margin-top:2px;font-variant-numeric:tabular-nums}
+.rec-attr[data-key]{box-shadow:inset 2px 0 0 #b7e08b;background:#1f3140;border-radius:4px}
+
+.sq-brief{display:grid;gap:12px;align-items:start}
+.sq-brief .sq-roles,.sq-brief .sq-form{height:100%}
+.sq-analysis{grid-template-columns:minmax(0,1fr);align-items:start}
+.sq-side{display:grid;gap:12px;align-content:start;min-width:0}
+.sq-attr{min-width:0}
+.sq-attr>small{letter-spacing:.12em;color:#b6d9cc;font-size:11px;font-weight:700;display:block;margin-bottom:6px}
+.sq-attr .rec-groups{grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));align-content:start}
+@media (min-width:900px){
+  .sq-brief{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+  .sq-analysis{grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:12px}
+}
+@media (max-width:720px){
+  .sq-banner{min-height:132px;padding:14px}
+  .sq-room .sq-banner h2{font-size:clamp(26px,8vw,34px)}
+  .sq-strip{padding:9px 2px}
+  .sq-strip strong{font-size:19px}
+  .sq-strip small{font-size:11px}
+  .sq-role-list>div{grid-template-columns:minmax(0,1fr) 3.2rem}
+  .sq-role-list>div>i{grid-column:1/-1;grid-row:2}
+  .sq-pass{flex-direction:column;align-items:flex-start;gap:10px}
+  .sq-photo{width:96px}
+}

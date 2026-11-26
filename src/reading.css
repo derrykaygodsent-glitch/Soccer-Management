@@ -669,12 +669,13 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 .player-directory th[scope=row] button{white-space:normal}
 @media(max-width:1000px){
   /* Availability, Age and Nation fold away first: name, position and value stay. */
-  .player-directory th:nth-child(2),.player-directory td:nth-child(2),
-  .player-directory th:nth-child(5),.player-directory td:nth-child(5),
-  .player-directory th:nth-child(6),.player-directory td:nth-child(6){display:none}
+  /* Older tables hide columns on a phone. A table that declares a card mode keeps every cell. */
+  .player-directory:not([data-tl-table]) th:nth-child(2),.player-directory:not([data-tl-table]) td:nth-child(2),
+  .player-directory:not([data-tl-table]) th:nth-child(5),.player-directory:not([data-tl-table]) td:nth-child(5),
+  .player-directory:not([data-tl-table]) th:nth-child(6),.player-directory:not([data-tl-table]) td:nth-child(6){display:none}
 }
 @media(max-width:620px){
-  .player-directory th:nth-child(7),.player-directory td:nth-child(7){display:none}
+  .player-directory:not([data-tl-table]) th:nth-child(7),.player-directory:not([data-tl-table]) td:nth-child(7){display:none}
   .player-directory{font-size:.8rem}
   .player-directory td,.player-directory th{padding:.32rem .35rem}
 }
