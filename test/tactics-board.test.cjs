@@ -131,11 +131,13 @@ test('every pitch code is named in words beside it, and the team sheet names eac
   const html = TLBoardRoom.render(s, pool);
   const legend = html.match(/<ul class="fm-code-legend"[\s\S]*?<\/ul>/);
   a.ok(legend, 'the pitch carries a code key');
-  const items = [...legend[0].matchAll(/<li><b>([^<]+)<\/b>\s*([^<]+)<\/li>/g)].map(m => ({ code: m[1], words: m[2].trim() }));
+  const items = [...legend[0].matchAll(/<li><b>([^<]+)<\/b> <span>([A-Za-z ]+?)(?:<em class="fm-duty">, ([a-z]+)<\/em>)?<\/span><\/li>/g)]
+    .map(m => ({ code: m[1], words: m[2] + (m[3] ? ', ' + m[3] : ''), duty: m[3] || '' }));
   a.ok(items.length >= 5, 'each distinct assignment on the pitch appears once');
   for (const item of items) {
     a.match(item.code, /^[A-Za-z]+-(At|De|Su)$/, `${item.code} is a role-duty code`);
     a.match(item.words, /^[A-Z][a-z].*, (attacking|defending|supporting)$/, `${item.code} is named in words: ${item.words}`);
+    a.match(item.duty, /^(attacking|defending|supporting)$/, `${item.code} keeps its duty in its own element, so a narrow screen can drop the verb without losing the code or the role`);
     a.equal(new Set(items.map(i => i.code)).size, items.length, 'no code is explained twice');
   }
   a.match(html, /<abbr title="Left-back">LB<\/abbr>/, 'a position code carries its plain name');
@@ -162,4 +164,53 @@ test('the four shape views are named in words and one command picks the XI', () 
   a.equal((html.match(/data-board="bestXI"/g) || []).length, 1, 'one auto-pick command, not two');
   a.match(html, /<small>TACTIC DESIGN · Kay FC<\/small>/, 'the screen names the job it does');
   a.doesNotMatch(html, /MATCH PREPARATION/, 'prep is not this screen');
+});
+
+test('the team sheet reads as named lines, and every starter sits in exactly one of them', () => {
+  const s = career(); s.id = 'c-lines'; s.boardPhase = 'base';
+  const html = TLBoardRoom.render(s, pool);
+  const sheet = html.slice(html.indexOf('<div class="fm-squad-table">'), html.indexOf('class="fm-bench-toggle"'));
+  const lines = [...sheet.matchAll(/<div class="fm-line"><div class="fm-line-head"><b>([A-Za-z]+)<\/b><small>(\d+)<\/small><\/div>([\s\S]*?)<\/div>/g)]
+    .map(m => ({ name: m[1], count: +m[2], rows: (m[3].match(/class="fm-row"/g) || []).length }));
+  a.deepEqual(lines.map(l => l.name), ['Goalkeeper', 'Defence', 'Midfield', 'Attack'], 'the XI is grouped keeper, defence, midfield, attack');
+  for (const line of lines) a.equal(line.rows, line.count, `${line.name} heading counts the rows under it`);
+  a.equal(lines.reduce((n, l) => n + l.rows, 0), 11, 'all eleven starters are listed, and only once');
+  for (let i = 0; i < 11; i++) a.equal((sheet.match(new RegExp(`class="fm-row(?: on)?" data-slot="${i}"`, 'g')) || []).length, 1, `slot ${i} appears in one line`);
+  a.match(lines[0].name === 'Goalkeeper' ? sheet : /$^/, /data-slot="0"/, 'the keeper opens the keeper line');
+});
+
+test('the substitutes fold behind one labelled control that opens on demand', () => {
+  const s = career(); s.id = 'c-bench'; s.boardPhase = 'base';
+  a.match(TLBoardRoom.render(s, pool), /<button type="button" class="fm-bench-toggle" data-bench-toggle aria-expanded="false" aria-controls="fm-bench"><span>Substitutes · \d+<\/span><em class="fm-bench-cue" aria-hidden="true"><\/em><\/button>/, 'the bench has a labelled control and starts closed');
+  const bench = TLBoardRoom.render(s, pool).match(/<div class="fm-bench" id="fm-bench">([\s\S]*?)<\/div>/)[1];
+  a.ok((bench.match(/fm-row fm-sub/g) || []).length >= 1, 'the substitutes are in the document, not fetched when asked for');
+
+  const handlers = {}, root = { addEventListener: (k, fn) => { handlers[k] = fn; }, querySelector: () => null };
+  let draws = 0;
+  TLBoardRoom.bind(root, () => {}, () => draws++);
+  const seen = [], panel = { classList: { toggle: (name, on) => seen.push([name, on]) } };
+  const toggle = { dataset: {}, hasAttribute: n => n === 'data-bench-toggle', closest: () => panel, setAttribute: (n, v) => seen.push([n, v]) };
+  handlers.click({ target: { closest: sel => sel === 'button' ? toggle : null } });
+  a.deepEqual(seen, [['bench-open', true], ['aria-expanded', 'true']], 'the control opens the bench in place');
+  a.equal(draws, 0, 'opening the bench does not rebuild the screen');
+  a.match(TLBoardRoom.render(s, pool), /class="fm-squad-panel bench-open"/, 'and it stays open through the next render');
+});
+
+test('each starter row names the player in words, not only inside the picker', () => {
+  const s = career(); s.id = 'c-rows'; s.boardPhase = 'base';
+  const html = TLBoardRoom.render(s, pool);
+  a.equal((html.match(/<span class="fm-name">/g) || []).length, 11, 'every starter row carries a readable name');
+  a.match(html, /<span class="fm-name">[A-Z][a-zA-Z'’.\- ]+<\/span>/, 'the name is a name');
+  a.doesNotMatch(html, /fm-name">(?:undefined|null|Open position<\/span><\/span>)/, 'a filled slot names a person');
+  a.match(html, /<select class="fm-player-picker" data-player-pick="0"/, 'the picker is still the control beside it');
+});
+
+test('the phone rules that make this fit are the ones the docs measure', () => {
+  const css = fs.readFileSync(path.join(__dirname, '../src/reading.css'), 'utf8');
+  const phone = css.slice(css.indexOf('@media(max-width:700px){'), css.length);
+  a.match(phone, /\.fm-squad-panel \.fm-player-editor\{position:fixed/, 'the player editor becomes a sheet on a phone');
+  a.match(phone, /\.fm-squad-panel \.fm-bench\{display:none\}/, 'the bench folds on a phone');
+  a.match(phone, /\.fm-squad-panel\.bench-open \.fm-bench\{display:block\}/, 'and unfolds when its control says so');
+  a.match(phone, /\.fm-duty\{display:none\}/, 'the key keeps codes and roles on a phone');
+  a.match(phone, /\.fm-squad-panel \.fm-row> \.fm-stars/, 'the row drops the columns the sheet now owns');
 });

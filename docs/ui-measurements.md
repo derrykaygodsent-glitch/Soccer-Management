@@ -1758,3 +1758,117 @@ Sweep: 214 screens at 390, 768 and 1440 px, **0 horizontal overflow**, nested sc
 The phone. Starters are still 11 identical rows, the bench is a flat list of 6, and the role/duty/condition
 editor is a panel below both — the plan's "line-grouped starters, collapsed bench, bottom-sheet
 role/duty/condition editor". That is also where the 4.28 folds get cut to under 3.0.
+
+---
+
+## §31 · Phase 6, session 2 — the phone gets a phone layout
+
+Session 1 left the screen at **4.28 folds at 390 px**, with the gate at ≤ 3.0. The budget said the phone
+was carrying a desktop's worth of chrome: a 240 px header with three stacked rows, a 549 px pitch, a
+94 px code key and a 621 px team sheet where eleven starters and six substitutes were seventeen identical
+rows above a role editor nobody could reach without scrolling past all of them.
+
+### 31.1 What changed on a phone
+
+| Before (390 px) | After |
+|---|---|
+| Seventeen identical rows: eleven starters, a `SUBSTITUTES` label, six subs | The XI is grouped into **`GOALKEEPER` · `DEFENCE` · `MIDFIELD` · `ATTACK`**, each heading counting its rows, grouped from the same slots the pitch draws |
+| No names on a phone: the player column was a `<select>`, and a phone row had room for a code and a status | Each row is `CB · 4 Dario Novak · Centre-back · READY` — position code, shirt and name, role in words, status — on one 38 px line with no sideways scroll |
+| The bench always open, six more rows | `Substitutes · 6` with `Show` / `Hide`, `aria-expanded`, `aria-controls="fm-bench"`, closed to begin with; the rows stay in the document rather than being fetched when asked for |
+| The role/duty/condition editor rendered *below* the team sheet, reachable only by scrolling past it | The same editor is the **sheet you pull up**: `position:fixed`, full width, `82dvh`, scrolling inside itself, opened by tapping a player mark or a row, with `Close` and a picker that can change the player it describes. On a desktop it is unchanged — inline, static, under the list |
+| The pitch as the third block down, 549 px tall, under a caption that repeated the sticky bar | The phase switch and the two formation controls lead, then the **pitch at 262 px**, then the key, the coaching note and the selection actions. The caption is gone — the sticky bar one row above already states `4-1-4-1 OOP · 4-2-1-3 IP` |
+| A 240 px header: label, input, button, select and a second button, three rows deep | **188 px** in two rows, with the name label clipped for screen readers rather than stacked above the field |
+| The desk briefing above every desk: eyebrow, count, two wrapped entries (169 px) | One line of named arrivals under the count (**113 px**) — `New since your last visit · 2` and the two items beside it |
+| A code key whose longest entry (`DM-Su Defensive midfielder, supporting`) was 212 px inside a 167 px column — **22 px of page overflow at 390** | Two columns that fit: `DM-Su Defensive midfielder`, with the duty verb in its own `<em class="fm-duty">` — still `DM-Su Defensive midfielder, supporting` at 1440, dropped at ≤ 700 px where the role name is what a row shows |
+
+The team sheet's own columns did not all disappear on a phone: **stars, fit %, condition % and the player
+picker are the sheet's job now**, so the row hides them below 701 px and the desktop keeps every one.
+
+### 31.2 Numbers
+
+Measured at 390×844 and 1440×950, fresh career (no stored shape view), `#clubPage` scroll depth:
+
+| | Session 1 | Session 2 |
+|---|---:|---:|
+| Tactics, one shape @390 | 3.93 (2,697 px) | **2.92** (2,002 px) |
+| Tactics as it opens @390 (one shape) | — | **2.92** |
+| Tactics, side by side @390 | 4.28 (2,939 px) | 3.27 (2,241 px) |
+| Team Instructions @390 | 3.40 | 3.19 (2,191 px) |
+| Player Instructions @390 | 2.44 | 2.23 (1,533 px) |
+| Tactics, side by side @1440 | 2.64 (2,127 px) | 2.66 (2,148 px) |
+| Tactics, one shape @1440 | 2.55 (2,055 px, the figure session 1 started from) | **1.99** (1,608 px) |
+| Team Instructions @1440 | 1.77 | 1.79 |
+| Player Instructions @1440 | 1.69 | 1.71 |
+
+**The gate is met where the screen opens**: a career that has never chosen a shape view lands on
+`Out of possession` at **2.92 folds**. The two states that are deliberately longer are stated rather than
+hidden — `Side by side` draws two pitches (3.27) and the bench costs 228 px when a manager asks for it.
+
+The 1440 side-by-side view is 21 px *deeper* than session 1: four line headings were added to the team
+sheet. The single-shape views fell by 447 px at 1440 because the pitch card no longer prints the phase
+caption under the header it duplicates.
+
+Block budget at 390, before → after:
+
+| Block | Session 1 | Now |
+|---|---:|---:|
+| Screen head (`Tactics`, crumb, bridge) | 77 | 77 |
+| Desk briefing | 169 | **113** |
+| Workspace header | 240 | **188** |
+| Tabs | 42 | 35 |
+| Sticky summary | 54 | 48 |
+| Pitch card | 1,171 | **640** |
+| of which the pitch itself | 549 | **262** |
+| of which the code key | 94 + 35 | 67 |
+| Team sheet panel | 621 | 636 |
+| of which the panel head | 102 | **53** |
+| of which the table | 490 (capped, scrolled) | 553 (whole list, no inner scroller) |
+| Opposition brief | 160 | 133 |
+| Dressing room | 82 | 70 |
+
+The team sheet got 15 px *taller* while the gate view lost 695 px: the cap is gone, so all eleven starters
+and the folded bench are in one flow instead of a 490 px window onto seventeen rows.
+
+### 31.3 What was checked
+
+28 assertions in the browser at both widths, all passing:
+
+- the screen opens on one phase, four named lines in order, eleven starters listed once and each in
+  exactly one line, no `undefined`, no sideways overflow at 390 or 1440;
+- the bench is `display:none` on arrival with `aria-expanded="false"`, opens in place when its control is
+  pressed (`Show` → `Hide`, six rows, no rebuild of the page), and the column header row is hidden at 390;
+- a row is 38 px; the editor is `position:fixed`, `bottom === 844`, 390 px wide, with 15 selects (two
+  phases of role and duty, five personal instructions), the player picker, the condition line and `Close`;
+  closing it removes it; opening it does not lengthen the page; at 1440 the same editor is `static` and
+  lives inside the team sheet;
+- the sticky summary still pins to the scroll container (`158 = 158` after 900 px).
+
+Session 1's own 32-assertion gate still passes 32/32 at both widths, including the pitch key text, the
+four view names, the single auto-pick, one h1, and no ISO dates.
+
+| Contract | Session 1 | Now |
+|---|---:|---:|
+| Page anchors / one h1 / one primary / breadcrumbs | 72/72 | 72/72 |
+| Status chips | 78 | 78, 0 without words |
+| Long lists without a range | 0 | 0 |
+| Tables without a phone mode | 0 of 22 | 0 of 22 |
+| Contrast failures | 0 | 0 |
+| Text under 11 px (not metadata) | 543 | **519** |
+| Tests | 327 | **331 pass, 0 fail** |
+
+Four new tests: the team sheet reads as named lines with every starter in exactly one of them; the bench
+folds behind one labelled control that opens in place without a redraw and stays open through the next
+render; every starter row carries a readable name beside the picker; and the phone rules the numbers come
+from (fixed sheet, folded bench, `fm-duty` dropped, the row's columns handed to the sheet) are declared in
+the stylesheet. The pitch-key test now parses the duty as its own element and still requires every code to
+be named in words exactly once.
+
+Sweep: 214 screens at 390, 768 and 1440 px, **0 horizontal overflow**, nested scroll traps **39 / 38 / 38**
+— one fewer than session 1 at 390, because the team sheet stopped being a scroller of its own.
+
+### 31.4 What this leaves
+
+Phase 6 has five sessions; this was the second. What remains is the match side of the phase: the prep
+rail with one primary action per step, the live-match tray closed by default, and the Season Book archive
+with its index and filters. The tactics screen now opens on one shape at ≤ 3.0 folds on a phone; if a later
+session wants `Side by side` on a phone to fit the same gate, the two pitches have to stop being 219 px each.
