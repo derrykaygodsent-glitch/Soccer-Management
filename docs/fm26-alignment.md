@@ -127,3 +127,12 @@ frame and the numbers in [`ui-measurements.md` §15](./ui-measurements.md).
 | A board of directors you can approach | A candidates table with what each one wants and their status (`Open to talk`, `Offer sent`, `Declined`) | The pane carries one candidate's four structures as priced buttons, and a declined candidate keeps the note that a different structure may still open the conversation |
 | A record of decisions | Minutes as a table: when, motion, `3 for · 2 against` | A motion with no vote taken says so, rather than showing an empty list |
 | Mobile: the same register | Phone cards with `Share`, `Stake` and `Dividends` labelled and the seat right-aligned; 0 sideways scroll | Selection is kept in desk state, so scrolling away and back does not lose the holder you were reading |
+
+## 14. Phase 4, fifth pass: the transfer centre
+
+| FM26 pattern | Touchline now | Beyond FM26 |
+|---|---|---|
+| Transfer activity split into your club and the rest of the market | Two scopes, `My club` and `World wire`, each with its own count; arrivals and departures are sub-tabs inside your club only | The scope is remembered with the page and the selected deal, so a reload returns to the same wire |
+| A deal described as a route between clubs | `From Unattached → To Kay FC` with an arrow between the shields, and `Unattached → Kay FC` written on every row | On a phone, where two shields collapse to initials, the written route replaces them rather than stacking two boxes |
+| A list you can page through | Twelve a page with `Showing 1 to 12 of 17 deals`, `Page 1 of 2` and Previous/Next at head and foot | The deal card follows the page — `Deal 13 of 17` is the first row of page two — instead of being steered by arrows |
+| Rows that name the player and the money | Name, fee, route and status on every row; every "Unnamed player" is gone | The same row shape carries arrivals, departures and world moves, so the list reads the same in both scopes |

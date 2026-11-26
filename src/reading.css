@@ -857,3 +857,36 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 
 /* the boardroom's sort buttons sit at the 11px floor, not the 10.5px table default */
 .br-table .column-sort{font-size:11px}
+
+/* ---- Phase 4 · transfers: scopes, route line, pages ---- */
+.tc-scope{display:flex;gap:.4rem;margin:.9rem 0 0;flex-wrap:wrap}
+.tc-scope button{flex:0 1 20rem;justify-content:center;min-height:44px;font-size:.92rem}
+.tc-scope button[aria-pressed=true]{background:#294942;color:#def6a7;border-color:#88ac87}
+.tc-scope b,.tc-tabs b{font-size:.72rem;opacity:.85}
+.tc-tabs{margin:.55rem 0}
+.tc-arrow{font-size:1.15rem;color:#9fc0b5;line-height:1}
+.tc-route-line{display:none;margin:.45rem 0 0;font-size:12.5px;font-weight:650;letter-spacing:.02em;color:#d7e9d9}
+.tc-list-head{display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-end;justify-content:space-between;margin-bottom:.4rem}
+.tc-list-head h3{margin:0}
+.tc-range{margin:.1rem 0 0;font-size:.8rem;font-weight:700;color:#d7e9d9}
+.tc-rows{display:grid;gap:.28rem}
+.tc-list .tc-row{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name fee" "route tag";gap:.1rem .5rem;align-items:baseline;width:100%;text-align:left;padding:.45rem .55rem}
+.tc-list .tc-row>span{grid-area:name;font-weight:700;overflow:hidden;text-overflow:ellipsis}
+.tc-list .tc-row>em{grid-area:fee;font-style:normal;font-variant-numeric:tabular-nums;color:#dceccf}
+.tc-list .tc-row>small{grid-area:route;color:#a9c3cf;overflow:hidden;text-overflow:ellipsis}
+.tc-list .tc-row>.dv-tag{grid-area:tag;justify-self:end;font-size:11px}
+.tc-list-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem;margin-top:.5rem;font-size:11.5px;color:#a9c3cf}
+.tc-pager{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+.tc-pager span{font-size:11.5px;color:#bfd4cf;white-space:nowrap}
+.tc-pager button{min-height:44px}
+.tc-deal-index{margin-left:auto;font-size:11.5px;color:#c1cfd9}
+@media(max-width:760px){
+  .tc-scope{flex-wrap:nowrap}
+  .tc-scope button{flex:1 1 0;padding-inline:.4rem}
+  .tc-list .tc-row{padding:.55rem .6rem}
+}
+/* on a phone the two club shields shrink to initials, so the route becomes one written line */
+@media(max-width:560px){
+  .tc-route{display:none}
+  .tc-route-line{display:block}
+}

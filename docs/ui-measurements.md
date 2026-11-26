@@ -1191,3 +1191,78 @@ smallest text 9 px. Tests: 313 pass, 0 fail.
 | A detail pane | One pane per table, selected by `aria-selected`, carrying the facts and the actions for that row |
 | 0 tables overflow | 0 of 22 tables without a phone mode; 0 horizontal overflow at three widths |
 | Nothing new in the engine | Same five commands, same confirmations, same arithmetic |
+
+
+## 24. Phase 4, session 5: the transfer centre
+
+### 24.1 The problem the scopes fix
+
+Transfers had three tabs in one list — Arrivals, Departures, Around the leagues — so "my business" and
+"everyone else's business" were the same control, one tab apart. The list rendered twelve rows and then
+said "5 more in this list. Use the arrows on the deal card to step through them", which meant the only
+way to reach deal thirteen was a Previous/Next arrow on a different card. Every row read "Unnamed
+player" because the list looked for a name on the deal record while the name lives on the player. The
+route existed as two labelled shields with no arrow between them, and the page printed ISO dates.
+
+### 24.2 What the centre is now
+
+| Before | Now |
+|---|---|
+| Three tabs: Arrivals, Departures, Around the leagues | Two scopes — **My club** (17) and **World wire** (15) — with Arrivals/Departures as sub-tabs inside My club only, which is what the world list never needed |
+| Twelve rows, then "5 more… use the arrows on the deal card" | Twelve a page: `Showing 1 to 12 of 17 deals`, `Page 1 of 2`, Previous/Next at the head and the foot of the list |
+| Reaching deal 13 meant stepping an arrow on the deal card | A page, and the deal card follows the page: `Deal 13 of 17` is the first row of page two |
+| A deal card with Previous/Next and `1 / 17` | The card is a detail view for the selected row and says `Deal 3 of 15`; the browsing arrows are gone |
+| `FC From Unattached KF To Kay FC`, no arrow | `From Unattached → To Kay FC` with an arrow between the shields, and a written line `Unattached → Kay FC` |
+| Every row "Unnamed player", status only | Name, fee, `From → To` and the status chip on every row; names resolve from the squad pool |
+| `2027-11-13`, `2027-11-20`, `2027-11-11` | `13 Nov 2027`, `20 Nov 2027`, `11 Nov 2027` |
+
+Page, tab and scope reset together: changing scope or tab returns to page one and deal one, and the whole
+view (scope, tab, page, selected deal) is part of the desk's history state, so a reload lands where you
+left off.
+
+On a phone the two club shields shrink to their initials and the arrow has nothing to sit between, so at
+560 px and below the shields are hidden and the route is the written line instead of two stacked boxes.
+
+The arrow is a text separator, not a disclosure icon: `test/disclosure-defaults.test.cjs` bans literal
+arrow glyphs in `src/`, so it is written as `\u2192` in a constant and rendered as content. The built
+`index.html` passes the same test.
+
+### 24.3 Numbers
+
+| Contract | §23 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 72/72 | 72/72 |
+| Status chips | 78 | 78, 0 without words |
+| Long lists without a range | 0 | 0 |
+| Tables without a phone mode | 0 of 22 | 0 of 22 |
+| Contrast failures | 0 | 0 |
+| Text under 11 px, not metadata | 545 | 545 |
+| Tests | 313 | 313 pass, 0 fail |
+
+Depth, `scrollHeight / clientHeight` of the desk: **1.83 at 1440** and **2.64 at 390**, against 1.31 and
+2.10 before. The page grew by the scope switch, the sub-tabs and a second line in every row — the row now
+carries the route and a status chip — and it is still under three folds on a phone.
+
+Behaviour, measured in the browser on the real career:
+
+- Scopes read `My club 17` and `World wire 15`; My club opens on Arrivals with `Arrivals 17` /
+  `Departures 0` sub-tabs, World wire has no sub-tabs.
+- My club page one: 12 rows, `Showing 1 to 12 of 17 deals`, `Page 1 of 2`; page two: 5 rows,
+  `Showing 13 to 17 of 17 deals`, and the card reads `Deal 13 of 17` with Amar Miro selected.
+- World wire: 12 of 15 rows, routes like `Densari FC → East Kintaba FC`, `World wire · 15` heading.
+- Selecting the third world row moves the card to `Luca Kone`, `Koroba City → Koroba Market Stars`,
+  `Deal 3 of 15`, with exactly one `.tc-row-on`.
+- Rows no longer read "Unnamed player"; names come from the pool (`Nico Koroma`, `Haru Vico`).
+- 0 horizontal overflow at 1440 and 390.
+
+Sweep: 214 screens at 390, 768 and 1440 px, 0 horizontal overflow, nested scroll traps 41 / 38 / 38,
+smallest text 9 px. Tests: 313 pass, 0 fail.
+
+### 24.4 Gate
+
+| Gate from the plan | Result |
+|---|---|
+| My club / World wire as separate scopes | Two-scope switch with counts; sub-tabs only inside My club |
+| Route line `From → To` | Shields with an arrow in the deal card, a written route on every row, and the written route replaces the shields at 560 px and below |
+| Pagination replaces the 12-row arrow browsing | 12 a page with range and page count at both ends; the deal card's browsing arrows are gone and the card follows the page |
+| Transfers show a range (Phase 4 gate) | `Showing 1 to 12 of 17 deals` on both scopes |
