@@ -100,3 +100,12 @@ frame and the numbers in [`ui-measurements.md` §15](./ui-measurements.md).
 | A contracts panel that lists expiring deals and opens a renewal | A queue grouped by the 90-day rule with a count per group, the days left, the wage and a status chip that repeats the rule in words, above it the four facts a decision needs | The queue names the next player as a command (`Start with Kofi Vico · 18 days left`) instead of leaving the manager to read eleven rows, and the row, the command and the contract desk on the player file are one path |
 | Renewal talks with an agent across a table | The desk states the wage, the expiry, the agent, up to four packages with a breakdown of wage, bonus, fee and full term cost, and answers in two days | The desk sits inside the player's own file rather than in a separate negotiation screen, so the role fit, the form and the cost are read together before a proposal is sent |
 | A mobile view of a dense financial table | One card per player at 390 px: name and position, then labelled expiry, days left, wage and status; no sideways scroll and no hidden column | The card keeps the 90-day grouping visible, so the reason a player is on the screen is never lost on a phone |
+
+## 11. Phase 4, second pass: the backroom
+
+| FM26 pattern | Touchline now | Beyond FM26 |
+|---|---|---|
+| A staff screen split into responsibilities, appointments, recruitment and reports | Four views behind one nav with counts, each answering one question: what needs me, who do I have, who can I appoint, what was delivered | The landing view states "Nothing needs you" in words when no decision is waiting, instead of leaving an empty queue to be read as missing data |
+| Staff list beside a detail panel | People pairs a roster row per appointment with one panel for the selected member: responsibility, monthly target, latest delivery, contract state and the decisions | The rating is repeated as a chip in the roster and with its score in the panel, so comparison happens in the list and judgement in the panel |
+| A recruitment market with prepared deals | Recruitment holds the signature queue, the scouting reports and one row per open position, with a hiring panel naming both candidates, their wage and the fee | The screen states that no proposal joins a player until the manager signs, and that there is no cap on appointments |
+| Mobile: one long administrative page | Phone fold 9.13 to 1.54 at 390 px, 0 sideways scroll, 44 px controls | The nav hides its counts at 390 px so all four views stay one tap apart rather than two scrolls apart |

@@ -948,3 +948,79 @@ primary `Offer terms to Kofi Vico`, `17 players have no contract`, 0 overflow at
 copy given four synthetic contracts: 4 with terms, `₥720` wage bill, 3 talks open, `₥90` owed, groups
 1/1/1/1, rows `Kofi Vico · 1 Dec 2027 · 18 · ₥120 · Renewal open` to `Felix Ibarra · 10 Jun 2028 · 210 ·
 ₥240 · Too early to talk`.
+
+---
+
+## 21. Phase 4, session 2: the staff split
+
+### 21.1 The problem the split fixes
+
+Staff was one page: a hero, four facts, a long delegation paragraph, the approval queue, ten scouting
+reports and sixteen role cards across six departments. On a phone that was a 9.13 fold scroll, the
+worst in the game. The phase plan asks for four views, and the gate is a staff fold of 2.0 or less at
+390 px.
+
+| View | What it answers |
+|---|---|
+| Overview | What needs me, who is appointed, what each department costs, how the budget works |
+| People | The appointments I have: one roster row each, one detail panel for the selected member |
+| Recruitment | What is waiting for my signature, what scouting reported, which positions are open and who is available |
+| Reports | The weekly work log, latest delivery per appointment |
+
+The local nav carries a count per view (`People · 9 appointed`, `Recruitment · 1 to sign`). Notes are
+hidden at 390 px so all four labels fit without a sideways scroll.
+
+### 21.2 Both lists are splits, not walls
+
+People and Recruitment each pair a compact roster with one detail panel, which is the pattern the plan
+calls a split:
+
+- People: a row per appointment (mark, name, role, wage, rating chip) and a panel for the selected
+  member with the weekly responsibility, the monthly target, the latest delivery, the contract state
+  and the three decisions (pay rise, renew, dismiss) plus a link to the work log.
+- Recruitment: the signature queue and the scouting reports, then one row per open position grouped by
+  department, and a hiring panel with the two candidates, their ability, their wage and the signing fee.
+  The panel states that there is no fixed three-person cap.
+
+Every `<details>` on the page renders `open`, per the disclosure rule the tests enforce.
+
+### 21.3 Also fixed
+
+- The staff stylesheet used a gold literal (`#e9c96e`) for the rating, the report grade and the
+  "under review" label. All three now use `--ui-attention`, the palette's periwinkle.
+- Staff dates were ISO (`2027-11-22`). They now read `22 Nov 2027` everywhere on the page, including the
+  contract end, the next assignment and the 28-day budget reset.
+- "Nothing needs you" replaces an empty pipeline: the screen states that no signature, wage or contract
+  decision is waiting instead of showing an empty queue.
+- A proposal waiting for signature no longer repeats as a scouting report in the same view.
+
+### 21.4 Numbers
+
+| Contract | §20 | Now |
+|---|---:|---:|
+| Page anchors / primary / breadcrumbs | 72/72 | 72/72 |
+| Status chips | 78 | 78, 0 without words |
+| Tables without a phone mode | 0 of 16 | 0 of 16 |
+| Contrast failures | 0 | 0 |
+| Text under 11 px, not metadata | 776 | 544 |
+| Tests | 313 | 313 pass, 0 fail |
+
+Staff fold at 390 px: **9.13 to 1.54** (0.92 at 768 and 1440). Per view at 390 px on the real career:
+Overview 1.54, People 1.66, Recruitment 1.68, Reports 2.83. On a seeded career with three appointments,
+a pending proposal and a scouting report: Overview 1.71, People 1.28, Recruitment 2.28, Reports 1.55.
+None of the four views overflows at any width and all of them keep 0 horizontal scroll.
+
+Sweep: 214 screens at 390, 768 and 1440 px, 0 horizontal overflow, nested scroll traps 41 / 38 / 38,
+smallest text 9 px. Tests: 313 pass, 0 fail.
+
+### 21.5 Gate
+
+| Gate from the plan | Result |
+|---|---|
+| Staff fold 2.0 or less at 390 px | 1.54 (was 9.13) |
+| Four views, not one page | Overview, People, Recruitment, Reports with counts in the nav |
+| 0 tables overflow | 0 tables on the staff screen; 0 of 16 game wide without a phone mode |
+| Actions still reachable | hire, assign responsibility, set target, approve pay rise, renew, dismiss, sign a proposal are all inside their own view |
+
+The staff contract test now checks the four views together, because the roles, the target control and the
+no-cap statement live in the view that owns them.

@@ -9,7 +9,7 @@ const hire=(s,i,j=0)=>O.act(s,'staffHire',`${i}|${j}`);
 
 test('the backroom has specialist departments beyond three posts and renders recurring work targets',()=>{
   const s=make();hire(s,3);hire(s,4);hire(s,10);hire(s,11);hire(s,12);
-  const html=O.render(s);
+  const html=['overview','people','recruitment','reports'].map(tab=>O.render(s,tab)).join('');
   a.equal(s.staff.length,5);
   a.equal(O.roles.length,16);
   for(const role of ['Head coach','Tactical coach','Goalkeeping coach','Fitness coach','Youth development coach','Sports scientist','Chief scout','First-team scout','Recruitment analyst','Director of football','Contract negotiator','Performance analyst','Academy manager'])a.ok(html.toLowerCase().includes(role.toLowerCase()),`missing ${role}`);

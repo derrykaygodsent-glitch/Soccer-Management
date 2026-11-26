@@ -19,7 +19,7 @@ const specs=[
  {name:'Performance analyst',group:'Analysis',mark:'PA',wage:370,duties:['Team performance','Upcoming opponent'],task:'analysis'},
  {name:'Academy manager',group:'Academy',mark:'AM',wage:460,duties:['Youth pathway','Find academy prospects'],task:'academy'},
 ];
-const roles=specs.map(x=>x.name),cash=n=>(g.TLLuma||require('./luma')).format(n),rate=(s,n)=>F.rate(s,s.profile.nation,n,'wages'),date=d=>g.TLManagerLife.date(d),clip=(x,a,b)=>Math.max(a,Math.min(b,x));
+const roles=specs.map(x=>x.name),cash=n=>(g.TLLuma||require('./luma')).format(n),rate=(s,n)=>F.rate(s,s.profile.nation,n,'wages'),date=day=>{const iso=g.TLManagerLife.date(Number(day)),d=new Date(iso+'T12:00:00Z');return Number.isNaN(d.getTime())?iso:d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});},clip=(x,a,b)=>Math.max(a,Math.min(b,x));
 function candidate(s,i,j){const h=D.seedFor([s.id,s.club.name,i,j].join('|'))>>>0;return {name:['Ama','Ivo','Nia','Emil','Mara','Sol','Kojo','Inés'][h%8]+' '+['Soro','Keita','Marin','Varela','Mensah','Novak','Bell','Rivas'][(h>>>4)%8],skill:55+(h%13)+j*20,wage:rate(s,specs[i].wage+j*125),fee:2500+j*1000};}
 function member(s,i,j=0){const c=candidate(s,i,j);return {...c,duty:0,joined:s.day,end:s.day+182,next:s.day+7,weeks:0,hits:0,periodHits:0,periodWeeks:0,periodStart:s.day,grade:50,log:[],arrears:0,target:3};}
 function read(s){if(!s.club)return null;const o=s.club.staffOffice||{members:{},cap:0,spent:0,from:s.day,debts:[],recommendations:[],approvals:[]};return {...o,recommendations:o.recommendations||[],approvals:o.approvals||[],members:Object.fromEntries(roles.flatMap((role,i)=>s.staff.includes(role)?[[i,o.members[i]||member(s,i)]]:[]))};}
@@ -71,16 +71,111 @@ function morning(s,pool){if(!s.club||(!s.staff?.length&&!s.club.staffOffice))ret
  }
  if(s.day===m.end-28)s.mail.unshift({day:s.day,from:'Club secretary',text:`${m.name} has four weeks left. Renew the ${spec.name} contract in Staff.`});if(s.day>=m.end){remove(s,o,i,m);s.mail.unshift({day:s.day,from:'Club secretary',text:`${m.name} completed their contract. The ${spec.name} position is now open.`});}}
 }
-function render(s){const e=g.TLClubUI.esc,art=g.TLClubUI.art,btn=(cmd,v,label,disabled=false,klass='')=>`<button class="${klass}" data-life="${cmd}" data-v="${e(v)}" ${disabled?'disabled':''}>${label}</button>`;if(!s.club)return `<section class="personnel"><header><small>FOOTBALL OPERATIONS</small><h2>Build a backroom team</h2></header><p>Take charge of a club to hire coaches, medical staff, scouts and recruitment specialists. Appointments and fieldwork are paid from club funds, not your wallet.</p></section>`;
- const o=read(s),team=Object.entries(o.members).map(([i,m])=>({i:+i,m,spec:specs[+i]})),roll=team.reduce((n,x)=>n+x.m.wage,0),groups=[...new Set(specs.map(x=>x.group))],budgetSpent=o.spent||0;
- const duties=(i,m)=>`<label class="staff-focus">Weekly responsibility<select data-staff-duty="${i}">${specs[i].duties.map((d,j)=>`<option value="${j}" ${m.duty===j?'selected':''}>${e(d)}</option>`).join('')}</select></label>`;
- const reportRow=r=>{const a=o.approvals.find(x=>x.id===r.id&&x.status==='pending');return `<article class="staff-report"><div class="staff-report-main"><span class="staff-pos">${e(r.pos)} · ${e(r.age)}</span><div><b>${e(r.name)}</b><small>${e(r.club)} · ${e(r.nation)} · ${e(r.scout)} · ${date(r.day)}</small></div><strong>${r.grade==null?'Awaiting analysis':r.grade+'/100'}</strong></div><p>${r.analysis?'Analysed by '+e(r.analysis)+' · ':''}Estimated transfer ${cash(r.fee)} · wage ${cash(r.wage)}/week · ${cash(r.fee+4*r.wage)} initial commitment.</p><div class="staff-report-actions"><button data-league-player="${e(r.id)}">Open player file</button>${r.status==='new'?'<span>Waiting for recruitment analysis</span>':''}${a?btn('staffApprove',r.id,'Review &amp; sign staff proposal',s.fund<a.fee+4*a.wage,'staff-sign'):''}${r.status==='offer submitted'?'<span class="staff-pending">Offer in progress · see Transfer talks</span>':''}</div></article>`;};
- return `<section class="personnel staff-office"><header class="staff-hero">${art('training')}<div><small>FOOTBALL OPERATIONS · ${e(s.club.name)}</small><h2>Backroom &amp; recruitment</h2><p>Hire the expertise you can afford, assign the work, track delivery and take final responsibility for signings.</p></div><a href="#staff-roles">Explore roles</a></header>
- <div class="staff-scoreboard"><div><small>APPOINTMENTS</small><b>${team.length} <span>/ ${roles.length}</span></b><em>No fixed three-person cap</em></div><div><small>WEEKLY PAYROLL</small><b>${cash(roll)}</b><em>${cash(s.fund)} remaining in club funds</em></div><div><small>SCOUTING SPEND</small><b>${cash(budgetSpent)} <span>/ ${cash(o.cap)}</span></b><em>28-day cap · resets ${date(o.from+28)}</em></div><div><small>STAFF REPORTS</small><b>${o.recommendations.length}</b><em>${o.approvals.filter(x=>x.status==='pending').length} awaiting your signature</em></div></div>
- <section class="staff-command"><div><small>DELEGATE RECURRING WORK</small><h3>Your staff act every week</h3><p>Assign each specialist a named responsibility and monthly target. Every weekly delivery is logged and appears on its relevant football page. The monthly rating compares completed assignments with your target: 100 means the target was met, scores above 100 mean overperformance, 50 to 99 means needs support, and scores below 50 mean failing. It informs your decision; only you can reassign, renew or dismiss staff.</p></div><form data-staff-cap><label>Scouting / fieldwork budget<select name="cap">${[0,250,750,1500,5000,10000].map(n=>`<option value="${n}" ${n===o.cap?'selected':''}>${n?cash(n)+' per 28 days':'Pause paid fieldwork'}</option>`).join('')}</select></label><button>Update cap</button></form></section>
- ${o.approvals.length?`<section class="staff-pipeline"><header><small>RECRUITMENT PIPELINE</small><h3>Manager signature required</h3><p>Scouting and recruitment staff find targets and prepare terms. No player joins until you review and sign the proposed deal.</p></header>${o.approvals.slice(0,8).map(a=>`<div class="staff-approval"><div><b>${e(a.name)}</b><small>${e(a.pos)} · ${e(a.role)} · fit ${a.grade}/100 · prepared ${date(a.day)}</small></div><span>${cash(a.fee)} fee + ${cash(a.wage)}/wk</span>${a.status==='pending'?btn('staffApprove',a.id,'Review &amp; sign',s.fund<a.fee+4*a.wage,'staff-sign'):e(a.status==='approved'?'Signed by '+a.signature:a.status)}</div>`).join('')}</section>`:''}
- <section class="staff-pipeline"><header><small>SCOUTING · ANALYSIS · NEGOTIATION</small><h3>Recommendations</h3><p>Scouts spend from the club’s approved cap. Analysts assess fit and cost; your director or negotiator prepares a proposal for your signature.</p></header>${o.recommendations.length?o.recommendations.slice(0,10).map(reportRow).join(''):'<p class="staff-empty">No reports yet. Hire a scout, set a fieldwork budget above zero and Continue through a weekly review.</p>'}</section>
- <div id="staff-roles" class="staff-groups">${groups.map(group=>`<section class="staff-group"><header><small>DEPARTMENT</small><h3>${e(group)}</h3><span>${team.filter(x=>x.spec.group===group).length} appointed</span></header><div class="staff-role-grid">${specs.map((spec,i)=>{if(spec.group!==group)return '';const m=o.members[i];if(!m){const cs=[0,1].map(j=>candidate(s,i,j));return `<article class="staff-vacancy"><small>${e(spec.name.toUpperCase())}</small><h4>Vacant position</h4><p>${e(spec.duties.join(' · '))}</p>${cs.map((c,j)=>`<div class="staff-candidate"><div><b>${e(c.name)}</b><small>Specialist ability ${c.skill}/100 · ${cash(c.wage)}/week</small></div>${btn('staffHire',i+'|'+j,'Appoint · '+cash(c.fee),s.fund<c.fee+c.wage)}</div>`).join('')}</article>`;}
- const target=m.target||3,period=m.periodHits||0,periodWeeks=m.periodWeeks||0,progress=Math.min(100,Math.round(period/target*100)),review=m.reviewResult||'No completed monthly review',rating=performance(m);return `<article class="staff-member"><header><span class="staff-mark">${e(spec.mark)}</span><div><small>${e(spec.name.toUpperCase())}</small><h4>${e(m.name)}</h4></div><b class="staff-grade ${rating.tone}">${rating.score==null?'—':rating.score}<small>${e(rating.label)}</small></b></header><p class="staff-contract">${cash(m.wage)}/week · to ${date(m.end)}${m.arrears?' · arrears '+cash(m.arrears):''}</p>${duties(i,m)}<div class="staff-target"><div><span>MONTHLY TARGET</span><b>${period} / ${target} productive assignments</b></div><i><b style="width:${progress}%"></b></i><small>${e(review)}${m.lastReview?' · '+date(m.lastReview):''}</small><label>Set target<select data-staff-target="${i}">${[2,3,4].map(n=>`<option value="${n}" ${n===target?'selected':''}>${n} completed / 4 weeks</option>`).join('')}</select></label></div><div class="staff-latest"><small>LATEST WORK</small><p>${e(m.log[0]?.text||'Assignment begins '+date(m.next)+'.')}</p>${m.log[0]?.success?'<b class="staff-success">Delivered</b>':'<b class="staff-wait">Under review</b>'}</div><details open class="staff-history"><summary>Work log · ${m.hits} productive weeks / ${m.weeks} paid</summary>${m.log.map(x=>`<p><time>${date(x.day)}</time> · ${e(x.text)}</p>`).join('')||'<p>No completed assignments yet.</p>'}<p>Next weekly assignment due ${date(m.next)}. Contract review ${date(m.end-42)}.</p>${m.ask?`<p class="staff-pay-request">Pay review requested · ${cash(m.ask)}/week ${btn('staffRaise',i,'Approve pay rise',s.fund<m.ask)}</p>`:''}${m.end-s.day<=42?btn('staffRenew',i,'Renew 26 weeks'):'<small>Renewals open '+date(m.end-42)+'.</small>'}${btn('staffDismiss',i,'Dismiss · '+cash(m.wage)+' severance',s.fund<m.wage,'staff-dismiss')}</details></article>`;}).join('')}</div></section>`).join('')}</div>
- ${o.debts.length?`<aside class="staff-debts">Former staff payroll outstanding: ${cash(o.debts.reduce((a,d)=>a+d.amount,0))}</aside>`:''}</section>`;}
+function tagFor(rating){return rating.score==null?'':rating.tone==='high'||rating.tone==='good'?'good':rating.tone==='low'?'bad':'info';}
+function render(s,tab='overview',focus=null,roleFocus=null){
+  const e=g.TLClubUI.esc,art=g.TLClubUI.art;
+  const btn=(cmd,v,label,disabled=false,klass='')=>`<button class="${klass}" data-life="${cmd}" data-v="${e(v)}" ${disabled?'disabled':''}>${label}</button>`;
+  if(!s.club)return `<section class="personnel"><header><small>FOOTBALL OPERATIONS</small><h2>Build a backroom team</h2></header><p>Take charge of a club to hire coaches, medical staff, scouts and recruitment specialists. Appointments and fieldwork are paid from club funds, not your wallet.</p></section>`;
+  const o=read(s);
+  const team=Object.entries(o.members).map(([i,m])=>({i:+i,m,spec:specs[+i]})).sort((a,b)=>a.i-b.i);
+  const roll=team.reduce((n,x)=>n+x.m.wage,0);
+  const pending=o.approvals.filter(x=>x.status==='pending');
+  const groups=[...new Set(specs.map(x=>x.group))];
+  const budgetSpent=o.spent||0;
+  const owed=team.reduce((n,x)=>n+(x.m.arrears||0),0);
+  const payAsks=team.filter(x=>x.m.ask);
+  const ending=team.filter(x=>x.m.end-s.day<=42);
+  const debts=o.debts.reduce((n,d)=>n+d.amount,0);
+  const vacancies=specs.filter((x,i)=>!o.members[i]);
+  const view=['overview','people','recruitment','reports'].includes(tab)?tab:'overview';
+
+  const dept=(name)=>groups.includes(name)?name:null;
+  function tag(rating){const tone=tagFor(rating);return `<span class="dv-tag${tone?' '+tone:''}">${e(rating.label)}${rating.score==null?'':' · '+rating.score+'/120'}</span>`;}
+
+  const tabs=[['overview','Overview',''],['people','People',team.length+' appointed'],['recruitment','Recruitment',pending.length?pending.length+' to sign':(vacancies.length?vacancies.length+' open':'')],['reports','Reports','']];
+  const nav=`<nav class="st-nav" aria-label="Staff views">${tabs.map(([id,label,note])=>`<button type="button" data-staff-tab="${id}" aria-pressed="${id===view}">${label}${note?`<small>${e(note)}</small>`:''}</button>`).join('')}</nav>`;
+
+  const hero=`<header class="staff-hero">${art('training')}<div><small>FOOTBALL OPERATIONS · ${e(s.club.name)}</small><h2>Backroom &amp; recruitment</h2><p>${team.length} of ${roles.length} positions filled · ${cash(roll)}/week payroll · ${cash(s.fund)} in club funds</p></div></header>`;
+
+  function scoreboard(){
+    const tiles=[
+      ['Appointments',`${team.length} / ${roles.length}`,team.length?'':'No staff appointed yet'],
+      ['Weekly payroll',cash(roll),owed?cash(owed)+' unpaid':'Paid up to date'],
+      ['Scouting spend',`${cash(budgetSpent)} / ${cash(o.cap)}`,`28-day cap · resets ${date(o.from+28)}`],
+      ['Awaiting signature',String(pending.length),pending.length?'Staff proposals need you':'Nothing to sign']
+    ];
+    return `<div class="st-kpis">${tiles.map(([label,value,note])=>`<div><small>${e(label)}</small><b>${e(value)}</b><em>${e(note)}</em></div>`).join('')}</div>`;
+  }
+
+  function needs(){
+    const rows=[];
+    if(pending.length)rows.push([`${pending.length} ${pending.length===1?'staff proposal waits':'staff proposals wait'} for your signature`,'recruitment','Review']);
+    if(owed)rows.push([`${cash(owed)} of staff wages is unpaid`,'people','Open']);
+    if(payAsks.length)rows.push([`${payAsks.length} pay ${payAsks.length===1?'review':'reviews'} requested`,'people','Open']);
+    if(ending.length)rows.push([`${ending.length} staff ${ending.length===1?'contract ends':'contracts end'} within six weeks`,'people','Open']);
+    if(!team.length)rows.push(['No staff appointed. Every backroom task is yours this week','recruitment','Hire']);
+    if(!rows.length)return `<article class="st-panel"><h3>Nothing needs you</h3><p class="cp-muted">No signature, wage or contract decision is waiting in the backroom. Work continues weekly on the assignments below.</p></article>`;
+    return `<article class="st-panel"><small>NEEDS YOU</small><div class="st-needs">${rows.map(([text,go,label])=>`<div><p>${e(text)}</p><button type="button" data-staff-tab="${go}">${label}</button></div>`).join('')}</div></article>`;
+  }
+
+  function departments(){
+    return `<article class="st-panel"><small>DEPARTMENTS</small><div class="st-depts">${groups.map(name=>{
+      const all=specs.map((x,i)=>({x,i})).filter(y=>y.x.group===name);
+      const filled=all.filter(y=>o.members[y.i]);
+      const wage=filled.reduce((n,y)=>n+o.members[y.i].wage,0);
+      const open=all.length-filled.length;
+      return `<div class="st-dept"><div role="presentation"><b>${e(name)}</b><small>${filled.length} of ${all.length} appointed${open?' · '+open+' open':''} · ${cash(wage)}/week</small></div><button type="button" data-staff-tab="${open?'recruitment':'people'}">${open?'Hire':'Open'}</button></div>`;
+    }).join('')}</div></article>`;
+  }
+
+  function delegation(){
+    return `<article class="st-panel st-how"><small>DELEGATION AND BUDGET</small><p class="cp-muted">Each specialist delivers one named responsibility a week and the monthly rating compares completed work with your target: 100 is the target met, above 100 is overperformance, 50 to 99 needs support, below 50 is failing. No fixed three-person cap applies; appoint as many specialists as the budget allows.</p><form data-staff-cap><label>Scouting and fieldwork budget<select name="cap">${[0,250,750,1500,5000,10000].map(n=>`<option value="${n}" ${n===o.cap?'selected':''}>${n?cash(n)+' per 28 days':'Pause paid fieldwork'}</option>`).join('')}</select></label><button>Update cap</button></form></article>`;
+  }
+
+  function peopleView(){
+    if(!team.length)return `<article class="st-panel"><h3>No staff appointed</h3><p class="cp-muted">Hire a coach, a physio or a scout and their weekly work starts on the next review.</p><button type="button" data-staff-tab="recruitment">Open recruitment</button></article>`;
+    const chosen=team.find(x=>x.i===Number(focus))||team[0];
+    const roster=`<article class="st-panel"><small>APPOINTMENTS · ${team.length}</small><p class="cp-muted">Pick a member to set the weekly responsibility, the monthly target and the contract decision.</p><div class="st-roster">${team.map(({i,m,spec})=>{const rating=performance(m);return `<button type="button" class="st-roster-row${i===chosen.i?' is-on':''}" data-staff-focus="${i}" aria-pressed="${i===chosen.i}"><span class="st-mark">${e(spec.mark)}</span><span><b>${e(m.name)}</b><small>${e(spec.name)} · ${cash(m.wage)}/week</small></span><span class="dv-tag${tagFor(rating)?' '+tagFor(rating):''}">${e(rating.label)}</span></button>`;}).join('')}</div></article>`;
+    const {i,m,spec}=chosen,rating=performance(m),target=m.target||3,period=m.periodHits||0,progress=Math.min(100,Math.round(period/target*100));
+    const panel=`<article class="st-panel"><small>${e(spec.group.toUpperCase())} · ${e(spec.name.toUpperCase())}</small><div class="st-person st-person-focus"><header><span class="st-mark">${e(spec.mark)}</span><div><b>${e(m.name)}</b><small>${cash(m.wage)}/week · contract to ${e(date(m.end))}${m.arrears?' · '+cash(m.arrears)+' owed':''}</small></div>${tag(rating)}</header>
+      <label class="st-field">Weekly responsibility<select data-staff-duty="${i}">${spec.duties.map((d,j)=>`<option value="${j}" ${m.duty===j?'selected':''}>${e(d)}</option>`).join('')}</select></label>
+      <div class="st-target"><span>MONTHLY TARGET · ${period} of ${target} completed this month</span><i><b style="width:${progress}%"></b></i><label>Set target<select data-staff-target="${i}">${[2,3,4].map(n=>`<option value="${n}" ${n===target?'selected':''}>${n} a month</option>`).join('')}</select></label></div>
+      <p class="st-latest"><small>LATEST WORK · ${e(date(m.log[0]?.day||m.next))}</small>${e(m.log[0]?.text||'Assignment begins '+date(m.next)+'.')}</p>
+      <p class="cp-muted">${m.hits} productive weeks in ${m.weeks} paid · next assignment ${e(date(m.next))} · renewal window opens ${e(date(m.end-42))}</p>
+      <div class="st-actions">${m.ask?btn('staffRaise',i,'Approve pay rise · '+cash(m.ask),s.fund<m.ask):''}${m.end-s.day<=42?btn('staffRenew',i,'Renew 26 weeks'):''}${btn('staffDismiss',i,'Dismiss · '+cash(m.wage)+' severance',s.fund<m.wage,'staff-dismiss')}<button type="button" data-staff-tab="reports">Open the work log</button></div></div></article>`;
+    return roster+panel;
+  }
+
+  function recruitmentView(){
+    const approvals=pending.length?`<article class="st-panel"><small>MANAGER SIGNATURE REQUIRED</small><div class="st-approvals">${pending.slice(0,8).map(a=>`<div class="st-approval"><div><b>${e(a.name)}</b><small>${e(a.pos)} · ${e(a.role)} · fit ${a.grade}/100 · prepared ${e(date(a.day))} by ${e(a.preparedBy)}</small></div><span>${cash(a.fee)} fee + ${cash(a.wage)}/week</span>${btn('staffApprove',a.id,'Review and sign',s.fund<a.fee+4*a.wage,'staff-sign')}</div>`).join('')}</div></article>`:'';
+    const open=o.recommendations.filter(r=>!pending.some(a=>a.id===r.id));
+    const recs=open.length?`<article class="st-panel"><small>SCOUTING, ANALYSIS, NEGOTIATION</small><div class="st-reports">${open.slice(0,6).map(r=>`<div class="st-report"><div><b>${e(r.name)}</b><small>${e(r.pos)} · ${e(r.age)} · ${e(r.club)} · ${e(r.scout)} · ${e(date(r.day))}</small></div><span>${r.grade==null?'Awaiting analysis':r.grade+'/100'}</span><p>${cash(r.fee)} fee · ${cash(r.wage)}/week · ${cash(r.fee+4*r.wage)} first-year commitment${r.status==='offer submitted'?' · offer in progress':''}</p><button data-league-player="${e(r.id)}">Open player file</button></div>`).join('')}</div></article>`:pending.length?'<article class="st-panel"><h3>No report waiting for analysis</h3><p class="cp-muted">The scouting work behind the proposals above is already prepared. Sign or dismiss a proposal to free the desk for the next report.</p></article>':'<article class="st-panel"><h3>No scouting reports yet</h3><p class="cp-muted">Hire a scout, set a fieldwork budget above zero and Continue through a weekly review.</p></article>';
+    const pool=vacancies.length?(()=>{
+      const chosen=specs.findIndex((spec,i)=>i===roleFocus&&!o.members[i])>=0?Number(roleFocus):specs.findIndex((spec,i)=>!o.members[i]);
+      const list=`<div class="st-roster">${groups.map(name=>{
+        const openRoles=specs.map((spec,i)=>({spec,i})).filter(x=>x.spec.group===name&&!o.members[x.i]);
+        if(!openRoles.length)return '';
+        return `<small class="st-roster-group">${e(name)}</small>${openRoles.map(({spec,i})=>`<button type="button" class="st-roster-row${i===chosen?' is-on':''}" data-staff-role="${i}" aria-pressed="${i===chosen}"><span class="st-mark">${e(spec.mark)}</span><span><b>${e(spec.name)}</b><small>${e(spec.group)} · ${cash(spec.wage)}/week guide</small></span><span class="dv-tag">Open</span></button>`).join('')}`;
+      }).join('')}</div>`;
+      const spec=specs[chosen],cs=[0,1].map(j=>candidate(s,chosen,j));
+      const panel=`<article class="st-panel"><small>${e(spec.group.toUpperCase())} · HIRING</small><div class="st-person st-person-focus"><header><span class="st-mark">${e(spec.mark)}</span><div><b>${e(spec.name)}</b><small>${e(spec.duties.join(' · '))}</small></div></header>
+      <p class="cp-muted">Two candidates are available for this position. The signing fee is paid from club funds and the wage is paid weekly from the same account. Any number of appointments can be made; there is no fixed three-person cap.</p>
+      <div class="st-cands">${cs.map((c,j)=>`<div class="st-cand"><div><b>${e(c.name)}</b><small>Specialist ability ${c.skill}/100 · ${cash(c.wage)}/week</small></div>${btn('staffHire',chosen+'|'+j,'Appoint · '+cash(c.fee),s.fund<c.fee+c.wage)}</div>`).join('')}</div></div></article>`;
+      return `<article class="st-panel"><small>OPEN POSITIONS · ${vacancies.length}</small><p class="cp-muted">Pick a position to see the two candidates and the cost.</p>${list}</article>`+panel;
+    })():'';
+    return (approvals||'')+recs+pool;
+  }
+
+  function reportsView(){
+    if(!team.length)return `<article class="st-panel"><h3>No reports yet</h3><p class="cp-muted">Appoint staff and their completed weekly work is logged here.</p><button type="button" data-staff-tab="recruitment">Open recruitment</button></article>`;
+    return `<article class="st-panel"><small>WEEKLY WORK LOG</small><p class="cp-muted">Every appointment reports weekly. The latest delivery is shown for each; open a name for the earlier ones and the review rating.</p>${team.map(({i,m,spec})=>{
+      const rating=performance(m),log=(m.log||[]);
+      const line=(x)=>`<div class="st-log"><time>${e(date(x.day))}</time><p>${e(x.text)}</p><span class="dv-tag${x.success?' good':' info'}">${x.success?'Delivered':'Needs follow-up'}</span></div>`;
+      return `<section class="st-report-panel"><header><div><b>${e(m.name)}</b><small>${e(spec.name)} · ${e(spec.duties[m.duty])} · next assignment ${e(date(m.next))}</small></div>${tag(rating)}</header>${log.length?line(log[0]):`<p class="cp-muted">No completed assignment yet. The first report is due ${e(date(m.next))}.</p>`}${log.length>1?`<details class="st-more" open><summary>Earlier reports · showing 2 of ${log.length-1}</summary>${log.slice(1,3).map(line).join('')}</details>`:''}</section>`;
+    }).join('')}</article>`;
+  }
+
+  const body=view==='people'?peopleView():view==='recruitment'?recruitmentView():view==='reports'?reportsView():`${scoreboard()}${needs()}${departments()}${delegation()}`;
+  return `<section class="personnel staff-office staff-split">${hero}${nav}${body}${debts?`<aside class="staff-debts">Former staff payroll outstanding: ${cash(debts)}</aside>`:''}</section>`;
+}
 const api={read,act,morning,approve,finishDeal,render,performance,reports,reportPanel,roles,specs};g.TLStaffOffice=api;if(typeof module!=='undefined')module.exports=api;})(typeof window==='undefined'?globalThis:window);
