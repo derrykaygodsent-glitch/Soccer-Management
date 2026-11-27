@@ -1959,3 +1959,13 @@ th[data-col-id] > .column-sort::after { flex: none; }
 .fm-drag-ghost i { flex: 0 0 auto; font-style: normal; font-size: 10px; color: #8ba0b2; }
 .fm-drag-hidden { display: none !important; }
 tr.fm-drag-placeholder { display: table-row !important; min-height: 0; }
+
+/* Desktop: the team sheet is a full data table, so give it the width its columns
+   need instead of squeezing it into a quarter of the screen. The pitch keeps a
+   usable minimum and the sheet never truncates on a normal laptop. */
+@media (min-width: 1101px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace {
+    grid-template-columns: minmax(380px, 1fr) minmax(560px, 1.62fr) !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel { padding: 6px 6px 8px; }
+}
