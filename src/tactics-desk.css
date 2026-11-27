@@ -1830,3 +1830,132 @@ th[data-col-id] > .column-sort::after { flex: none; }
   .tl-col-body { grid-template-columns: minmax(0, 1fr); }
   .tl-col-views { gap: 4px; }
 }
+
+/* ============================================================================
+   Team sheet: one flat, customisable data table — same column system as Squad.
+   No panel card, no borders, no position bands; the sheet is a plain list.
+   ========================================================================== */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-table {
+  border: 0 !important;
+  max-height: clamp(360px, 58vh, 720px) !important;
+  overflow: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: #2b3f52 transparent;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-table::-webkit-scrollbar { height: 8px; width: 8px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-table::-webkit-scrollbar-thumb { background: #2b3f52; border-radius: 4px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse !important;
+  border-spacing: 0;
+  table-layout: auto;
+  background: #192735;
+  font-size: 12px;
+  color: #e6eff5;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table caption {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table th {
+  position: sticky !important; top: 0 !important; z-index: 3;
+  padding: 6px 6px;
+  border: 0 !important;
+  border-bottom: 1px solid #2f4050 !important;
+  background: #192735;
+  color: #b6cad6;
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-transform: none;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td {
+  padding: 6px 6px;
+  border: 0 !important;
+  border-bottom: 1px solid #2b3b4a !important;
+  vertical-align: middle;
+  color: #e6eff5;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 12px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table tbody tr.fm-row {
+  display: table-row !important;
+  width: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #192735 !important;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table tbody tr.fm-row > td { background: #192735; transition: background .1s linear; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table tbody tr.fm-row:hover > td { background: #20313f; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table tbody tr.fm-row.on > td { background: #1f3b4c; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table tbody tr.fm-row.on > td:first-child { box-shadow: inset 3px 0 #e6b760; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table tbody tr.fm-sub > td { background: #16232f; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table tbody tr.fm-sub:hover > td { background: #20313f; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table tbody tr.fm-sub.on > td { background: #1f3b4c; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel:not(.is-bench-open) .fm-sheet-table tr.fm-sub { display: none !important; }
+
+/* the substitutes band is a row in the same table, so nothing divides the list */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table tr.fm-sheet-divider > th {
+  position: static;
+  padding: 9px 6px 6px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #2b3b4a !important;
+  background: #192735 !important;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  font-size: 12px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-subhead {
+  display: inline-flex; align-items: baseline; justify-content: flex-start; gap: 7px;
+  width: auto; min-height: 0;
+  margin: 0; padding: 2px 0;
+  border: 0 !important; border-radius: 0;
+  background: transparent !important;
+  color: #9fb6c4 !important;
+  text-align: left;
+  font: 800 9.5px/1.2 Inter, system-ui, sans-serif !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-subhead:hover { color: #d7e7ee !important; }
+
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-subhead small {
+  display: inline; color: #7fb9bb !important; font-size: 9px; font-weight: 800; letter-spacing: .08em;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td .position-tag { font-size: 10px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-stars { font-size: 10px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button { font-size: 11.5px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-sheet-role { display: table-cell !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-person { font-size: 12px; font-weight: 600; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-suitability,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-stat { font-variant-numeric: tabular-nums; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-empty,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-empty {
+  color: #8ba0b2; font-size: 11px; padding: 10px 8px;
+}
+
+/* dragging a team-sheet row: the row collapses to a compact player chip */
+.fm-drag-ghost {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: 8px;
+  background: #1d3442; box-shadow: 0 16px 34px rgba(0, 0, 0, .55);
+  font: 600 12px/1 system-ui, sans-serif; color: #e8f2f7;
+  max-width: 250px; opacity: .96;
+}
+.fm-drag-ghost b { flex: 0 0 auto; font-size: 9px; letter-spacing: .08em; color: #7fb9bb; }
+.fm-drag-ghost span { flex: 1 1 auto; min-width: 0; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fm-drag-ghost i { flex: 0 0 auto; font-style: normal; font-size: 10px; color: #8ba0b2; }
+.fm-drag-hidden { display: none !important; }
+tr.fm-drag-placeholder { display: table-row !important; min-height: 0; }

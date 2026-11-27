@@ -36,6 +36,18 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
     a.ok(html.includes(needle), 'missing ' + needle);
   a.equal((html.match(/class="fm-row(?: on)?"/g) || []).length, 11, 'eleven starters share selection rows');
   a.ok((html.match(/class="fm-row fm-sub"/g) || []).length >= 1, 'actual substitutes are listed');
+  a.match(html, /<table class="fm-sheet-table" data-sort-table="teamsheet" data-sort-default="off"/, 'the team sheet is a sortable data table');
+  a.match(html, /<div class="fm-squad-table" data-tl-bar>/, 'the sheet hosts the column view bar');
+  a.equal((html.match(/<th scope="col">/g) || []).length, 8, 'eight team-sheet headings');
+  for (const heading of ['POS', 'In possession role', 'Out of possession role', 'Ability', 'Player', 'Fit · IP / OOP', 'Status', 'Cond.'])
+    a.ok(html.includes('>' + heading + '<') || html.includes(heading), 'missing heading ' + heading);
+  a.ok(!html.includes('fm-squad-group'), 'no position-group bands inside the sheet');
+  a.ok(!html.includes('fm-squad-columns'), 'no static heading strip above the sheet');
+  a.match(html, /<tr class="fm-row fm-sub[^"]*" role="button" tabindex="0" data-bench="[^"]+" data-board="bench\|[^"]+"/, 'substitutes are table rows that carry their own command');
+  const sheetRows = (html.match(/<tr class="fm-row[^"]*" role="button" tabindex="0"/g) || []).length;
+  a.ok(sheetRows >= 11, 'the sheet lists every starter as a focusable row');
+  a.equal((html.match(/<td class="fm-sheet-pos"/g) || []).length, sheetRows, 'every sheet row starts with a position cell');
+  a.equal((html.match(/<td class="fm-sheet-player fm-person"/g) || []).length, sheetRows, 'every sheet row carries the player column');
   a.ok(!html.includes('fm-tactical-nav'), 'the long legacy navigation rail is gone');
   a.ok(!/undefined|NaN|\[object Object\]/.test(html), 'no template garbage');
 
@@ -325,7 +337,7 @@ test('explicit pitch phase edits stay in that phase, including from Both and Com
 test('starter rows allow real player selection without invalid nested buttons around the player picker', () => {
   const s = career(); s.id = 'starter-row-selection';
   const html = TLBoardRoom.render(s, pool);
-  a.match(html, /<div class="fm-row[^\"]*" role="button" tabindex="0" data-slot="0"/);
+  a.match(html, /<tr class="fm-row[^\"]*" role="button" tabindex="0" data-slot="0"/);
   a.doesNotMatch(html, /<button[^>]*class="fm-row[^>]*>[\s\S]*?<select class="fm-player-picker/);
   const handlers = {}, root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, querySelector: () => null };
   let draws = 0;
