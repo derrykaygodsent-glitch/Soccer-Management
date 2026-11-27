@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="834f4bb6f3350f84fdc7">
+  <meta name="tl-build" content="500fa5c8b1e13f6b5684">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -4963,6 +4963,129 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
     height: auto !important;
   }
 }
+
+/* ==========================================================================
+   The pitch frame: four phase sections sit in the top edge, the frame hugs
+   the grass with no gutter between them.
+   ========================================================================== */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  overflow: hidden !important;
+  box-shadow: none !important;
+}
+
+/* the section strip: one band, four equal cells, no rules between them */
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .fm-pitch-phases {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 2px !important;
+  padding: 4px 4px 0 !important;
+  background: #071310 !important;
+  border-radius: 10px 10px 0 0 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .fm-pitch-phases button {
+  height: 38px !important;
+  min-width: 0 !important;
+  padding: 0 6px !important;
+  border: 0 !important;
+  border-radius: 7px 7px 0 0 !important;
+  background: #0b1a17 !important;
+  color: #93aaa2 !important;
+  font-size: 10.5px !important;
+  font-weight: 750 !important;
+  letter-spacing: .1em !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  cursor: pointer;
+  transition: background-color .12s ease, color .12s ease;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .fm-pitch-phases button:hover {
+  background: #122720 !important;
+  color: #d7e8e1 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .fm-pitch-phases button[aria-pressed="true"] {
+  background: #12463a !important;
+  color: #f2fbf6 !important;
+  box-shadow: inset 0 -2px 0 0 #5ec8bd !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .fm-pitch-phases button:focus-visible {
+  outline: 2px solid #7fd6c8 !important;
+  outline-offset: -3px !important;
+}
+
+/* the grass runs flush to the frame: no side gutter, same corners */
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 4 / 3 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 0 9px 9px !important;
+}
+
+/* the toolbar keeps only the formation selects, so it sits tight above */
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar {
+  margin-bottom: 6px !important;
+}
+
+/* the strip holds the switch as four equal cells */
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .fm-pitch-phases { display: block !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .fm-pitch-phases .fm-shape-switch {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 2px !important;
+  width: 100% !important;
+  align-items: stretch !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .fm-pitch-phases .fm-shape-switch button {
+  width: auto !important;
+  flex: none !important;
+}
+
+/* the pitch column keeps the pitch a sane size now that it hugs the frame */
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace {
+  grid-template-columns: minmax(0, 52%) minmax(0, 48%) !important;
+}
+@media (max-width: 1099px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .fm-pitch-phases .fm-shape-switch button {
+    white-space: normal !important;
+    height: 42px !important;
+    font-size: 9px !important;
+    line-height: 1.15 !important;
+    letter-spacing: .06em !important;
+    padding: 0 3px !important;
+  }
+}
+
+/* the Both view: swap-style row wraps, cards stay compact */
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar {
+  flex-wrap: wrap !important;
+  align-items: flex-end !important;
+  gap: 10px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar .fm-shape-switch {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar .fm-shape-switch button {
+  white-space: nowrap !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-both-pitches .shape-field {
+  aspect-ratio: 1.42 / 1 !important;
+  max-height: 46vh !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar .fm-shape-switch { flex: 0 0 auto !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar .fm-shape-switch button { flex: 0 0 auto !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar > * { min-width: 0; }
 </style>
 </head>
 <body>
@@ -15228,8 +15351,8 @@ function render(s,players){
   const shapeFormationControls=`<div class="fm-shape-controls">${picker('Out of possession','tactic',defenseOptions,defenseChoice,v=>v==='Custom'&&defenseCustomNumber?`Custom (${defenseCustomNumber})`:v)}<label>In-possession formation<select data-attack-formation>${options(attackChoices,attackChoice,v=>v==='Custom'&&attackCustomNumber?`Custom (${attackCustomNumber})`:v)}</select></label>${picker('Mentality','mentality',['Very Defensive','Defensive','Cautious','Balanced','Positive','Attacking','Very Attacking'],s.mentality||'Balanced')}<label>Team system<select data-system><option value="">${e(s.style||'Balanced shape')}</option>${options(Object.keys(Z.systems),plan.system)}</select></label></div>`;
   const undoSelection=plan.previousXI?.shape===s.tactic&&plan.previousXI.scope===(s.kitScope||'')?'<button type="button" data-board="undoXI">Undo selection</button>':'';const quickSelect=undoSelection?`<div class="fm-quick-actions">${undoSelection}</div>`:'';
   const viewSummary=`<div class="fm-phase-caption"><span>${phase==='attack'?'IN POSSESSION':phase==='both'?'PHASE COMPARISON':phase==='combined'?'AVERAGE POSITIONS':'OUT OF POSSESSION'}</span><b>${e(defenseLabel)} OOP · ${e(attackLabel)} IP</b></div>`;
-  const shapeToolbar=`<div class="fm-shape-toolbar">${phaseButtons()}${shapeFormationControls}</div>`;
-  const shapeContent=phase==='both'?`<div class="fm-both-view">${shapeToolbar}<div class="fm-both-pitches"><section class="fm-pitch-card"><header><b>Out of Possession</b><small>${e(defenseLabel)}</small></header>${field('defense','wide')}</section><section class="fm-pitch-card"><header><b>In Possession</b><small>${e(attackLabel)}</small></header>${field('attack','wide')}</section></div>${squad()}${quickSelect}</div>`:`${shapeToolbar}<div class="fm-shape-workspace"><div class="fm-shape-main"><section class="fm-pitch-card fm-primary-pitch"><h3 class="sr-only">${phase==='attack'?'In Possession':phase==='combined'?'Combined · average player positions':'Out of Possession'}</h3>${field(phase==='attack'?'attack':phase==='combined'?'combined':'defense')}${quickSelect}</section></div><aside class="fm-shape-side">${squad()}</aside></div>`;
+  const shapeToolbar=(withPhases=true)=>`<div class="fm-shape-toolbar">${withPhases?phaseButtons():''}${shapeFormationControls}</div>`;
+  const shapeContent=phase==='both'?`<div class="fm-both-view">${shapeToolbar()}<div class="fm-both-pitches"><section class="fm-pitch-card"><header><b>Out of Possession</b><small>${e(defenseLabel)}</small></header>${field('defense','wide')}</section><section class="fm-pitch-card"><header><b>In Possession</b><small>${e(attackLabel)}</small></header>${field('attack','wide')}</section></div>${squad()}${quickSelect}</div>`:`${shapeToolbar(false)}<div class="fm-shape-workspace"><div class="fm-shape-main"><section class="fm-pitch-card fm-primary-pitch"><div class="fm-pitch-phases">${phaseButtons()}</div><h3 class="sr-only">${phase==='attack'?'In Possession':phase==='combined'?'Combined · average player positions':'Out of Possession'}</h3>${field(phase==='attack'?'attack':phase==='combined'?'combined':'defense')}${quickSelect}</section></div><aside class="fm-shape-side">${squad()}</aside></div>`;
   const selectedZoneLabel=zoneCells.find(z=>z.id===selectedZone)?.label||'Middle third · Centre';
   const zoneLabel=(row,col)=>`${zoneNames[row]} · ${zoneSide[col]}`;
   const selectedZonePositions=slots.filter((v,i)=>zoneOf((phase==='attack'?v.attack||v:v),i)===selectedZone);
