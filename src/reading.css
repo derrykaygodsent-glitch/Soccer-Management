@@ -600,7 +600,7 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 #homeScreen:has(.fm-tactics-workspace) #homeFrame{height:100dvh!important;min-height:0!important}
 #homeScreen:has(.fm-tactics-workspace) #clubPage{height:100dvh!important;max-height:none!important;overflow:auto!important;padding:0!important;background:linear-gradient(180deg,#0a121d,#0b141f 40%,#09111b)!important}
 #homeScreen:has(.fm-tactics-workspace) #clubPage>.life-desk{display:block!important;width:100%!important;margin:0!important;padding:0!important}
-#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace{min-height:100dvh;display:grid;grid-template-rows:auto auto 1fr auto auto;gap:0!important;background:#0a111b;color:#e9f1f7;border:0!important;border-radius:0!important}
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace{min-height:0;display:grid;grid-template-rows:auto auto auto auto;gap:0!important;background:#0a111b;color:#e9f1f7;border:0!important;border-radius:0!important}
 #homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace:before{content:"TOUCHLINE 26  /  MATCH PREPARATION";display:flex;align-items:center;height:26px;padding:0 22px;background:#07101a;border-bottom:1px solid #1c2b3b;color:#6f879b;font:800 11px/1 system-ui;letter-spacing:.18em}
 #homeScreen:has(.fm-tactics-workspace) .fm-workspace-header{grid-template-columns:minmax(260px,1fr) auto minmax(390px,.95fr);min-height:78px;padding:12px 22px!important;background:linear-gradient(180deg,#162638,#101b29)!important;border:0!important;border-bottom:1px solid #33485e!important;border-radius:0!important;box-shadow:0 3px 12px #0005}
 #homeScreen:has(.fm-tactics-workspace) .fm-title-group h2{font-size:25px;letter-spacing:-.025em;color:#f4f7fa}
