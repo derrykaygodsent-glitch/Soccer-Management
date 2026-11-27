@@ -1268,3 +1268,22 @@
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-subhead {
   background: #0a141e !important;
 }
+
+/* ---- review count: a single badge beside familiarity, no banner ---- */
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics .fm-review-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  margin-right: 6px;
+  border-radius: 999px;
+  background: #e0ae66;
+  color: #221806;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+  cursor: default;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics { align-items: center; }
