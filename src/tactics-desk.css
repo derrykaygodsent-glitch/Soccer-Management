@@ -33,6 +33,11 @@
   --tac-amber: #e0ae66;
 }
 
+/* the section tabs (Overview / Calendar / Inbox / Profile) belong to the club
+   screens, not to the tactics desk: they are hidden while the desk is open and
+   come back as soon as it closes */
+#homeScreen:has(.fm-tactics-workspace) #homeTabs { display: none !important; }
+
 #homeScreen:has(.fm-tactics-workspace) .board-room.fm-tactics-workspace {
   display: flex;
   flex-direction: column;

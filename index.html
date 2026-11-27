@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="3baf99b5bd3bfb28b49d">
+  <meta name="tl-build" content="b386736d9c1149bd14cd">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -3612,6 +3612,11 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   --tac-teal-ink: #10231f;
   --tac-amber: #e0ae66;
 }
+
+/* the section tabs (Overview / Calendar / Inbox / Profile) belong to the club
+   screens, not to the tactics desk: they are hidden while the desk is open and
+   come back as soon as it closes */
+#homeScreen:has(.fm-tactics-workspace) #homeTabs { display: none !important; }
 
 #homeScreen:has(.fm-tactics-workspace) .board-room.fm-tactics-workspace {
   display: flex;
