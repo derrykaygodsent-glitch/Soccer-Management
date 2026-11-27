@@ -699,8 +699,7 @@
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row .fm-pip.warn { background: var(--fm-warn); }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row .fm-pip.bad { background: var(--fm-bad); }
-#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-stars,
-#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-stat { display: none !important; }
+/* ability and condition are part of the FM26 row anatomy */
 
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-subhead {
   display: flex !important;
@@ -1789,3 +1788,227 @@
   .fm26-tok-name { display: none !important; }
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-role-cell { min-width: 0 !important; overflow: hidden; }
+
+/* ---- reference pass: line colours, chips, plates, dense list, subs band -- */
+
+#homeScreen:has(.fm-tactics-workspace) {
+  --line-gk: #2c6f66;
+  --line-def: #2f7a5f;
+  --line-mid: #2a3f7a;
+  --line-att: #6b2f8f;
+  --line-str: #a92f6b;
+}
+#homeScreen:has(.fm-tactics-workspace) .line-goalkeeper { --line: var(--line-gk); }
+#homeScreen:has(.fm-tactics-workspace) .line-defence { --line: var(--line-def); }
+#homeScreen:has(.fm-tactics-workspace) .line-midfield { --line: var(--line-mid); }
+#homeScreen:has(.fm-tactics-workspace) .line-attack { --line: var(--line-att); }
+
+/* marker: shirt, line-coloured position chip, name plate with stars */
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  width: auto !important;
+  height: auto !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  transform: translate(-50%, 48%);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-shirt {
+  width: 19px;
+  height: 19px;
+  fill: #dce8f3;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .55));
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok > b {
+  padding: 0 5px;
+  border-radius: 2px;
+  background: var(--line, var(--line-mid));
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  line-height: 13px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .45);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok-name {
+  position: static !important;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  max-width: 96px;
+  margin-top: 1px;
+  padding: 0 5px;
+  border-radius: 2px;
+  background: rgba(4, 8, 6, .82);
+  color: #eef4ef;
+  transform: none !important;
+  line-height: 14px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok-name > b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 14px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok-stars { color: #e8c15a; font-size: 7px; font-style: normal; letter-spacing: -.5px; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok.is-selected .fm26-tok-name { background: #6f37c2; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok.is-selected .fm26-shirt { fill: #fff; }
+
+/* dense list: IP / OOP chips, ability, player, fit, condition */
+#homeScreen:has(.fm-tactics-workspace) .fm-team-head { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+#homeScreen:has(.fm-tactics-workspace) .fm-team-head h3 { display: flex; align-items: baseline; gap: 6px; margin: 0; font-size: 13px; color: #eef4ef; }
+#homeScreen:has(.fm-tactics-workspace) .fm-team-head h3 small { font-size: 11px; font-weight: 600; color: #8fa39a; }
+#homeScreen:has(.fm-tactics-workspace) .fm-team-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+#homeScreen:has(.fm-tactics-workspace) .fm-team-tools .fm26-pill { font-size: 10.5px; padding: 2px 8px; }
+
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-list-head,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row {
+  display: grid;
+  grid-template-columns: 30px 30px 46px minmax(0, 1fr) 26px 14px 34px !important;
+  align-items: center;
+  column-gap: 6px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-list-head {
+  padding: 6px 8px 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #7e928a;
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
+  position: sticky;
+  top: 0;
+  background: var(--fm-panel);
+  z-index: 3;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-list-head span:nth-child(6),
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-list-head span:nth-child(5) { text-align: center; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-list-head span:last-child { text-align: right; }
+
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row { min-height: 26px !important; padding: 2px 8px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-role-cell { display: flex; justify-content: flex-start; }
+#homeScreen:has(.fm-tactics-workspace) .fm-role-cell > button {
+  padding: 1px 5px !important;
+  border: 0 !important;
+  border-radius: 2px !important;
+  background: var(--line, var(--line-mid)) !important;
+  color: #fff !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: .05em;
+  line-height: 14px;
+  text-align: center;
+  min-width: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-role-cell > small { display: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-stars { font-size: 9px !important; color: #e8c15a; letter-spacing: -.5px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-stars i { color: rgba(232, 193, 90, .28); font-style: normal; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-person { gap: 5px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-number { font-size: 9.5px; color: #7e928a; min-width: 14px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-player-name { font-size: 11.5px; font-weight: 600; color: #e9f0ea; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-person > b { position: static !important; font-size: 9px; color: #8fa39a; font-weight: 600; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-suitability { font-size: 10px !important; color: #9db0a7; text-align: center; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-status { justify-content: center; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-pip {
+  width: 8px; height: 8px; border-radius: 50%;
+  font-size: 0 !important; overflow: hidden;
+  background: #5ac88c; display: inline-block;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-pip.warn { background: #e2a84a; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-pip.bad { background: #e05a5a; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-stat { font-size: 10.5px !important; color: #9db0a7; text-align: right; }
+
+/* substitutes band, full width under the pitches and the list */
+#homeScreen:has(.fm-tactics-workspace) .fm26-band {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 16px;
+  padding: 8px 14px 10px !important;
+  border-top: 1px solid rgba(255, 255, 255, .06);
+  background: var(--fm-panel) !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-band-head { display: flex; align-items: baseline; gap: 8px; grid-column: 1; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-band-head h3 { margin: 0; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #9db0a7; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-band-head span { font-size: 10px; color: #7e928a; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-subs {
+  grid-column: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1px 12px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-band-actions { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-band-actions .fm-quick-actions { flex-direction: row; align-items: center; gap: 8px; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-band-actions small { display: none; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-subs .fm-sub {
+  display: flex; align-items: center; gap: 6px;
+  padding: 2px 0 !important; min-height: 20px !important;
+  background: none !important; border: 0 !important; border-radius: 0 !important;
+  text-align: left;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-subs .fm-sub:hover { background: rgba(255, 255, 255, .05) !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-sub-pos {
+  padding: 0 4px; border-radius: 2px; background: var(--line, var(--line-mid));
+  color: #fff; font-size: 8.5px; font-weight: 800; letter-spacing: .04em; line-height: 13px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-sub-name { font-size: 11px; color: #d6e2d9; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#homeScreen:has(.fm-tactics-workspace) .fm-sub-cond { font-size: 10px; color: #7e928a; }
+
+/* the sheet's named grid areas were fighting the new column order */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > *,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-list-head > * { grid-area: auto !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-person {
+  display: flex !important; align-items: center; min-width: 0; gap: 6px; position: static !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-player-name {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-player-picker { display: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-stars { display: flex !important; align-items: center; gap: 0; min-width: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-band { align-self: stretch; width: 100%; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-player-name { max-width: none !important; flex: 1 1 auto; width: auto !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-stars,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-stars span,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-stars i {
+  display: inline !important;
+  font-size: 9px !important;
+  line-height: 1;
+  color: #e8c15a !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-stars i { color: rgba(232, 193, 90, .3) !important; }
+
+/* player list: one position chip, the name, ability — detail on the right */
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row {
+  grid-template-columns: 30px minmax(0, 1fr) 48px !important;
+  align-items: center;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row .fm-role-cell { display: flex !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row .fm-role-cell + .fm-role-cell { display: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row > .fm-stars { display: inline !important; font-size: 9px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row > .fm-suitability,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row > .fm-status,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row > .fm-stat { display: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row .fm-person { min-width: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row.fm-sub { grid-template-columns: 34px minmax(0, 1fr) auto !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row.fm-sub > .fm-role-cell,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row.fm-sub > .fm-stars,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row.fm-sub > .fm-status,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row.fm-sub > .fm-stat { display: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row.fm-sub > .fm-suitability { display: inline !important; font-size: 10px !important; color: #8fa39a; text-align: right; }
+@media (max-width: 1179px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-table,
+  #homeScreen:has(.fm-tactics-workspace) .fm26-overview,
+  #homeScreen:has(.fm-tactics-workspace) .fm26-tiles,
+  #homeScreen:has(.fm-tactics-workspace) .fm-player-list {
+    overflow: visible !important;
+    max-height: none !important;
+    min-height: 0 !important;
+  }
+}
