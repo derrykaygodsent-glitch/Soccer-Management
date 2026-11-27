@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="12cc337c61c1dcc0badc">
+  <meta name="tl-build" content="3b77665144f1a4fd3c0b">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -2886,9 +2886,6 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 .fm-instruction-player-detail>div:first-child>small{color:#7fb9bb;font-size:11px;font-weight:800;letter-spacing:.12em}
 .fm-instruction-player-detail>div:first-child>p{margin:3px 0;color:#95a7ba;font-size:11px}
 .fm-instruction-player-detail .fm-player-editor{margin:0}
-.fm-opposition,.fm-leadership{padding:8px 10px;background:#111c2a;border:0;border-top:1px solid #2d4054;border-radius:0}
-.fm-opposition p{color:#aebdcd;font-size:11px}.fm-opposition h3{font-size:12px}
-.fm-leadership{display:flex;align-items:center;gap:10px}.fm-leadership label{color:#aebdcd;font-size:11px}.fm-leadership select{height:28px}
 .fm-pip.good{color:#8dccbb}.fm-pip.warn{color:#e7bd73}.fm-pip.bad{color:#e68a83}
 @media(max-width:1250px){
  .fm-tactics-workspace .fm-workspace-header{grid-template-columns:minmax(0,1fr) auto minmax(280px,1fr);padding:7px 10px}
@@ -4269,7 +4266,6 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 #homeScreen:has(.fm-tactics-workspace) .fm-player-instruction-grid label { color: var(--tac-dim); font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-instruction-grid select,
 #homeScreen:has(.fm-tactics-workspace) .fm-context-control-list select,
-#homeScreen:has(.fm-tactics-workspace) .fm-leadership select,
 #homeScreen:has(.fm-tactics-workspace) .fm-assignment-row button {
   height: 32px;
   padding: 0 8px;
@@ -4285,43 +4281,6 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 #homeScreen:has(.fm-tactics-workspace) .fm-player-readiness { color: var(--tac-muted); font-size: 11px; }
 
 /* ---- match context: one quiet strip, not two more boxes ----------------- */
-
-#homeScreen:has(.fm-tactics-workspace) .fm-match-context {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-  gap: 0 20px;
-  margin: 0 20px 20px;
-  padding-top: 12px;
-  border-top: 1px solid var(--tac-line);
-}
-#homeScreen:has(.fm-tactics-workspace) .fm-opposition,
-#homeScreen:has(.fm-tactics-workspace) .fm-leadership { min-width: 0; padding: 0; border: 0; background: none; }
-#homeScreen:has(.fm-tactics-workspace) .fm-opposition header { display: block; padding: 0; border: 0; background: none; }
-#homeScreen:has(.fm-tactics-workspace) .fm-opposition header > small,
-#homeScreen:has(.fm-tactics-workspace) .fm-leadership > small {
-  display: block;
-  margin-bottom: 4px;
-  color: var(--tac-dim);
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-}
-#homeScreen:has(.fm-tactics-workspace) .fm-opposition h3 { margin: 0 0 2px; color: var(--tac-body); font-size: 12.5px; font-weight: 650; }
-#homeScreen:has(.fm-tactics-workspace) .fm-opposition p { margin: 0 0 2px; color: var(--tac-dim); font-size: 10.5px; line-height: 1.45; }
-#homeScreen:has(.fm-tactics-workspace) .fm-opposition button {
-  margin-top: 6px;
-  height: 28px;
-  padding: 0 10px;
-  border: 1px solid var(--tac-line-2);
-  border-radius: 5px;
-  background: none;
-  color: var(--tac-muted);
-  font-size: 10.5px;
-  cursor: pointer;
-}
-#homeScreen:has(.fm-tactics-workspace) .fm-leadership { display: grid; gap: 4px; align-content: start; }
-#homeScreen:has(.fm-tactics-workspace) .fm-leadership label { display: grid; gap: 4px; color: var(--tac-dim); font-size: 10px; }
 
 /* ---- team instructions: visualiser, context, overview ------------------- */
 
@@ -4997,11 +4956,11 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   color: #93aaa2 !important;
   font-size: 10.5px !important;
   font-weight: 750 !important;
-  letter-spacing: .1em !important;
+  letter-spacing: .07em !important;
+  line-height: 1.12 !important;
   text-transform: uppercase !important;
-  white-space: nowrap !important;
+  white-space: normal !important;
   overflow: hidden !important;
-  text-overflow: ellipsis !important;
   cursor: pointer;
   transition: background-color .12s ease, color .12s ease;
 }
@@ -15907,11 +15866,8 @@ function render(s,players){
   const header=`<header class="fm-workspace-header${libraryOpen?' is-library-open':''}"><div class="fm-title-group"><small>TACTICS · ${e(s.club?.name||'FIRST TEAM')}</small><h2>${e(plan.system||s.style||'Balanced shape')}</h2><p><span>${e(defenseLabel)} OOP</span><i aria-hidden="true"></i><span>${e(attackLabel)} IP</span><em>${e(s.mentality||'Balanced')} mentality</em></p></div><button type="button" class="fm-library-toggle" data-library-toggle aria-expanded="${libraryOpen}">Tactics library</button><div class="fm-save-controls"><label class="sr-only" for="fm-tactic-name">Saved tactic name</label><input id="fm-tactic-name" type="text" data-preset-name maxlength="48" placeholder="Name this tactic"><button type="button" data-library-action="save">Save tactic</button><select aria-label="Load saved tactic" data-preset-select><option value="">Saved tactics</option>${savedOptions}</select><button type="button" data-library-action="load" ${library.length?'':'disabled'}>Load</button></div></header>`;
   const attentionActions=(g.TLDeskAttention&&g.TLDeskAttention.badges?(g.TLDeskAttention.badges(s,'tactics').actions||{}):{});const reviewEntries=Object.entries(attentionActions).filter(([,v])=>Number(v)>0);const reviewCount=reviewEntries.reduce((n,[,v])=>n+Number(v),0);const reviewTarget=reviewEntries.length?(reviewEntries[0][0]==='home'?'interviewDesk':reviewEntries[0][0]):'';const reviewBadge=reviewCount?`<button type="button" class="fm-review-badge" data-life="go" data-v="${reviewTarget}" title="${reviewCount} to review · open" aria-label="${reviewCount} to review · open">${reviewCount}</button>`:'';const workspaceNav=`<div class="fm-desk-bar"><nav class="fm-workspace-nav" aria-label="Tactical workspace">${nav.map(([id,label])=>`<button type="button" data-workspace-tab="${id}" aria-current="${workspaceTab===id?'page':'false'}">${label}</button>`).join('')}</nav><div class="fm-header-metrics">${reviewBadge}<span><small>Familiarity</small><b>${familiarity.position}%</b><i><b style="width:${familiarity.position}%"></b></i></span><span><small>Intensity</small><b>${intensity}%</b><i><b style="width:${intensity}%"></b></i></span><span class="fm-status-chip ${warnings.length?'has-risks':'is-clear'}" role="status" title="${e(reviewHelp)}">${e(reviewLabel)}</span></div></div>`;
   const content=workspaceTab==='instructions'?instructionContent:workspaceTab==='players'?playerContent:shapeContent;
-  const oppFixture=g.TLLeagueMatchday?.fixture(s),oppName=oppFixture?(oppFixture.own===0?oppFixture.host:oppFixture.team):'',oppPlayers=oppName?W.pool.filter(p=>p.club===oppName):[],oppKey=oppPlayers.slice().sort((a,b)=>D.ROLE_WEIGHTS[b.pos](b.attrs)-D.ROLE_WEIGHTS[a.pos](a.attrs)).slice(0,3),oppBacks=oppPlayers.filter(p=>['DC','FB','WB'].includes(p.pos)),oppPace=oppBacks.length?Math.round(oppBacks.reduce((n,p)=>n+(p.attrs.pace||0),0)/oppBacks.length):null;
-  const opposition=`<section class="fm-opposition" id="tactic-opposition"><header><small>OPPOSITION ANALYSIS</small>${oppFixture?`<h3>Next: ${e(oppName)}</h3><p>Scheduled shape ${e(oppFixture.tactics?.[oppFixture.own===0?1:0]?.formation||'not recorded')} · ${oppPlayers.length} players indexed in the current world.</p><p>${oppKey.length?'Players to watch: '+oppKey.map(p=>e(p.name)+' ('+e(p.pos)+')').join(' · '):'No opponent player ratings are on file yet.'}${oppPace!=null?' · Defensive pace average '+oppPace+'/20':''}</p><button type="button" data-board="order|0|trigger|Carrier facing own goal">Use facing-away pressing trigger</button>`:'<h3>No upcoming opponent</h3><p>Opposition notes will appear when a fixture is scheduled; unobserved adjustments are not inferred.</p>'}</header></section>`;
-  const leadership=`<section class="fm-leadership"><small>DRESSING ROOM</small><label>Match captain<select data-arm="0"><option value="">Automatic captain</option>${players.map(p=>`<option value="${e(p.id)}"${s.armband?.[0]===p.id?' selected':''}>${e(p.name)} · Composure ${e(p.attrs.composure)}</option>`).join('')}</select></label></section>`;
   const strip=`<div class="fm-tactics-strip"><span class="fm-strip-label">TOUCHLINE 26 <i aria-hidden="true">/</i> MATCH PREPARATION</span><div class="fm-strip-controls">${shapeFormationControls}</div></div>`;
-  return `<section class="board-room fm-tactics-workspace">${strip}${header}${workspaceNav}<main class="fm-workspace-content" data-workspace="${workspaceTab}">${content}</main><section class="fm-match-context" aria-label="Match context">${opposition}${leadership}</section>${roleDialog}</section>`;
+  return `<section class="board-room fm-tactics-workspace">${strip}${header}${workspaceNav}<main class="fm-workspace-content" data-workspace="${workspaceTab}">${content}</main>${roleDialog}</section>`;
 }
 function bind(root,change,draw){
  let drag=null,suppressUntil=0;

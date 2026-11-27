@@ -528,9 +528,6 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 .fm-instruction-player-detail>div:first-child>small{color:#7fb9bb;font-size:11px;font-weight:800;letter-spacing:.12em}
 .fm-instruction-player-detail>div:first-child>p{margin:3px 0;color:#95a7ba;font-size:11px}
 .fm-instruction-player-detail .fm-player-editor{margin:0}
-.fm-opposition,.fm-leadership{padding:8px 10px;background:#111c2a;border:0;border-top:1px solid #2d4054;border-radius:0}
-.fm-opposition p{color:#aebdcd;font-size:11px}.fm-opposition h3{font-size:12px}
-.fm-leadership{display:flex;align-items:center;gap:10px}.fm-leadership label{color:#aebdcd;font-size:11px}.fm-leadership select{height:28px}
 .fm-pip.good{color:#8dccbb}.fm-pip.warn{color:#e7bd73}.fm-pip.bad{color:#e68a83}
 @media(max-width:1250px){
  .fm-tactics-workspace .fm-workspace-header{grid-template-columns:minmax(0,1fr) auto minmax(280px,1fr);padding:7px 10px}

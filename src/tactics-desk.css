@@ -686,7 +686,6 @@
 #homeScreen:has(.fm-tactics-workspace) .fm-player-instruction-grid label { color: var(--tac-dim); font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-instruction-grid select,
 #homeScreen:has(.fm-tactics-workspace) .fm-context-control-list select,
-#homeScreen:has(.fm-tactics-workspace) .fm-leadership select,
 #homeScreen:has(.fm-tactics-workspace) .fm-assignment-row button {
   height: 32px;
   padding: 0 8px;
@@ -702,43 +701,6 @@
 #homeScreen:has(.fm-tactics-workspace) .fm-player-readiness { color: var(--tac-muted); font-size: 11px; }
 
 /* ---- match context: one quiet strip, not two more boxes ----------------- */
-
-#homeScreen:has(.fm-tactics-workspace) .fm-match-context {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-  gap: 0 20px;
-  margin: 0 20px 20px;
-  padding-top: 12px;
-  border-top: 1px solid var(--tac-line);
-}
-#homeScreen:has(.fm-tactics-workspace) .fm-opposition,
-#homeScreen:has(.fm-tactics-workspace) .fm-leadership { min-width: 0; padding: 0; border: 0; background: none; }
-#homeScreen:has(.fm-tactics-workspace) .fm-opposition header { display: block; padding: 0; border: 0; background: none; }
-#homeScreen:has(.fm-tactics-workspace) .fm-opposition header > small,
-#homeScreen:has(.fm-tactics-workspace) .fm-leadership > small {
-  display: block;
-  margin-bottom: 4px;
-  color: var(--tac-dim);
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-}
-#homeScreen:has(.fm-tactics-workspace) .fm-opposition h3 { margin: 0 0 2px; color: var(--tac-body); font-size: 12.5px; font-weight: 650; }
-#homeScreen:has(.fm-tactics-workspace) .fm-opposition p { margin: 0 0 2px; color: var(--tac-dim); font-size: 10.5px; line-height: 1.45; }
-#homeScreen:has(.fm-tactics-workspace) .fm-opposition button {
-  margin-top: 6px;
-  height: 28px;
-  padding: 0 10px;
-  border: 1px solid var(--tac-line-2);
-  border-radius: 5px;
-  background: none;
-  color: var(--tac-muted);
-  font-size: 10.5px;
-  cursor: pointer;
-}
-#homeScreen:has(.fm-tactics-workspace) .fm-leadership { display: grid; gap: 4px; align-content: start; }
-#homeScreen:has(.fm-tactics-workspace) .fm-leadership label { display: grid; gap: 4px; color: var(--tac-dim); font-size: 10px; }
 
 /* ---- team instructions: visualiser, context, overview ------------------- */
 
@@ -1414,11 +1376,11 @@
   color: #93aaa2 !important;
   font-size: 10.5px !important;
   font-weight: 750 !important;
-  letter-spacing: .1em !important;
+  letter-spacing: .07em !important;
+  line-height: 1.12 !important;
   text-transform: uppercase !important;
-  white-space: nowrap !important;
+  white-space: normal !important;
   overflow: hidden !important;
-  text-overflow: ellipsis !important;
   cursor: pointer;
   transition: background-color .12s ease, color .12s ease;
 }
