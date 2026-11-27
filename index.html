@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="ef96e3db06ad482e0c2c">
+  <meta name="tl-build" content="c38a93062cee5de9c477">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -6343,6 +6343,290 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 @media (max-width: 1179px) {
   #homeScreen:has(.fm-tactics-workspace) .fm26-tactic-pick { flex: 0 1 auto; max-width: 340px; }
   #homeScreen:has(.fm-tactics-workspace) .fm26-tactic { justify-content: flex-start; }
+}
+
+/* ======================================================================
+   THE TACTIC BAR — geometry read off the 3840x2160 capture
+   (37px row, 27px pills, formation pill #188b78, muted pills +10% white,
+    bordered Familiarity / Intensity boxes with seven dashes at the right)
+   ====================================================================== */
+#homeScreen:has(.fm-tactics-workspace) .fm26-strip {
+  display: flex !important;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0 !important;
+  height: 37px !important;
+  min-height: 37px !important;
+  max-height: 37px !important;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #05463b !important;
+  border-radius: 0 !important;
+  background: linear-gradient(90deg, #1d6a5b 0%, #0d6151 24%, #08604f 58%, #055448 100%) !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactics { display: flex; align-items: center; gap: 6px; min-width: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic { display: flex; align-items: center; min-width: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-pick { position: relative; }
+
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-trigger,
+#homeScreen:has(.fm-tactics-workspace) .fm26-plus {
+  display: inline-flex; align-items: center; gap: 9px;
+  height: 27px !important;
+  padding: 0 10px !important;
+  border: 1px solid rgba(255, 255, 255, .18) !important;
+  border-radius: 3px !important;
+  background: rgba(255, 255, 255, .11) !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  cursor: pointer;
+  max-width: none !important;
+  box-shadow: none !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic.is-active .fm26-tactic-trigger {
+  background: #188b78 !important;
+  border-color: rgba(255, 255, 255, .22) !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-trigger:hover,
+#homeScreen:has(.fm-tactics-workspace) .fm26-plus:hover { background: rgba(255, 255, 255, .18) !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic.is-active .fm26-tactic-trigger:hover { background: #1e9c87 !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-no {
+  display: inline-block;
+  width: auto !important; height: auto !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  color: #fff !important;
+  font-size: 13.5px !important; font-weight: 700 !important; line-height: 1 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-name {
+  display: inline !important;
+  max-width: 240px !important;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: #fff !important;
+  font-size: 13px !important; font-weight: 600 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-caret {
+  flex: 0 0 auto;
+  width: 8px; height: 8px;
+  margin-top: -3px;
+  border-right: 1.8px solid rgba(255, 255, 255, .92);
+  border-bottom: 1.8px solid rgba(255, 255, 255, .92);
+  transform: rotate(45deg);
+  font-size: 0 !important;
+  line-height: 0;
+  color: transparent !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-plus {
+  width: 31px !important; min-width: 31px; justify-content: center;
+  padding: 0 !important;
+  font-size: 16px !important; font-weight: 400 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-plus span { display: block; line-height: 1; }
+
+/* style + mentality: value in white, field name muted, chevron */
+#homeScreen:has(.fm-tactics-workspace) .fm26-picks { display: flex; align-items: center; gap: 9px; margin-left: 10px; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-pick {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 27px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, .11);
+  cursor: pointer;
+  min-width: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-pick:hover { background: rgba(255, 255, 255, .18); }
+#homeScreen:has(.fm-tactics-workspace) .fm26-pick-value {
+  color: #fff; font-size: 13px; font-weight: 600; line-height: 1;
+  white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-pick-label {
+  color: rgba(255, 255, 255, .64); font-size: 13px; font-weight: 500; line-height: 1;
+  white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-pick select {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  margin: 0; padding: 0;
+  border: 0; border-radius: 3px;
+  background: transparent;
+  color: transparent;
+  opacity: 0;
+  cursor: pointer;
+  appearance: none; -webkit-appearance: none;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-pick select:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+
+/* familiarity / intensity: outlined boxes with seven dashes */
+#homeScreen:has(.fm-tactics-workspace) .fm26-metrics { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-metric {
+  display: flex; flex-direction: column; justify-content: center; gap: 3px;
+  height: 21px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 2px;
+  background: none;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-metric small {
+  color: #eef8f4; font-size: 10px; font-weight: 600; line-height: 1;
+  letter-spacing: .01em; text-transform: none;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-dashes { display: flex; gap: 3px; height: 2px; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-dashes b {
+  display: block; width: 8px; height: 2px; border-radius: 1px;
+  background: rgba(255, 255, 255, .26);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-dashes.is-cyan b.is-on { background: #2ee6d6; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-dashes.is-amber b.is-on { background: #f0932b; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-strip .fm-save-controls { display: none !important; }
+
+/* the menu that drops out of the active pill */
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-menu {
+  top: calc(100% + 5px) !important;
+  width: 288px !important;
+  border: 1px solid rgba(255, 255, 255, .18) !important;
+  border-radius: 3px !important;
+  background: #0a3d33 !important;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, .55) !important;
+}
+
+/* bar polish: thicker chevron, slightly taller metric boxes, vertical sheen */
+#homeScreen:has(.fm-tactics-workspace) .fm26-strip {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .055), rgba(0, 0, 0, .07)),
+    linear-gradient(90deg, #1d6a5b 0%, #0d6151 24%, #08604f 58%, #055448 100%) !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-caret {
+  width: 9px !important; height: 9px !important;
+  border-right-width: 2.2px; border-bottom-width: 2.2px;
+  margin-top: -4px !important;
+  border-right-color: #fff; border-bottom-color: #fff;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-metric { height: 22px !important; padding: 0 8px !important; gap: 4px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-metric small { font-size: 10.5px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-dashes b { width: 8px; height: 2px; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-trigger:focus-visible,
+#homeScreen:has(.fm-tactics-workspace) .fm26-plus:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+
+/* type + spacing tuned against the capture: regular-weight labels, big chevrons */
+#homeScreen:has(.fm-tactics-workspace) .fm26-strip {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(0, 0, 0, .07)),
+    linear-gradient(90deg, #12655a 0%, #0d6151 40%, #075a4b 100%) !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-trigger,
+#homeScreen:has(.fm-tactics-workspace) .fm26-plus {
+  gap: 10px !important;
+  padding: 0 12px !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-no { font-size: 14px !important; font-weight: 600 !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-name { font-size: 14px !important; font-weight: 400 !important; letter-spacing: .005em !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-caret {
+  width: 11px !important; height: 11px !important;
+  border-right-width: 2.4px; border-bottom-width: 2.4px;
+  margin-top: -5px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-plus { font-size: 17px !important; font-weight: 300 !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-pick { padding: 0 12px !important; gap: 10px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-pick-value { font-size: 14px !important; font-weight: 400 !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-pick-label { font-size: 14px !important; font-weight: 400 !important; color: rgba(255, 255, 255, .66) !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-metric small { font-size: 10.5px !important; font-weight: 500 !important; }
+
+/* metric boxes: light label, short rounded dashes, tight box */
+#homeScreen:has(.fm-tactics-workspace) .fm26-metric small { font-weight: 400 !important; color: #f2faf7 !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-dashes { gap: 3px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-dashes b { width: 7px !important; height: 2px !important; border-radius: 1px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-metric { gap: 4px !important; padding: 0 8px !important; min-width: 0 !important; }
+
+/* ---- the bar at narrow widths: FM stacks the controls into rows ---------- */
+@media (max-width: 1179px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm26-strip {
+    height: auto !important; min-height: 0 !important; max-height: none !important;
+    flex-wrap: wrap !important;
+    gap: 6px 8px !important;
+    padding: 7px 10px !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-tactics { flex: 1 1 100%; flex-wrap: wrap; gap: 6px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-tactic { flex: 1 1 auto; min-width: 0; max-width: 100%; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-tactic-trigger { max-width: 100%; min-width: 0; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-tactic-name { max-width: none !important; min-width: 0; flex: 1 1 auto; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-picks { flex: 1 1 100%; margin-left: 0; gap: 6px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-pick { flex: 1 1 0; min-width: 0; justify-content: flex-start; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-pick-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-metrics { margin-left: auto; flex: 0 0 auto; }
+}
+@media (max-width: 700px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm26-picks { flex-wrap: wrap; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-pick { flex: 1 1 100%; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-metrics { flex: 1 1 100%; justify-content: flex-start; }
+}
+@media (max-width: 1179px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm26-tactic { flex: 0 1 auto; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-plus { flex: 0 0 auto; }
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic.is-active .fm26-tactic-trigger { background: #148073 !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic.is-active .fm26-tactic-trigger:hover { background: #189184 !important; }
+
+/* the pill's menu: a tidy field list, not stretched labels */
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-menu { padding: 10px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-menu .fm26-menu-title {
+  margin: 0 0 2px !important; font-size: 9px !important; font-weight: 700 !important;
+  letter-spacing: .09em !important; text-transform: uppercase !important; color: #9fc4b7 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-menu .fm26-menu-sub {
+  margin: 0 0 9px !important; padding-bottom: 8px !important;
+  font-size: 10.5px !important; color: #bcd8cd !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-menu .fm-shape-controls { display: grid !important; gap: 7px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-menu label {
+  display: grid !important; justify-items: stretch !important; gap: 3px !important;
+  width: 100% !important; height: auto !important; min-width: 0 !important;
+  padding: 0 !important; border: 0 !important; background: none !important;
+  text-align: left !important;
+  font-size: 8.5px !important; font-weight: 700 !important; letter-spacing: .09em !important;
+  text-transform: uppercase !important; color: #9fc4b7 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-menu label > select {
+  width: 100% !important; max-width: none !important; height: 26px !important;
+  margin: 0 !important; padding: 0 26px 0 9px !important;
+  border: 1px solid rgba(255, 255, 255, .22) !important; border-radius: 3px !important;
+  background-color: #0f5347 !important;
+  color: #fff !important;
+  font-size: 12.5px !important; font-weight: 500 !important; text-transform: none !important; letter-spacing: 0 !important;
+  appearance: none !important; -webkit-appearance: none !important;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #cfe8dd 50%),
+    linear-gradient(135deg, #cfe8dd 50%, transparent 50%) !important;
+  background-position: right 11px center, right 6px center !important;
+  background-size: 5px 5px, 5px 5px !important;
+  background-repeat: no-repeat !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-menu .fm-shape-controls {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-auto-flow: row !important;
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-menu .fm-shape-controls > label {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  flex: none !important;
+  width: 100% !important;
+  white-space: nowrap;
 }
 </style>
 </head>
@@ -16652,13 +16936,23 @@ function render(s,players){
   const library=B().presetLibrary(s),savedOptions=library.map(x=>`<option value="${e(x.id)}"${s.activeTacticPreset===x.id?' selected':''}>${e(x.name)}</option>`).join('');
   const nav=[['shape','Team Shape'],['instructions','Team Instructions'],['players','Player Instructions']];
   const reviewLabel=warnings.length?`Needs review · ${warnings.length}`:'Ready for review',reviewHelp=warnings.length?warnings.map(w=>w.text).join('\n'):'No structural risks are currently flagged.';
+    const boardIdx=s.boardIndex||0;
+  const boardSlots=Math.min(3,Math.max(1,boardIdx+1,...Object.keys(s.boards||{}).map(k=>Number(k)+1).filter(n=>Number.isFinite(n))));
+  const SLOT_SHAPES=['4-4-2','4-3-3','4-4-2'],ACTIVE_SYSTEM=plan.system||s.style||'Balanced shape';
+  const slotShape=i=>i===boardIdx?defenseLabel:(s.boards?.[i]?.formation||SLOT_SHAPES[i]||s.tactic);
+  const slotSystem=i=>i===boardIdx?ACTIVE_SYSTEM:(s.boards?.[i]?.system||s.boards?.[i]?.style||s.style||'Balanced shape');
+  const dashLine=(value,tone)=>{const filled=Math.max(0,Math.min(7,Math.round((Number(value)||0)/100*7)));return `<i class="fm26-dashes is-${tone}" aria-hidden="true">${Array.from({length:7},(_,k)=>`<b${k<filled?' class="is-on"':''}></b>`).join('')}</i>`;};
+  const tacticMenu=`<div class="fm26-tactic-menu"><p class="fm26-menu-title">Tactic ${boardIdx+1}</p><p class="fm26-menu-sub">${e(defenseLabel)} OOP · ${e(attackLabel)} IP · ${e(s.mentality||'Balanced')}</p><div class="fm-shape-controls"><label>Out of possession formation<select data-plan="tactic">${options(defenseOptions,defenseChoice,v=>v==='Custom'&&defenseCustomNumber?`Custom (${defenseCustomNumber})`:v)}</select></label><label>In-possession formation<select data-attack-formation>${options(attackChoices,attackChoice,v=>v==='Custom'&&attackCustomNumber?`Custom (${attackCustomNumber})`:v)}</select></label></div></div>`;
+  const tacticPills=Array.from({length:boardSlots},(_,i)=>i===boardIdx
+    ?`<div class="fm26-tactic is-active"><div class="fm26-tactic-pick"><button type="button" class="fm26-tactic-trigger" aria-label="Tactic ${i+1}: ${e(slotShape(i))} ${e(slotSystem(i))}, ${e(attackLabel)} in possession, ${e(s.mentality||'Balanced')} mentality"><b class="fm26-tactic-no">${i+1}</b><span class="fm26-tactic-name">${e(slotShape(i))} - ${e(slotSystem(i))}</span><b class="fm26-caret" aria-hidden="true"></b></button>${tacticMenu}</div></div>`
+    :`<div class="fm26-tactic"><button type="button" class="fm26-tactic-trigger" data-board="preset|${i}" aria-label="Switch to tactic ${i+1}: ${e(slotShape(i))} ${e(slotSystem(i))}"><b class="fm26-tactic-no">${i+1}</b><span class="fm26-tactic-name">${e(slotShape(i))} - ${e(slotSystem(i))}</span><b class="fm26-caret" aria-hidden="true"></b></button></div>`).join('');
   const header=`<header class="fm-workspace-header fm26-strip">
-<div class="fm26-tactic"><b class="fm26-tactic-no">1</b><div class="fm26-tactic-pick"><button type="button" class="fm26-tactic-trigger" aria-label="Tactic: ${e(defenseLabel)} ${e(plan.system||s.style||'Balanced shape')}, ${e(attackLabel)} in possession, ${e(s.mentality||'Balanced')} mentality"><h2>${e(defenseLabel)} · ${e(plan.system||s.style||'Balanced shape')}</h2><b class="fm26-caret" aria-hidden="true">▾</b></button><div class="fm26-tactic-menu"><p class="fm26-menu-title">Tactic</p><p class="fm26-menu-sub">${e(defenseLabel)} OOP · ${e(attackLabel)} IP · ${e(s.mentality||'Balanced')}</p><div class="fm-shape-controls"><label>Out of possession formation<select data-plan="tactic">${options(defenseOptions,defenseChoice,v=>v==='Custom'&&defenseCustomNumber?`Custom (${defenseCustomNumber})`:v)}</select></label><label>In-possession formation<select data-attack-formation>${options(attackChoices,attackChoice,v=>v==='Custom'&&attackCustomNumber?`Custom (${attackCustomNumber})`:v)}</select></label></div></div></div><button type="button" class="fm26-plus" data-library-toggle aria-expanded="${libraryOpen}" aria-label="Tactic library"><span aria-hidden="true">+</span></button></div>
-<div class="fm-shape-controls fm26-header-selects"><label>Style<select data-system><option value="">${e(s.style||'Balanced shape')}</option>${options(Object.keys(Z.systems),plan.system)}</select></label><label>Mentality<select data-plan="mentality">${options(['Very Defensive','Defensive','Cautious','Balanced','Positive','Attacking','Very Attacking'],s.mentality||'Balanced')}</select></label></div>
-<div class="fm-header-metrics"><span><small>Familiarity</small><b>${familiarity.position}%</b><i><b style="width:${familiarity.position}%"></b></i></span><span><small>Intensity</small><b>${intensity}%</b><i><b style="width:${intensity}%"></b></i></span></div>
+<div class="fm26-tactics">${tacticPills}${boardSlots<3?`<button type="button" class="fm26-plus" data-board="preset|${boardSlots}" aria-label="Add tactic ${boardSlots+1} of 3"><span aria-hidden="true">+</span></button>`:''}</div>
+<div class="fm26-picks"><label class="fm26-pick"><span class="fm26-pick-value">${e(ACTIVE_SYSTEM)}</span><span class="fm26-pick-label">Style</span><b class="fm26-caret" aria-hidden="true"></b><select data-system aria-label="Team style"><option value="">${e(s.style||'Balanced shape')}</option>${options(Object.keys(Z.systems),plan.system)}</select></label><label class="fm26-pick"><span class="fm26-pick-value">${e(s.mentality||'Balanced')}</span><span class="fm26-pick-label">Mentality</span><b class="fm26-caret" aria-hidden="true"></b><select data-plan="mentality" aria-label="Mentality">${options(['Very Defensive','Defensive','Cautious','Balanced','Positive','Attacking','Very Attacking'],s.mentality||'Balanced')}</select></label></div>
+<div class="fm26-metrics"><span class="fm26-metric" role="img" aria-label="Familiarity ${familiarity.position} percent"><small>Familiarity</small>${dashLine(familiarity.position,'cyan')}</span><span class="fm26-metric" role="img" aria-label="Intensity ${intensity} percent"><small>Intensity</small>${dashLine(intensity,'amber')}</span></div>
 <div class="fm-save-controls"><label class="sr-only" for="fm-tactic-name">Saved tactic name</label><input id="fm-tactic-name" type="text" data-preset-name maxlength="48" placeholder="Name this tactic"><button type="button" data-library-action="save">Save tactic</button><select aria-label="Load saved tactic" data-preset-select><option value="">Saved tactics</option>${savedOptions}</select><button type="button" data-library-action="load" ${library.length?'':'disabled'}>Load</button></div>
 </header>`;
-  const workspaceNav=`<div class="fm-desk-bar"><nav class="fm-workspace-nav" aria-label="Tactical workspace">${nav.map(([id,label])=>`<button type="button" data-workspace-tab="${id}" aria-current="${workspaceTab===id?'page':'false'}">${label}</button>`).join('')}</nav><div class="fm26-actions"><span class="fm-status-chip ${warnings.length?'has-risks':'is-clear'}" role="status" title="${e(reviewHelp)}">${e(reviewLabel)}</span><button type="button" class="fm26-pill is-quiet" data-board="bestXI" ${players.length?'':'disabled'}>Quick pick</button><button type="button" class="fm26-pill is-quiet" data-board="undoXI" ${plan.previousXI?'':'disabled'}>Undo</button></div></div>`;
+const workspaceNav=`<div class="fm-desk-bar"><nav class="fm-workspace-nav" aria-label="Tactical workspace">${nav.map(([id,label])=>`<button type="button" data-workspace-tab="${id}" aria-current="${workspaceTab===id?'page':'false'}">${label}</button>`).join('')}</nav><div class="fm26-actions"><span class="fm-status-chip ${warnings.length?'has-risks':'is-clear'}" role="status" title="${e(reviewHelp)}">${e(reviewLabel)}</span><button type="button" class="fm26-pill is-quiet" data-board="bestXI" ${players.length?'':'disabled'}>Quick pick</button><button type="button" class="fm26-pill is-quiet" data-board="undoXI" ${plan.previousXI?'':'disabled'}>Undo</button></div></div>`;
   const content=workspaceTab==='instructions'?instructionContent:workspaceTab==='players'?playerContent:shapeContent;
   const oppFixture=g.TLLeagueMatchday?.fixture(s),oppName=oppFixture?(oppFixture.own===0?oppFixture.host:oppFixture.team):'',oppPlayers=oppName?W.pool.filter(p=>p.club===oppName):[],oppKey=oppPlayers.slice().sort((a,b)=>D.ROLE_WEIGHTS[b.pos](b.attrs)-D.ROLE_WEIGHTS[a.pos](a.attrs)).slice(0,3),oppBacks=oppPlayers.filter(p=>['DC','FB','WB'].includes(p.pos)),oppPace=oppBacks.length?Math.round(oppBacks.reduce((n,p)=>n+(p.attrs.pace||0),0)/oppBacks.length):null;
   const opposition=`<section class="fm-opposition" id="tactic-opposition"><header><small>OPPOSITION ANALYSIS</small>${oppFixture?`<h3>Next: ${e(oppName)}</h3><p>Scheduled shape ${e(oppFixture.tactics?.[oppFixture.own===0?1:0]?.formation||'not recorded')} · ${oppPlayers.length} players indexed in the current world.</p><p>${oppKey.length?'Players to watch: '+oppKey.map(p=>e(p.name)+' ('+e(p.pos)+')').join(' · '):'No opponent player ratings are on file yet.'}${oppPace!=null?' · Defensive pace average '+oppPace+'/20':''}</p><button type="button" data-board="order|0|trigger|Carrier facing own goal">Use facing-away pressing trigger</button>`:'<h3>No upcoming opponent</h3><p>Opposition notes will appear when a fixture is scheduled; unobserved adjustments are not inferred.</p>'}</header></section>`;
