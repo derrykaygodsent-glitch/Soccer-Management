@@ -1669,10 +1669,15 @@
    scrolling sideways instead of being squeezed into the panel.
    ========================================================================== */
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel {
+  background: transparent !important;
   border: 0 !important;
-  border-radius: 10px !important;
+  border-radius: 0 !important;
   box-shadow: none !important;
   overflow: hidden !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head {
+  background: transparent !important;
+  border-radius: 0 !important;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-table {
   overflow-x: auto !important;
