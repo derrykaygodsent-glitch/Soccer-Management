@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="10710ab822c47355a7ee">
+  <meta name="tl-build" content="db1ffe13cd45959d1d05">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -4870,6 +4870,66 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   cursor: default;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-header-metrics { align-items: center; }
+
+/* ---- review badge: a compact clickable chip, not decoration ---- */
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics .fm-review-badge,
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace .fm-review-badge {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  height: 21px !important;
+  min-width: 21px !important;
+  padding: 0 7px !important;
+  margin-right: 8px !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  background: #e8b574 !important;
+  background-color: #e8b574 !important;
+  color: #1a1206 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 3px #0a141e !important;
+  cursor: pointer;
+  transition: background-color .12s ease;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-review-badge:hover { background: #f3c88c !important; background-color: #f3c88c !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-review-badge:focus-visible { outline: 2px solid #7fd6c8; outline-offset: 2px; }
+
+/* ---- the pitch card loses its heading and caption; the pitch itself shrinks a touch ---- */
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch {
+  padding: 12px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch > header { display: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .fm-phase-caption { display: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field {
+  width: 92% !important;
+  height: min(62vh, 585px) !important;
+  min-height: 400px !important;
+  margin: 0 auto !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch > h3.sr-only,
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch > .sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+@media (max-width: 760px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field {
+    width: 100% !important;
+    height: min(56vh, 460px) !important;
+    min-height: 300px !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -15136,7 +15196,7 @@ function render(s,players){
   const quickSelect=`<div class="fm-quick-actions"><button type="button" data-board="rotate" ${bench.some(p=>!p.red&&!readiness[p.id]?.knock)?'':'disabled'}>Rotate squad</button>${plan.previousXI?.shape===s.tactic&&plan.previousXI.scope===(s.kitScope||'')?'<button type="button" data-board="undoXI">Undo selection</button>':''}<small>Selection weighs role fit, readiness and squad ability.</small></div>`;
   const viewSummary=`<div class="fm-phase-caption"><span>${phase==='attack'?'IN POSSESSION':phase==='both'?'PHASE COMPARISON':phase==='combined'?'AVERAGE POSITIONS':'OUT OF POSSESSION'}</span><b>${e(defenseLabel)} OOP · ${e(attackLabel)} IP</b></div>`;
   const shapeToolbar=`<div class="fm-shape-toolbar">${phaseButtons()}${shapeFormationControls}</div>`;
-  const shapeContent=phase==='both'?`<div class="fm-both-view">${shapeToolbar}<div class="fm-both-pitches"><section class="fm-pitch-card"><header><b>Out of Possession</b><small>${e(defenseLabel)}</small></header>${field('defense','wide')}</section><section class="fm-pitch-card"><header><b>In Possession</b><small>${e(attackLabel)}</small></header>${field('attack','wide')}</section></div>${squad()}${quickSelect}</div>`:`${shapeToolbar}<div class="fm-shape-workspace"><div class="fm-shape-main"><section class="fm-pitch-card fm-primary-pitch"><header><div><small>TACTICAL SHAPE</small><h3>${phase==='attack'?'In Possession':phase==='combined'?'Combined · average player positions':'Out of Possession'}</h3></div><span>${phase==='combined'?'Drag to adjust both phases together':'Drag a shirt to adjust positions'}</span></header>${viewSummary}${field(phase==='attack'?'attack':phase==='combined'?'combined':'defense')}<div class="fm-pitch-legend"><span>Selected player remains linked to the squad</span><span>${phase==='combined'?'Combined movement shifts both shapes together':'Drag a player marker to adjust this phase'}</span></div>${quickSelect}</section></div><aside class="fm-shape-side">${squad()}</aside></div>`;
+  const shapeContent=phase==='both'?`<div class="fm-both-view">${shapeToolbar}<div class="fm-both-pitches"><section class="fm-pitch-card"><header><b>Out of Possession</b><small>${e(defenseLabel)}</small></header>${field('defense','wide')}</section><section class="fm-pitch-card"><header><b>In Possession</b><small>${e(attackLabel)}</small></header>${field('attack','wide')}</section></div>${squad()}${quickSelect}</div>`:`${shapeToolbar}<div class="fm-shape-workspace"><div class="fm-shape-main"><section class="fm-pitch-card fm-primary-pitch"><h3 class="sr-only">${phase==='attack'?'In Possession':phase==='combined'?'Combined · average player positions':'Out of Possession'}</h3>${field(phase==='attack'?'attack':phase==='combined'?'combined':'defense')}<div class="fm-pitch-legend"><span>Selected player remains linked to the squad</span><span>${phase==='combined'?'Combined movement shifts both shapes together':'Drag a player marker to adjust this phase'}</span></div>${quickSelect}</section></div><aside class="fm-shape-side">${squad()}</aside></div>`;
   const selectedZoneLabel=zoneCells.find(z=>z.id===selectedZone)?.label||'Middle third · Centre';
   const zoneLabel=(row,col)=>`${zoneNames[row]} · ${zoneSide[col]}`;
   const selectedZonePositions=slots.filter((v,i)=>zoneOf((phase==='attack'?v.attack||v:v),i)===selectedZone);
@@ -15163,7 +15223,7 @@ function render(s,players){
   const nav=[['shape','Team Shape'],['instructions','Team Instructions'],['players','Player Instructions']];
   const reviewLabel=warnings.length?`Needs review · ${warnings.length}`:'Ready for review',reviewHelp=warnings.length?warnings.map(w=>w.text).join('\n'):'No structural risks are currently flagged.';
   const header=`<header class="fm-workspace-header${libraryOpen?' is-library-open':''}"><div class="fm-title-group"><small>TACTICS · ${e(s.club?.name||'FIRST TEAM')}</small><h2>${e(plan.system||s.style||'Balanced shape')}</h2><p><span>${e(defenseLabel)} OOP</span><i aria-hidden="true"></i><span>${e(attackLabel)} IP</span><em>${e(s.mentality||'Balanced')} mentality</em></p></div><button type="button" class="fm-library-toggle" data-library-toggle aria-expanded="${libraryOpen}">Tactics library</button><div class="fm-save-controls"><label class="sr-only" for="fm-tactic-name">Saved tactic name</label><input id="fm-tactic-name" type="text" data-preset-name maxlength="48" placeholder="Name this tactic"><button type="button" data-library-action="save">Save tactic</button><select aria-label="Load saved tactic" data-preset-select><option value="">Saved tactics</option>${savedOptions}</select><button type="button" data-library-action="load" ${library.length?'':'disabled'}>Load</button></div></header>`;
-  const attentionActions=(g.TLDeskAttention&&g.TLDeskAttention.badges?(g.TLDeskAttention.badges(s,'tactics').actions||{}):{});const reviewCount=Object.values(attentionActions).reduce((n,v)=>n+(Number(v)||0),0);const reviewBadge=reviewCount?`<span class="fm-review-badge" title="${reviewCount} to review" aria-label="${reviewCount} to review">${reviewCount}</span>`:'';const workspaceNav=`<div class="fm-desk-bar"><nav class="fm-workspace-nav" aria-label="Tactical workspace">${nav.map(([id,label])=>`<button type="button" data-workspace-tab="${id}" aria-current="${workspaceTab===id?'page':'false'}">${label}</button>`).join('')}</nav><div class="fm-header-metrics">${reviewBadge}<span><small>Familiarity</small><b>${familiarity.position}%</b><i><b style="width:${familiarity.position}%"></b></i></span><span><small>Intensity</small><b>${intensity}%</b><i><b style="width:${intensity}%"></b></i></span><span class="fm-status-chip ${warnings.length?'has-risks':'is-clear'}" role="status" title="${e(reviewHelp)}">${e(reviewLabel)}</span></div></div>`;
+  const attentionActions=(g.TLDeskAttention&&g.TLDeskAttention.badges?(g.TLDeskAttention.badges(s,'tactics').actions||{}):{});const reviewEntries=Object.entries(attentionActions).filter(([,v])=>Number(v)>0);const reviewCount=reviewEntries.reduce((n,[,v])=>n+Number(v),0);const reviewTarget=reviewEntries.length?(reviewEntries[0][0]==='home'?'interviewDesk':reviewEntries[0][0]):'';const reviewBadge=reviewCount?`<button type="button" class="fm-review-badge" data-life="go" data-v="${reviewTarget}" title="${reviewCount} to review · open" aria-label="${reviewCount} to review · open">${reviewCount}</button>`:'';const workspaceNav=`<div class="fm-desk-bar"><nav class="fm-workspace-nav" aria-label="Tactical workspace">${nav.map(([id,label])=>`<button type="button" data-workspace-tab="${id}" aria-current="${workspaceTab===id?'page':'false'}">${label}</button>`).join('')}</nav><div class="fm-header-metrics">${reviewBadge}<span><small>Familiarity</small><b>${familiarity.position}%</b><i><b style="width:${familiarity.position}%"></b></i></span><span><small>Intensity</small><b>${intensity}%</b><i><b style="width:${intensity}%"></b></i></span><span class="fm-status-chip ${warnings.length?'has-risks':'is-clear'}" role="status" title="${e(reviewHelp)}">${e(reviewLabel)}</span></div></div>`;
   const content=workspaceTab==='instructions'?instructionContent:workspaceTab==='players'?playerContent:shapeContent;
   const oppFixture=g.TLLeagueMatchday?.fixture(s),oppName=oppFixture?(oppFixture.own===0?oppFixture.host:oppFixture.team):'',oppPlayers=oppName?W.pool.filter(p=>p.club===oppName):[],oppKey=oppPlayers.slice().sort((a,b)=>D.ROLE_WEIGHTS[b.pos](b.attrs)-D.ROLE_WEIGHTS[a.pos](a.attrs)).slice(0,3),oppBacks=oppPlayers.filter(p=>['DC','FB','WB'].includes(p.pos)),oppPace=oppBacks.length?Math.round(oppBacks.reduce((n,p)=>n+(p.attrs.pace||0),0)/oppBacks.length):null;
   const opposition=`<section class="fm-opposition" id="tactic-opposition"><header><small>OPPOSITION ANALYSIS</small>${oppFixture?`<h3>Next: ${e(oppName)}</h3><p>Scheduled shape ${e(oppFixture.tactics?.[oppFixture.own===0?1:0]?.formation||'not recorded')} · ${oppPlayers.length} players indexed in the current world.</p><p>${oppKey.length?'Players to watch: '+oppKey.map(p=>e(p.name)+' ('+e(p.pos)+')').join(' · '):'No opponent player ratings are on file yet.'}${oppPace!=null?' · Defensive pace average '+oppPace+'/20':''}</p><button type="button" data-board="order|0|trigger|Carrier facing own goal">Use facing-away pressing trigger</button>`:'<h3>No upcoming opponent</h3><p>Opposition notes will appear when a fixture is scheduled; unobserved adjustments are not inferred.</p>'}</header></section>`;

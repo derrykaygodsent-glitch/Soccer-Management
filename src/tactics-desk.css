@@ -1287,3 +1287,63 @@
   cursor: default;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-header-metrics { align-items: center; }
+
+/* ---- review badge: a compact clickable chip, not decoration ---- */
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics .fm-review-badge,
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace .fm-review-badge {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  height: 21px !important;
+  min-width: 21px !important;
+  padding: 0 7px !important;
+  margin-right: 8px !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  background: #e8b574 !important;
+  background-color: #e8b574 !important;
+  color: #1a1206 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 3px #0a141e !important;
+  cursor: pointer;
+  transition: background-color .12s ease;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-review-badge:hover { background: #f3c88c !important; background-color: #f3c88c !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-review-badge:focus-visible { outline: 2px solid #7fd6c8; outline-offset: 2px; }
+
+/* ---- the pitch card loses its heading and caption; the pitch itself shrinks a touch ---- */
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch {
+  padding: 12px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch > header { display: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .fm-phase-caption { display: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field {
+  width: 92% !important;
+  height: min(62vh, 585px) !important;
+  min-height: 400px !important;
+  margin: 0 auto !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch > h3.sr-only,
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch > .sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+@media (max-width: 760px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field {
+    width: 100% !important;
+    height: min(56vh, 460px) !important;
+    min-height: 300px !important;
+  }
+}
