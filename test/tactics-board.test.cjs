@@ -41,7 +41,7 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
 
   s.boardPhase = 'both';
   const both = TLBoardRoom.render(s, pool);
-  a.equal((both.match(/class="shape-field" data-orientation="portrait"/g) || []).length, 2, 'Both shows two side-by-side portrait pitches');
+  a.equal((both.match(/class="shape-field field-wide"/g) || []).length, 2, 'Both shows two side-by-side landscape pitches');
   a.match(both, /data-phase-view="defense"/);
   a.match(both, /data-phase-view="attack"/);
   s.boardPhase = 'combined';
