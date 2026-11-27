@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="cb2038cec5dd90d5ead3">
+  <meta name="tl-build" content="0789cc3a23c35b65a0bf">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -5245,6 +5245,40 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 #homeScreen:has(.fm-tactics-workspace) .fm-strip-controls { position: relative !important; }
 #homeScreen:has(.fm-tactics-workspace) .fm-strip-controls label > span {
   display: none !important;
+}
+
+/* ==========================================================================
+   Team sheet sits plain: no frame, and the columns get room to breathe by
+   scrolling sideways instead of being squeezed into the panel.
+   ========================================================================== */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel {
+  border: 0 !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-table {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: #2b3f52 transparent;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-table::-webkit-scrollbar { height: 8px; width: 8px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-table::-webkit-scrollbar-thumb {
+  background: #2b3f52; border-radius: 4px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-table::-webkit-scrollbar-track { background: transparent; }
+
+/* wider, fixed-ish columns so the sheet reads at a glance */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-columns,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row {
+  grid-template-columns: 34px 150px 158px minmax(170px, 1fr) 62px 96px !important;
+  column-gap: 14px !important;
+  min-width: 760px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-group,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-subhead {
+  min-width: 760px !important;
 }
 </style>
 </head>
