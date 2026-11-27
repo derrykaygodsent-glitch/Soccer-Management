@@ -3045,3 +3045,145 @@
   width: 100% !important;
   white-space: nowrap;
 }
+
+/* ======================================================================
+   THE TOOLBAR CARD — bar row + tab row in one green panel, as in the capture
+   (bar 37px #036150 band, tab row 36px #045046 band, 1px divider, actions
+    right-aligned: fixture chip, advice/status pill, Undo, Quick pick + menu)
+   ====================================================================== */
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar {
+  margin: 6px 6px 0;
+  border: 1px solid rgba(255, 255, 255, .10);
+  border-radius: 4px;
+  background: #045046;
+  overflow: visible;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm26-strip {
+  border-radius: 3px 3px 0 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, .14) !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-desk-bar {
+  display: flex !important;
+  align-items: center;
+  gap: 24px;
+  height: 36px !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-radius: 0 0 3px 3px !important;
+  background: #045046 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav { display: flex; align-items: stretch; gap: 22px; height: 36px; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav button {
+  height: 36px !important; padding: 0 !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  background: none !important;
+  color: rgba(255, 255, 255, .72) !important;
+  font-size: 13px !important; font-weight: 500 !important;
+  line-height: 34px !important;
+  white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav button:hover { color: #fff !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav button[aria-current="page"] {
+  color: #fff !important; font-weight: 600 !important; border-bottom-color: #fff !important;
+}
+
+/* right-hand cluster */
+#homeScreen:has(.fm-tactics-workspace) .fm26-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-fixture {
+  display: inline-flex; align-items: baseline; gap: 7px;
+  height: 26px; padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, .16); border-radius: 3px;
+  background: rgba(0, 0, 0, .18);
+  font-size: 12px; line-height: 24px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-fixture b { color: #fff; font-weight: 600; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-fixture small { color: rgba(255, 255, 255, .66); font-size: 11px; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-actions .fm-status-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 26px; padding: 0 10px !important;
+  border: 1px solid rgba(255, 255, 255, .16) !important; border-radius: 3px !important;
+  background: rgba(0, 0, 0, .18) !important;
+  color: #f2f8f4 !important;
+  font-size: 12px !important; font-weight: 500 !important;
+  line-height: 24px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-star { font-size: 11px; color: #f2cd8e; font-weight: 400; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-actions .fm-status-chip.has-risks { color: #f2cd8e !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act,
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-split {
+  height: 26px;
+  border: 1px solid rgba(255, 255, 255, .16) !important;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, .18) !important;
+  color: #eef7f2 !important;
+  font-size: 12px !important; font-weight: 500 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-act {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 10px !important;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-act:hover:not(:disabled) { background: rgba(0, 0, 0, .3) !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act:disabled { opacity: .45; cursor: default; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-split { display: inline-flex; position: relative; overflow: visible; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-split .fm26-act { border: 0 !important; background: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-split .fm26-act.is-caret {
+  width: 22px; justify-content: center; padding: 0 !important;
+  border-left: 1px solid rgba(255, 255, 255, .16) !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-split .fm26-caret { width: 7px; height: 7px; border-right-width: 1.6px; border-bottom-width: 1.6px; margin-top: -2px; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-menu {
+  display: none;
+  position: absolute; top: calc(100% + 5px); right: 0; z-index: 40;
+  min-width: 190px; padding: 5px;
+  border: 1px solid rgba(255, 255, 255, .18); border-radius: 3px;
+  background: #0a3d33;
+  box-shadow: 0 16px 30px rgba(0, 0, 0, .55);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-split:focus-within .fm26-act-menu { display: block; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-menu button {
+  display: block; width: 100%;
+  padding: 6px 8px; border: 0; border-radius: 2px;
+  background: none; color: #eef7f2;
+  font-size: 12px; font-weight: 500; text-align: left; cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-menu button:hover { background: rgba(255, 255, 255, .1); }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-menu button:disabled { opacity: .45; cursor: default; }
+
+/* the workspace tucks under the card */
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar + .fm-workspace-content { padding-top: 4px; }
+
+/* the tab row's active underline is white, once — no leftover accent bar */
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav button {
+  min-height: 0 !important;
+  height: 36px !important;
+  line-height: 34px !important;
+  margin-right: 0 !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav button[aria-current="page"] {
+  border-bottom: 2px solid #fff !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav button[aria-current="page"]::after { display: none !important; content: none !important; }
+
+/* the tab row and its actions wrap instead of running off the card */
+@media (max-width: 1179px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-desk-bar {
+    height: auto !important;
+    flex-wrap: wrap !important;
+    padding: 6px 10px 8px !important;
+    gap: 8px 12px !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav { height: auto; flex-wrap: wrap; gap: 0 18px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav button { height: 32px !important; line-height: 30px !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-actions {
+    flex: 1 1 100%; flex-wrap: wrap !important; justify-content: flex-end;
+    margin-left: 0 !important; gap: 6px !important;
+  }
+}
+@media (max-width: 700px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm26-actions { justify-content: flex-start; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-fixture { flex: 1 1 100%; justify-content: flex-start; }
+}

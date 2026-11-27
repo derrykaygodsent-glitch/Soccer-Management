@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="c38a93062cee5de9c477">
+  <meta name="tl-build" content="febac1755a6ea5192c01">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -6627,6 +6627,148 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   flex: none !important;
   width: 100% !important;
   white-space: nowrap;
+}
+
+/* ======================================================================
+   THE TOOLBAR CARD — bar row + tab row in one green panel, as in the capture
+   (bar 37px #036150 band, tab row 36px #045046 band, 1px divider, actions
+    right-aligned: fixture chip, advice/status pill, Undo, Quick pick + menu)
+   ====================================================================== */
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar {
+  margin: 6px 6px 0;
+  border: 1px solid rgba(255, 255, 255, .10);
+  border-radius: 4px;
+  background: #045046;
+  overflow: visible;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm26-strip {
+  border-radius: 3px 3px 0 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, .14) !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-desk-bar {
+  display: flex !important;
+  align-items: center;
+  gap: 24px;
+  height: 36px !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-radius: 0 0 3px 3px !important;
+  background: #045046 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav { display: flex; align-items: stretch; gap: 22px; height: 36px; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav button {
+  height: 36px !important; padding: 0 !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  background: none !important;
+  color: rgba(255, 255, 255, .72) !important;
+  font-size: 13px !important; font-weight: 500 !important;
+  line-height: 34px !important;
+  white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav button:hover { color: #fff !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav button[aria-current="page"] {
+  color: #fff !important; font-weight: 600 !important; border-bottom-color: #fff !important;
+}
+
+/* right-hand cluster */
+#homeScreen:has(.fm-tactics-workspace) .fm26-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-fixture {
+  display: inline-flex; align-items: baseline; gap: 7px;
+  height: 26px; padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, .16); border-radius: 3px;
+  background: rgba(0, 0, 0, .18);
+  font-size: 12px; line-height: 24px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-fixture b { color: #fff; font-weight: 600; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-fixture small { color: rgba(255, 255, 255, .66); font-size: 11px; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-actions .fm-status-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 26px; padding: 0 10px !important;
+  border: 1px solid rgba(255, 255, 255, .16) !important; border-radius: 3px !important;
+  background: rgba(0, 0, 0, .18) !important;
+  color: #f2f8f4 !important;
+  font-size: 12px !important; font-weight: 500 !important;
+  line-height: 24px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-star { font-size: 11px; color: #f2cd8e; font-weight: 400; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-actions .fm-status-chip.has-risks { color: #f2cd8e !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act,
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-split {
+  height: 26px;
+  border: 1px solid rgba(255, 255, 255, .16) !important;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, .18) !important;
+  color: #eef7f2 !important;
+  font-size: 12px !important; font-weight: 500 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-act {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 10px !important;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-act:hover:not(:disabled) { background: rgba(0, 0, 0, .3) !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act:disabled { opacity: .45; cursor: default; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-split { display: inline-flex; position: relative; overflow: visible; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-split .fm26-act { border: 0 !important; background: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-split .fm26-act.is-caret {
+  width: 22px; justify-content: center; padding: 0 !important;
+  border-left: 1px solid rgba(255, 255, 255, .16) !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-split .fm26-caret { width: 7px; height: 7px; border-right-width: 1.6px; border-bottom-width: 1.6px; margin-top: -2px; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-menu {
+  display: none;
+  position: absolute; top: calc(100% + 5px); right: 0; z-index: 40;
+  min-width: 190px; padding: 5px;
+  border: 1px solid rgba(255, 255, 255, .18); border-radius: 3px;
+  background: #0a3d33;
+  box-shadow: 0 16px 30px rgba(0, 0, 0, .55);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-split:focus-within .fm26-act-menu { display: block; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-menu button {
+  display: block; width: 100%;
+  padding: 6px 8px; border: 0; border-radius: 2px;
+  background: none; color: #eef7f2;
+  font-size: 12px; font-weight: 500; text-align: left; cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-menu button:hover { background: rgba(255, 255, 255, .1); }
+#homeScreen:has(.fm-tactics-workspace) .fm26-act-menu button:disabled { opacity: .45; cursor: default; }
+
+/* the workspace tucks under the card */
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar + .fm-workspace-content { padding-top: 4px; }
+
+/* the tab row's active underline is white, once — no leftover accent bar */
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav button {
+  min-height: 0 !important;
+  height: 36px !important;
+  line-height: 34px !important;
+  margin-right: 0 !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav button[aria-current="page"] {
+  border-bottom: 2px solid #fff !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav button[aria-current="page"]::after { display: none !important; content: none !important; }
+
+/* the tab row and its actions wrap instead of running off the card */
+@media (max-width: 1179px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-desk-bar {
+    height: auto !important;
+    flex-wrap: wrap !important;
+    padding: 6px 10px 8px !important;
+    gap: 8px 12px !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav { height: auto; flex-wrap: wrap; gap: 0 18px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-toolbar .fm-workspace-nav button { height: 32px !important; line-height: 30px !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-actions {
+    flex: 1 1 100%; flex-wrap: wrap !important; justify-content: flex-end;
+    margin-left: 0 !important; gap: 6px !important;
+  }
+}
+@media (max-width: 700px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm26-actions { justify-content: flex-start; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-fixture { flex: 1 1 100%; justify-content: flex-start; }
 }
 </style>
 </head>
@@ -16952,12 +17094,13 @@ function render(s,players){
 <div class="fm26-metrics"><span class="fm26-metric" role="img" aria-label="Familiarity ${familiarity.position} percent"><small>Familiarity</small>${dashLine(familiarity.position,'cyan')}</span><span class="fm26-metric" role="img" aria-label="Intensity ${intensity} percent"><small>Intensity</small>${dashLine(intensity,'amber')}</span></div>
 <div class="fm-save-controls"><label class="sr-only" for="fm-tactic-name">Saved tactic name</label><input id="fm-tactic-name" type="text" data-preset-name maxlength="48" placeholder="Name this tactic"><button type="button" data-library-action="save">Save tactic</button><select aria-label="Load saved tactic" data-preset-select><option value="">Saved tactics</option>${savedOptions}</select><button type="button" data-library-action="load" ${library.length?'':'disabled'}>Load</button></div>
 </header>`;
-const workspaceNav=`<div class="fm-desk-bar"><nav class="fm-workspace-nav" aria-label="Tactical workspace">${nav.map(([id,label])=>`<button type="button" data-workspace-tab="${id}" aria-current="${workspaceTab===id?'page':'false'}">${label}</button>`).join('')}</nav><div class="fm26-actions"><span class="fm-status-chip ${warnings.length?'has-risks':'is-clear'}" role="status" title="${e(reviewHelp)}">${e(reviewLabel)}</span><button type="button" class="fm26-pill is-quiet" data-board="bestXI" ${players.length?'':'disabled'}>Quick pick</button><button type="button" class="fm26-pill is-quiet" data-board="undoXI" ${plan.previousXI?'':'disabled'}>Undo</button></div></div>`;
+  const navFixture=g.TLLeagueMatchday?.fixture(s),navOpp=navFixture?(navFixture.own===0?navFixture.host:navFixture.team):'',navIn=navFixture?Math.max(0,navFixture.day-s.day):null,navWhen=navIn===null?'':navIn===0?'Today':navIn===1?'Tomorrow':`In ${navIn} days`;
+  const workspaceNav=`<div class="fm-desk-bar"><nav class="fm-workspace-nav" aria-label="Tactical workspace">${nav.map(([id,label])=>`<button type="button" data-workspace-tab="${id}" aria-current="${workspaceTab===id?'page':'false'}">${label}</button>`).join('')}</nav><div class="fm26-actions">${navOpp?`<span class="fm26-fixture"><b>${e(navOpp)}</b><small>${e(navWhen)}</small></span>`:''}<span class="fm-status-chip ${warnings.length?'has-risks':'is-clear'}" role="status" title="${e(reviewHelp)}"><b class="fm26-star" aria-hidden="true">★</b>${e(reviewLabel)}</span><button type="button" class="fm26-act" data-board="undoXI" ${plan.previousXI?'':'disabled'}>Undo</button><div class="fm26-act-split"><button type="button" class="fm26-act" data-board="bestXI" ${players.length?'':'disabled'}>Quick pick</button><button type="button" class="fm26-act is-caret" aria-label="More quick pick choices" aria-haspopup="true"><span class="fm26-caret" aria-hidden="true"></span></button><div class="fm26-act-menu"><button type="button" data-board="bestXI" ${players.length?'':'disabled'}>Auto-pick the best XI</button><button type="button" data-board="rotate" ${bench.some(p=>!p.red&&!readiness[p.id]?.knock)?'':'disabled'}>Rotate the squad</button></div></div></div></div>`;
   const content=workspaceTab==='instructions'?instructionContent:workspaceTab==='players'?playerContent:shapeContent;
   const oppFixture=g.TLLeagueMatchday?.fixture(s),oppName=oppFixture?(oppFixture.own===0?oppFixture.host:oppFixture.team):'',oppPlayers=oppName?W.pool.filter(p=>p.club===oppName):[],oppKey=oppPlayers.slice().sort((a,b)=>D.ROLE_WEIGHTS[b.pos](b.attrs)-D.ROLE_WEIGHTS[a.pos](a.attrs)).slice(0,3),oppBacks=oppPlayers.filter(p=>['DC','FB','WB'].includes(p.pos)),oppPace=oppBacks.length?Math.round(oppBacks.reduce((n,p)=>n+(p.attrs.pace||0),0)/oppBacks.length):null;
   const opposition=`<section class="fm-opposition" id="tactic-opposition"><header><small>OPPOSITION ANALYSIS</small>${oppFixture?`<h3>Next: ${e(oppName)}</h3><p>Scheduled shape ${e(oppFixture.tactics?.[oppFixture.own===0?1:0]?.formation||'not recorded')} · ${oppPlayers.length} players indexed in the current world.</p><p>${oppKey.length?'Players to watch: '+oppKey.map(p=>e(p.name)+' ('+e(p.pos)+')').join(' · '):'No opponent player ratings are on file yet.'}${oppPace!=null?' · Defensive pace average '+oppPace+'/20':''}</p><button type="button" data-board="order|0|trigger|Carrier facing own goal">Use facing-away pressing trigger</button>`:'<h3>No upcoming opponent</h3><p>Opposition notes will appear when a fixture is scheduled; unobserved adjustments are not inferred.</p>'}</header></section>`;
   const leadership=`<section class="fm-leadership"><small>DRESSING ROOM</small><label>Match captain<select data-arm="0"><option value="">Automatic captain</option>${players.map(p=>`<option value="${e(p.id)}"${s.armband?.[0]===p.id?' selected':''}>${e(p.name)} · Composure ${e(p.attrs.composure)}</option>`).join('')}</select></label></section>`;
-  return `<section class="board-room fm-tactics-workspace">${header}${workspaceNav}<main class="fm-workspace-content" data-workspace="${workspaceTab}">${content}</main>${opposition}${roleDialog}</section>`;
+  return `<section class="board-room fm-tactics-workspace"><div class="fm26-toolbar">${header}${workspaceNav}</div><main class="fm-workspace-content" data-workspace="${workspaceTab}">${content}</main>${opposition}${roleDialog}</section>`;
 }
 function bind(root,change,draw){
  let drag=null,suppressUntil=0;
