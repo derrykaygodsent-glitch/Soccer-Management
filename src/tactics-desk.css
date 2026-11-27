@@ -1043,3 +1043,228 @@
 
 /* ---- title block and save/load panel removed from the tactics screen ---- */
 #homeScreen:has(.fm-tactics-workspace) .fm-workspace-header { display: none !important; }
+
+/* ============================================================================
+   Line-free surfaces
+   ----------------------------------------------------------------------------
+   No hairline separators anywhere on the desk. Regions are told apart by fill:
+   one border around each parent card, shaded bands for headers and feet, and a
+   lift on hover. Controls lose their outlines and sit in a slightly raised fill.
+   ========================================================================== */
+
+/* every hairline on the desk goes; fills do the separating */
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace * {
+  border-color: transparent !important;
+}
+
+/* the one border each parent carries */
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel {
+  border: 1px solid #1d2c3a !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  background: var(--tac-panel);
+}
+
+/* bands instead of rules */
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card > header {
+  padding: 12px 14px 10px !important;
+  background: #0d1824;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head {
+  padding: 12px 14px 10px !important;
+  background: #0d1824;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-columns {
+  padding: 7px 12px 6px !important;
+  background: #0a141e;
+  color: #7f93a3;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-subhead {
+  background: #14212c !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-foot {
+  background: #0a141e;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row {
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:nth-child(even) {
+  background: #131f2a;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:hover {
+  background: #1a2836;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on:hover {
+  background: #23324a !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub {
+  background: #0e1a24;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub:nth-child(even) {
+  background: #121e29;
+}
+
+/* the tab strip separates by shade, and the active tab is a filled chip */
+#homeScreen:has(.fm-tactics-workspace) .fm-desk-bar {
+  background: #0a141e;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button {
+  border-radius: 6px 6px 0 0 !important;
+  padding: 0 14px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button[aria-current="page"] {
+  background: #14212c;
+  color: var(--tac-ink);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button[aria-current="page"]::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* the shape toolbar row sits on its own band */
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar {
+  background: #0a141e;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+/* controls: no outlines, just a raised fill */
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace select,
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace input[type="text"],
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace button {
+  border: 1px solid transparent !important;
+  background-color: #18242f;
+  border-radius: 6px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace select:hover,
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace button:hover {
+  background-color: #1e2c39;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-switch button,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-subhead,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-switch button[aria-pressed="true"] {
+  background-color: transparent;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-switch button[aria-pressed="true"] {
+  background-color: #1d3441;
+}
+/* the pitch keeps its own surfaces: markers and role targets stay clear */
+#homeScreen:has(.fm-tactics-workspace) .shape-field button.shirt-marker,
+#homeScreen:has(.fm-tactics-workspace) .shape-field button.shirt-marker:hover,
+#homeScreen:has(.fm-tactics-workspace) .shape-field .shirt-marker,
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-role-target,
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-role-target:hover,
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-role-target:focus {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-role,
+#homeScreen:has(.fm-tactics-workspace) .shape-field .shirt-marker b {
+  border-color: transparent !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-status,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-pos,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-role-cell span {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-table {
+  padding-bottom: 2px;
+  background: linear-gradient(#111d28, #111d28);
+}
+/* status needs room for its word now that the column has no rule beside it */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-columns,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row {
+  grid-template-columns: 24px minmax(0,1fr) minmax(0,1fr) minmax(0,1.05fr) 52px 78px !important;
+  column-gap: 10px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-status { font-size: 10px !important; letter-spacing: .06em; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-columns,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row {
+  grid-template-columns: 22px minmax(0,.86fr) minmax(0,.86fr) minmax(0,1.3fr) 46px 76px !important;
+  column-gap: 8px !important;
+}
+
+/* ---- explicit: no rule anywhere on the desk; fills do the work ---- */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-columns,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-subhead,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-foot,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-table,
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card > header,
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card .fm-pitch-legend,
+#homeScreen:has(.fm-tactics-workspace) .fm-desk-bar,
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button,
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button::after,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar > *,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-main,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-side,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace,
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-content,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-foot > *,
+#homeScreen:has(.fm-tactics-workspace) .fm-panel-head > div {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* rows are a single flat fill; groups are told apart by the shaded band above them */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:nth-child(even),
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:nth-child(odd) {
+  background: #121d29 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub:nth-child(even) {
+  background: #0f1926 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:hover {
+  background: #1a2836 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on:hover {
+  background: #22314a !important;
+}
+
+/* ---- stronger fills: dark bands, light row blocks, one border ---- */
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel {
+  background: #0f1a26 !important;
+  border: 1px solid #1e2e3d !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card > header,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-columns,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-foot {
+  background: #0a141e !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-group {
+  background: #0a141e !important;
+  margin: 0 !important;
+  padding: 7px 12px 5px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:nth-child(even),
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:nth-child(odd) {
+  background: #17242f !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub:nth-child(even) {
+  background: #121f2b !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:hover {
+  background: #1e2d3c !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on:hover {
+  background: #243349 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-subhead {
+  background: #0a141e !important;
+}

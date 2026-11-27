@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="37a362ce5d368b141080">
+  <meta name="tl-build" content="73ba7e6857492f4200b1">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -4626,6 +4626,231 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 
 /* ---- title block and save/load panel removed from the tactics screen ---- */
 #homeScreen:has(.fm-tactics-workspace) .fm-workspace-header { display: none !important; }
+
+/* ============================================================================
+   Line-free surfaces
+   ----------------------------------------------------------------------------
+   No hairline separators anywhere on the desk. Regions are told apart by fill:
+   one border around each parent card, shaded bands for headers and feet, and a
+   lift on hover. Controls lose their outlines and sit in a slightly raised fill.
+   ========================================================================== */
+
+/* every hairline on the desk goes; fills do the separating */
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace * {
+  border-color: transparent !important;
+}
+
+/* the one border each parent carries */
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel {
+  border: 1px solid #1d2c3a !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  background: var(--tac-panel);
+}
+
+/* bands instead of rules */
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card > header {
+  padding: 12px 14px 10px !important;
+  background: #0d1824;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head {
+  padding: 12px 14px 10px !important;
+  background: #0d1824;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-columns {
+  padding: 7px 12px 6px !important;
+  background: #0a141e;
+  color: #7f93a3;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-subhead {
+  background: #14212c !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-foot {
+  background: #0a141e;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row {
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:nth-child(even) {
+  background: #131f2a;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:hover {
+  background: #1a2836;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on:hover {
+  background: #23324a !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub {
+  background: #0e1a24;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub:nth-child(even) {
+  background: #121e29;
+}
+
+/* the tab strip separates by shade, and the active tab is a filled chip */
+#homeScreen:has(.fm-tactics-workspace) .fm-desk-bar {
+  background: #0a141e;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button {
+  border-radius: 6px 6px 0 0 !important;
+  padding: 0 14px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button[aria-current="page"] {
+  background: #14212c;
+  color: var(--tac-ink);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button[aria-current="page"]::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* the shape toolbar row sits on its own band */
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar {
+  background: #0a141e;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+/* controls: no outlines, just a raised fill */
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace select,
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace input[type="text"],
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace button {
+  border: 1px solid transparent !important;
+  background-color: #18242f;
+  border-radius: 6px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace select:hover,
+#homeScreen:has(.fm-tactics-workspace) .fm-tactics-workspace button:hover {
+  background-color: #1e2c39;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-switch button,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-subhead,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-switch button[aria-pressed="true"] {
+  background-color: transparent;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-switch button[aria-pressed="true"] {
+  background-color: #1d3441;
+}
+/* the pitch keeps its own surfaces: markers and role targets stay clear */
+#homeScreen:has(.fm-tactics-workspace) .shape-field button.shirt-marker,
+#homeScreen:has(.fm-tactics-workspace) .shape-field button.shirt-marker:hover,
+#homeScreen:has(.fm-tactics-workspace) .shape-field .shirt-marker,
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-role-target,
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-role-target:hover,
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-role-target:focus {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-role,
+#homeScreen:has(.fm-tactics-workspace) .shape-field .shirt-marker b {
+  border-color: transparent !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-status,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-pos,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-role-cell span {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-table {
+  padding-bottom: 2px;
+  background: linear-gradient(#111d28, #111d28);
+}
+/* status needs room for its word now that the column has no rule beside it */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-columns,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row {
+  grid-template-columns: 24px minmax(0,1fr) minmax(0,1fr) minmax(0,1.05fr) 52px 78px !important;
+  column-gap: 10px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-status { font-size: 10px !important; letter-spacing: .06em; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-columns,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row {
+  grid-template-columns: 22px minmax(0,.86fr) minmax(0,.86fr) minmax(0,1.3fr) 46px 76px !important;
+  column-gap: 8px !important;
+}
+
+/* ---- explicit: no rule anywhere on the desk; fills do the work ---- */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-columns,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-subhead,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-foot,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-table,
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card > header,
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card .fm-pitch-legend,
+#homeScreen:has(.fm-tactics-workspace) .fm-desk-bar,
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button,
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button::after,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-toolbar > *,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-main,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-side,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace,
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-content,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-foot > *,
+#homeScreen:has(.fm-tactics-workspace) .fm-panel-head > div {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* rows are a single flat fill; groups are told apart by the shaded band above them */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:nth-child(even),
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:nth-child(odd) {
+  background: #121d29 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub:nth-child(even) {
+  background: #0f1926 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:hover {
+  background: #1a2836 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on:hover {
+  background: #22314a !important;
+}
+
+/* ---- stronger fills: dark bands, light row blocks, one border ---- */
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel {
+  background: #0f1a26 !important;
+  border: 1px solid #1e2e3d !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card > header,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-columns,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-foot {
+  background: #0a141e !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-group {
+  background: #0a141e !important;
+  margin: 0 !important;
+  padding: 7px 12px 5px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:nth-child(even),
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:nth-child(odd) {
+  background: #17242f !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub:nth-child(even) {
+  background: #121f2b !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:hover {
+  background: #1e2d3c !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on:hover {
+  background: #243349 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-subhead {
+  background: #0a141e !important;
+}
 </style>
 </head>
 <body>
@@ -14884,7 +15109,7 @@ function render(s,players){
   const lineOf=position=>{const p=String(position||'');if(p==='GK')return 'goalkeeper';if(/^(SW|CB|DC|LB|RB|LWB|RWB|FB|WB)$/.test(p))return 'defence';if(/^(DM|CM|AM|LM|RM|ML|MR)$/.test(p))return 'midfield';return 'attack';};
   const LINE_TITLES={goalkeeper:'Goalkeeper',defence:'Defence',midfield:'Midfield',attack:'Attack'},LINE_ORDER={goalkeeper:0,defence:1,midfield:2,attack:3};
   const groupedSlots=()=>{const lines=slots.map((slot,index)=>({slot,index,line:lineOf(slot.position)})).sort((a,b)=>LINE_ORDER[a.line]-LINE_ORDER[b.line]||a.index-b.index),counts={};for(const v of lines)counts[v.line]=(counts[v.line]||0)+1;let shown=null;return lines.map(({slot,index,line})=>{const heading=line===shown?'':`<div class="fm-squad-group"><span>${LINE_TITLES[line]}</span><small>${counts[line]}</small></div>`;shown=line;return heading+row(slot,index);}).join('');};
-  const squad=(title='First-team selection')=>`<aside class="fm-squad-panel${benchOpen?' is-bench-open':''}" id="tactic-roles"><header class="fm-panel-head"><div><small>TEAM SHEET</small><h3>${title}</h3><p>${slots.filter(x=>x.player).length} starters · ${bench.length} substitutes · role settings belong to each tactical position; click a role to inspect its guide</p></div><button type="button" data-board="bestXI">Auto-pick best XI</button></header><div class="fm-squad-table"><div class="fm-squad-columns" aria-hidden="true"><span>POS</span><span>IN POSSESSION ROLE</span><span>OUT OF POSSESSION ROLE</span><span>ABILITY</span><span>PLAYER</span><span>FIT · IP / OOP</span><span>STATUS</span><span>COND.</span></div>${groupedSlots()}<button type="button" class="fm-squad-subhead" data-bench-toggle aria-expanded="${benchOpen}"><span>SUBSTITUTES · ${bench.length}</span><small>${benchOpen?'Hide':'Show'}</small></button>${bench.map(subRow).join('')||'<p class="fm-empty">No substitutes available.</p>'}</div>${selected!=null?instructionEditor(slots[selected]):''}</aside>`;
+  const squad=(title='First-team selection')=>`<aside class="fm-squad-panel${benchOpen?' is-bench-open':''}" id="tactic-roles"><header class="fm-panel-head"><div><small>TEAM SHEET</small><h3>${title}</h3></div><button type="button" data-board="bestXI">Auto-pick best XI</button></header><div class="fm-squad-table"><div class="fm-squad-columns" aria-hidden="true"><span>POS</span><span>IN POSSESSION ROLE</span><span>OUT OF POSSESSION ROLE</span><span>ABILITY</span><span>PLAYER</span><span>FIT · IP / OOP</span><span>STATUS</span><span>COND.</span></div>${groupedSlots()}<button type="button" class="fm-squad-subhead" data-bench-toggle aria-expanded="${benchOpen}"><span>SUBSTITUTES · ${bench.length}</span><small>${benchOpen?'Hide':'Show'}</small></button>${bench.map(subRow).join('')||'<p class="fm-empty">No substitutes available.</p>'}</div>${selected!=null?instructionEditor(slots[selected]):''}</aside>`;
   const roleDialog=rolePicker?(()=>{const {slot:index,phase:phaseName}=rolePicker,slot=slots[index];if(!slot)return '';const attack=phaseName==='attack',position=attack?(slot.attackPosition||slot.position):slot.position,current=attack?slot.attackJob[0]:slot.job[0],candidates=Z.choices(position).map(name=>({name,fit:slot.player?Z.fit(slot.player,position,name,s.boardReps?.[slot.player.id]):null,info:Z.roleInfo(name)})).sort((a,b)=>a.fit==null?0:b.fit==null?-1:b.fit-a.fit||a.name.localeCompare(b.name));return `<div class="fm-role-dialog-backdrop"><section class="fm-role-dialog" role="dialog" aria-modal="true" aria-labelledby="fm-role-dialog-title"><header><div><small>TOUCHLINE ROLE GUIDE · ${attack?'IN POSSESSION':'OUT OF POSSESSION'}</small><h2 id="fm-role-dialog-title">Choose a role for ${e(slot.player?.name||position)}</h2><p>${e(position)} position · roles are saved to this tactical position, so a replacement inherits its instructions.</p></div><button type="button" data-role-picker-close aria-label="Close role guide">×</button></header><div class="fm-role-dialog-list">${candidates.map(({name,fit,info})=>`<button type="button" class="fm-role-option${current===name?' is-current':''}" data-role-choice="${e(name)}" data-role-choice-slot="${index}" data-role-choice-phase="${phaseName}" aria-pressed="${current===name}"><span class="fm-role-option-head"><b>${e(name)}</b><strong>${fit==null?'Player fit shown after selection':`${Z.fitRating(fit)}/5 · ${Z.fitBand(fit)} (${fit}%)`}</strong></span><span>${e(info.description)}</span><small>Key attributes · ${e(info.attributes.join(' · '))}</small><small>Tactical behaviour · ${e(info.behaviour)}</small>${current===name?'<i>Current role</i>':'<em>Select role</em>'}</button>`).join('')}</div></section></div>`;})():'';
   const phaseButtons=()=>`<div class="fm-shape-switch" role="group" aria-label="Team shape view">${[['combined','Combined'],['attack','In Possession'],['base','Out of Possession'],['both','Both']].map(([v,label])=>`<button type="button" data-board="phase|0|${v}" aria-pressed="${phase===v}">${label}</button>`).join('')}</div>`;
   const defenseOptions=[...Object.keys(D.FORMATIONS),'Custom'],attackChoices=B().phaseFormationOptions();
