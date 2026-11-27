@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="d05390bc6aeaebfea3ae">
+  <meta name="tl-build" content="12cc337c61c1dcc0badc">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -5430,7 +5430,7 @@ th[data-col-id] > .column-sort::after { flex: none; }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table {
   width: max-content;
   min-width: 100%;
-  border-collapse: collapse !important;
+  border-collapse: separate !important;
   border-spacing: 0;
   table-layout: auto;
   background: #192735;
@@ -5444,8 +5444,7 @@ th[data-col-id] > .column-sort::after { flex: none; }
   position: sticky !important; top: 0 !important; z-index: 3;
   padding: 6px 6px;
   border: 0 !important;
-  border-bottom: 1px solid #2f4050 !important;
-  background: #192735;
+  background: #14222e;
   color: #b6cad6;
   text-align: left;
   vertical-align: middle;
@@ -5522,6 +5521,48 @@ th[data-col-id] > .column-sort::after { flex: none; }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button { font-size: 11.5px; }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-sheet-role { display: table-cell !important; }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-person { font-size: 12px; font-weight: 600; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td { display: table-cell !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player {
+  position: relative;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player .fm-number {
+  display: inline-block;
+  min-width: 15px;
+  margin-right: 9px;
+  font-style: normal;
+  font-size: 11px;
+  color: #8ba0b2;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player .fm-player-name { display: inline; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player > b {
+  margin-left: 8px;
+  color: #e6b760;
+  font-weight: 700;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player .fm-player-picker {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  opacity: 0 !important;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player .fm-player-picker option { color: #0f1c28; background: #ffffff; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player:hover .fm-player-name { text-decoration: underline; text-underline-offset: 2px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player:has(.fm-player-picker:focus-visible) {
+  outline: 2px solid #61c9c3; outline-offset: -2px;
+}
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-suitability,
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-stat { font-variant-numeric: tabular-nums; }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-empty,
@@ -5549,8 +5590,28 @@ tr.fm-drag-placeholder { display: table-row !important; min-height: 0; }
 @media (min-width: 1101px) {
   #homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace {
     grid-template-columns: minmax(380px, 1fr) minmax(560px, 1.62fr) !important;
+    align-items: stretch;
   }
   #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel { padding: 6px 6px 8px; }
+  /* the pitch grows downward to end level with the team sheet, without getting wider */
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-main {
+    display: flex;
+    min-height: 0;
+    /* the pitch matches the team sheet's list height, and stops growing when
+       the player editor opens underneath it */
+    max-height: clamp(482px, 58vh + 122px, 842px);
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field {
+    flex: 1 1 auto;
+    height: auto !important;
+    min-height: 430px;
+  }
 }
 </style>
 </head>
