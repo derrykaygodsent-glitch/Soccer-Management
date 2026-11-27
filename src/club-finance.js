@@ -27,7 +27,7 @@
   const profit = () => `<section class="cc-fin-zone cc-profit"><div class="cc-profit-head">${metric('Profit / (loss) this month',monthProfit,'trend')}<div><p class="cc-eyebrow">This season</p><strong>${H.money(F.profit)}</strong></div><div><p class="cc-eyebrow">Last season</p><strong>${H.money(F.previousProfit)}</strong></div></div>${chart(F.monthlyProfit,settings.profit)}</section>`;
   function flows(income){
     const key=income?'income':'expenditure', value=income?F.income:F.expenditure;
-    return `<section class="cc-fin-flow">${metric(`${income?'Income':'Expenditure'} this month`,value,income?'trend':'swap')}${chart(income?F.monthlyIncome:F.monthlySpend,settings[key])}<h3 class="cc-eyebrow">Breakdown · October 2026</h3>${breakdown(income?F.incomeParts:F.expenseParts)}</section>`;
+    return `<section class="cc-fin-flow">${metric(`${income?'Income':'Expenditure'} this month`,value,income?'trend':'swap')}${chart(income?F.monthlyIncome:F.monthlySpend,settings[key])}<h3 class="cc-eyebrow">Breakdown this month</h3>${breakdown(income?F.incomeParts:F.expenseParts)}</section>`;
   }
   function overview(c){
     return `<div class="cc-finances cc-fill"><div class="cc-fin-layout"><div class="cc-fin-plots">${balance()}${profit()}<div class="cc-fin-duo">${flows(true)}${flows(false)}</div></div>${budgets(c)}</div>${ffp(c)}</div>`;

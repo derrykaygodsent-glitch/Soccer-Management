@@ -112,6 +112,16 @@
       { role: 'W', x: 0.58, y: 0.12 }, { role: 'AM', x: 0.55, y: 0.50 }, { role: 'W', x: 0.58, y: 0.88 },
       { role: 'ST', x: 0.74, y: 0.50 }
     ],
+    '4-2-1-3': [
+      { role: 'FB', x: 0.16, y: 0.10 }, { role: 'DC', x: 0.10, y: 0.36 }, { role: 'DC', x: 0.10, y: 0.64 }, { role: 'FB', x: 0.16, y: 0.90 },
+      { role: 'DM', x: 0.33, y: 0.38 }, { role: 'DM', x: 0.33, y: 0.62 }, { role: 'AM', x: 0.55, y: 0.50 },
+      { role: 'W', x: 0.68, y: 0.10 }, { role: 'ST', x: 0.74, y: 0.50 }, { role: 'W', x: 0.68, y: 0.90 }
+    ],
+    '3-2-5': [
+      { role: 'DC', x: 0.18, y: 0.167 }, { role: 'DC', x: 0.18, y: 0.50 }, { role: 'DC', x: 0.18, y: 0.833 },
+      { role: 'DM', x: 0.43, y: 0.25 }, { role: 'CM', x: 0.43, y: 0.75 },
+      { role: 'W', x: 0.76, y: 0.10 }, { role: 'W', x: 0.76, y: 0.30 }, { role: 'ST', x: 0.76, y: 0.50 }, { role: 'W', x: 0.76, y: 0.70 }, { role: 'W', x: 0.76, y: 0.90 }
+    ],
     '3-5-2': [
       { role: 'DC', x: 0.10, y: 0.26 }, { role: 'DC', x: 0.09, y: 0.50 }, { role: 'DC', x: 0.10, y: 0.74 },
       { role: 'WB', x: 0.44, y: 0.07 }, { role: 'CM', x: 0.42, y: 0.34 }, { role: 'DM', x: 0.34, y: 0.50 }, { role: 'CM', x: 0.42, y: 0.66 }, { role: 'WB', x: 0.44, y: 0.93 },
@@ -133,7 +143,41 @@
   for(const [name,lines] of Object.entries({'3-4-3':['DC DC DC','WB CM CM WB','W ST W'],'4-1-4-1':['FB DC DC FB','DM','W CM CM W','ST'],'4-3-2-1':['FB DC DC FB','CM DM CM','AM AM','ST'],'4-2-2-2':['FB DC DC FB','DM DM','AM AM','ST ST'],'3-4-2-1':['DC DC DC','WB CM CM WB','AM AM','ST'],'4-5-1':['FB DC DC FB','W CM DM CM W','ST'],'4-3-1-2':['FB DC DC FB','CM DM CM','AM','ST ST'],'4-2-4':['FB DC DC FB','CM CM','W ST ST W'],'5-4-1':['WB DC DC DC WB','W CM CM W','ST'],'5-2-3':['WB DC DC DC WB','CM CM','W ST W'],'3-6-1':['DC DC DC','DM DM','W CM CM W','ST'],'3-3-3-1':['DC DC DC','WB DM WB','AM AM AM','ST'],'4-6-0':['FB DC DC FB','DM DM','W AM AM W']})){
     FORMATIONS[name]=lines.flatMap((line,j)=>{const roles=line.split(' ');return roles.map((role,i)=>({role,x:({DC:.12,FB:.16,WB:j?.34:.18,DM:.32,CM:.45,AM:.59,W:j===lines.length-1?.69:.47,ST:.75})[role],y:(i+.5)/roles.length}));});
   }
-  FORMATIONS['4-1-2-1-2']=FORMATIONS['4-4-2 Diamond'];
+  const LEGACY_FORMATIONS = Object.keys(FORMATIONS);
+  // Recognised 11-a-side shapes. Keep the catalogue data-driven so both phase
+  // pickers and the board's formation matcher offer the same complete set.
+  const RECOGNISED_FORMATIONS = [
+    '4-4-2','4-4-2 Diamond','4-4-1-1','4-3-3','4-2-3-1','4-1-4-1','4-5-1','4-3-1-2','4-1-3-2','4-2-2-2','4-2-4','4-3-2-1','4-6-0','4-1-2-1-2','4-2-1-3','4-1-2-3','4-3-3 with False Nine','4-1-1-3-1',
+    '3-5-2','3-4-3','3-4-2-1','3-4-1-2','3-5-1-1','3-3-3-1','3-3-1-3','3-2-4-1','3-1-4-2','3-1-3-3','3-6-1','3-1-4-1-1','3-2-3-2',
+    '5-3-2','5-4-1','5-2-3','5-2-2-1','5-3-1-1','5-1-3-1','5-1-2-2','5-4-1 Diamond',
+    '3-2-2-3','2-3-5','2-3-2-3','2-5-3','1-3-3-3','1-4-3-2','1-4-2-3','1-4-4-1','1-5-3-1','1-3-4-2','1-3-5-1'
+  ];
+  const lineRoles=(count,kind,place,total)=>{
+    if(kind==='defense')return count===5?['WB','DC','DC','DC','WB']:count===4?['FB','DC','DC','FB']:count===3?['DC','DC','DC']:count===2?['DC','DC']:['DC'];
+    if(kind==='forward')return count===1?['ST']:count===2?['ST','ST']:count===3?['W','ST','W']:count===4?['W','ST','ST','W']:['W','W','ST',...Array(Math.max(0,count-3)).fill('W')];
+    if(total===1)return count===1?['DM']:count===2?['DM','DM']:count===3?['DM','CM','CM']:count===4?['W','CM','CM','W']:count===5?['W','CM','DM','CM','W']:['W','DM','CM','CM','DM','W'];
+    if(count===1)return [place===total-1?'AM':'DM'];
+    if(count===2)return place===1?['DM','DM']:place===total-1?['AM','AM']:['CM','CM'];
+    if(count===3)return place===1?['DM','CM','CM']:place===total-1?['AM','AM','AM']:['W','CM','W'];
+    if(count===4)return ['W','CM','CM','W'];
+    return ['W','DM','CM','AM','W'];
+  };
+  const buildFormation=(name)=>{
+    const counts=(name.match(/^\d+(?:-\d+)+/)||[])[0]?.split('-').map(Number);if(!counts)return null;
+    const rows=counts.map((count,index)=>lineRoles(count,index===0?'defense':index===counts.length-1?'forward':'midfield',index,counts.length-2));
+    const depths=counts.map((_,i)=>counts.length===1?.14:i===0?.14:i===counts.length-1?.9:[.32,.45,.59,.75][Math.max(0,Math.min(3,i-1))]);
+    return rows.flatMap((roles,line)=>{
+      let shaped=roles;
+      if(name==='4-3-3 with False Nine'&&line===2)shaped=['W','AM','W'];
+      if(name==='5-4-1 Diamond'&&line===1)shaped=['W','CM','CM','AM'];
+      if(name==='4-1-2-1-2'&&line===1)shaped=['DM'];
+      if(name==='4-1-2-1-2'&&line===2)shaped=['CM','CM'];
+      if(name==='4-1-2-1-2'&&line===3)shaped=['AM'];
+      return shaped.map((role,index)=>({role,x:depths[line],y:((index+0.5)/shaped.length)}));
+    });
+  };
+  for(const name of RECOGNISED_FORMATIONS)if(!FORMATIONS[name])FORMATIONS[name]=buildFormation(name);
+  FORMATIONS['4-1-2-1-2']=buildFormation('4-1-2-1-2');
   const ROLE_FIT = {
     GK: { GK: 1 }, DC: { DC: 1, FB: 0.72, DM: 0.6 }, FB: { FB: 1, WB: 0.92, DC: 0.75, W: 0.72 },
     WB: { FB: 0.9, W: 0.85, FB2: 0 }, DM: { DM: 1, CM: 0.9, DC: 0.62 }, CM: { CM: 1, DM: 0.9, AM: 0.88 },
@@ -216,6 +260,6 @@
     return (h >>> 0) % 1000000;
   }
 
-  global.TLData = { mulberry32, CLUBS, genSquad, seedFor, FORMATIONS, bestXI, roleFit, ROLE_WEIGHTS, MENTALITIES, PASSING, TEMPO, PRESS, WIDTH, LINE, defaultTactics };
+  global.TLData = { mulberry32, CLUBS, genSquad, seedFor, FORMATIONS, LEGACY_FORMATIONS, bestXI, roleFit, ROLE_WEIGHTS, MENTALITIES, PASSING, TEMPO, PRESS, WIDTH, LINE, defaultTactics };
   if (typeof module !== 'undefined' && module.exports) module.exports = global.TLData;
 })(typeof window !== 'undefined' ? window : globalThis);

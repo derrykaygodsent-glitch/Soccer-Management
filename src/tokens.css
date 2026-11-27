@@ -1,0 +1,169 @@
+/* ============================================================================
+   Touchline 26 — canonical design tokens (Phase 0)
+   Loaded before every other stylesheet. Nothing here paints a screen on its own;
+   it only names the values the rest of the product is allowed to use.
+
+   Rules
+   -----
+   1. New work uses --ui-* tokens. No raw hex, no ad-hoc font sizes.
+   2. The legacy families (--tl-*, --cc-*) are mapped onto these tokens in their
+      own files, so old rules follow the same palette as new ones.
+   3. Type: 11px is the floor for anything a manager must read. 9px exists only
+      for glyphs, badges and metadata, and metadata must carry [data-tl-meta].
+   ========================================================================== */
+
+:root {
+  /* ---- surfaces: four tiers, darkest to lightest ------------------------- */
+  --ui-surface-0: #0a111b;   /* app backdrop, behind everything */
+  --ui-surface-1: #0d141e;   /* page */
+  --ui-surface-2: #111925;   /* rail, header, sticky bars */
+  --ui-surface-3: #172230;   /* cards, panels */
+  --ui-surface-4: #202e3d;   /* raised: hover, selected, inputs */
+  --ui-surface-inset: #0b121a; /* wells, code, table stripes */
+  --ui-scrim: #050a12d9;      /* drawer and dialog backdrop */
+
+  /* ---- edges ------------------------------------------------------------ */
+  --ui-edge-soft: #22303f;
+  --ui-edge: #2b3a4c;
+  --ui-edge-strong: #3a4c61;
+  --ui-edge-action: #55724a;
+
+  /* ---- ink -------------------------------------------------------------- */
+  --ui-ink: #f1f5fb;         /* headings, primary text */
+  --ui-ink-2: #d3deea;       /* strong body */
+  --ui-muted: #a6b3c5;       /* body, secondary (7.0:1 on surface-3) */
+  --ui-dim: #8193ab;         /* metadata, captions (4.6:1 on surface-3) */
+  --ui-ghost: #6b7d94;       /* disabled only — never body text */
+
+  /* ---- action and identity ---------------------------------------------- */
+  --ui-lime: #d7f889;        /* the only "you can act" colour */
+  --ui-lime-ink: #101a08;    /* text on lime */
+  --ui-lime-soft: #2a3a1c;
+  --ui-ice: #9ad2ff;
+  --ui-teal: #91e2d4;
+  --ui-attention: #a8bdf5;   /* cool periwinkle: replaced the old gold at the user's request */
+  --ui-amber: var(--ui-attention); /* legacy name, same value */
+  --ui-danger: #ff9f9f;
+  --ui-danger-soft: #3d1f22;
+  --ui-club-home: #7fd7ff;
+  --ui-club-away: #ffb0b0;
+
+  /* ---- status: state is a word first, colour second --------------------- */
+  /* every pair below is ≥ 4.5:1 ink-on-bg */
+  --ui-state-due-ink: #d3ddff;      --ui-state-due-bg: #1b2340;      --ui-state-due-line: #3a4a7a;
+  --ui-state-next-ink: #e6ffb0;     --ui-state-next-bg: #26331a;     --ui-state-next-line: #4d6b2a;
+  --ui-state-pending-ink: #a8d9ff;  --ui-state-pending-bg: #142c40;  --ui-state-pending-line: #2c5478;
+  --ui-state-safe-ink: #a9f0d2;     --ui-state-safe-bg: #10312a;     --ui-state-safe-line: #2b6355;
+  --ui-state-risk-ink: #ffb3ad;     --ui-state-risk-bg: #3a1d1f;     --ui-state-risk-line: #77383a;
+  --ui-state-locked-ink: #c6cfdc;   --ui-state-locked-bg: #1c2634;   --ui-state-locked-line: #3b4b5e;
+  --ui-state-done-ink: #cfe0c4;     --ui-state-done-bg: #1e2a1c;     --ui-state-done-line: #3f5738;
+  --ui-state-optional-ink: #d5c3e8; --ui-state-optional-bg: #292139; --ui-state-optional-line: #4d3a68;
+
+  /* ---- type ramp --------------------------------------------------------- */
+  --ui-font-ui: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ui-font-display: 'Barlow Condensed', Inter, 'Arial Narrow', sans-serif;
+  --ui-font-numeric: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
+
+  --ui-text-micro: 9px;    /* glyphs, badge counts, star ratings only */
+  --ui-text-meta: 10.5px;  /* metadata: dates, captions, chips — mark with [data-tl-meta] */
+  --ui-text-s: 11.5px;     /* dense UI: table heads, tab labels */
+  --ui-text-m: 12.5px;     /* table cells, list rows, body in dense workspaces */
+  --ui-text-l: 14px;       /* default body */
+  --ui-text-xl: 17px;      /* page titles */
+  --ui-text-2xl: 22px;     /* section heroes */
+  --ui-text-3xl: 30px;     /* display numerals, scores */
+
+  --ui-leading-tight: 1.15;
+  --ui-leading: 1.45;
+  --ui-leading-loose: 1.6;
+
+  --ui-tracking-label: .09em;  /* uppercase eyebrows */
+  --ui-tracking-title: -.02em;
+
+  /* ---- spacing (4px base, no in-between values) ------------------------- */
+  --ui-space-1: 2px;
+  --ui-space-2: 4px;
+  --ui-space-3: 6px;
+  --ui-space-4: 8px;
+  --ui-space-5: 10px;
+  --ui-space-6: 12px;
+  --ui-space-7: 16px;
+  --ui-space-8: 20px;
+  --ui-space-9: 26px;
+  --ui-space-10: 34px;
+
+  /* ---- shape ------------------------------------------------------------- */
+  --ui-radius-xs: 4px;
+  --ui-radius-s: 7px;
+  --ui-radius-m: 10px;
+  --ui-radius-l: 13px;
+  --ui-radius-pill: 999px;
+
+  /* ---- focus, motion ---------------------------------------------------- */
+  --ui-focus: 2px solid var(--ui-lime);
+  --ui-focus-offset: -2px;
+  --ui-motion-fast: 120ms;
+  --ui-motion: 165ms;
+  --ui-motion-slow: 220ms;
+  --ui-ease: cubic-bezier(.2, .7, .3, 1);
+
+  /* ---- layout ----------------------------------------------------------- */
+  --ui-page-inset: clamp(16px, 2.3vw, 32px);
+  --ui-rail-w: 215px;
+  --ui-tap: 44px;
+}
+
+/* ---- status chip: the one way state is shown ---------------------------- */
+.tl-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  padding: 2px var(--ui-space-3);
+  border: 1px solid var(--ui-state-line, var(--ui-edge));
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-state-bg, var(--ui-surface-4));
+  color: var(--ui-state-ink, var(--ui-muted));
+  font: 700 var(--ui-text-meta)/1.5 var(--ui-font-ui);
+  letter-spacing: .015em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.tl-status[data-tl-status='due'] { --ui-state-ink: var(--ui-state-due-ink); --ui-state-bg: var(--ui-state-due-bg); --ui-state-line: var(--ui-state-due-line); }
+.tl-status[data-tl-status='next'] { --ui-state-ink: var(--ui-state-next-ink); --ui-state-bg: var(--ui-state-next-bg); --ui-state-line: var(--ui-state-next-line); }
+.tl-status[data-tl-status='pending'] { --ui-state-ink: var(--ui-state-pending-ink); --ui-state-bg: var(--ui-state-pending-bg); --ui-state-line: var(--ui-state-pending-line); }
+.tl-status[data-tl-status='safe'] { --ui-state-ink: var(--ui-state-safe-ink); --ui-state-bg: var(--ui-state-safe-bg); --ui-state-line: var(--ui-state-safe-line); }
+.tl-status[data-tl-status='risk'] { --ui-state-ink: var(--ui-state-risk-ink); --ui-state-bg: var(--ui-state-risk-bg); --ui-state-line: var(--ui-state-risk-line); }
+.tl-status[data-tl-status='locked'] { --ui-state-ink: var(--ui-state-locked-ink); --ui-state-bg: var(--ui-state-locked-bg); --ui-state-line: var(--ui-state-locked-line); }
+.tl-status[data-tl-status='done'] { --ui-state-ink: var(--ui-state-done-ink); --ui-state-bg: var(--ui-state-done-bg); --ui-state-line: var(--ui-state-done-line); }
+.tl-status[data-tl-status='optional'] { --ui-state-ink: var(--ui-state-optional-ink); --ui-state-bg: var(--ui-state-optional-bg); --ui-state-line: var(--ui-state-optional-line); }
+
+/* deadline rides inside the chip, never as a bare number */
+.tl-status small {
+  font: 700 var(--ui-text-micro)/1 var(--ui-font-ui);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  opacity: .92;
+}
+
+/* The UA style shrinks <small> to 83% of its parent. On a 12.5px row that is 10.4px,
+   but inside a .72rem block it falls to 8.4px. This keeps every <small> on the ramp. */
+small { font-size: max(9px, .84em); }
+
+/* ---- metadata: the only place below 11px is allowed --------------------- */
+[data-tl-meta],
+.tl-meta {
+  font-size: var(--ui-text-meta);
+  line-height: var(--ui-leading);
+  letter-spacing: .02em;
+  color: var(--ui-dim);
+}
+
+/* ---- numbers that must line up ----------------------------------------- */
+.tl-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --ui-motion-fast: 0ms; --ui-motion: 0ms; --ui-motion-slow: 0ms; }
+}

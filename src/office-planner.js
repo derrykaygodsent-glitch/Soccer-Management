@@ -131,7 +131,11 @@
         .filter((p) => p.day === day)
         .sort((a, b) => a.hour - b.hour),
       now = L.state(s).hour;
-    return `<section class="org-agenda appointment-book"><small>OFFICE PLANNER</small><h3>${day === s.day ? "Today · " + time(now) : g.TLManagerLife.date(day)}</h3>${ps
+    /* The planner never said how much of the day was left. An hour window of 06:00 to 22:00. */
+    const bookedHours = ps.reduce((sum, p) => sum + (Number(option(p.id).duration) || 1), 0),
+      freeHours = Math.max(0, 16 - bookedHours),
+      load = `<span class="tl-status" data-tl-status="${bookedHours ? 'due' : 'done'}"><small>${bookedHours} booked</small>${freeHours ? freeHours + ' free hours' : 'Day full'}</span>`;
+    return `<section class="org-agenda appointment-book"><small>OFFICE PLANNER</small><h3>${day === s.day ? "Today · " + time(now) : g.TLManagerLife.date(day)} ${load}</h3>${ps
       .map((p) => {
         const o = option(p.id);
         return `<p><b>${time(p.hour)}–${time(p.hour + o.duration)}</b>　${e(o.label)} ${(()=>{const r=itinerary(s,day,entries(s),day===s.day).find(r=>r.hour===p.hour);return r.trip.hours?`<small>Leave ${time(r.depart)} · ${r.trip.hours}h travel · ${g.TLLuma.format(r.trip.fare)}</small>`:""})()} ${day === s.day && now >= p.hour ? `<button data-attend="${p.hour}">${o.place ? "Take shift" : "Open desk"}</button>` : ""} <button data-unbook="${p.hour}">Remove</button></p>`;
