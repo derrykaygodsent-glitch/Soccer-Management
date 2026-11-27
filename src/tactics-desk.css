@@ -1662,7 +1662,10 @@
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-group,
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-squad-subhead {
-  min-width: 760px !important;
+  /* was pinned to 760px to stretch across a fixed-width table; the sheet is fluid
+     now, so the band fills its own row instead of forcing a horizontal scrollbar */
+  min-width: 0 !important;
+  max-width: 100% !important;
 }
 
 /* ============================================================================
@@ -1915,7 +1918,25 @@ th[data-col-id] > .column-sort::after { flex: none; }
   font-size: 11px;
   color: #8ba0b2;
 }
-#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player .fm-player-name { display: inline; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player .fm-player-name {
+  /* an inline box with overflow:hidden clips to a fraction of the cell; as an
+     inline-block it takes the room that is actually there and ellipsises only
+     when the column really is too narrow */
+  display: inline-block;
+  max-width: calc(100% - 32px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player .fm-player-name button {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player > b {
   margin-left: 8px;
   color: #e6b760;
@@ -1972,6 +1993,37 @@ tr.fm-drag-placeholder { display: table-row !important; min-height: 0; }
     align-items: stretch;
   }
   #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel { padding: 6px 6px 8px; }
+  /* reclaim the gutters around the desk so the sheet gets the width back */
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-content { padding: 14px 12px 16px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace { padding: 12px 8px 14px; }
+  /* the sheet is a fluid table: the columns keep their proportions and the table
+     always fills its panel, so a horizontal scrollbar can never appear */
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel table.fm-sheet-table {
+    table-layout: fixed;
+    width: 100%;
+    min-width: 0;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel table.fm-sheet-table th[data-col-id="b0"] { width: 6.9%; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel table.fm-sheet-table th[data-col-id="b1"] { width: 19.4%; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel table.fm-sheet-table th[data-col-id="b2"] { width: 19.4%; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel table.fm-sheet-table th[data-col-id="b3"] { width: 8.1%; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel table.fm-sheet-table th[data-col-id="b4"] { width: 16.8%; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel table.fm-sheet-table th[data-col-id="b5"] { width: 11.6%; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel table.fm-sheet-table th[data-col-id="b6"] { width: 10.2%; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel table.fm-sheet-table th[data-col-id="b7"] { width: 7.6%; }
+
+/* narrow desktops: the star strip and the longest role names are the first
+   things to run out of room, so they ease off a touch before anything clips */
+@media (min-width: 1101px) and (max-width: 1279px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-sheet-ability .fm-stars { font-size: 9.5px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td,
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table th { padding-left: 5px; padding-right: 5px; }
+  /* the two long role headers give way first so the short ones stay whole */
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel table.fm-sheet-table th[data-col-id="b1"],
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel table.fm-sheet-table th[data-col-id="b2"] { width: 17.6%; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel table.fm-sheet-table th[data-col-id="b5"] { width: 12.6%; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel table.fm-sheet-table th[data-col-id="b6"] { width: 11.2%; }
+}
   /* the pitch grows downward to end level with the team sheet, without getting wider */
   #homeScreen:has(.fm-tactics-workspace) .fm-shape-main {
     display: flex;
