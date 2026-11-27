@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="6cf5c06803b07f22f74d">
+  <meta name="tl-build" content="d05390bc6aeaebfea3ae">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -5542,6 +5542,16 @@ th[data-col-id] > .column-sort::after { flex: none; }
 .fm-drag-ghost i { flex: 0 0 auto; font-style: normal; font-size: 10px; color: #8ba0b2; }
 .fm-drag-hidden { display: none !important; }
 tr.fm-drag-placeholder { display: table-row !important; min-height: 0; }
+
+/* Desktop: the team sheet is a full data table, so give it the width its columns
+   need instead of squeezing it into a quarter of the screen. The pitch keeps a
+   usable minimum and the sheet never truncates on a normal laptop. */
+@media (min-width: 1101px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace {
+    grid-template-columns: minmax(380px, 1fr) minmax(560px, 1.62fr) !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel { padding: 6px 6px 8px; }
+}
 </style>
 </head>
 <body>
