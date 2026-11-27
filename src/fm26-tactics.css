@@ -1,0 +1,1791 @@
+/* ============================================================================
+   Tactics · FM26 prototype
+   ----------------------------------------------------------------------------
+   A likeness of the Football Manager 26 tactics planner, built from reference
+   screenshots (see docs/fm26-reference.md). The point of this sheet is to be
+   replaceable: it owns only presentation, the data and the pointer drag are the
+   board's own, and every rule is scoped to the tactics workspace.
+
+   Read off the reference:
+     · one near-black canvas, panels a shade lighter, exactly one 1px border
+       per panel and no hairlines inside lists
+     · one accent (the club colour) on: active tab, active segment, selected
+       chip, primary pill, role chips, instruction titles
+     · a green pitch sized to the window, thin light lines, small circular /
+       shirt markers with a 9 px label — nothing docked outside the grass
+     · a control strip on top (tactic, formations, mentality, system, bars),
+       then tabs, then the workspace
+     · lists are lists: 32 px rows, one number, one name, one value
+   ========================================================================== */
+
+#homeScreen:has(.fm-tactics-workspace) {
+  --fm-canvas: #0b0d10;
+  --fm-sunken: #080a0c;
+  --fm-panel: #14171c;
+  --fm-panel-2: #1a1e24;
+  --fm-panel-3: #22272e;
+  --fm-edge: #272d35;
+  --fm-edge-2: #333a44;
+  --fm-ink: #f2f5f8;
+  --fm-body: #c8d0d9;
+  --fm-muted: #8d97a3;
+  --fm-dim: #6f7985;
+  --fm-accent: #a259f7;
+  --fm-accent-ink: #ffffff;
+  --fm-accent-soft: rgba(162, 89, 247, 0.16);
+  --fm-grass: #1d5c3d;
+  --fm-grass-2: #195035;
+  --fm-line: rgba(233, 245, 238, 0.55);
+  --fm-good: #4cc98a;
+  --fm-warn: #f0b45a;
+  --fm-bad: #e8756a;
+}
+
+/* the route becomes one full-height column: strip, tabs, workspace, band ------ */
+
+#homeScreen:has(.fm-tactics-workspace) .board-room.fm-tactics-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: var(--fm-canvas) !important;
+  box-shadow: none !important;
+  color: var(--fm-body);
+}
+
+/* ---- the control strip --------------------------------------------------- */
+
+#homeScreen:has(.fm-tactics-workspace) .fm26-strip {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "tactic controls bars"
+    "tactic library  library";
+  align-items: center;
+  gap: 8px 14px;
+  padding: 10px 14px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--fm-edge) !important;
+  border-radius: 0 !important;
+  background: var(--fm-panel) !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic {
+  grid-area: tactic;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-no {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  background: var(--fm-panel-3);
+  color: var(--fm-ink);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-name { min-width: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-name h2 {
+  margin: 0;
+  color: var(--fm-ink);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-name p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 1px 0 0;
+  color: var(--fm-muted);
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-name p > i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--fm-edge-2);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tactic-name p > span { color: var(--fm-body); }
+
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-controls {
+  grid-area: controls;
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 0 !important;
+  min-width: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--fm-edge);
+  border-radius: 5px;
+  background: var(--fm-panel-2);
+  color: var(--fm-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  text-transform: none;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-controls label select {
+  min-width: 0;
+  max-width: 130px;
+  height: 26px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--fm-ink);
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics {
+  grid-area: bars;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics > span {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 2px 6px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics > span > small {
+  color: var(--fm-muted);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics > span > b {
+  color: var(--fm-ink);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics > span > i {
+  grid-column: 1 / -1;
+  display: block;
+  width: 84px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--fm-panel-3);
+  overflow: hidden;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-header-metrics > span > i > b {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--fm-good);
+}
+
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls {
+  grid-area: library;
+  display: none !important;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 6px;
+  max-width: none !important;
+  margin: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-strip.is-library-open .fm-save-controls { display: grid !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls input,
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls select,
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls button {
+  height: 28px;
+  min-width: 0;
+  padding: 0 9px;
+  border: 1px solid var(--fm-edge);
+  border-radius: 5px;
+  background: var(--fm-panel-2);
+  color: var(--fm-ink);
+  font-size: 11px;
+  font-weight: 600;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls button[data-library-action="save"] {
+  border-color: transparent;
+  background: var(--fm-accent);
+  color: var(--fm-accent-ink);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-save-controls button:disabled { opacity: .45; }
+
+#homeScreen:has(.fm-tactics-workspace) .fm-library-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--fm-edge-2);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--fm-body);
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--fm-edge-2);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--fm-body);
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-pill:hover { border-color: var(--fm-accent); color: var(--fm-ink); }
+#homeScreen:has(.fm-tactics-workspace) .fm26-pill:disabled { opacity: .4; cursor: default; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-pill.is-quiet { border-color: var(--fm-edge); color: var(--fm-muted); }
+
+/* ---- tabs and the actions beside them ------------------------------------ */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-desk-bar {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 14px;
+  background: var(--fm-canvas);
+  border-bottom: 1px solid var(--fm-edge);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav {
+  display: flex !important;
+  align-items: stretch;
+  gap: 0;
+  min-width: 0;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  overflow: visible;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button {
+  position: relative;
+  flex: none;
+  min-height: 38px;
+  padding: 0 !important;
+  margin-right: 18px;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent;
+  color: var(--fm-muted);
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button:hover { color: var(--fm-ink); }
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button[aria-current="page"] { color: var(--fm-ink); }
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--fm-accent);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-actions { display: flex; align-items: center; gap: 8px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-status-chip {
+  padding: 4px 8px;
+  border: 1px solid #4a3a22;
+  border-radius: 4px;
+  background: rgba(240, 180, 90, 0.12);
+  color: var(--fm-warn);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-status-chip.is-clear {
+  border-color: #23503a;
+  background: rgba(76, 201, 138, 0.12);
+  color: var(--fm-good);
+}
+
+/* ---- the workspace: everything below is a grid that fills the height ------ */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+  background: var(--fm-canvas);
+}
+
+/* segmented phase control (FM26's In Possession / Out of Possession pills) */
+#homeScreen:has(.fm-tactics-workspace) .fm26-substrip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--fm-edge);
+  border-radius: 6px;
+  background: var(--fm-sunken);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-switch button {
+  min-width: 0;
+  height: 26px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fm-muted);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-switch button:hover { color: var(--fm-ink); }
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-switch button[aria-pressed="true"] {
+  background: var(--fm-accent-soft);
+  color: var(--fm-ink);
+  box-shadow: inset 0 0 0 1px rgba(162, 89, 247, 0.5);
+}
+
+/* the shape screen: pitch(es) left, list right, both filling the window */
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 384px !important;
+  align-items: stretch;
+  gap: 12px;
+  padding: 10px 14px 0 !important;
+  min-height: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-both-pitches {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  min-height: 0;
+}
+
+/* ---- the pitch ----------------------------------------------------------- */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 !important;
+  border: 1px solid var(--fm-edge) !important;
+  border-radius: 8px !important;
+  background: var(--fm-panel) !important;
+  overflow: hidden;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card > header {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--fm-edge) !important;
+  background: transparent !important;
+  color: var(--fm-ink);
+  font-size: 11px;
+  font-weight: 600;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card > header b { font-weight: 700; }
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card > header small { color: var(--fm-muted); font-size: 10px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card > header > div { display: contents; }
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card > header h3 { margin: 0; color: var(--fm-ink); font-size: 11px; font-weight: 700; }
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card > header > span { color: var(--fm-dim); font-size: 10px; }
+
+/* the grass: FM26's portrait pitch, sized by the height it is given */
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card .shape-field {
+  flex: 1 1 auto;
+  width: auto !important;
+  max-width: none !important;
+  min-height: 0;
+  margin: 8px auto !important;
+  aspect-ratio: 68 / 100 !important;
+  height: calc(100% - 16px);
+  max-height: calc(100% - 16px);
+  border: 1px solid #2f6b4c !important;
+  border-radius: 3px;
+  background:
+    repeating-linear-gradient(90deg, var(--fm-grass) 0 8%, var(--fm-grass-2) 8% 16%) !important;
+  color: var(--fm-line) !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-both-pitches .fm-pitch-card .shape-field { width: 100% !important; height: auto; }
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card .shape-field.field-wide { aspect-ratio: 68 / 100 !important; }
+
+/* markers: a round token (outfield) or a small keeper shirt, role above, name below */
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-marker { width: 0; height: 0; z-index: 3; }
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-marker .shirt-marker,
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-marker button[data-slot] {
+  position: absolute !important;
+  left: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--fm-accent);
+  color: #fff;
+  transform: translate(-50%, 50%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .45);
+  cursor: grab;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-marker .shirt-marker.keeper { background: #e8eef2; color: #12331f; }
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-marker .shirt-marker.selected,
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-marker.is-selected .shirt-marker {
+  box-shadow: 0 0 0 2px #fff, 0 2px 8px rgba(0, 0, 0, .5);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-marker .shirt-marker svg,
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-marker .shirt-marker .jersey { display: none; }
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-marker .shirt-marker > b {
+  grid-area: 1 / 1;
+  color: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  line-height: 1;
+  background: none;
+  padding: 0;
+  position: static;
+  transform: none;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-marker .shirt-marker > small {
+  position: absolute;
+  left: 50%;
+  top: 28px;
+  transform: translateX(-50%);
+  max-width: 84px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: rgba(6, 10, 8, .78);
+  color: #eaf1ec;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-marker .shirt-marker > small:empty { display: none; }
+
+/* a selected marker's card: a small popover, not a full-width band */
+#homeScreen:has(.fm-tactics-workspace) .fm-marker-controls {
+  position: absolute;
+  left: 50%;
+  bottom: 34px;
+  z-index: 6;
+  width: 208px;
+  transform: translateX(-50%);
+  padding: 8px;
+  border: 1px solid var(--fm-edge-2);
+  border-radius: 6px;
+  background: var(--fm-panel-2);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .55);
+  display: grid;
+  gap: 6px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-marker-controls label,
+#homeScreen:has(.fm-tactics-workspace) .fm-marker-role { display: grid; gap: 3px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-marker-controls span {
+  color: var(--fm-dim);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-marker-controls select,
+#homeScreen:has(.fm-tactics-workspace) .fm-marker-role button {
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--fm-edge);
+  border-radius: 4px;
+  background: var(--fm-panel);
+  color: var(--fm-ink);
+  font-size: 10.5px;
+  text-align: left;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-marker-role button small { display: none; }
+
+/* hidden position targets read as tiny reference letters, like FM26's */
+#homeScreen:has(.fm-tactics-workspace) .fm-role-target,
+#homeScreen:has(.fm-tactics-workspace) .fm-hidden-position-target {
+  width: 12px;
+  height: 12px;
+  border: 0 !important;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(240, 250, 244, .18);
+  font-size: 8px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-legend,
+#homeScreen:has(.fm-tactics-workspace) .fm-phase-caption { display: none !important; }
+
+/* ---- the list ------------------------------------------------------------ */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-width: none;
+  padding: 0 !important;
+  border: 1px solid var(--fm-edge) !important;
+  border-radius: 8px;
+  background: var(--fm-panel) !important;
+  overflow: hidden;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--fm-edge);
+  background: transparent;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head h3 {
+  margin: 0;
+  color: var(--fm-ink);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head p {
+  margin: 1px 0 0;
+  color: var(--fm-dim);
+  font-size: 9.5px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-table {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none !important;
+  overflow: visible !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-columns { display: none !important; }
+
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px 3px;
+  border: 0;
+  color: var(--fm-dim);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-group small { color: var(--fm-dim); font-size: 9px; font-weight: 600; letter-spacing: 0; }
+
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row {
+  display: grid !important;
+  grid-template-columns: 22px minmax(0, 1fr) 74px 46px 34px !important;
+  grid-template-areas: "num person role fit status";
+  align-items: center;
+  gap: 8px;
+  min-height: 30px !important;
+  padding: 0 10px !important;
+  border: 0 !important;
+  background: transparent;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:hover { background: var(--fm-panel-2); }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row[aria-pressed="true"] { background: var(--fm-accent-soft); }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-pos {
+  grid-area: num;
+  color: var(--fm-muted);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-person { grid-area: person; min-width: 0; display: flex; align-items: center; gap: 6px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-number { color: var(--fm-dim); font-size: 9.5px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-player-name { min-width: 0; font-size: 11.5px !important; font-weight: 600; color: var(--fm-ink); }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-player-picker {
+  flex: none;
+  width: 18px !important;
+  max-width: 18px;
+  height: 18px;
+  border: 0;
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238d97a3' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") center/8px 5px no-repeat;
+  color: transparent;
+  font-size: 0;
+  text-indent: -99px;
+  appearance: none;
+  cursor: pointer;
+  opacity: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row:hover .fm-player-picker,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.on .fm-player-picker { opacity: 1; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-role-cell { min-width: 0; grid-area: role; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-role-cell button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fm-body);
+  font: 600 10.5px/1.2 system-ui, sans-serif;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-role-cell button:hover { color: var(--fm-accent); }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-role-cell small { display: none; }
+/* the list shows the phase you are looking at */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel[data-phase="base"] .fm-row > .fm-role-cell:first-of-type,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel[data-phase="attack"] .fm-row > .fm-role-cell:last-of-type { display: none; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-suitability {
+  grid-area: fit;
+  justify-self: end;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fm-muted);
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-status { grid-area: status; justify-self: end; min-width: 0; overflow: hidden; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row .fm-pip {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fm-good);
+  font-size: 0;
+  color: transparent;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row .fm-pip.warn { background: var(--fm-warn); }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row .fm-pip.bad { background: var(--fm-bad); }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-stars,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row > .fm-stat { display: none !important; }
+
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-subhead {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 6px 10px !important;
+  border: 0 !important;
+  border-top: 1px solid var(--fm-edge) !important;
+  background: transparent !important;
+  color: var(--fm-dim) !important;
+  font: 700 9px/1.2 system-ui, sans-serif !important;
+  letter-spacing: .1em !important;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-subhead small { color: var(--fm-accent); font-size: 9.5px; letter-spacing: 0; text-transform: none; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub { min-height: 26px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row.fm-sub > .fm-person span { color: var(--fm-body); font-size: 11px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-empty { padding: 8px 10px; color: var(--fm-dim); font-size: 10.5px; }
+
+/* ---- the bottom band: the selection actions, like FM's action strip ------ */
+
+#homeScreen:has(.fm-tactics-workspace) .fm26-band {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px 12px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-quick-actions {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  padding: 0 !important;
+  border: 0 !important;
+  background: none !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-quick-actions button {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--fm-edge);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--fm-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-quick-actions button:hover { border-color: var(--fm-accent); color: var(--fm-ink); }
+#homeScreen:has(.fm-tactics-workspace) .fm-quick-actions small { color: var(--fm-dim); font-size: 10px; }
+
+/* ---- Team Instructions: pitch · tiles · overview ------------------------- */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace {
+  display: grid !important;
+  grid-template-columns: minmax(300px, 340px) minmax(0, 1fr) 320px !important;
+  grid-template-areas: none !important;
+  align-items: start;
+  gap: 12px;
+  padding: 12px 14px 14px;
+  min-height: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual {
+  grid-area: unset;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  border: 1px solid var(--fm-edge);
+  border-radius: 8px;
+  background: transparent;
+  min-width: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-instheading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-instheading h3 { margin: 0; color: var(--fm-ink); font-size: 11.5px; font-weight: 700; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-instheading span { color: var(--fm-muted); font-size: 10px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-phase {
+  display: flex;
+  gap: 2px;
+  margin: 0 8px;
+  padding: 2px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--fm-sunken);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-phase button {
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fm-muted);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-phase button[aria-pressed="true"] {
+  background: var(--fm-accent-soft);
+  color: var(--fm-ink);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field {
+  width: auto !important;
+  max-width: none !important;
+  height: 460px;
+  margin: 0 8px 8px !important;
+  aspect-ratio: 68 / 100 !important;
+  border: 1px solid #2f6b4c !important;
+  border-radius: 3px;
+  background: repeating-linear-gradient(90deg, var(--fm-grass) 0 8%, var(--fm-grass-2) 8% 16%) !important;
+  color: var(--fm-line) !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-zone-analysis {
+  display: none;
+  margin: 0 10px 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--fm-edge);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-zone-analysis > b {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--fm-accent);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-zone-analysis > div { display: grid; gap: 2px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-zone-analysis > div span { color: var(--fm-muted); font-size: 10.5px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-zone-analysis > div b { color: var(--fm-body); font-weight: 600; }
+
+#homeScreen:has(.fm-tactics-workspace) .fm26-tiles { min-width: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tiles-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 0 8px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tiles-head h3 { margin: 0; color: var(--fm-ink); font-size: 13px; font-weight: 700; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tiles-head span { color: var(--fm-muted); font-size: 10.5px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-control,
+#homeScreen:has(.fm-tactics-workspace) .fm-transition-control-group {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--fm-edge);
+  border-radius: 7px;
+  background: var(--fm-panel);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-transition-control-group { grid-column: 1 / -1; }
+#homeScreen:has(.fm-tactics-workspace) .fm-transition-control-group h4 {
+  margin: 0;
+  color: var(--fm-accent);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-control > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fm-accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .03em;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-control > span > i {
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--fm-accent-soft);
+  color: var(--fm-accent);
+  font-size: 8px;
+  font-style: normal;
+  letter-spacing: .06em;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-control select {
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--fm-edge);
+  border-radius: 5px;
+  background: var(--fm-panel-2);
+  color: var(--fm-ink);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+#homeScreen:has(.fm-tactics-workspace) .fm26-overview { display: grid; gap: 10px; min-width: 0; align-content: start; }
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview {
+  padding: 10px !important;
+  border: 1px solid var(--fm-edge) !important;
+  border-radius: 8px;
+  background: var(--fm-panel);
+  min-width: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 0 8px !important;
+  border: 0 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header h3 { margin: 0; color: var(--fm-ink); font-size: 12px; font-weight: 700; }
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview dl {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview dl > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview dt { color: var(--fm-muted); font-size: 10.5px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview dd { margin: 0; color: var(--fm-ink); font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview dd small { color: var(--fm-dim); font-size: 9.5px; font-weight: 500; }
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview .fm-review-state { display: none; }
+#homeScreen:has(.fm-tactics-workspace) .fm-overview-risks { padding: 8px 0 0; border: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-overview-risks > b {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--fm-accent);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-overview-risks p {
+  margin: 0 0 6px;
+  padding: 0;
+  border: 0;
+  color: var(--fm-muted);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > button { margin-top: 8px; }
+
+/* the opposition card, straight out of FM's right column */
+#homeScreen:has(.fm-tactics-workspace) .fm-opposition {
+  padding: 10px !important;
+  border: 1px solid var(--fm-edge) !important;
+  border-radius: 8px;
+  background: var(--fm-panel);
+  margin: 0 14px 14px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-opposition header { display: grid; gap: 3px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-opposition header > small {
+  color: var(--fm-accent);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-opposition h3 { margin: 0; color: var(--fm-ink); font-size: 12.5px; font-weight: 700; }
+#homeScreen:has(.fm-tactics-workspace) .fm-opposition p { margin: 0; color: var(--fm-muted); font-size: 10.5px; line-height: 1.45; }
+#homeScreen:has(.fm-tactics-workspace) .fm-opposition button { margin-top: 6px; }
+
+/* ---- Player Instructions ------------------------------------------------- */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace {
+  display: grid !important;
+  grid-template-columns: 300px minmax(0, 1fr) !important;
+  align-items: start;
+  gap: 12px;
+  padding: 12px 14px 14px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list {
+  padding: 0 !important;
+  border: 1px solid var(--fm-edge) !important;
+  border-radius: 8px;
+  background: var(--fm-panel);
+  overflow: hidden;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list > header {
+  padding: 8px 10px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--fm-edge) !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list > header h3 { margin: 0; color: var(--fm-ink); font-size: 11.5px; font-weight: 700; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list > header p { margin: 1px 0 0; color: var(--fm-dim); font-size: 9.5px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row {
+  display: grid !important;
+  grid-template-columns: 22px minmax(0, 1fr) 40px;
+  grid-template-areas: "num person fit";
+  align-items: center;
+  gap: 8px;
+  min-height: 30px !important;
+  padding: 0 10px !important;
+  border: 0 !important;
+  background: transparent;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row:hover { background: var(--fm-panel-2); }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row.on,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row[aria-pressed="true"] { background: var(--fm-accent-soft); }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-pos { grid-area: num; color: var(--fm-muted); font-size: 9.5px; font-weight: 700; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-person { grid-area: person; min-width: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-suitability { grid-area: fit; justify-self: end; color: var(--fm-muted); font-size: 10px; font-weight: 600; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-role-cell,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-stars,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-status,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-stat,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row .fm-player-picker { display: none !important; }
+
+#homeScreen:has(.fm-tactics-workspace) .fm-player-detail {
+  padding: 12px !important;
+  border: 1px solid var(--fm-edge) !important;
+  border-radius: 8px;
+  background: var(--fm-panel);
+  min-width: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor { padding: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 0 0 10px;
+  border: 0;
+  border-bottom: 1px solid var(--fm-edge);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head > div:first-child { flex: 1 1 220px; min-width: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head small { color: var(--fm-accent); font-size: 9px; font-weight: 700; letter-spacing: .09em; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head h3 { margin: 2px 0 0; color: var(--fm-ink); font-size: 17px; font-weight: 700; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head p { margin: 2px 0 0; color: var(--fm-muted); font-size: 10.5px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-readiness { display: flex; align-items: center; gap: 8px; color: var(--fm-muted); font-size: 10.5px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-readiness b { color: var(--fm-body); }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-detail .fm-player-phase-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding-top: 12px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-phase {
+  padding: 10px;
+  border: 1px solid var(--fm-edge);
+  border-radius: 7px;
+  background: var(--fm-panel-2);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-phase > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 0 8px;
+  border: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-phase > header b { color: var(--fm-ink); font-size: 11.5px; font-weight: 700; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-phase > header span { color: var(--fm-accent); font-size: 10px; font-weight: 700; }
+#homeScreen:has(.fm-tactics-workspace) .fm-assignment-row > div { display: grid; gap: 3px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-assignment-row > div > span { color: var(--fm-dim); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+#homeScreen:has(.fm-tactics-workspace) .fm-assignment-row > div > button {
+  width: 100%;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--fm-edge);
+  border-radius: 5px;
+  background: var(--fm-panel);
+  color: var(--fm-ink);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-instruction-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-instruction-grid label { display: grid; gap: 3px; color: var(--fm-dim); font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-instruction-grid select {
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid var(--fm-edge);
+  border-radius: 5px;
+  background: var(--fm-panel);
+  color: var(--fm-ink);
+  font-size: 10.5px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor footer { padding: 10px 0 0; color: var(--fm-dim); font-size: 9.5px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor.empty h3 { margin: 0 0 4px; color: var(--fm-ink); font-size: 15px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor.empty p { margin: 0; color: var(--fm-muted); font-size: 11px; line-height: 1.5; max-width: 56ch; }
+
+/* ---- the role dialog keeps FM26's panel language ------------------------ */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-role-dialog-backdrop { background: rgba(4, 6, 8, .72); }
+#homeScreen:has(.fm-tactics-workspace) .fm-role-dialog {
+  border: 1px solid var(--fm-edge-2);
+  border-radius: 10px;
+  background: var(--fm-panel);
+  color: var(--fm-body);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-role-dialog header h2 { color: var(--fm-ink); font-size: 16px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-role-dialog header small { color: var(--fm-accent); }
+#homeScreen:has(.fm-tactics-workspace) .fm-role-option {
+  border: 1px solid var(--fm-edge) !important;
+  border-radius: 7px;
+  background: var(--fm-panel-2) !important;
+  color: var(--fm-body);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-role-option.is-current { border-color: var(--fm-accent) !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-role-option b { color: var(--fm-ink); }
+
+/* ---- narrow screens: the strip wraps, the list goes under the pitch ------ */
+
+@media (max-width: 1180px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace,
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace,
+  #homeScreen:has(.fm-tactics-workspace) .fm-player-workspace {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-strip { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "tactic bars" "controls controls" "library library"; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-pitch-card .shape-field { height: auto; width: 100% !important; aspect-ratio: 68 / 100 !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-tile-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm26-strip { padding: 8px 10px !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-tactic-name h2 { font-size: 13px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-tactic .fm26-pill { display: none; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-controls label { height: 26px; font-size: 9.5px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-controls label select { max-width: 96px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-desk-bar { flex-wrap: wrap; gap: 0 8px; padding: 0 10px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button { flex: 1; margin-right: 0; text-align: center; font-size: 11px !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-actions { width: 100%; justify-content: space-between; padding-bottom: 6px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-substrip { padding: 8px 10px 0; overflow-x: auto; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace,
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace,
+  #homeScreen:has(.fm-tactics-workspace) .fm-player-workspace { padding: 8px 10px 0 !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-both-pitches { grid-template-columns: minmax(0, 1fr); }
+  #homeScreen:has(.fm-tactics-workspace) .fm-pitch-card .shape-field { margin: 6px auto !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field { height: 400px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-player-detail .fm-player-phase-grid { grid-template-columns: minmax(0, 1fr); }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row {
+    grid-template-columns: 22px minmax(0, 1fr) 62px 40px 24px !important;
+    min-height: 34px !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-opposition { margin: 10px; }
+  }
+
+/* ---- corrections after the first render -------------------------------- */
+
+/* the shell's briefing panel is not part of an FM26 tactics screen */
+#homeScreen:has(.fm-tactics-workspace) .arrival-brief { display: none !important; }
+
+/* workspaces take the full width whatever the merged sheet says */
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-content,
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace,
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box;
+  align-items: start;
+}
+
+/* the strip is one row at desktop widths */
+#homeScreen:has(.fm-tactics-workspace) .fm26-strip {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "tactic controls bars" "library library library";
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-controls { flex-wrap: nowrap; justify-content: flex-start; }
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-controls label { flex: 0 1 auto; }
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-controls label select { max-width: 118px; }
+
+/* the pitch is sized by the window, not by a percentage chain */
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field {
+  height: min(58vh, 600px);
+  width: auto !important;
+  max-height: none;
+  margin: 8px auto !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-both-pitches .fm-pitch-card .shape-field {
+  height: auto;
+  width: 100% !important;
+  margin: 8px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-both-pitches .fm-pitch-card { align-items: stretch; }
+
+/* the list keeps its own column and scrolls inside it when it must */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel { min-width: 0; width: 100%; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-table { overflow-y: auto !important; overscroll-behavior: contain; }
+
+/* rows were pinned to a desktop minimum width by the merged sheet */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row { min-width: 0 !important; width: 100%; }
+
+/* the marker is a token, not the old 60 px card */
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-marker .shirt-marker {
+  min-width: 0 !important;
+  max-width: none;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  background: var(--fm-accent) !important;
+  color: #fff !important;
+  z-index: 4;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-marker .shirt-marker.keeper { background: #eef3f6 !important; color: #10331f !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-marker .shirt-marker > b {
+  color: inherit !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: .02em;
+  background: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+  position: static !important;
+  transform: none !important;
+  line-height: 1;
+}
+/* FM26 does not print ghost role letters on the grass */
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-role-target { opacity: .18 !important; font-size: 9px !important; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field.fm-dragging .fm-role-target { opacity: .82 !important; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-hidden-position-target { opacity: 0 !important; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field.fm-dragging .fm-hidden-position-target { opacity: .35 !important; }
+
+/* the pitch card hugs its pitch instead of floating in a wide panel */
+#homeScreen:has(.fm-tactics-workspace) .fm-shape-main { align-items: flex-start; }
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch { width: auto; }
+
+/* ---- FM26 tokens: their own elements, the drag button lives underneath --- */
+
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-marker .shirt-marker {
+  position: absolute !important;
+  left: 0;
+  bottom: 0;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: transparent !important;
+  opacity: 0;
+  transform: translate(-50%, 50%) !important;
+  cursor: grab;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: var(--fm-accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  font-style: normal;
+  letter-spacing: .02em;
+  line-height: 1;
+  pointer-events: none;
+  transform: translate(-50%, 50%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok.keeper { background: #eef3f6; color: #123a26; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok.vacant { background: transparent; box-shadow: inset 0 0 0 1.5px rgba(240, 250, 244, .7); color: rgba(240, 250, 244, .8); }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok.is-selected { box-shadow: 0 0 0 2px #fff, 0 2px 8px rgba(0, 0, 0, .55); }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok-name {
+  position: absolute;
+  left: 0;
+  top: 17px;
+  z-index: 5;
+  max-width: 88px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: rgba(6, 10, 8, .72);
+  color: #eaf1ec;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok-name.is-selected { background: var(--fm-accent); color: #fff; }
+
+/* ---- the screen fits the window --------------------------------------- */
+
+/* the eyebrow line and the shell crumb band are not part of an FM26 screen */
+#homeScreen:has(.fm-tactics-workspace) .board-room.fm-tactics-workspace::before { content: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .tl-screen-top { display: none !important; }
+
+@media (min-width: 1180px) {
+  #homeScreen:has(.fm-tactics-workspace) .hc-content { overflow: hidden !important; }
+  #homeScreen:has(.fm-tactics-workspace) .hc-main { overflow: hidden; }
+  #homeScreen:has(.fm-tactics-workspace) .life-desk {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    padding-bottom: 0;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .board-room.fm-tactics-workspace {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-content { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace,
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace,
+  #homeScreen:has(.fm-tactics-workspace) .fm-player-workspace { flex: 1 1 auto; min-height: 0; height: auto; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-main { height: 100%; min-height: 0; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch { height: 100%; min-height: 0; justify-content: center; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field {
+    height: calc(100% - 18px);
+    min-height: 0;
+    max-height: none;
+    width: auto !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel { height: 100%; min-height: 0; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-table { min-height: 0; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-tiles,
+  #homeScreen:has(.fm-tactics-workspace) .fm26-overview { overflow-y: auto; min-height: 0; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-player-list { overflow-y: auto; min-height: 0; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-band { flex: 0 0 auto; }
+}
+
+/* role names are cut short in the list column — give them room */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row { grid-template-columns: 22px minmax(0, 1fr) 94px 42px 30px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-role-cell button { font-size: 11px; }
+
+/* the shape workspace is one row that fills the content box */
+@media (min-width: 1180px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace {
+    grid-template-rows: minmax(0, 1fr) !important;
+    grid-template-columns: minmax(0, 1fr) clamp(360px, 34vw, 512px) !important;
+    align-items: stretch;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace .fm-squad-panel { height: 100%; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch { justify-content: center; align-items: center; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-both-pitches { align-items: stretch; }
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row { grid-template-columns: 22px minmax(0, 1fr) 110px 40px 30px; }
+
+/* beat the merged sheet's earlier !important rules on the same nodes */
+@media (min-width: 1180px) {
+  #homeScreen:has(.fm-tactics-workspace) #clubPage > .life-desk {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) #clubPage .board-room.fm-tactics-workspace {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: hidden !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-content {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-main { height: 100% !important; min-height: 0 !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch {
+    height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field {
+    height: calc(100% - 20px) !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    width: auto !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-both-pitches { height: 100% !important; min-height: 0 !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel { height: 100% !important; min-height: 0 !important; }
+}
+
+/* FM26 keeps the opposition in the report column, not as a second footer */
+#homeScreen:has(.fm-tactics-workspace) .fm-opposition { display: none !important; }
+
+@media (min-width: 1180px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm26-substrip { padding: 5px 8px; min-height: 0; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-substrip .fm-phase-toggle,
+  #homeScreen:has(.fm-tactics-workspace) .fm26-substrip .fm-shape-toggle { height: 28px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-main-field { height: 100%; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-main > * + * { margin-top: 6px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-board-head,
+  #homeScreen:has(.fm-tactics-workspace) .fm-visual-head { padding: 4px 2px; }
+}
+
+/* the sheet pins the row grid and the dual-pitch box with !important */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row {
+  grid-template-columns: 22px minmax(0, 1fr) 112px 44px 30px !important;
+  column-gap: 8px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-role-cell button { max-width: 100%; }
+@media (min-width: 1180px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-both-pitches {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-both-pitches .fm-pitch-card {
+    width: auto !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-both-pitches .fm-pitch-card .shape-field {
+    height: calc(100% - 20px) !important;
+    width: auto !important;
+    max-height: none !important;
+    margin: 0 auto !important;
+  }
+}
+
+/* pitch card captions: small, left, one rule */
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card > header {
+  display: flex !important;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 4px 6px !important;
+  border: 0 !important;
+  background: none !important;
+  text-align: left;
+  min-height: 0;
+  height: auto;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card > header b {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #cfe0d5 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card > header small {
+  font-size: 10.5px !important;
+  color: #8fa39a !important;
+  letter-spacing: .02em;
+}
+
+/* every pitch card positions its markers the same way */
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker {
+  position: absolute !important;
+  width: 0 !important;
+  height: 0 !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.dock-above,
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.dock-below,
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.dock-left,
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.dock-right { transform: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row { grid-template-columns: 22px minmax(0, 1fr) 112px 76px 30px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-row .fm-stars { font-size: 10.5px !important; white-space: nowrap; }
+#homeScreen:has(.fm-tactics-workspace) .fm-role-cell button {
+  display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ---- FM26 instruction tiles and overview list -------------------------- */
+
+#homeScreen:has(.fm-tactics-workspace) .fm26-tiles-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 2px 10px;
+  border: 0 !important;
+  background: none !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-tiles-head h3 { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .02em; color: #e8efe9; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tiles-head span { font-size: 11px; color: #8fa39a; }
+
+#homeScreen:has(.fm-tactics-workspace) .fm-tile-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  align-content: start;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tile-grid .fm-instruction-control {
+  display: block !important;
+  position: relative;
+  margin: 0 !important;
+  padding: 11px 12px 9px !important;
+  border: 0 !important;
+  border-radius: 4px !important;
+  background: var(--fm-panel-2) !important;
+  box-shadow: none !important;
+  min-height: 74px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tile-grid .fm-instruction-control:hover { background: var(--fm-panel-3) !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-tile-grid .fm-instruction-control[data-customized="true"]::after {
+  content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px; border-radius: 2px; background: var(--fm-accent);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tile-grid .fm-instruction-control > span {
+  display: block;
+  margin: 0 0 6px !important;
+  font-size: 10.5px !important;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #93a79d !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tile-grid .fm-instruction-control > span i {
+  margin-left: 6px;
+  font-style: normal;
+  font-size: 9px;
+  letter-spacing: .06em;
+  color: var(--fm-accent);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tile-grid .fm-instruction-control select {
+  width: 100%;
+  margin: 0 !important;
+  padding: 0 16px 0 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #f2f6f3 !important;
+  font-size: 13px !important;
+  font-weight: 600;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #8fa39a 50%), linear-gradient(135deg, #8fa39a 50%, transparent 50%) !important;
+  background-position: right 5px center, right 1px center !important;
+  background-size: 4px 4px, 4px 4px !important;
+  background-repeat: no-repeat !important;
+  box-shadow: none !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tile-grid .fm-instruction-control select option { background: #14171c; color: #e8efe9; }
+
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview { padding: 12px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header { display: flex; align-items: center; justify-content: space-between; padding: 0 0 8px; border: 0 !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header h3 { margin: 0; font-size: 13px; font-weight: 700; color: #e8efe9; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instr-group h4 {
+  margin: 12px 0 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #7e928a;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instr-list { list-style: none; margin: 0; padding: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instr-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 12px;
+  border: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instr-list li span { color: #9db0a7; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instr-list li b { color: #e8efe9; font-weight: 600; text-align: right; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instr-list.is-team li { padding: 6px 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-overview-risks { margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.06) !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-overview-risks > b { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #7e928a; }
+#homeScreen:has(.fm-tactics-workspace) .fm-overview-risks p { margin: 6px 0 0; font-size: 11.5px; line-height: 1.45; color: #b9c7bf; }
+
+/* the instruction screen: visual, tiles, list */
+@media (min-width: 1180px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace {
+    display: grid !important;
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr) minmax(280px, 330px) !important;
+    gap: 12px !important;
+    align-items: start;
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual { min-height: 0; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-instr-pitch { height: auto !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-instr-pitch .shape-field { height: auto !important; width: 100% !important; aspect-ratio: 68/100; margin: 0 !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-tiles { display: flex; flex-direction: column; min-height: 0; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-overview { height: 100%; min-height: 0; overflow-y: auto; }
+}
+
+/* review chip stays a chip */
+#homeScreen:has(.fm-tactics-workspace) .fm-review-state {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  background: rgba(255,255,255,.06); color: #cfd9d3; white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-review-state.has-risks { background: rgba(226,168,74,.14); color: #e8b95f; }
+#homeScreen:has(.fm-tactics-workspace) .fm-review-state.is-clear { background: rgba(90,200,140,.14); color: #74d3a0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-tile-grid .fm-instruction-control { min-height: 66px; }
+
+/* player list: the detail panel carries fit and role */
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row { grid-template-columns: 22px minmax(0, 1fr) 34px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row .fm-stars,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row .fm-role-cell,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row .fm-suitability { display: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-workspace .fm-row .fm-person b { font-size: 12px; }
+@media (min-width: 1180px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-player-workspace { display: grid !important; grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) !important; gap: 12px !important; align-items: start; height: 100% !important; min-height: 0 !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-player-workspace > .fm-squad-panel { height: 100% !important; min-height: 0 !important; }
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header .fm26-pill { font-size: 10px; padding: 1px 8px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-phase { margin: 0 0 8px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header { background: none !important; border: 0 !important; }
+
+/* ---- mobile: tabs stay at the top, everything else stacks -------------- */
+@media (max-width: 759px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm26-strip {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas: "tactic bars" "controls controls" !important;
+    row-gap: 8px;
+    padding: 8px 10px !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-tactic { min-width: 0; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-tactic-name h2 { font-size: 16px !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-header-metrics { justify-self: end; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-controls { flex-wrap: wrap !important; gap: 6px !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-controls label { flex: 1 1 44%; min-width: 0; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-controls label select { max-width: none; width: 100%; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-tactic .fm26-pill { display: none; }
+
+  #homeScreen:has(.fm-tactics-workspace) .fm-desk-bar {
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    padding: 6px 10px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--fm-canvas);
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav { gap: 16px !important; overflow-x: auto; scrollbar-width: none; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav::-webkit-scrollbar { display: none; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button { padding: 0 0 6px !important; font-size: 13px !important; white-space: nowrap; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-actions { margin-left: auto; gap: 6px !important; }
+
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace,
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace,
+  #homeScreen:has(.fm-tactics-workspace) .fm-player-workspace {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px !important;
+    padding: 0 10px 12px !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-substrip { padding: 6px 0 !important; overflow-x: auto; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field,
+  #homeScreen:has(.fm-tactics-workspace) .fm-instr-pitch .shape-field {
+    height: auto !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-both-pitches { display: flex; flex-direction: column; gap: 10px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel { order: 2; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-tile-grid { grid-template-columns: 1fr 1fr !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-band { position: sticky; bottom: 0; z-index: 15; }
+}
+@media (max-width: 759px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-main,
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch,
+  #homeScreen:has(.fm-tactics-workspace) .fm-pitch-card,
+  #homeScreen:has(.fm-tactics-workspace) .fm-instr-pitch { display: block !important; width: 100% !important; height: auto !important; min-height: 0 !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field,
+  #homeScreen:has(.fm-tactics-workspace) .fm-instr-pitch .shape-field,
+  #homeScreen:has(.fm-tactics-workspace) .fm-both-pitches .fm-pitch-card .shape-field {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 68 / 100 !important;
+    max-height: none !important;
+    margin: 0 !important;
+  }
+}
+@media (max-width: 759px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm26-tactic p { display: none !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-tactic-name h2 { font-size: 15px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav { gap: 13px !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-nav button { font-size: 12.5px !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm26-actions .fm26-pill,
+  #homeScreen:has(.fm-tactics-workspace) .fm26-actions button { font-size: 11px !important; padding: 2px 8px !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-workspace-content { padding-bottom: 72px; }
+}
+
+/* the selected player's sheet sits under the match plan, FM26-style */
+#homeScreen:has(.fm-tactics-workspace) .fm26-player-sheet {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm26-player-sheet .fm-player-editor { border: 0 !important; background: none !important; padding: 0 !important; box-shadow: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-player-sheet .fm-player-editor h3 { margin: 2px 0 6px; font-size: 14px; color: #eef4ef; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-player-sheet .fm-player-editor header { border: 0 !important; }
+
+/* readable accent text: the vivid purple is for lines, the deeper one for fills */
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok { background: #7b3fd4 !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok.is-selected { background: #8b4ce6 !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok-name.is-selected { background: #6f37c2 !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-tile-grid .fm-instruction-control > span i { color: #b98cff !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm26-tok.keeper { background: #eef3f6 !important; color: #123a26 !important; }
+@media (max-width: 759px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace,
+  #homeScreen:has(.fm-tactics-workspace) .fm-player-workspace { display: block !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace > *,
+  #homeScreen:has(.fm-tactics-workspace) .fm-player-workspace > * { width: 100% !important; margin-bottom: 12px; }
+}
+
+/* player detail: sections, not boxes */
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor { border: 0 !important; background: none !important; box-shadow: none !important; padding: 0 !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head { padding: 0 0 10px !important; border: 0 !important; background: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head h3 { font-size: 19px; margin: 2px 0 2px; color: #f2f7f3; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head p { margin: 0; font-size: 11.5px; color: #93a79d; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-phase {
+  border: 0 !important;
+  border-radius: 5px !important;
+  background: var(--fm-panel) !important;
+  padding: 12px 14px !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-phase > header { border: 0 !important; background: none !important; padding: 0 0 8px !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-phase label > span { font-size: 10px !important; letter-spacing: .06em; text-transform: uppercase; color: #90a49b !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-phase select {
+  border: 1px solid rgba(255,255,255,.09) !important;
+  background: #191d23 !important;
+  color: #eef4ef !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  height: 30px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor [class*="readiness"],
+#homeScreen:has(.fm-tactics-workspace) .fm-player-editor .fm26-pill { font-size: 11px !important; }
+@media (min-width: 1180px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch { justify-self: center; width: auto !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-workspace { grid-template-columns: minmax(0, 1fr) clamp(360px, 36vw, 520px) !important; }
+}
+@media (min-width: 1180px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch { align-self: center; }
+}
+
+/* tablet: the strip stacks before it starts to crush */
+@media (max-width: 999px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm26-strip {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas: "tactic bars" "controls controls" !important;
+    row-gap: 8px;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-controls { flex-wrap: wrap !important; gap: 6px !important; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-controls label { flex: 1 1 44%; min-width: 0; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-shape-controls label select { max-width: none; width: 100%; }
+}
+/* narrow pitches drop the name labels instead of stacking them */
+#homeScreen:has(.fm-tactics-workspace) .shape-field { container-type: inline-size; }
+@container (max-width: 300px) {
+  .fm26-tok-name { display: none !important; }
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-role-cell { min-width: 0 !important; overflow: hidden; }

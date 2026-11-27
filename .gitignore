@@ -4,3 +4,6 @@ npm-debug.log*
 
 # UI audit captures (browser sweep output)
 .audit/
+
+# FM26 reference captures (research only, not shipped)
+image-search/
