@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="03253d430aa50076c27b">
+  <meta name="tl-build" content="37a362ce5d368b141080">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -4623,6 +4623,9 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   #homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head { align-items: flex-start; }
   #homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head > button { margin-left: auto; }
 }
+
+/* ---- title block and save/load panel removed from the tactics screen ---- */
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-header { display: none !important; }
 </style>
 </head>
 <body>

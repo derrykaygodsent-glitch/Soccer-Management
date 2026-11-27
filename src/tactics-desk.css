@@ -1040,3 +1040,6 @@
   #homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head { align-items: flex-start; }
   #homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head > button { margin-left: auto; }
 }
+
+/* ---- title block and save/load panel removed from the tactics screen ---- */
+#homeScreen:has(.fm-tactics-workspace) .fm-workspace-header { display: none !important; }
