@@ -1347,3 +1347,36 @@
     min-height: 300px !important;
   }
 }
+
+/* ---- team sheet actions sit together; the pitch keeps true proportions ---- */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head .fm-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head .fm-btn-quiet,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head .fm-btn-quiet[disabled] {
+  background: #14212c !important;
+  color: #cfdde8 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head .fm-btn-quiet:hover:not([disabled]) {
+  background: #1c2c3a !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-panel-head .fm-btn-quiet[disabled] { opacity: .45; }
+
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field {
+  width: 88% !important;
+  height: auto !important;
+  aspect-ratio: 4 / 3 !important;
+  min-height: 0 !important;
+  max-height: 78% !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field { max-height: none !important; }
+@media (max-width: 760px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .shape-field {
+    width: 100% !important;
+    aspect-ratio: 4 / 3 !important;
+    height: auto !important;
+  }
+}
