@@ -71,7 +71,8 @@
       /* ---------- saved state: one record per table, one layout per view ---------- */
       const defaults = () => {
         const order = builtins.map(item => item.id);
-        const base = { order, widths: {}, hidden: [], added: [], sort: { id: builtins[Number(table.dataset.initial || 0)]?.id || order[0], dir: table.dataset.direction === 'desc' ? -1 : 1 } };
+        const unsorted = table.dataset.sortDefault === 'off';
+        const base = { order, widths: {}, hidden: [], added: [], sort: unsorted ? null : { id: builtins[Number(table.dataset.initial || 0)]?.id || order[0], dir: table.dataset.direction === 'desc' ? -1 : 1 } };
         const views = { General: clone(base) };
         if (extras.length) {
           for (const preset of PRESETS) {
@@ -91,6 +92,7 @@
         return clean;
       };
 
+      let pinnedDirty = false;
       let record = store[key] ? normalise(store[key]) : null;
       if (!record) {
         const legacy = readAll(LEGACY)[key];
@@ -254,7 +256,9 @@
         for (const id of visible) widths[id] = effectiveWidth(id);
         /* once a layout is pinned every shown column keeps an explicit width, so a
            reload or a re-render can never drift from what the user set up */
-        for (const id of visible) layout.widths[id] = widths[id];
+        for (const id of visible) {
+          if (layout.widths[id] !== widths[id]) { layout.widths[id] = widths[id]; pinnedDirty = true; }
+        }
         const tableWidth = Math.max(120, visible.reduce((sum, id) => sum + widths[id], 0));
         table.style.tableLayout = 'fixed';
         table.style.width = tableWidth + 'px';
@@ -338,7 +342,8 @@
         for (const id of known) if (!order.includes(id)) order.push(id);
         applyOrder(order);
         applyVisibility();
-        sortBy(layout.sort.id, layout.sort.dir);
+        if (layout.sort) sortBy(layout.sort.id, layout.sort.dir);
+        if (pinnedDirty) { pinnedDirty = false; save(); }
         viewBar?.fill();
       }
 
@@ -355,7 +360,7 @@
         button.append(label);
         button.onclick = () => {
           const layout = view(), id = header.dataset.colId;
-          const dir = layout.sort.id === id ? -layout.sort.dir : header.dataset.first === 'desc' ? -1 : 1;
+          const dir = layout.sort?.id === id ? -layout.sort.dir : header.dataset.first === 'desc' ? -1 : 1;
           sortBy(id, dir);
           save();
           button.title = 'Sort by ' + button.textContent;
@@ -440,12 +445,11 @@
             }
             const ids = visibleIds();
             const cells = ids.map(id => headerOf(id)).filter(Boolean);
-            let target = cells.length;
+            let target = 0;
             cells.forEach((cell, index) => {
               const rect = cell.getBoundingClientRect();
-              if (e.clientX > rect.left + rect.width / 2) target = Math.max(target === cells.length ? index + 1 : target, index + 1);
+              if (e.clientX > rect.left + rect.width / 2) target = index + 1;
             });
-            if (e.clientX < cells[0]?.getBoundingClientRect().left) target = 0;
             dragState = { id: header.dataset.colId, target };
             const anchor = cells[Math.min(target, cells.length - 1)];
             const rect = anchor?.getBoundingClientRect();
@@ -711,7 +715,8 @@
           <button type="button" class="tl-col-btn" data-col-view="new">New view</button>
           <button type="button" class="tl-col-btn" data-col-view="manage">Manage columns</button>
           <button type="button" class="tl-col-btn tl-col-more" data-col-view="more" aria-haspopup="menu" aria-label="View options">⋯</button>`;
-        table.parentElement.insertBefore(bar, table);
+        const host = table.closest('[data-tl-bar]') || table;
+        host.parentElement.insertBefore(bar, host);
         const select = bar.querySelector('select');
         const wrap = bar;
         const fill = () => {
@@ -816,15 +821,16 @@
             option.textContent = headerOf(id)?.querySelector('.column-sort')?.textContent || 'Column';
             select.append(option);
           });
-          select.value = view().sort.id;
-          dir.textContent = view().sort.dir === -1 ? 'High to low' : 'Low to high';
+          select.value = view().sort?.id || '';
+          dir.textContent = view().sort?.dir === -1 ? 'High to low' : 'Low to high';
           dir.setAttribute('aria-label', 'Reverse the sort order');
         };
-        select.onchange = () => { sortBy(select.value, view().sort.dir); save(); fill(); };
-        dir.onclick = () => { sortBy(select.value, view().sort.dir === -1 ? 1 : -1); save(); fill(); };
+        select.onchange = () => { sortBy(select.value, view().sort?.dir ?? 1); save(); fill(); };
+        dir.onclick = () => { sortBy(select.value, view().sort?.dir === -1 ? 1 : -1); save(); fill(); };
         label.append(select);
         bar.append(label, dir);
-        table.parentElement.insertBefore(bar, table);
+        const host = table.closest('[data-tl-bar]') || table;
+        host.parentElement.insertBefore(bar, host);
         fill();
         return { fill };
       }

@@ -77,13 +77,12 @@ function render(s,players){
     const fitDefense=p?Z.fit(p,slot.position,slot.job?.[0],s.boardReps?.[p.id]):null,fitAttack=p?Z.fit(p,slot.attackPosition||slot.position,slot.attackJob?.[0]||slot.job?.[0],s.boardReps?.[p.id]):null;
     const shownFit=phase==='both'?`${Z.fitRating(fitDefense)}/5 / ${Z.fitRating(fitAttack)}/5`:attack?`${Z.fitRating(fitAttack)}/5`:`${Z.fitRating(fitDefense)}/5`;
     const fitTitle=p?`${p.name}: Out of possession ${slot.job?.[0]} fit ${fitDefense}%; In possession ${slot.attackJob?.[0]||slot.job?.[0]} fit ${fitAttack}%.`:'No player assigned to this position.';
-    return `<div class="fm-row${selected===i||(workspaceTab==='players'&&selected==null&&i===0)?' on':''}" role="button" tabindex="0" data-slot="${i}" data-player-id="${e(p?.id||'')}" data-player-pos="${e(p?.pos||'')}" aria-pressed="${selected===i}"><span class="fm-pos">${e(pos)}</span>${roleCell(slot,i,'attack')}${roleCell(slot,i,'defense')}${starsOf(p)}<span class="fm-person"><i class="fm-number">${p?e(numbers[p.id]??p.num??defaults[i]??'—'):'—'}</i><span class="fm-player-name" title="${e(p?.name||'Open position')}">${e(p?.name||'Open')}</span>${playerPicker(slot,i)}${p?.id===captain?'<b title="Match captain">(c)</b>':''}</span><span class="fm-suitability" title="${e(fitTitle)}">${p?shownFit:'—'}</span><span class="fm-status">${status(p)}</span><span class="fm-stat">${ready?.fitness!=null?ready.fitness+'%':'—'}</span></div>`;
+    return `<tr class="fm-row${selected===i||(workspaceTab==='players'&&selected==null&&i===0)?' on':''}" role="button" tabindex="0" data-slot="${i}" data-player-id="${e(p?.id||'')}" data-player-pos="${e(p?.pos||'')}" aria-pressed="${selected===i}"><td class="fm-sheet-pos"><span class="position-tag">${e(pos)}</span></td><td class="fm-sheet-role">${roleCell(slot,i,'attack')}</td><td class="fm-sheet-role">${roleCell(slot,i,'defense')}</td><td class="fm-sheet-ability">${starsOf(p)}</td><td class="fm-sheet-player fm-person"><i class="fm-number">${p?e(numbers[p.id]??p.num??defaults[i]??'—'):'—'}</i><span class="fm-player-name" title="${e(p?.name||'Open position')}">${e(p?.name||'Open')}</span>${playerPicker(slot,i)}${p?.id===captain?'<b title="Match captain">(c)</b>':''}</span></td><td class="fm-sheet-fit fm-suitability" title="${e(fitTitle)}">${p?shownFit:'—'}</td><td class="fm-sheet-status fm-status">${status(p)}</td><td class="fm-sheet-cond fm-stat">${ready?.fitness!=null?ready.fitness+'%':'—'}</td></tr>`;
   };
-  const subRow=(p,i)=>`<button type="button" class="fm-row fm-sub${selectedBench===p.id?' on':''}" data-player-id="${e(p.id)}" data-player-pos="${e(p.pos)}" data-board="${selected!=null?`pick|${selected}|${e(p.id)}`:`bench|${e(p.id)}`}" aria-pressed="${selectedBench===p.id}"><span class="fm-pos">S${i+1}</span><span class="fm-role-cell">—</span><span class="fm-role-cell">—</span>${starsOf(p)}<span class="fm-person"><i class="fm-number">${e(numbers[p.id]??p.num??'—')}</i><span>${e(p.name)}</span></span><span class="fm-suitability">${e(p.pos)}</span><span class="fm-status">${status(p)}</span><span class="fm-stat">${readiness[p.id]?.fitness!=null?readiness[p.id].fitness+'%':'—'}</span></button>`;
-  const lineOf=position=>{const p=String(position||'');if(p==='GK')return 'goalkeeper';if(/^(SW|CB|DC|LB|RB|LWB|RWB|FB|WB)$/.test(p))return 'defence';if(/^(DM|CM|AM|LM|RM|ML|MR)$/.test(p))return 'midfield';return 'attack';};
-  const LINE_TITLES={goalkeeper:'Goalkeeper',defence:'Defence',midfield:'Midfield',attack:'Attack'},LINE_ORDER={goalkeeper:0,defence:1,midfield:2,attack:3};
-  const groupedSlots=()=>{const lines=slots.map((slot,index)=>({slot,index,line:lineOf(slot.position)})).sort((a,b)=>LINE_ORDER[a.line]-LINE_ORDER[b.line]||a.index-b.index),counts={};for(const v of lines)counts[v.line]=(counts[v.line]||0)+1;let shown=null;return lines.map(({slot,index,line})=>{const heading=line===shown?'':`<div class="fm-squad-group"><span>${LINE_TITLES[line]}</span><small>${counts[line]}</small></div>`;shown=line;return heading+row(slot,index);}).join('');};
-  const squad=(title='First-team selection')=>`<aside class="fm-squad-panel${benchOpen?' is-bench-open':''}" id="tactic-roles"><header class="fm-panel-head"><div><small>TEAM SHEET</small><h3>${title}</h3></div><div class="fm-panel-actions"><button type="button" class="fm-btn-quiet" data-board="rotate" ${bench.some(p=>!p.red&&!readiness[p.id]?.knock)?'':'disabled'}>Rotate squad</button><button type="button" data-board="bestXI">Auto-pick best XI</button></div></header><div class="fm-squad-table"><div class="fm-squad-columns" aria-hidden="true"><span>POS</span><span>IN POSSESSION ROLE</span><span>OUT OF POSSESSION ROLE</span><span>ABILITY</span><span>PLAYER</span><span>FIT · IP / OOP</span><span>STATUS</span><span>COND.</span></div>${groupedSlots()}<button type="button" class="fm-squad-subhead" data-bench-toggle aria-expanded="${benchOpen}"><span>SUBSTITUTES · ${bench.length}</span><small>${benchOpen?'Hide':'Show'}</small></button>${bench.map(subRow).join('')||'<p class="fm-empty">No substitutes available.</p>'}</div>${selected!=null?instructionEditor(slots[selected]):''}</aside>`;
+  const subRow=(p,i)=>`<tr class="fm-row fm-sub${selectedBench===p.id?' on':''}" role="button" tabindex="0" data-bench="${e(p.id)}" data-board="${selected!=null?`pick|${selected}|${e(p.id)}`:`bench|${e(p.id)}`}" data-player-id="${e(p.id)}" data-player-pos="${e(p.pos)}" aria-pressed="${selectedBench===p.id}"><td class="fm-sheet-pos"><span class="position-tag reserve">S${i+1}</span></td><td class="fm-sheet-role"><div class="fm-role-cell">—</div></td><td class="fm-sheet-role"><div class="fm-role-cell">—</div></td><td class="fm-sheet-ability">${starsOf(p)}</td><td class="fm-sheet-player fm-person"><i class="fm-number">${e(numbers[p.id]??p.num??'—')}</i><span>${e(p.name)}</span></td><td class="fm-sheet-fit fm-suitability">${e(p.pos)}</td><td class="fm-sheet-status fm-status">${status(p)}</td><td class="fm-sheet-cond fm-stat">${readiness[p.id]?.fitness!=null?readiness[p.id].fitness+'%':'—'}</td></tr>`;
+  const SHEET_COLUMNS=['POS','In possession role','Out of possession role','Ability','Player','Fit · IP / OOP','Status','Cond.'];
+  const sheetRows=()=>slots.map((slot,index)=>row(slot,index)).join('');
+  const squad=(title='First-team selection')=>`<aside class="fm-squad-panel${benchOpen?' is-bench-open':''}" id="tactic-roles"><header class="fm-panel-head"><div><small>TEAM SHEET</small><h3>${title}</h3></div><div class="fm-panel-actions"><button type="button" class="fm-btn-quiet" data-board="rotate" ${bench.some(p=>!p.red&&!readiness[p.id]?.knock)?'':'disabled'}>Rotate squad</button><button type="button" data-board="bestXI">Auto-pick best XI</button></div></header><div class="fm-squad-table" data-tl-bar><table class="fm-sheet-table" data-sort-table="teamsheet" data-sort-default="off" data-column-options="player" data-phone-sort="off" data-col-min="44"><caption class="sr-only">First-team selection</caption><thead><tr>${SHEET_COLUMNS.map(label=>`<th scope="col">${label}</th>`).join('')}</tr></thead><tbody>${sheetRows()}<tr class="fm-sheet-divider"><th scope="colgroup" colspan="${SHEET_COLUMNS.length}"><button type="button" class="fm-squad-subhead" data-bench-toggle aria-expanded="${benchOpen}"><span>SUBSTITUTES · ${bench.length}</span><small>${benchOpen?'Hide':'Show'}</small></button></th></tr>${bench.map(subRow).join('')||`<tr><td class="fm-empty" colspan="${SHEET_COLUMNS.length}">No substitutes available.</td></tr>`}</tbody></table></div>${selected!=null?instructionEditor(slots[selected]):''}</aside>`;
   const roleDialog=rolePicker?(()=>{const {slot:index,phase:phaseName}=rolePicker,slot=slots[index];if(!slot)return '';const attack=phaseName==='attack',position=attack?(slot.attackPosition||slot.position):slot.position,current=attack?slot.attackJob[0]:slot.job[0],candidates=Z.choices(position).map(name=>({name,fit:slot.player?Z.fit(slot.player,position,name,s.boardReps?.[slot.player.id]):null,info:Z.roleInfo(name)})).sort((a,b)=>a.fit==null?0:b.fit==null?-1:b.fit-a.fit||a.name.localeCompare(b.name));return `<div class="fm-role-dialog-backdrop"><section class="fm-role-dialog" role="dialog" aria-modal="true" aria-labelledby="fm-role-dialog-title"><header><div><small>TOUCHLINE ROLE GUIDE · ${attack?'IN POSSESSION':'OUT OF POSSESSION'}</small><h2 id="fm-role-dialog-title">Choose a role for ${e(slot.player?.name||position)}</h2><p>${e(position)} position · roles are saved to this tactical position, so a replacement inherits its instructions.</p></div><button type="button" data-role-picker-close aria-label="Close role guide">×</button></header><div class="fm-role-dialog-list">${candidates.map(({name,fit,info})=>`<button type="button" class="fm-role-option${current===name?' is-current':''}" data-role-choice="${e(name)}" data-role-choice-slot="${index}" data-role-choice-phase="${phaseName}" aria-pressed="${current===name}"><span class="fm-role-option-head"><b>${e(name)}</b><strong>${fit==null?'Player fit shown after selection':`${Z.fitRating(fit)}/5 · ${Z.fitBand(fit)} (${fit}%)`}</strong></span><span>${e(info.description)}</span><small>Key attributes · ${e(info.attributes.join(' · '))}</small><small>Tactical behaviour · ${e(info.behaviour)}</small>${current===name?'<i>Current role</i>':'<em>Select role</em>'}</button>`).join('')}</div></section></div>`;})():'';
   const phaseButtons=()=>`<div class="fm-shape-switch" role="group" aria-label="Team shape view">${[['combined','Combined'],['attack','In Possession'],['base','Out of Possession'],['both','Both']].map(([v,label])=>`<button type="button" data-board="phase|0|${v}" aria-pressed="${phase===v}">${label}</button>`).join('')}</div>`;
   const defenseOptions=[...Object.keys(D.FORMATIONS),'Custom'],attackChoices=B().phaseFormationOptions();
@@ -160,6 +159,8 @@ function bind(root,change,draw){
   if(ev.target.closest('[data-player-pick]')||ev.target.closest('select'))return;
   const field=ev.target.closest?.('.shape-field');
   if(field&&!ev.target.closest('.shape-field [data-slot],.shape-field [data-role-target],.fm-zone-overlay,.fm-pitch-marker')){if(selected!==null||selectedBench){selected=null;selectedBench=null;draw();}return;}
+  const benchRow=ev.target.closest('.fm-sub[data-board]');
+  if(benchRow){act(benchRow.dataset.board);return;}
   const row=ev.target.closest('.fm-row[data-slot]');
   const b=ev.target.closest('button');
   if(b?.hasAttribute('data-bench-toggle')){benchOpen=!benchOpen;const panel=root.querySelector('.fm-squad-panel');panel?.classList.toggle('is-bench-open',benchOpen);b.setAttribute('aria-expanded',String(benchOpen));const hint=b.querySelector('small');if(hint)hint.textContent=benchOpen?'Hide':'Show';return;}
@@ -180,6 +181,8 @@ function bind(root,change,draw){
   if(ev.key==='Escape'&&rolePicker){const target=rolePicker;rolePicker=null;draw();root.querySelector(`[data-role-picker-open="${target.slot}"][data-role-picker-phase="${target.phase}"]`)?.focus?.();return;}
   if(ev.key==='Tab'&&rolePicker){const items=[...root.querySelectorAll('.fm-role-dialog button:not(:disabled)')],first=items[0],last=items.at(-1);if(ev.shiftKey&&ev.target===first){ev.preventDefault();last?.focus();return;}if(!ev.shiftKey&&ev.target===last){ev.preventDefault();first?.focus();return;}}
   if(ev.target.closest('select,input,textarea,button,[contenteditable="true"]'))return;
+  const benchRow=ev.target.closest('.fm-sub[data-board][role="button"]');
+  if(benchRow&&['Enter',' '].includes(ev.key)){ev.preventDefault();act(benchRow.dataset.board);return;}
   const row=ev.target.closest('.fm-row[data-slot][role="button"]');
   if(!row||!['Enter',' '].includes(ev.key))return;
   ev.preventDefault();const i=+row.dataset.slot;
@@ -198,9 +201,28 @@ function bind(root,change,draw){
   if(!drag.moving){root.setPointerCapture?.(ev.pointerId);drag.captured=true;}
   drag.moving=true;drag.markerCard?.classList.add('fm-marker-dragging');
   if(drag.kind==='player'&&!drag.rowDetached){
-   const r=drag.source.getBoundingClientRect(),placeholder=document.createElement('div');placeholder.className='fm-drag-placeholder';placeholder.style.height=`${r.height}px`;placeholder.style.width=`${r.width}px`;drag.source.parentNode?.insertBefore(placeholder,drag.source);drag.placeholder=placeholder;document.body.appendChild(drag.source);Object.assign(drag.source.style,{position:'fixed',left:`${r.left}px`,top:`${r.top}px`,width:`${r.width}px`,margin:'0',zIndex:'99999',pointerEvents:'none'});drag.rowDetached=true;
+   const r=drag.source.getBoundingClientRect(),isRow=drag.source.tagName==='TR',placeholder=document.createElement(isRow?'tr':'div'),cellWidths=isRow?[...drag.source.cells].map(()=>0):[];
+   placeholder.className='fm-drag-placeholder';
+   if(isRow){const spacer=document.createElement('td');spacer.colSpan=cellWidths.length||99;spacer.style.height=`${r.height}px`;placeholder.append(spacer);}
+   else{placeholder.style.height=`${r.height}px`;placeholder.style.width=`${r.width}px`;}
+   drag.source.parentNode?.insertBefore(placeholder,drag.source);drag.placeholder=placeholder;
+   if(isRow){
+    drag.source.classList.add('fm-drag-hidden');
+    const ghost=document.createElement('div'),tag=document.createElement('b'),who=document.createElement('span'),fit=document.createElement('i');
+    ghost.className='fm-drag-ghost';
+    tag.textContent=drag.source.querySelector('.fm-sheet-pos')?.textContent.trim()||'';
+    who.textContent=drag.playerLabel||'';
+    fit.textContent=drag.source.querySelector('.fm-sheet-fit')?.textContent.trim().split('·')[0].trim()||'';
+    ghost.append(tag,who,fit);
+    Object.assign(ghost.style,{position:'fixed',left:'0px',top:'0px',zIndex:'99999',pointerEvents:'none'});
+    drag.ghostOffset={x:Math.min(Math.max(drag.x-r.left,26),150),y:Math.max(drag.y-r.top,20)};
+    document.body.appendChild(ghost);drag.holder=ghost;
+   }else{
+    document.body.appendChild(drag.source);Object.assign(drag.source.style,{position:'fixed',left:`${r.left}px`,top:`${r.top}px`,width:`${r.width}px`,margin:'0',zIndex:'99999',pointerEvents:'none'});
+   }
+   drag.rowDetached=true;
   }
-  drag.source.classList.add('fm-drag-source');
+  (drag.holder||drag.source).classList.add('fm-drag-source');
   const under=document.elementFromPoint(ev.clientX,ev.clientY),field=under?.closest('.shape-field'),directExact=under?.closest('.shape-field [data-slot]'),directRole=under?.closest('.shape-field [data-role-target]');
   if(drag.activeField!==field){drag.activeField?.classList?.remove('fm-dragging');drag.activeField=field;field?.classList?.add('fm-dragging');}
   const roleTarget=directRole||(directExact?null:nearestTarget(field,'[data-role-target]',ev.clientX,ev.clientY)),exact=directExact||(roleTarget?null:nearestTarget(field,'[data-slot]',ev.clientX,ev.clientY)),preview=roleTarget||exact;
@@ -208,13 +230,15 @@ function bind(root,change,draw){
   if(drag.hover!==hover){drag.hover?.classList.remove('fm-drop-target','fm-drop-invalid');drag.hover=hover;}
   if(hover)hover.classList.add(valid?'fm-drop-target':'fm-drop-invalid');
   const targetRect=valid?hover?.getBoundingClientRect?.():null;
-  if(drag.kind==='shirt'&&drag.origin&&targetRect){drag.source.classList.add('fm-snap-preview');drag.source.style.translate=`${targetRect.left+targetRect.width/2-drag.origin.left-drag.origin.width/2}px ${targetRect.top+targetRect.height/2-drag.origin.top-drag.origin.height/2}px`;}
-  else{drag.source.classList.remove('fm-snap-preview');drag.source.style.translate=`${ev.clientX-drag.x}px ${ev.clientY-drag.y}px`;}
+  const mover=drag.holder||drag.source;
+  if(drag.kind==='shirt'&&drag.origin&&targetRect){mover.classList.add('fm-snap-preview');mover.style.translate=`${targetRect.left+targetRect.width/2-drag.origin.left-drag.origin.width/2}px ${targetRect.top+targetRect.height/2-drag.origin.top-drag.origin.height/2}px`;}
+  else{mover.classList.remove('fm-snap-preview');mover.style.translate=drag.ghostOffset?`${ev.clientX-drag.ghostOffset.x}px ${ev.clientY-drag.ghostOffset.y}px`:`${ev.clientX-drag.x}px ${ev.clientY-drag.y}px`;}
   drag.drop={field,marker:exact,preview,valid};
  });
  function restore(d){
-  if(d.rowDetached&&d.placeholder?.parentNode){d.placeholder.parentNode.insertBefore(d.source,d.placeholder);d.placeholder.remove();for(const key of ['position','left','top','width','margin','zIndex','pointerEvents'])d.source.style[key]='';}
-  d.activeField?.classList?.remove('fm-dragging');d.markerCard?.classList.remove('fm-marker-dragging');d.source.style.translate='';d.source.classList.remove('fm-drag-source','fm-snap-preview');
+  const mover=d.holder||d.source;
+  if(d.rowDetached&&d.placeholder?.parentNode){d.placeholder.parentNode.insertBefore(d.source,d.placeholder);d.placeholder.remove();for(const key of ['position','left','top','width','margin','zIndex','pointerEvents'])d.source.style[key]='';if(d.holder){d.holder.remove();d.holder=null;}d.source.classList.remove('fm-drag-hidden');d.ghostOffset=null;}
+  d.activeField?.classList?.remove('fm-dragging');d.markerCard?.classList.remove('fm-marker-dragging');mover.style.translate='';mover.classList.remove('fm-drag-source','fm-snap-preview');
  }
  function finish(ev,cancel){
   if(drag?.id!==ev.pointerId)return;
