@@ -941,7 +941,7 @@
   z-index: 60;
   overflow: visible !important;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu {
+#homeScreen:has(.fm-tactics-workspace) .fm-marker-menu {
   position: absolute;
   top: calc(100% + 5px);
   left: 50%;
@@ -960,11 +960,22 @@
   overscroll-behavior: contain;
   scrollbar-width: thin;
 }
+/* the team-sheet picker uses the same sheet, pinned to the clicked player cell */
+#homeScreen:has(.fm-tactics-workspace) .fm-marker-menu.is-sheet-menu {
+  position: fixed;
+  z-index: 420;
+  top: auto;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  transform: none;
+  max-height: min(430px, 70vh);
+}
 #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.dock-above .fm-marker-menu {
   top: auto;
   bottom: calc(100% + 5px);
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-head {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-head {
   position: sticky;
   top: 0;
   z-index: 2;
@@ -976,8 +987,8 @@
   border-bottom: 1px solid #14402f;
   background: #0b2a21;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-head div { display: grid; gap: 2px; min-width: 0; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-head small {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-head div { display: grid; gap: 2px; min-width: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-head small {
   overflow: hidden;
   color: #7fa596;
   font: 800 7.5px/1 system-ui, sans-serif;
@@ -986,14 +997,14 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-head b {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-head b {
   overflow: hidden;
   color: #f2f8f5;
   font: 750 11px/1.2 system-ui, sans-serif;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-close {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-close {
   position: relative !important;
   inset: auto !important;
   flex: none;
@@ -1009,15 +1020,15 @@
   font: 700 12px/1 system-ui, sans-serif;
   transform: none !important;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-close:hover { background: #1b5540 !important; color: #fff; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-cols,
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-close:hover { background: #1b5540 !important; color: #fff; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-cols,
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-row {
   display: grid;
   grid-template-columns: 14px minmax(0, 1fr) 28px 26px 44px 23px 23px 23px;
   gap: 6px;
   align-items: center;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-cols {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-cols {
   padding: 5px 9px 4px;
   border-bottom: 1px solid #0f362a;
   color: #6f9587;
@@ -1025,8 +1036,8 @@
   letter-spacing: .08em;
   text-transform: uppercase;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-cols span:not(:nth-child(2)) { text-align: right; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-cols span:not(:nth-child(2)) { text-align: right; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-row {
   position: relative !important;
   inset: auto !important;
   width: 100%;
@@ -1042,24 +1053,27 @@
   cursor: pointer;
   transform: none !important;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row:is(:hover, :focus-visible) {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-row:is(:hover, :focus-visible) {
   background: #1b5540 !important;
   box-shadow: inset 0 0 0 1px #2a6f52;
   outline: 0;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row.is-knock { color: #f0b9a8; cursor: default; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-num {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-row.is-knock { color: #f0b9a8; cursor: default; }
+/* a starter offered in the same list keeps his shirt number lit */
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-row.is-on-pitch .fm-swap-num { color: #f2c14e; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-row.is-on-pitch { box-shadow: inset 2px 0 0 #2f6b52, inset 0 1px 0 #0d3125; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-num {
   color: #7ea293;
   font-size: 8px;
   font-weight: 800;
   text-align: center;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-name {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-tag {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-tag {
   overflow: hidden;
   color: #9dbab0;
   font-size: 8.5px;
@@ -1068,7 +1082,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stars {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-stars {
   display: flex;
   justify-content: flex-end;
   gap: 1px;
@@ -1076,23 +1090,23 @@
   line-height: 1;
   letter-spacing: -.4px;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stars span { color: #f2c14e; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stars i { color: #3d5a4e; font-style: normal; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stat {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-stars span { color: #f2c14e; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-stars i { color: #3d5a4e; font-style: normal; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-stat {
   color: #c8dcd4;
   font-size: 9px;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   text-align: right;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stat.is-low { color: #e8a24a; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-empty {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-stat.is-low { color: #e8a24a; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-empty {
   margin: 0;
   padding: 10px 9px;
   color: #9db8ab;
   font-size: 10px;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-foot {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-foot {
   position: sticky;
   bottom: 0;
   z-index: 2;
@@ -1100,7 +1114,7 @@
   border-top: 1px solid #14402f;
   background: #0b2a21;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-foot button {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-foot button {
   position: relative !important;
   inset: auto !important;
   width: 100%;
@@ -1115,7 +1129,7 @@
   transform: none !important;
   cursor: pointer;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-foot button:is(:hover, :focus-visible) {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-foot button:is(:hover, :focus-visible) {
   background: #4a2b22 !important;
   color: #ffd0c4;
   outline: 0;
@@ -1149,12 +1163,12 @@
 @media (max-width: 600px) {
   #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card { grid-template-rows: 26px 15px 14px; width: 78px; }
   #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .shirt-marker > svg { width: 28px; height: 24px; }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu { width: min(330px, 90vw); max-height: min(360px, 58vh); }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-cols,
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row { grid-template-columns: 12px minmax(0, 1fr) 24px 22px 38px 21px 21px 21px; gap: 4px; }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row { padding: 5px 8px; font-size: 9.5px; }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stat { font-size: 8.5px; }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stars { font-size: 7px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-marker-menu { width: min(330px, 90vw); max-height: min(360px, 58vh); }
+  #homeScreen:has(.fm-tactics-workspace) .fm-swap-cols,
+  #homeScreen:has(.fm-tactics-workspace) .fm-swap-row { grid-template-columns: 11px minmax(0, 1fr) 27px 21px 34px 20px 20px 20px; gap: 4px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-swap-row { padding: 5px 8px; font-size: 9.5px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-swap-stat { font-size: 8.5px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-swap-stars { font-size: 7px; }
 }
 
 /* the visualiser pitch places its markers like the shape pitch does */

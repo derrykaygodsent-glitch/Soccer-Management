@@ -118,15 +118,15 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   handlers.click({target:{closest:selector=>selector==='button'?subTrigger:selector==='.fm-marker-player'?{}:null}});
   const menuOpen=TLBoardRoom.render(s,pool);
   a.match(menuOpen,/class="fm-marker-player is-open"/,'tapping the name row opens the in-game substitute list');
-  a.match(menuOpen,/role="dialog" aria-labelledby="fm-swap-title-3"/,'the swap sheet is announced as a labelled panel, not a system dropdown');
+  a.match(menuOpen,/role="dialog" aria-labelledby="fm-swap-title-marker-3"/,'the swap sheet is announced as a labelled panel, not a system dropdown');
   a.match(menuOpen,/fm-swap-cols/,'the swap sheet carries column headings');
   for (const column of ['Player','Role','Pos','Abil','Con','Shp','Mor']) a.match(menuOpen,new RegExp(`>${column}<`),`the swap sheet lists ${column.toLowerCase()} for every substitute`);
   a.match(menuOpen,/class="fm-swap-row/,'each substitute is a rich swap row');
   a.match(menuOpen,/data-marker-remove="3"[^>]*>Remove [A-Za-z' -]+ from position</,'the filled slot can be vacated from the sheet');
   a.ok(!/data-marker-substitute="\d+"[^>]*>\s*<option/.test(menuOpen)&&!/<select data-marker-substitute/.test(menuOpen),'the row no longer renders a native select');
-  const starterSheet=TLMatchBoard.sheet(s.tactic,plan,pool),starter=starterSheet.slots[3],listed=[...menuOpen.matchAll(/data-marker-pick="([^"]+)" data-marker-slot="3"/g)].map(m=>m[1]),suitability=p=>TLZones.fit(p,starter.position,starter.job[0],s.boardReps),stars=TLDynamics.squadStars(pool),expectedSubs=starterSheet.bench.filter(p=>(p.pos==='GK')===false&&!p.red&&!TLDynamics.snapshot(s,pool).players[p.id]?.knock).sort((x,y)=>suitability(y)-suitability(x)||(stars[y.id]||0)-(stars[x.id]||0)||x.name.localeCompare(y.name)).map(p=>p.id);
+  const starterSheet=TLMatchBoard.sheet(s.tactic,plan,pool),starter=starterSheet.slots[3],listed=[...menuOpen.matchAll(/data-marker-pick="([^"]+)" data-marker-slot="3"/g)].map(m=>m[1]),suitability=p=>TLZones.fit(p,starter.position,starter.job[0],s.boardReps),stars=TLDynamics.squadStars(pool),expectedSubs=pool.filter(p=>!p.red&&!TLDynamics.snapshot(s,pool).players[p.id]?.knock&&(p.pos==='GK')===false&&p.id!==starter.player.id).map(p=>({p,fit:suitability(p)})).filter(x=>x.fit>=30).sort((x,y)=>y.fit-x.fit||(stars[y.p.id]||0)-(stars[x.p.id]||0)||x.p.name.localeCompare(y.p.name)).slice(0,14).map(x=>x.p.id);
   a.ok(!listed.includes(starter.player.id),'the player being replaced is never offered as their own substitute');
-  a.deepEqual(listed,expectedSubs,'available substitutes are ordered by fit for the selected role, then squad ability');
+  a.deepEqual(listed,expectedSubs,'only players who can cover the role are offered, ordered by fit then squad ability');
   const playerId = TLMatchBoard.sheet(s.tactic, plan, pool).slots[3].player.id;
   const instruction = { value: TLZones.individualInstructions.pressing[0], dataset: { playerInstruction: `defense|${playerId}|pressing` }, hasAttribute: name => name === 'data-player-instruction' };
   handlers.change({ target: instruction });
@@ -420,6 +420,24 @@ test('status and squad metrics are legible text, with team-instruction responsib
   a.match(css, /fm-squad-panel \.fm-row\.on \.fm-suitability[^}]*color:#bce5e0!important/);
   a.match(css, /fm-status-chip\.has-risks[^}]*#f2cd8e!important/);
   a.doesNotMatch(css, /fm-drag-ghost/, 'dragging uses the source item, not a cloned lifted ghost');
+});
+
+test('the team-sheet player cell opens the same in-game swap sheet', () => {
+  const s = career(); s.id = 'sheet-picker-swap';
+  const handlers = {}, actions = [], root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, querySelector: () => null };
+  TLBoardRoom.bind(root, (action, value) => { actions.push(value); if (action === 'matchBoard') TLMatchBoard.update(s, value, pool); }, () => {});
+  const html = TLBoardRoom.render(s, pool);
+  a.doesNotMatch(html, /<select class="fm-player-picker/, 'the team sheet no longer renders a native select');
+  a.match(html, /<button type="button" class="fm-player-picker" data-player-pick="3"/, 'the player cell carries an in-game picker trigger');
+  const trigger = { dataset: { playerPick: '3' }, hasAttribute: name => name === 'data-player-pick' };
+  handlers.click({ target: { closest: selector => selector === '[data-player-pick]' ? trigger : null } });
+  const open = TLBoardRoom.render(s, pool);
+  a.match(open, /class="fm-marker-menu is-sheet-menu"/, 'the team sheet opens the shared swap sheet');
+  a.match(open, /aria-labelledby="fm-swap-title-sheet-3"/, 'the sheet panel is labelled for its slot');
+  const slot = TLMatchBoard.sheet(s.tactic, TLMatchBoard.active(s), pool).slots[3];
+  const target = open.match(/data-marker-pick="([^"]+)" data-marker-slot="3"/)[1];
+  a.notEqual(target, slot.player.id, 'the player already in the slot is never listed against himself');
+  a.ok(TLZones.fit(pool.find(p => p.id === target), slot.position, slot.job[0], s.boardReps) >= 30, 'only players who can cover the role are listed');
 });
 
 test('opening a player picker does not accidentally press its containing squad row', () => {

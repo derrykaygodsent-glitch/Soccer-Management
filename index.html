@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="a6581ebd5f795c3c9d90">
+  <meta name="tl-build" content="90c3b3e46f5c8766f313">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -4521,7 +4521,7 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   z-index: 60;
   overflow: visible !important;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu {
+#homeScreen:has(.fm-tactics-workspace) .fm-marker-menu {
   position: absolute;
   top: calc(100% + 5px);
   left: 50%;
@@ -4540,11 +4540,22 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   overscroll-behavior: contain;
   scrollbar-width: thin;
 }
+/* the team-sheet picker uses the same sheet, pinned to the clicked player cell */
+#homeScreen:has(.fm-tactics-workspace) .fm-marker-menu.is-sheet-menu {
+  position: fixed;
+  z-index: 420;
+  top: auto;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  transform: none;
+  max-height: min(430px, 70vh);
+}
 #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.dock-above .fm-marker-menu {
   top: auto;
   bottom: calc(100% + 5px);
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-head {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-head {
   position: sticky;
   top: 0;
   z-index: 2;
@@ -4556,8 +4567,8 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   border-bottom: 1px solid #14402f;
   background: #0b2a21;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-head div { display: grid; gap: 2px; min-width: 0; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-head small {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-head div { display: grid; gap: 2px; min-width: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-head small {
   overflow: hidden;
   color: #7fa596;
   font: 800 7.5px/1 system-ui, sans-serif;
@@ -4566,14 +4577,14 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   text-transform: uppercase;
   white-space: nowrap;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-head b {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-head b {
   overflow: hidden;
   color: #f2f8f5;
   font: 750 11px/1.2 system-ui, sans-serif;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-close {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-close {
   position: relative !important;
   inset: auto !important;
   flex: none;
@@ -4589,15 +4600,15 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   font: 700 12px/1 system-ui, sans-serif;
   transform: none !important;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-close:hover { background: #1b5540 !important; color: #fff; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-cols,
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-close:hover { background: #1b5540 !important; color: #fff; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-cols,
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-row {
   display: grid;
   grid-template-columns: 14px minmax(0, 1fr) 28px 26px 44px 23px 23px 23px;
   gap: 6px;
   align-items: center;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-cols {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-cols {
   padding: 5px 9px 4px;
   border-bottom: 1px solid #0f362a;
   color: #6f9587;
@@ -4605,8 +4616,8 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   letter-spacing: .08em;
   text-transform: uppercase;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-cols span:not(:nth-child(2)) { text-align: right; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-cols span:not(:nth-child(2)) { text-align: right; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-row {
   position: relative !important;
   inset: auto !important;
   width: 100%;
@@ -4622,24 +4633,27 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   cursor: pointer;
   transform: none !important;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row:is(:hover, :focus-visible) {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-row:is(:hover, :focus-visible) {
   background: #1b5540 !important;
   box-shadow: inset 0 0 0 1px #2a6f52;
   outline: 0;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row.is-knock { color: #f0b9a8; cursor: default; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-num {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-row.is-knock { color: #f0b9a8; cursor: default; }
+/* a starter offered in the same list keeps his shirt number lit */
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-row.is-on-pitch .fm-swap-num { color: #f2c14e; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-row.is-on-pitch { box-shadow: inset 2px 0 0 #2f6b52, inset 0 1px 0 #0d3125; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-num {
   color: #7ea293;
   font-size: 8px;
   font-weight: 800;
   text-align: center;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-name {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-tag {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-tag {
   overflow: hidden;
   color: #9dbab0;
   font-size: 8.5px;
@@ -4648,7 +4662,7 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stars {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-stars {
   display: flex;
   justify-content: flex-end;
   gap: 1px;
@@ -4656,23 +4670,23 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   line-height: 1;
   letter-spacing: -.4px;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stars span { color: #f2c14e; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stars i { color: #3d5a4e; font-style: normal; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stat {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-stars span { color: #f2c14e; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-stars i { color: #3d5a4e; font-style: normal; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-stat {
   color: #c8dcd4;
   font-size: 9px;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   text-align: right;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stat.is-low { color: #e8a24a; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-empty {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-stat.is-low { color: #e8a24a; }
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-empty {
   margin: 0;
   padding: 10px 9px;
   color: #9db8ab;
   font-size: 10px;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-foot {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-foot {
   position: sticky;
   bottom: 0;
   z-index: 2;
@@ -4680,7 +4694,7 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   border-top: 1px solid #14402f;
   background: #0b2a21;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-foot button {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-foot button {
   position: relative !important;
   inset: auto !important;
   width: 100%;
@@ -4695,7 +4709,7 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   transform: none !important;
   cursor: pointer;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-foot button:is(:hover, :focus-visible) {
+#homeScreen:has(.fm-tactics-workspace) .fm-swap-foot button:is(:hover, :focus-visible) {
   background: #4a2b22 !important;
   color: #ffd0c4;
   outline: 0;
@@ -4729,12 +4743,12 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 @media (max-width: 600px) {
   #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card { grid-template-rows: 26px 15px 14px; width: 78px; }
   #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .shirt-marker > svg { width: 28px; height: 24px; }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu { width: min(330px, 90vw); max-height: min(360px, 58vh); }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-cols,
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row { grid-template-columns: 12px minmax(0, 1fr) 24px 22px 38px 21px 21px 21px; gap: 4px; }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row { padding: 5px 8px; font-size: 9.5px; }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stat { font-size: 8.5px; }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stars { font-size: 7px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-marker-menu { width: min(330px, 90vw); max-height: min(360px, 58vh); }
+  #homeScreen:has(.fm-tactics-workspace) .fm-swap-cols,
+  #homeScreen:has(.fm-tactics-workspace) .fm-swap-row { grid-template-columns: 11px minmax(0, 1fr) 27px 21px 34px 20px 20px 20px; gap: 4px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-swap-row { padding: 5px 8px; font-size: 9.5px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-swap-stat { font-size: 8.5px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-swap-stars { font-size: 7px; }
 }
 
 /* the visualiser pitch places its markers like the shape pitch does */
@@ -16424,7 +16438,7 @@ const api={scheme,overrides,sheet,update,active,score,formation,freeze,lineup,le
 
 ;
 /* ===== board-room.js ===== */
-(function(g){'use strict';let selected=null,selectedBench=null,context='',workspaceTab='shape',rolePicker=null,benchOpen=false,libraryOpen=false,markerMenu=null;const B=()=>g.TLMatchBoard,e=x=>g.TLClubUI.esc(String(x??''));
+(function(g){'use strict';let selected=null,selectedBench=null,context='',workspaceTab='shape',rolePicker=null,benchOpen=false,libraryOpen=false,markerMenu=null,sheetMenu=null;const B=()=>g.TLMatchBoard,e=x=>g.TLClubUI.esc(String(x??''));
 // Match coordinates describe compact playing positions. Stretch the lines on the chalkboard
 // without changing the underlying tactic, and invert the same projection for touch placement.
 const depth=[[0,5],[.035,8],[.10,24],[.32,41],[.45,56],[.59,72],[.75,89],[1,95]];
@@ -16447,7 +16461,7 @@ function jersey(n){return `<svg class="tactic-shirt" viewBox="0 0 42 38" aria-hi
 function render(s,players){
   const stars=g.TLDynamics.squadStars(players),lists=g.TLKit.current(s).filter(r=>r.day<=s.day),filed=lists.find(r=>r.title===s.kitScope),numbers=(filed||lists.find(r=>r.title===g.TLKit.league))?.numbers||{},defaults=positionalNumbers(s.tactic);
   if(filed)players=players.filter(p=>filed.numbers[p.id]);
-  const key=[s.id,s.boardIndex,s.tactic,s.kitScope].join(':');if(context!==key){selected=null;selectedBench=null;workspaceTab='shape';rolePicker=null;markerMenu=null;context=key;}
+  const key=[s.id,s.boardIndex,s.tactic,s.kitScope].join(':');if(context!==key){selected=null;selectedBench=null;workspaceTab='shape';rolePicker=null;markerMenu=null;sheetMenu=null;context=key;}
   const {slots,bench}=B().sheet(s.tactic,B().active(s),players),W=g.TLManagerLife,Z=g.TLZones,D=g.TLData,plan=B().active(s),phaseRaw=s.boardPhase||'base',phase=phaseRaw==='transition'?'base':phaseRaw,inst=Z.settings(plan),visualMode=phase,defenseName=Object.hasOwn(D.FORMATIONS,plan.defenseFormation)?plan.defenseFormation:s.tactic,defenseCustomNumber=B().formationNumber(slots.slice(1).map(v=>({x:v.x,y:v.y}))),attackCustomNumber=B().formationNumber(slots.slice(1).map(v=>v.attack||v)),defenseChoice=plan.defenseFormation==='Custom'?'Custom':defenseName,attackName=plan.attackFormation||'Same as defensive shape',attackChoice=plan.attackFormation||((plan.attack||Object.keys(plan.attackByPlayer||{}).length||plan.phaseCoordinates?.attack)?'Custom':'Same as defensive shape'),defenseLabel=defenseChoice==='Custom'?`Custom${defenseCustomNumber?` (${defenseCustomNumber})`:''}`:defenseName,attackLabel=attackChoice==='Custom'?`Custom${attackCustomNumber?` (${attackCustomNumber})`:''}`:attackName;
   const options=(values,current,display=v=>v)=>values.map(v=>`<option value="${e(v)}"${v===current?' selected':''}>${e(display(v))}</option>`).join('');
   const picker=(label,cmd,values,current,display=v=>v)=>`<label><span>${label}</span><select aria-label="${label}" data-plan="${cmd}">${options(values,current,display)}</select></label>`;
@@ -16461,7 +16475,7 @@ function render(s,players){
   const intensity=Math.round(((inst.fine?.tempo??inst.tempo??1)+(inst.fine?.press??inst.press??1))/4*100);
   const status=p=>{if(!p)return '';const v=readiness[p.id];if(!v)return '';if(v.knock)return '<i class="fm-pip bad" title="Carrying a knock">Injured</i>';if(v.fitness<70)return '<i class="fm-pip warn" title="Low condition">Low</i>';if(v.sharp<70)return '<i class="fm-pip warn" title="Needs match sharpness">Sharpness</i>';return '<i class="fm-pip good" title="Ready">Ready</i>';};
   const starsOf=p=>{const n=p?(stars[p.id]||0):0;return `<span class="fm-stars" role="img" aria-label="Squad ability ${n} of 5"><span>${'★'.repeat(n)}</span><i>${'☆'.repeat(5-n)}</i></span>`;};
-  const code=(role,job,duty)=>{const names={'Goalkeeper':'GK','Sweeper Keeper':'SK','Ball-Playing Goalkeeper':'BPG','Centre-Back':'CB','Ball-Playing Defender':'BPD','No-Nonsense Centre-Back':'NNCB','Libero':'Lib','Stopper':'Stop','Cover Defender':'Cov','Full-Back':'FB','Wing-Back':'WB','Complete Wing-Back':'CWB','Inverted Wing-Back':'IWB','Inverted Full-Back':'IFB','No-Nonsense Full-Back':'NNFB','Defensive Midfielder':'DM','Anchor':'A','Half-Back':'HB','Deep-Lying Playmaker':'DLP','Segundo Volante':'SV','Regista':'Reg','Ball-Winning Midfielder':'BWM','Central Midfielder':'CM','Box-to-Box Midfielder':'BBM','Mezzala':'Mez','Carrilero':'Car','Advanced Playmaker':'AP','Roaming Playmaker':'RPM','Attacking Midfielder':'AM','Shadow Striker':'SS','Trequartista':'Treq','Enganche':'Eng','Wide Midfielder':'WM','Wide Playmaker':'WP','Winger':'W','Defensive Winger':'DW','Inside Forward':'IF','Inverted Winger':'IW','Advanced Winger':'AW','Raumdeuter':'Rau','Wide Target Forward':'WTF','Striker':'ST','Advanced Forward':'AF','Complete Forward':'CF','Deep-Lying Forward':'DLF','Target Forward':'TF','Poacher':'P','Pressing Forward':'PF','False Nine':'F9','Defensive Forward':'DF'};return names[job]||job||role;};
+  const code=(role,job,duty)=>{const names={'Goalkeeper':'GK','Sweeper Keeper':'SK','Ball-Playing Goalkeeper':'BPG','Centre-Back':'CB','Wide Centre-Back':'WCB','Ball-Playing Defender':'BPD','No-Nonsense Centre-Back':'NNCB','Libero':'Lib','Stopper':'Stop','Cover Defender':'Cov','Full-Back':'FB','Wing-Back':'WB','Complete Wing-Back':'CWB','Inverted Wing-Back':'IWB','Inverted Full-Back':'IFB','No-Nonsense Full-Back':'NNFB','Defensive Midfielder':'DM','Anchor':'A','Half-Back':'HB','Deep-Lying Playmaker':'DLP','Segundo Volante':'SV','Regista':'Reg','Ball-Winning Midfielder':'BWM','Central Midfielder':'CM','Box-to-Box Midfielder':'BBM','Mezzala':'Mez','Carrilero':'Car','Advanced Playmaker':'AP','Roaming Playmaker':'RPM','Attacking Midfielder':'AM','Shadow Striker':'SS','Trequartista':'Treq','Enganche':'Eng','Wide Midfielder':'WM','Wide Playmaker':'WP','Winger':'W','Defensive Winger':'DW','Inside Forward':'IF','Inverted Winger':'IW','Advanced Winger':'AW','Raumdeuter':'Rau','Wide Target Forward':'WTF','Striker':'ST','Advanced Forward':'AF','Complete Forward':'CF','Deep-Lying Forward':'DLF','Target Forward':'TF','Poacher':'P','Pressing Forward':'PF','False Nine':'F9','Defensive Forward':'DF'};return names[job]||job||role;};
   const captain=B().captain({tactics:{captains:s.armband||[]},slots:slots.filter(v=>v.player)})?.id;
   const location=(v,index,mode)=>{
     const base={x:v.x,y:v.y},forward=v.attack||base;
@@ -16473,15 +16487,34 @@ function render(s,players){
     return {point:base,role:v.position,job:v.job};
   };
   const zoneOf=(pt,index)=>{const row=pt.x<.34?'defense':pt.x<.66?'middle':'attack',col=pt.y<.34?'left':pt.y>.66?'right':'centre';return `${row}-${col}`;};
+  const swapFloor=30,swapLimit=14;
+  const swapCandidates=(index,position,role)=>{
+    const own=slots[index]?.player?.id;
+    return players.filter(q=>q.id!==own&&!q.red&&!readiness[q.id]?.knock&&(q.pos==='GK')===(index===0))
+      .map(q=>({player:q,fit:Z.fit(q,position,role,s.boardReps?.[q.id]),onPitch:slots.some((v,j)=>j!==index&&v.player?.id===q.id)}))
+      .filter(x=>index===0||x.fit>=swapFloor)
+      .sort((a,b)=>b.fit-a.fit||(stars[b.player.id]||0)-(stars[a.player.id]||0)||a.player.name.localeCompare(b.player.name))
+      .slice(0,swapLimit);
+  };
+  const swapSheet=(index,{position,role,duty,anchor})=>{
+    const own=slots[index]?.player,list=swapCandidates(index,position,role),surname=own?own.name.split(' ').filter(Boolean).pop():'',
+      title=own?`Swap ${e(surname)} with…`:`Choose a ${e(role||position)}`,dutyWord=duty?({Su:'Support',De:'Defend',At:'Attack'}[duty]||duty):'',uid=`fm-swap-title-${anchor}-${index}`;
+    const rows=list.length?list.map(({player:q,fit,onPitch})=>{
+      const v=readiness[q.id]||{},ranked=Z.choices(position).map(name=>[name,Z.fit(q,position,name,s.boardReps?.[q.id])]).sort((a,b)=>(b[1]??0)-(a[1]??0)),bestRole=(ranked[0]||[position])[0],
+        rating=Z.fitRating(fit),fitness=v.fitness??'–',sharp=v.sharp??'–',mood=v.mood??'–',num=numbers[q.id]??q.num??'–';
+      return `<button type="button" data-marker-pick="${e(q.id)}" data-marker-slot="${index}" class="fm-swap-row${onPitch?' is-on-pitch':''}" title="${e(q.name)} · ${onPitch?'already on the pitch':'on the bench'} · best role ${e(bestRole)} · ${rating}/5 ${e(Z.fitBand(fit))} · condition ${fitness}% · sharpness ${sharp}% · morale ${mood}%"><span class="fm-swap-num">${e(num)}</span><span class="fm-swap-name">${e(q.name)}</span><span class="fm-swap-tag">${e(code(position,bestRole))}</span><span class="fm-swap-tag">${e(q.pos)}</span><span class="fm-swap-stars" role="img" aria-label="Role ability ${rating} of 5"><span>${'★'.repeat(rating)}</span><i>${'☆'.repeat(5-rating)}</i></span><span class="fm-swap-stat">${fitness}</span><span class="fm-swap-stat">${sharp}</span><span class="fm-swap-stat${mood!=='–'&&mood<55?' is-low':''}">${mood}</span></button>`;
+    }).join(''):`<p class="fm-swap-empty">No ${index===0?'goalkeeper':'squad player'} can cover this role.</p>`;
+    return `<div class="fm-marker-menu${anchor==='sheet'?' is-sheet-menu':''}" role="dialog" aria-labelledby="${uid}"><header class="fm-swap-head"><div><small>${e((role||position).toUpperCase())}${dutyWord?` · ${e(dutyWord.toUpperCase())}`:''}</small><b id="${uid}">${title}</b></div><button type="button" class="fm-swap-close" data-swap-close="${anchor}" aria-label="Close swap list">×</button></header><div class="fm-swap-cols"><span aria-hidden="true"></span><span>Player</span><span title="Best role for this position">Role</span><span title="Natural position">Pos</span><span title="Role ability">Abil</span><span title="Condition">Con</span><span title="Sharpness">Shp</span><span title="Morale">Mor</span></div>${rows}${index>0&&own?`<footer class="fm-swap-foot"><button type="button" data-marker-remove="${index}">Remove ${e(surname)} from position</button></footer>`:''}</div>`;
+  };
   const field=(mode='defense',orientation='portrait',withZones=false)=>{
     const viewKey=`${mode}:${orientation}`,menuOpen=i=>markerMenu!==null&&markerMenu.slot===i&&(markerMenu.key==null||markerMenu.key===viewKey);
     const wide=orientation==='wide',zone=selectedZone;
     const anchorsX=[.14,.32,.45,.59,.75,.9],anchorsY=[.12,.32,.5,.68,.88],gridTargets=anchorsX.flatMap(x=>anchorsY.map(y=>({x,y,job:Z.choices(Z.zone(x,y))[0],hidden:true}))),visibleAt=new Set(roleTargets.map(t=>`${t.x},${t.y}`)),hiddenTargets=gridTargets.filter(t=>!visibleAt.has(`${t.x},${t.y}`)),allTargets=[...roleTargets,...hiddenTargets];
     const targets=allTargets.length&&!withZones?allTargets.map((target,index)=>{const left=wide?project(target.x):8+84*target.y,bottom=wide?8+84*(1-target.y):project(target.x),slot=target.keeper?0:slots.slice(1).reduce((best,v,j)=>{const point=location(v,j+1,mode).point,current=location(slots[best],best,mode).point;return Math.hypot(point.x-target.x,point.y-target.y)<Math.hypot(current.x-target.x,current.y-target.y)?j+1:best;},1),hidden=target.hidden,code=target.code||'',label=code?`${code} · ${target.job}${target.flexible?' · additional line position':''}`:hidden?'Hidden pitch position':'Additional pitch position';return `<button type="button" tabindex="-1" class="${hidden?'fm-hidden-position-target':'fm-role-target'+(target.keeper?' keeper':'')+(target.flexible?' flexible':'')}" data-role-target="${index}" data-role-code="${code}" data-role-slot="${slot}" data-role-x="${target.x}" data-role-y="${target.y}" data-role-job="${e(target.job)}" data-role-phase="${mode}" data-role-keeper="${target.keeper?'true':'false'}" aria-label="${e(label)}" title="${e(label)}" style="left:${left}%;bottom:${bottom}%">${code?`<span>${e(code)}</span>`:''}</button>`;}).join(''):'';
     const markers=slots.map((v,i)=>{
-      const {point,role,job}=location(v,i,mode),p=v.player,n=numbers[p?.id]??p?.num??defaults[i]??'–',label=p?.name||'Open position',isSelected=selected===i,left=wide?project(point.x):8+84*point.y,bottom=wide?8+84*(1-point.y):project(point.x),rolePhase=mode==='attack'||mode==='combined'?'attack':'defense',chosenRole=rolePhase==='attack'?(v.attackPosition||v.position):v.position,chosenJob=rolePhase==='attack'?v.attackJob:v.job,substitutes=bench.filter(q=>(q.pos==='GK')===(i===0)&&!q.red&&!readiness[q.id]?.knock).sort((a,b)=>Z.fit(b,chosenRole,chosenJob?.[0],s.boardReps)-Z.fit(a,chosenRole,chosenJob?.[0],s.boardReps)||(stars[b.id]||0)-(stars[a.id]||0)||a.name.localeCompare(b.name)),dockX=left<28?'dock-left':left>72?'dock-right':'',dockY=bottom<18?'dock-above':bottom>82?'dock-below':'';
+      const {point,role,job}=location(v,i,mode),p=v.player,n=numbers[p?.id]??p?.num??defaults[i]??'–',label=p?.name||'Open position',isSelected=selected===i,left=wide?project(point.x):8+84*point.y,bottom=wide?8+84*(1-point.y):project(point.x),rolePhase=mode==='attack'||mode==='combined'?'attack':'defense',chosenRole=rolePhase==='attack'?(v.attackPosition||v.position):v.position,chosenJob=rolePhase==='attack'?v.attackJob:v.job,dockX=left<28?'dock-left':left>72?'dock-right':'',dockY=bottom<18?'dock-above':bottom>82?'dock-below':'';
       const platePhase=rolePhase==='attack'?'In possession':'Out of possession',plateCode=code(chosenRole,chosenJob?.[0],chosenJob?.[2]),plateDuty=(chosenJob?.[2]||'').slice(0,2),groupOf=pos=>{const c=(pos||'').toUpperCase();if(c==='GK')return 'gk';if(/^(CB|LB|RB|WB|LWB|RWB|FB|SW|LIB|CD|BPD|NNCB|IFB|COV|STOP)/.test(c))return 'def';if(/^(ST|CF|PF|AF|LW|RW|LF|RF|W|S)$/.test(c))return 'att';return 'mid';};
-      const rows=`<button type="button" class="fm-marker-role" data-role-picker-open="${i}" data-role-picker-phase="${rolePhase}" aria-haspopup="dialog" title="${e(plateCode)}${plateDuty?' - '+e(plateDuty):''} · ${platePhase} role" aria-label="${platePhase} role: ${e(chosenJob?.[0]||chosenRole)}. Choose a role"><span>${e(plateCode)}${plateDuty?` - ${e(plateDuty)}`:''}</span></button><div class="fm-marker-player${menuOpen(i)?' is-open':''}" data-marker-player="${i}"><button type="button" class="fm-marker-player-trigger" data-marker-substitute="${i}" aria-haspopup="listbox" aria-expanded="${menuOpen(i)}" title="${e(label)} · Choose a substitute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.2 4.2 0 1 0 0-8.4A4.2 4.2 0 0 0 12 12Zm0 2.1c-4.1 0-7.4 2.2-7.4 4.9V21h14.8v-2c0-2.7-3.3-4.9-7.4-4.9Z"/></svg><span>${e(p?p.name.split(' ').filter(Boolean).pop():label)}</span><i aria-hidden="true"></i></button>${menuOpen(i)?`<div class="fm-marker-menu" role="dialog" aria-labelledby="fm-swap-title-${i}"><header class="fm-swap-head"><div><small>${e((chosenJob?.[0]||chosenRole||role).toUpperCase())}${plateDuty?` · ${e(({'Su':'Support','De':'Defend','At':'Attack'}[plateDuty]||plateDuty).toUpperCase())}`:''}</small><b id="fm-swap-title-${i}">${p?`Swap ${e(p.name.split(' ').filter(Boolean).pop())} with…`:`Choose a ${e(chosenJob?.[0]||chosenRole||role)}`}</b></div><button type="button" class="fm-swap-close" data-marker-close="${i}" aria-label="Close swap list">×</button></header><div class="fm-swap-cols"><span aria-hidden="true"></span><span>Player</span><span title="Best role for this position">Role</span><span title="Natural position">Pos</span><span title="Role ability">Abil</span><span title="Condition">Con</span><span title="Sharpness">Shp</span><span title="Morale">Mor</span></div>${substitutes.length?substitutes.map(q=>{const v=readiness[q.id]||{},ranked=Z.choices(chosenRole).map(name=>[name,Z.fit(q,chosenRole,name,s.boardReps?.[q.id])]).sort((a,b)=>(b[1]??0)-(a[1]??0)),best=ranked[0]||[chosenRole,0],bestRole=best[0],fit=best[1],rating=Z.fitRating(fit),fitness=v.fitness??'–',sharp=v.sharp??'–',mood=v.mood??'–',num=numbers[q.id]??q.num??'–';return `<button type="button" data-marker-pick="${e(q.id)}" data-marker-slot="${i}" class="fm-swap-row${v.knock?' is-knock':''}" title="${e(q.name)} · best role ${e(bestRole)} · ${rating}/5 ${e(Z.fitBand(fit))} · condition ${fitness}% · sharpness ${sharp}% · morale ${mood}%"><span class="fm-swap-num">${e(num)}</span><span class="fm-swap-name">${e(q.name)}</span><span class="fm-swap-tag">${e(code(chosenRole,bestRole))}</span><span class="fm-swap-tag">${e(q.pos)}</span><span class="fm-swap-stars" role="img" aria-label="Role ability ${rating} of 5"><span>${'★'.repeat(rating)}</span><i>${'☆'.repeat(5-rating)}</i></span><span class="fm-swap-stat">${fitness}</span><span class="fm-swap-stat">${sharp}</span><span class="fm-swap-stat${mood!=='–'&&mood<55?' is-low':''}">${mood}</span></button>`;}).join(''):`<p class="fm-swap-empty">No ${i===0?'goalkeeper':'substitute'} available for this position.</p>`}${i>0&&p?`<footer class="fm-swap-foot"><button type="button" data-marker-remove="${i}">Remove ${e(p.name.split(' ').filter(Boolean).pop())} from position</button></footer>`:''}</div>`:''}</div>`;
+      const rows=`<button type="button" class="fm-marker-role" data-role-picker-open="${i}" data-role-picker-phase="${rolePhase}" aria-haspopup="dialog" title="${e(plateCode)}${plateDuty?' - '+e(plateDuty):''} · ${platePhase} role" aria-label="${platePhase} role: ${e(chosenJob?.[0]||chosenRole)}. Choose a role"><span>${e(plateCode)}${plateDuty?` - ${e(plateDuty)}`:''}</span></button><div class="fm-marker-player${menuOpen(i)?' is-open':''}" data-marker-player="${i}"><button type="button" class="fm-marker-player-trigger" data-marker-substitute="${i}" aria-haspopup="listbox" aria-expanded="${menuOpen(i)}" title="${e(label)} · Choose a substitute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.2 4.2 0 1 0 0-8.4A4.2 4.2 0 0 0 12 12Zm0 2.1c-4.1 0-7.4 2.2-7.4 4.9V21h14.8v-2c0-2.7-3.3-4.9-7.4-4.9Z"/></svg><span>${e(p?p.name.split(' ').filter(Boolean).pop():label)}</span><i aria-hidden="true"></i></button>${menuOpen(i)?swapSheet(i,{position:chosenRole,role:chosenJob?.[0]||chosenRole,duty:plateDuty,anchor:'marker'}):''}</div>`;
       return `<div class="fm-pitch-marker${isSelected?' is-selected':''}${dockX?' '+dockX:''}${dockY?' '+dockY:''}" style="left:${left}%;bottom:${bottom}%;z-index:${menuOpen(i)?320:isSelected?160:120-Math.round(bottom)}"><div class="fm-marker-card" data-group="${groupOf(chosenRole)}"><button type="button" title="${e(label)} · Drag to move or swap; click to select" data-slot="${i}" data-player-id="${e(p?.id||'')}" class="shirt-marker${i===0?' keeper':''}${p?'':' vacant'}${isSelected?' selected':''}" aria-label="Select ${e(role)} · ${e(label)} · shirt ${e(n)}" aria-pressed="${isSelected}">${jersey(n)}</button>${rows}</div></div>`;
     }).join('');
     const fieldSvg=wide?`<svg class="board-lines" viewBox="0 0 140 100" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width=".6"><rect x="1" y="1" width="138" height="98"/><path d="M70 1v98M1 20h21V80H1M1 37h8v26H1M139 20h-21v60h21m0-43h-8v26h8"/><circle cx="70" cy="50" r="11"/></g></svg>`:fieldLines;
@@ -16500,7 +16533,7 @@ function render(s,players){
     const phasePanel=phaseName=>{const groups=Object.entries(Z.individualInstructions).filter(([k])=>Z.individualInstructionChoices(phaseName,k).length);return `<section class="fm-player-phase"><header><b>${phaseName==='attack'?'In Possession':'Out of Possession'}</b><span>${phaseName==='attack'?code(slot.attackPosition||slot.position,slot.attackJob[0],slot.attackJob[2]):code(slot.position,slot.job[0],slot.job[2])}</span></header>${posSelect(slot,phaseName)}<div class="fm-player-instruction-grid">${groups.map(([k])=>{const choices=Z.individualInstructionChoices(phaseName,k);return `<label>${({position:'Positioning',risk:'Passing risk',shooting:'Shooting',dribbling:'Dribbling',pressing:'Pressing'})[k]}<select data-player-instruction="${phaseName}|${e(p.id)}|${k}">${options(choices,slot.instructions?.[phaseName]?.[k]||'Team default')}</select></label>`;}).join('')}</div></section>`;};
     return `<section class="fm-player-editor"><header class="fm-player-editor-head"><div><h3>${e(p.name)}</h3><p>${e(p.pos)} · Shirt ${e(numbers[p.id]??p.num??'—')}</p></div><div class="fm-player-readiness">${starsOf(p)} ${status(p)} <b>${readiness[p.id]?.fitness??'—'}% condition</b></div><button type="button" data-league-player="${e(p.id)}">Player profile</button></header><div class="fm-player-phase-grid">${phasePanel('attack')}${phasePanel('defense')}</div><footer><small>Familiarity ${slot.experience||0}/20 · Out of possession ${Z.fitRating(Z.fit(p,slot.position,slot.job[0],s.boardReps?.[p.id]))}/5 · In possession ${Z.fitRating(Z.fit(p,slot.attackPosition||slot.position,slot.attackJob[0],s.boardReps?.[p.id]))}/5</small></footer></section>`;
   };
-  const playerPicker=(slot,i)=>`<select class="fm-player-picker" data-player-pick="${i}" aria-label="Choose player for ${e(slot.position)}" title="Choose a player for ${e(slot.position)}"><option value="">Pick</option>${players.filter(p=>!p.red&&!readiness[p.id]?.knock).map(p=>`<option value="${e(p.id)}"${slot.player?.id===p.id?' selected':''}>${e(p.name)} · ${e(p.pos)}</option>`).join('')}</select>`;
+  const playerPicker=(slot,i)=>`<button type="button" class="fm-player-picker" data-player-pick="${i}" aria-haspopup="dialog" aria-expanded="${sheetMenu===i}" aria-label="Choose a player for ${e(slot.position)}" title="Choose a player for ${e(slot.position)}"></button>`;
   const roleCell=(slot,index,phaseName)=>{const attack=phaseName==='attack',position=attack?(slot.attackPosition||slot.position):slot.position,job=attack?slot.attackJob[0]:slot.job[0],player=slot.player,fit=player?Z.fit(player,position,job,s.boardReps?.[player.id]):null;return `<div class="fm-role-cell"><button type="button" data-role-picker-open="${index}" data-role-picker-phase="${phaseName}" aria-haspopup="dialog" aria-label="Choose ${phaseName==='attack'?'In Possession':'Out of Possession'} role for ${e(player?.name||position)}">${e(job)}</button>${fit==null?'<small>Awaiting player</small>':`<small>${Z.fitRating(fit)}/5 · ${e(Z.fitBand(fit))}</small>`}</div>`;};
   const row=(slot,i)=>{
     const p=slot.player,attack=phase==='attack',combined=phase==='combined',averaged=combined?location(slot,i,'combined'):null,pos=combined?averaged.role:attack&&slot.attack?slot.attackPosition:slot.position,ready=p?readiness[p.id]:null;
@@ -16512,7 +16545,7 @@ function render(s,players){
   const subRow=(p,i)=>`<tr class="fm-row fm-sub${selectedBench===p.id?' on':''}" role="button" tabindex="0" data-bench="${e(p.id)}" data-board="${selected!=null?`pick|${selected}|${e(p.id)}`:`bench|${e(p.id)}`}" data-player-id="${e(p.id)}" data-player-pos="${e(p.pos)}" aria-pressed="${selectedBench===p.id}"><td class="fm-sheet-pos"><span class="position-tag reserve">S${i+1}</span></td><td class="fm-sheet-role"><div class="fm-role-cell">—</div></td><td class="fm-sheet-role"><div class="fm-role-cell">—</div></td><td class="fm-sheet-ability">${starsOf(p)}</td><td class="fm-sheet-player fm-person"><i class="fm-number">${e(numbers[p.id]??p.num??'—')}</i><span>${e(p.name)}</span></td><td class="fm-sheet-fit fm-suitability">${e(p.pos)}</td><td class="fm-sheet-status fm-status">${status(p)}</td><td class="fm-sheet-cond fm-stat">${readiness[p.id]?.fitness!=null?readiness[p.id].fitness+'%':'—'}</td></tr>`;
   const SHEET_COLUMNS=['POS','In possession role','Out of possession role','Ability','Player','Fit · IP / OOP','Status','Cond.'];
   const sheetRows=()=>slots.map((slot,index)=>row(slot,index)).join('');
-  const squad=(title='First-team selection')=>`<aside class="fm-squad-panel${benchOpen?' is-bench-open':''}" id="tactic-roles"><header class="fm-panel-head"><div><small>TEAM SHEET</small><h3>${title}</h3></div><div class="fm-panel-actions"><button type="button" class="fm-btn-quiet" data-board="rotate" ${bench.some(p=>!p.red&&!readiness[p.id]?.knock)?'':'disabled'}>Rotate squad</button><button type="button" data-board="bestXI">Auto-pick best XI</button></div></header><div class="fm-squad-table" data-tl-bar><table class="fm-sheet-table" data-sort-table="teamsheet" data-sort-default="off" data-column-options="player" data-phone-sort="off" data-col-min="44"><caption class="sr-only">First-team selection</caption><thead><tr>${SHEET_COLUMNS.map(label=>`<th scope="col">${label}</th>`).join('')}</tr></thead><tbody>${sheetRows()}<tr class="fm-sheet-divider"><th scope="colgroup" colspan="${SHEET_COLUMNS.length}"><button type="button" class="fm-squad-subhead" data-bench-toggle aria-expanded="${benchOpen}"><span>SUBSTITUTES · ${bench.length}</span><small>${benchOpen?'Hide':'Show'}</small></button></th></tr>${bench.map(subRow).join('')||`<tr><td class="fm-empty" colspan="${SHEET_COLUMNS.length}">No substitutes available.</td></tr>`}</tbody></table></div>${selected!=null?instructionEditor(slots[selected]):''}</aside>`;
+  const squad=(title='First-team selection')=>`<aside class="fm-squad-panel${benchOpen?' is-bench-open':''}" id="tactic-roles"><header class="fm-panel-head"><div><small>TEAM SHEET</small><h3>${title}</h3></div><div class="fm-panel-actions"><button type="button" class="fm-btn-quiet" data-board="rotate" ${bench.some(p=>!p.red&&!readiness[p.id]?.knock)?'':'disabled'}>Rotate squad</button><button type="button" data-board="bestXI">Auto-pick best XI</button></div></header><div class="fm-squad-table" data-tl-bar><table class="fm-sheet-table" data-sort-table="teamsheet" data-sort-default="off" data-column-options="player" data-phone-sort="off" data-col-min="44"><caption class="sr-only">First-team selection</caption><thead><tr>${SHEET_COLUMNS.map(label=>`<th scope="col">${label}</th>`).join('')}</tr></thead><tbody>${sheetRows()}<tr class="fm-sheet-divider"><th scope="colgroup" colspan="${SHEET_COLUMNS.length}"><button type="button" class="fm-squad-subhead" data-bench-toggle aria-expanded="${benchOpen}"><span>SUBSTITUTES · ${bench.length}</span><small>${benchOpen?'Hide':'Show'}</small></button></th></tr>${bench.map(subRow).join('')||`<tr><td class="fm-empty" colspan="${SHEET_COLUMNS.length}">No substitutes available.</td></tr>`}</tbody></table></div>${sheetMenu!==null?swapSheet(sheetMenu,{position:slots[sheetMenu]?.position,role:slots[sheetMenu]?.job?.[0],duty:slots[sheetMenu]?.job?.[2],anchor:'sheet'}):''}${selected!=null?instructionEditor(slots[selected]):''}</aside>`;
   const roleDialog=rolePicker?(()=>{const {slot:index,phase:phaseName}=rolePicker,slot=slots[index];if(!slot)return '';const attack=phaseName==='attack',position=attack?(slot.attackPosition||slot.position):slot.position,current=attack?slot.attackJob[0]:slot.job[0],candidates=Z.choices(position).map(name=>({name,fit:slot.player?Z.fit(slot.player,position,name,s.boardReps?.[slot.player.id]):null,info:Z.roleInfo(name)})).sort((a,b)=>a.fit==null?0:b.fit==null?-1:b.fit-a.fit||a.name.localeCompare(b.name));return `<div class="fm-role-dialog-backdrop"><section class="fm-role-dialog" role="dialog" aria-modal="true" aria-labelledby="fm-role-dialog-title"><header><div><small>TOUCHLINE ROLE GUIDE · ${attack?'IN POSSESSION':'OUT OF POSSESSION'}</small><h2 id="fm-role-dialog-title">Choose a role for ${e(slot.player?.name||position)}</h2><p>${e(position)} position · roles are saved to this tactical position, so a replacement inherits its instructions.</p></div><button type="button" data-role-picker-close aria-label="Close role guide">×</button></header><div class="fm-role-dialog-list">${candidates.map(({name,fit,info})=>`<button type="button" class="fm-role-option${current===name?' is-current':''}" data-role-choice="${e(name)}" data-role-choice-slot="${index}" data-role-choice-phase="${phaseName}" aria-pressed="${current===name}"><span class="fm-role-option-head"><b>${e(name)}</b><strong>${fit==null?'Player fit shown after selection':`${Z.fitRating(fit)}/5 · ${Z.fitBand(fit)} (${fit}%)`}</strong></span><span>${e(info.description)}</span><small>Key attributes · ${e(info.attributes.join(' · '))}</small><small>Tactical behaviour · ${e(info.behaviour)}</small>${current===name?'<i>Current role</i>':'<em>Select role</em>'}</button>`).join('')}</div></section></div>`;})():'';
   const phaseButtons=()=>`<div class="fm-shape-switch" role="group" aria-label="Team shape view">${[['combined','Combined'],['attack','In Possession'],['base','Out of Possession'],['both','Both']].map(([v,label])=>`<button type="button" data-board="phase|0|${v}" aria-pressed="${phase===v}">${label}</button>`).join('')}</div>`;
   const defenseOptions=[...Object.keys(D.FORMATIONS),'Custom'],attackChoices=B().phaseFormationOptions();
@@ -16553,7 +16586,7 @@ function render(s,players){
   return `<section class="board-room fm-tactics-workspace">${strip}${header}${workspaceNav}<main class="fm-workspace-content" data-workspace="${workspaceTab}">${content}</main>${roleDialog}</section>`;
 }
 function bind(root,change,draw){
- let drag=null,suppressUntil=0;
+ let drag=null,suppressUntil=0,sheetGuard=0;
  const act=value=>{
   const [cmd,a,b]=value.split('|'),i=cmd==='move'?a:null;
   if(cmd==='bench'){selected=null;selectedBench=b||a;draw();return;}
@@ -16578,9 +16611,22 @@ function bind(root,change,draw){
   else if(ev.target.hasAttribute('data-axis'))act(`axis|0|${ev.target.dataset.axis}|${ev.target.value}`);
   else if(ev.target.hasAttribute('data-duty'))act(`duty|${ev.target.dataset.duty}|${ev.target.value}`);
   else if(ev.target.hasAttribute('data-arm'))act(`skipper|${ev.target.dataset.arm}|${ev.target.value}`);
-  else if(ev.target.hasAttribute('data-player-pick'))act(`pick|${ev.target.dataset.playerPick}|${ev.target.value}`);
  });
  const afterPaint=fn=>{if(typeof requestAnimationFrame==='function')requestAnimationFrame(fn);else fn();};
+ function placeSheetMenu(){
+  const menu=root.querySelector('.fm-marker-menu.is-sheet-menu');
+  if(!menu||sheetMenu===null)return;
+  const cell=root.querySelector(`[data-player-pick="${sheetMenu}"]`);
+  for(const key of ['left','top','bottom','right','transform','maxHeight'])menu.style.removeProperty(key);
+  if(!cell){menu.style.setProperty('left','50%');menu.style.setProperty('transform','translateX(-50%)');menu.style.setProperty('top',Math.round(innerHeight*.12)+'px');return;}
+  const cr=cell.getBoundingClientRect(),width=menu.offsetWidth||360,height=menu.offsetHeight||300,pad=8;
+  let left=Math.min(Math.max(pad,cr.right-width),Math.max(pad,innerWidth-width-pad));
+  let top=cr.bottom+5;
+  if(top+height>innerHeight-pad){const above=cr.top-height-5;top=above>=pad?above:Math.max(pad,innerHeight-height-pad);}
+  menu.style.setProperty('left',Math.round(left)+'px');
+  menu.style.setProperty('top',Math.round(top)+'px');
+  menu.style.setProperty('max-height',Math.max(120,Math.min(430,innerHeight-top-pad))+'px');
+ }
  function placeMenu(){
   const menu=root.querySelector('.fm-marker-player.is-open > .fm-marker-menu');
   if(!menu)return;
@@ -16603,6 +16649,9 @@ function bind(root,change,draw){
  root.addEventListener('click',ev=>{
   if(performance.now()<suppressUntil&&ev.target.closest('.shape-field,.fm-squad-panel .fm-row'))return;
   if(markerMenu!==null&&!ev.target.closest?.('.fm-marker-player')){markerMenu=null;draw();}
+  if(sheetMenu!==null&&!ev.target.closest?.('.is-sheet-menu')&&!ev.target.closest?.('[data-player-pick]')){sheetMenu=null;draw();}
+  const pickTrigger=ev.target.closest?.('[data-player-pick]');
+  if(pickTrigger){const index=Number(pickTrigger.dataset.playerPick);sheetMenu=sheetMenu===index?null:index;markerMenu=null;sheetGuard=performance.now()+600;draw();if(sheetMenu!==null){root.querySelector(`[data-player-pick="${index}"]`)?.focus?.({preventScroll:true});afterPaint(placeSheetMenu);}return;}
   if(ev.target.closest('[data-player-pick]')||ev.target.closest('select'))return;
   const field=ev.target.closest?.('.shape-field');
   if(field&&!ev.target.closest('.shape-field [data-slot],.shape-field [data-role-target],.fm-zone-overlay,.fm-pitch-marker')){if(selected!==null||selectedBench){selected=null;selectedBench=null;draw();}return;}
@@ -16623,14 +16672,16 @@ function bind(root,change,draw){
   if(b?.dataset.board){act(b.dataset.board);return;}
   if(b?.hasAttribute('data-clear-slot')){selected=null;selectedBench=null;draw();return;}
   if(b?.hasAttribute('data-marker-substitute')&&b.classList.contains('fm-marker-player-trigger')){const i=Number(b.dataset.markerSubstitute),fieldEl=ev.target.closest?.('.shape-field'),viewKey=fieldEl?`${fieldEl.dataset.phaseView||''}:${fieldEl.dataset.orientation||''}`:null;markerMenu=markerMenu&&markerMenu.slot===i&&markerMenu.key===viewKey?null:{slot:i,key:viewKey};draw();if(markerMenu!==null){root.querySelector(`[data-marker-substitute="${i}"]`)?.focus?.({preventScroll:true});afterPaint(placeMenu);}return;}
-  if(b?.hasAttribute('data-marker-pick')){const i=b.dataset.markerSlot,pick=b.dataset.markerPick;markerMenu=null;act(`pick|${i}|${pick}`);draw();return;}
-  if(b?.hasAttribute('data-marker-close')){const i=Number(b.dataset.markerClose);markerMenu=null;draw();root.querySelector(`[data-marker-substitute="${i}"]`)?.focus?.({preventScroll:true});return;}
-  if(b?.hasAttribute('data-marker-remove')){const i=Number(b.dataset.markerRemove);markerMenu=null;selected=null;selectedBench=null;act(`clear|${i}`);draw();return;}
+  if(b?.hasAttribute('data-marker-pick')){const i=b.dataset.markerSlot,pick=b.dataset.markerPick;markerMenu=null;sheetMenu=null;act(`pick|${i}|${pick}`);draw();return;}
+  if(b?.hasAttribute('data-swap-close')){const anchor=b.dataset.swapClose,index=sheetMenu;sheetMenu=null;const slot=markerMenu?.slot??null;const cell=root.querySelector(`[data-player-pick="${index}"]`);markerMenu=null;draw();
+   if(anchor==='sheet')cell?.focus?.({preventScroll:true});else root.querySelector(`[data-marker-substitute="${slot}"]`)?.focus?.({preventScroll:true});return;}
+  if(b?.hasAttribute('data-marker-remove')){const i=Number(b.dataset.markerRemove);markerMenu=null;sheetMenu=null;selected=null;selectedBench=null;act(`clear|${i}`);draw();return;}
   const cardTap=ev.target.closest('.fm-pitch-marker .fm-marker-card');
   if(cardTap&&!ev.target.closest('button,select,label,input')){const tapSlot=cardTap.querySelector('[data-slot]')?.dataset.slot;if(tapSlot!=null){const i=+tapSlot;if(selectedBench)act(`pick|${i}|${selectedBench}`);else{selected=selected===i?null:i;draw();}}return;}
   if(row||b?.hasAttribute('data-slot')){const target=row||b,i=+target.dataset.slot;if(selectedBench)act(`pick|${i}|${selectedBench}`);else{selected=selected===i?null:i;draw();}return;}
  });
  root.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'&&sheetMenu!==null){const index=sheetMenu;sheetMenu=null;draw();root.querySelector(`[data-player-pick="${index}"]`)?.focus?.({preventScroll:true});return;}
   if(ev.key==='Escape'&&markerMenu!==null){const i=markerMenu.slot;markerMenu=null;draw();root.querySelector(`[data-marker-substitute="${i}"]`)?.focus?.();return;}
   if(ev.key==='Escape'&&rolePicker){const target=rolePicker;rolePicker=null;draw();root.querySelector(`[data-role-picker-open="${target.slot}"][data-role-picker-phase="${target.phase}"]`)?.focus?.();return;}
   if(ev.key==='Tab'&&rolePicker){const items=[...root.querySelectorAll('.fm-role-dialog button:not(:disabled)')],first=items[0],last=items.at(-1);if(ev.shiftKey&&ev.target===first){ev.preventDefault();last?.focus();return;}if(!ev.shiftKey&&ev.target===last){ev.preventDefault();first?.focus();return;}}
@@ -16648,6 +16699,7 @@ function bind(root,change,draw){
   if((!shirt&&!row)||(row&&(!row.dataset.playerId||ev.target.closest('select,input,option'))))return;
   drag={id:ev.pointerId,kind:shirt?'shirt':'player',shirt,row,playerId:shirt?.dataset.playerId||row?.dataset.playerId,playerLabel:row?.querySelector('.fm-person span')?.textContent||row?.dataset.playerId,x:ev.clientX,y:ev.clientY,source:shirt||row,markerCard:shirt?.closest('.fm-pitch-marker'),origin:shirt?.closest('.fm-pitch-marker')?.getBoundingClientRect?.()||shirt?.getBoundingClientRect?.()||row?.getBoundingClientRect?.()||null,moving:false,hover:null};
  }
+ root.addEventListener('scroll',ev=>{if(sheetMenu!==null&&performance.now()>sheetGuard&&!ev.target?.closest?.('.is-sheet-menu')){sheetMenu=null;draw();}},true);
  root.addEventListener('pointerdown',begin);
  root.addEventListener('pointermove',ev=>{
   if(drag?.id!==ev.pointerId)return;
