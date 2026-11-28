@@ -2913,6 +2913,16 @@ tr.fm-drag-placeholder { display: table-row !important; min-height: 0; }
   pointer-events: none;
   transition: border-color .12s ease;
 }
+/* the sheet cells are text dropdowns: no boxed ring on hover or focus, just the words */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button:hover,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button:focus-visible {
+  border-color: transparent;
+  background: none;
+  outline: 0;
+  color: var(--tac-teal, #61c9c3);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell:hover::after {
   border-color: #cfe2ec;
 }

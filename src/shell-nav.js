@@ -48,23 +48,59 @@
     }
   }
 
+  let closeTimer = 0;
+  /* a pointer-opened menu stays put when the button is clicked under it */
+  let openedByPointer = false;
+
   function closeHub() {
     openHub = null;
+    openedByPointer = false;
+    clearTimeout(closeTimer);
     for (const button of nav()?.querySelectorAll('[data-hub]') || []) button.setAttribute('aria-expanded', 'false');
     for (const panel of nav()?.querySelectorAll('[data-hub-panel]') || []) panel.hidden = true;
   }
 
-  function openPanel(id) {
-    if (openHub === id) { closeHub(); return; }
+  function openPanel(id, pointer = false) {
+    if (openHub === id) {
+      if (pointer) return;
+      closeHub();
+      return;
+    }
     closeHub();
     openHub = id;
+    openedByPointer = pointer;
     nav()?.querySelector(`[data-hub="${id}"]`)?.setAttribute('aria-expanded', 'true');
     const panel = nav()?.querySelector(`[data-hub-panel="${id}"]`);
     if (panel) {
       panel.hidden = false;
-      panel.querySelector('[data-hc-open]')?.focus({ preventScroll: true });
+      /* hovering must not steal the cursor's focus; a click or key press may */
+      if (!pointer) panel.querySelector('[data-hc-open]')?.focus({ preventScroll: true });
     }
   }
+
+  function scheduleHubClose() {
+    clearTimeout(closeTimer);
+    closeTimer = setTimeout(() => { if (openHub) closeHub(); }, 190);
+  }
+
+  function cancelHubClose() {
+    clearTimeout(closeTimer);
+  }
+
+  /* The section menus follow the pointer: hover opens, leaving the row closes. */
+  document.addEventListener('pointerover', event => {
+    if (event.pointerType !== 'mouse' || !event.target.closest?.('#homeNav')) return;
+    cancelHubClose();
+    const hub = event.target.closest?.('[data-hub]');
+    if (hub && hub.dataset.hub !== openHub) openPanel(hub.dataset.hub, true);
+  });
+
+  document.addEventListener('pointerout', event => {
+    if (event.pointerType !== 'mouse' || !openHub) return;
+    if (!event.target.closest?.('#homeNav')) return;
+    if (event.relatedTarget?.closest?.('#homeNav')) return;
+    scheduleHubClose();
+  });
 
   /* ---- command palette ---------------------------------------------------------------- */
   const PALETTE = () => {
@@ -168,7 +204,16 @@
 
   document.addEventListener('click', event => {
     const hub = event.target.closest('[data-hub]');
-    if (hub) { openPanel(hub.dataset.hub); return; }
+    if (hub) {
+      if (openHub === hub.dataset.hub) {
+        /* a key press (detail 0) on a hover-opened menu parks the keyboard inside it */
+        if (event.detail === 0) { nav()?.querySelector(`[data-hub-panel="${openHub}"] [data-hc-open]`)?.focus({ preventScroll: true }); return; }
+        /* a hover-opened menu is already showing: the first click keeps it, the next closes */
+        if (openedByPointer) { openedByPointer = false; return; }
+      }
+      openPanel(hub.dataset.hub);
+      return;
+    }
     const pin = event.target.closest('[data-pin]');
     if (pin) { go(pin.dataset.pin); closeHub(); return; }
     const pinButton = event.target.closest('[data-tl-pin]');
