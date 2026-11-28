@@ -523,3 +523,29 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
   .house-nav::-webkit-scrollbar{display:none}
   .house-nav button{flex:none;padding:8px 12px}
 }
+
+/* Personal money reads in the same sections as the household: one nav, one page of facts. */
+.account-nav{display:flex;gap:2px;flex-wrap:wrap;margin:0 0 12px;padding-bottom:2px;border-bottom:1px solid #96b9ba26}
+.account-nav button{width:auto;min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:#aebcaf;font-size:12.5px;font-weight:750}
+.account-nav button:hover{color:#e8f1f5;background:#96b9ba0f}
+.account-nav button[aria-pressed="true"]{color:#dafa8a;border-bottom-color:#dafa8a}
+.account-body{display:grid;gap:14px;min-width:0}
+.account-body>*{min-width:0}
+.account-cols{display:grid;gap:12px}
+@media(min-width:1000px){.account-cols{grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))}}
+@media(max-width:640px){
+  .account-nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:0}
+  .account-nav::-webkit-scrollbar{display:none}
+  .account-nav button{flex:none;padding:8px 12px}
+}
+/* A desk gets the full measure on personal money, two cards wide instead of one long column. */
+.personal-accounts{max-width:1160px;width:100%;grid-template-columns:minmax(0,1fr)}
+.personal-accounts .account-body{width:100%}
+@media(min-width:1000px){
+  .personal-accounts .account-cards>section.org{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;max-width:none}
+  .personal-accounts .account-cards>section.org>header{grid-column:1/-1}
+  .personal-accounts .account-cards>section.org>button{grid-column:1/-1;justify-self:start}
+  .personal-accounts .venture-room{max-width:none}
+  .personal-accounts .venture-grid{grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr))}
+  .personal-accounts .luma-cover,.personal-accounts .org-cover{grid-column:1/-1}
+}
