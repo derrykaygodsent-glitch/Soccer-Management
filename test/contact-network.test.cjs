@@ -43,7 +43,8 @@ test('professional exchanges are saved to a reputation-scored contacts notebook'
   assert.match(html, /Nora Bell/);
   assert.match(html, /Reputation/);
   assert.match(html, /Ask for an introduction/);
-  assert.match(Household.render(s), /data-v="connections"/);
+  assert.match(Household.render(s), /data-house-tab="circle"/, 'the household offers its circle of contacts from the section nav');
+  assert.match(Household.render(s, 'circle'), /data-v="connections"/, 'and the notebook opens from that section');
   assert.match(People.render(s, 'people'), /data-v="connections"/);
 });
 
