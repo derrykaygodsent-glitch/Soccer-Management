@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="6ee74846bd5cc8495ced">
+  <meta name="tl-build" content="a6581ebd5f795c3c9d90">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -4514,63 +4514,191 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 }
 #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player-trigger:focus-visible { outline: 1px solid #cfe0e6; outline-offset: 1px; }
 
+/* the swap sheet is allowed to leave the pitch while it is open */
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card.is-swap-open,
+#homeScreen:has(.fm-tactics-workspace) .fm-pitch-card.is-swap-open.fm-primary-pitch {
+  position: relative;
+  z-index: 60;
+  overflow: visible !important;
+}
 #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 5px);
   left: 50%;
   z-index: 6;
   display: grid;
-  gap: 1px;
-  width: max-content;
-  min-width: 138px;
-  max-width: 210px;
-  max-height: 208px;
+  grid-auto-rows: min-content;
+  width: min(392px, 88vw);
+  max-height: min(430px, 62vh);
+  padding: 0;
   overflow: auto;
-  padding: 3px;
-  border: 1px solid #0a3a2b;
-  border-radius: 7px;
+  border: 1px solid #0d3b2c;
+  border-radius: 9px;
   background: #08201a;
-  box-shadow: 0 14px 28px #02100ad9;
+  box-shadow: 0 18px 34px #020d09e6;
   transform: translateX(-50%);
   overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.dock-above .fm-marker-menu {
   top: auto;
-  bottom: calc(100% + 4px);
+  bottom: calc(100% + 5px);
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu > button {
-  position: relative !important;
-  inset: auto !important;
-  transform: none !important;
-  transform-origin: center;
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
+  padding: 7px 9px;
+  border-bottom: 1px solid #14402f;
+  background: #0b2a21;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-head div { display: grid; gap: 2px; min-width: 0; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-head small {
+  overflow: hidden;
+  color: #7fa596;
+  font: 800 7.5px/1 system-ui, sans-serif;
+  letter-spacing: .1em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-head b {
+  overflow: hidden;
+  color: #f2f8f5;
+  font: 750 11px/1.2 system-ui, sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-close {
+  position: relative !important;
+  inset: auto !important;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  min-width: 0;
+  min-height: 0 !important;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 5px;
+  background: #123a2c !important;
+  color: #cfe3da;
+  font: 700 12px/1 system-ui, sans-serif;
+  transform: none !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-close:hover { background: #1b5540 !important; color: #fff; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-cols,
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) 28px 26px 44px 23px 23px 23px;
+  gap: 6px;
+  align-items: center;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-cols {
+  padding: 5px 9px 4px;
+  border-bottom: 1px solid #0f362a;
+  color: #6f9587;
+  font: 800 7px/1 system-ui, sans-serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-cols span:not(:nth-child(2)) { text-align: right; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row {
+  position: relative !important;
+  inset: auto !important;
   width: 100%;
   min-height: 0 !important;
-  padding: 6px 8px;
+  padding: 6px 9px;
   border: 0 !important;
-  border-radius: 4px;
+  border-radius: 0;
   background: transparent !important;
+  box-shadow: inset 0 1px 0 #0d3125;
   color: #eaf3ee;
   font: 650 10.5px/1.2 system-ui, sans-serif;
   text-align: left;
   cursor: pointer;
+  transform: none !important;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu > button:is(:hover,:focus-visible,:active) { transform: none !important; background: #1b5540 !important; outline: 0; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu > button small {
-  flex: none;
-  color: #8fb2a4;
-  font-size: 9px;
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row:is(:hover, :focus-visible) {
+  background: #1b5540 !important;
+  box-shadow: inset 0 0 0 1px #2a6f52;
+  outline: 0;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row.is-knock { color: #f0b9a8; cursor: default; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-num {
+  color: #7ea293;
+  font-size: 8px;
   font-weight: 800;
-  letter-spacing: .05em;
+  text-align: center;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu > p {
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-tag {
+  overflow: hidden;
+  color: #9dbab0;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: .03em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stars {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1px;
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: -.4px;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stars span { color: #f2c14e; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stars i { color: #3d5a4e; font-style: normal; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stat {
+  color: #c8dcd4;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: right;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stat.is-low { color: #e8a24a; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-empty {
   margin: 0;
-  padding: 8px;
+  padding: 10px 9px;
   color: #9db8ab;
   font-size: 10px;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 6px 9px 7px;
+  border-top: 1px solid #14402f;
+  background: #0b2a21;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-foot button {
+  position: relative !important;
+  inset: auto !important;
+  width: 100%;
+  min-height: 0 !important;
+  padding: 5px 7px;
+  border: 0 !important;
+  border-radius: 5px;
+  background: #16352a !important;
+  color: #d8e8e0;
+  font: 700 9.5px/1.2 system-ui, sans-serif;
+  text-align: left;
+  transform: none !important;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-foot button:is(:hover, :focus-visible) {
+  background: #4a2b22 !important;
+  color: #ffd0c4;
+  outline: 0;
 }
 
 /* selecting grows the dark body around the shirt; nothing else changes */
@@ -4601,9 +4729,12 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 @media (max-width: 600px) {
   #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card { grid-template-rows: 26px 15px 14px; width: 78px; }
   #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .shirt-marker > svg { width: 28px; height: 24px; }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu { min-width: 118px; max-width: 168px; max-height: 188px; padding: 2px; }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu > button { gap: 8px; padding: 5px 7px; font-size: 10px; }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu > button small { font-size: 8.5px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu { width: min(330px, 90vw); max-height: min(360px, 58vh); }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-cols,
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row { grid-template-columns: 12px minmax(0, 1fr) 24px 22px 38px 21px 21px 21px; gap: 4px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-row { padding: 5px 8px; font-size: 9.5px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stat { font-size: 8.5px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-swap-stars { font-size: 7px; }
 }
 
 /* the visualiser pitch places its markers like the shape pitch does */
@@ -16343,14 +16474,15 @@ function render(s,players){
   };
   const zoneOf=(pt,index)=>{const row=pt.x<.34?'defense':pt.x<.66?'middle':'attack',col=pt.y<.34?'left':pt.y>.66?'right':'centre';return `${row}-${col}`;};
   const field=(mode='defense',orientation='portrait',withZones=false)=>{
+    const viewKey=`${mode}:${orientation}`,menuOpen=i=>markerMenu!==null&&markerMenu.slot===i&&(markerMenu.key==null||markerMenu.key===viewKey);
     const wide=orientation==='wide',zone=selectedZone;
     const anchorsX=[.14,.32,.45,.59,.75,.9],anchorsY=[.12,.32,.5,.68,.88],gridTargets=anchorsX.flatMap(x=>anchorsY.map(y=>({x,y,job:Z.choices(Z.zone(x,y))[0],hidden:true}))),visibleAt=new Set(roleTargets.map(t=>`${t.x},${t.y}`)),hiddenTargets=gridTargets.filter(t=>!visibleAt.has(`${t.x},${t.y}`)),allTargets=[...roleTargets,...hiddenTargets];
     const targets=allTargets.length&&!withZones?allTargets.map((target,index)=>{const left=wide?project(target.x):8+84*target.y,bottom=wide?8+84*(1-target.y):project(target.x),slot=target.keeper?0:slots.slice(1).reduce((best,v,j)=>{const point=location(v,j+1,mode).point,current=location(slots[best],best,mode).point;return Math.hypot(point.x-target.x,point.y-target.y)<Math.hypot(current.x-target.x,current.y-target.y)?j+1:best;},1),hidden=target.hidden,code=target.code||'',label=code?`${code} · ${target.job}${target.flexible?' · additional line position':''}`:hidden?'Hidden pitch position':'Additional pitch position';return `<button type="button" tabindex="-1" class="${hidden?'fm-hidden-position-target':'fm-role-target'+(target.keeper?' keeper':'')+(target.flexible?' flexible':'')}" data-role-target="${index}" data-role-code="${code}" data-role-slot="${slot}" data-role-x="${target.x}" data-role-y="${target.y}" data-role-job="${e(target.job)}" data-role-phase="${mode}" data-role-keeper="${target.keeper?'true':'false'}" aria-label="${e(label)}" title="${e(label)}" style="left:${left}%;bottom:${bottom}%">${code?`<span>${e(code)}</span>`:''}</button>`;}).join(''):'';
     const markers=slots.map((v,i)=>{
       const {point,role,job}=location(v,i,mode),p=v.player,n=numbers[p?.id]??p?.num??defaults[i]??'–',label=p?.name||'Open position',isSelected=selected===i,left=wide?project(point.x):8+84*point.y,bottom=wide?8+84*(1-point.y):project(point.x),rolePhase=mode==='attack'||mode==='combined'?'attack':'defense',chosenRole=rolePhase==='attack'?(v.attackPosition||v.position):v.position,chosenJob=rolePhase==='attack'?v.attackJob:v.job,substitutes=bench.filter(q=>(q.pos==='GK')===(i===0)&&!q.red&&!readiness[q.id]?.knock).sort((a,b)=>Z.fit(b,chosenRole,chosenJob?.[0],s.boardReps)-Z.fit(a,chosenRole,chosenJob?.[0],s.boardReps)||(stars[b.id]||0)-(stars[a.id]||0)||a.name.localeCompare(b.name)),dockX=left<28?'dock-left':left>72?'dock-right':'',dockY=bottom<18?'dock-above':bottom>82?'dock-below':'';
       const platePhase=rolePhase==='attack'?'In possession':'Out of possession',plateCode=code(chosenRole,chosenJob?.[0],chosenJob?.[2]),plateDuty=(chosenJob?.[2]||'').slice(0,2),groupOf=pos=>{const c=(pos||'').toUpperCase();if(c==='GK')return 'gk';if(/^(CB|LB|RB|WB|LWB|RWB|FB|SW|LIB|CD|BPD|NNCB|IFB|COV|STOP)/.test(c))return 'def';if(/^(ST|CF|PF|AF|LW|RW|LF|RF|W|S)$/.test(c))return 'att';return 'mid';};
-      const rows=`<button type="button" class="fm-marker-role" data-role-picker-open="${i}" data-role-picker-phase="${rolePhase}" aria-haspopup="dialog" title="${e(plateCode)}${plateDuty?' - '+e(plateDuty):''} · ${platePhase} role" aria-label="${platePhase} role: ${e(chosenJob?.[0]||chosenRole)}. Choose a role"><span>${e(plateCode)}${plateDuty?` - ${e(plateDuty)}`:''}</span></button><div class="fm-marker-player${markerMenu===i?' is-open':''}" data-marker-player="${i}"><button type="button" class="fm-marker-player-trigger" data-marker-substitute="${i}" aria-haspopup="listbox" aria-expanded="${markerMenu===i}" title="${e(label)} · Choose a substitute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.2 4.2 0 1 0 0-8.4A4.2 4.2 0 0 0 12 12Zm0 2.1c-4.1 0-7.4 2.2-7.4 4.9V21h14.8v-2c0-2.7-3.3-4.9-7.4-4.9Z"/></svg><span>${e(p?p.name.split(' ').filter(Boolean).pop():label)}</span><i aria-hidden="true"></i></button>${markerMenu===i?`<div class="fm-marker-menu" role="listbox" aria-label="Substitutes for ${e(role)}">${substitutes.length?substitutes.map(q=>`<button type="button" role="option" aria-selected="false" data-marker-pick="${e(q.id)}" data-marker-slot="${i}"><span>${e(q.name)}</span><small>${e(q.pos)}</small></button>`).join(''):'<p>No substitute available</p>'}</div>`:''}</div>`;
-      return `<div class="fm-pitch-marker${isSelected?' is-selected':''}${dockX?' '+dockX:''}${dockY?' '+dockY:''}" style="left:${left}%;bottom:${bottom}%;z-index:${markerMenu===i?320:isSelected?160:120-Math.round(bottom)}"><div class="fm-marker-card" data-group="${groupOf(chosenRole)}"><button type="button" title="${e(label)} · Drag to move or swap; click to select" data-slot="${i}" data-player-id="${e(p?.id||'')}" class="shirt-marker${i===0?' keeper':''}${p?'':' vacant'}${isSelected?' selected':''}" aria-label="Select ${e(role)} · ${e(label)} · shirt ${e(n)}" aria-pressed="${isSelected}">${jersey(n)}</button>${rows}</div></div>`;
+      const rows=`<button type="button" class="fm-marker-role" data-role-picker-open="${i}" data-role-picker-phase="${rolePhase}" aria-haspopup="dialog" title="${e(plateCode)}${plateDuty?' - '+e(plateDuty):''} · ${platePhase} role" aria-label="${platePhase} role: ${e(chosenJob?.[0]||chosenRole)}. Choose a role"><span>${e(plateCode)}${plateDuty?` - ${e(plateDuty)}`:''}</span></button><div class="fm-marker-player${menuOpen(i)?' is-open':''}" data-marker-player="${i}"><button type="button" class="fm-marker-player-trigger" data-marker-substitute="${i}" aria-haspopup="listbox" aria-expanded="${menuOpen(i)}" title="${e(label)} · Choose a substitute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.2 4.2 0 1 0 0-8.4A4.2 4.2 0 0 0 12 12Zm0 2.1c-4.1 0-7.4 2.2-7.4 4.9V21h14.8v-2c0-2.7-3.3-4.9-7.4-4.9Z"/></svg><span>${e(p?p.name.split(' ').filter(Boolean).pop():label)}</span><i aria-hidden="true"></i></button>${menuOpen(i)?`<div class="fm-marker-menu" role="dialog" aria-labelledby="fm-swap-title-${i}"><header class="fm-swap-head"><div><small>${e((chosenJob?.[0]||chosenRole||role).toUpperCase())}${plateDuty?` · ${e(({'Su':'Support','De':'Defend','At':'Attack'}[plateDuty]||plateDuty).toUpperCase())}`:''}</small><b id="fm-swap-title-${i}">${p?`Swap ${e(p.name.split(' ').filter(Boolean).pop())} with…`:`Choose a ${e(chosenJob?.[0]||chosenRole||role)}`}</b></div><button type="button" class="fm-swap-close" data-marker-close="${i}" aria-label="Close swap list">×</button></header><div class="fm-swap-cols"><span aria-hidden="true"></span><span>Player</span><span title="Best role for this position">Role</span><span title="Natural position">Pos</span><span title="Role ability">Abil</span><span title="Condition">Con</span><span title="Sharpness">Shp</span><span title="Morale">Mor</span></div>${substitutes.length?substitutes.map(q=>{const v=readiness[q.id]||{},ranked=Z.choices(chosenRole).map(name=>[name,Z.fit(q,chosenRole,name,s.boardReps?.[q.id])]).sort((a,b)=>(b[1]??0)-(a[1]??0)),best=ranked[0]||[chosenRole,0],bestRole=best[0],fit=best[1],rating=Z.fitRating(fit),fitness=v.fitness??'–',sharp=v.sharp??'–',mood=v.mood??'–',num=numbers[q.id]??q.num??'–';return `<button type="button" data-marker-pick="${e(q.id)}" data-marker-slot="${i}" class="fm-swap-row${v.knock?' is-knock':''}" title="${e(q.name)} · best role ${e(bestRole)} · ${rating}/5 ${e(Z.fitBand(fit))} · condition ${fitness}% · sharpness ${sharp}% · morale ${mood}%"><span class="fm-swap-num">${e(num)}</span><span class="fm-swap-name">${e(q.name)}</span><span class="fm-swap-tag">${e(code(chosenRole,bestRole))}</span><span class="fm-swap-tag">${e(q.pos)}</span><span class="fm-swap-stars" role="img" aria-label="Role ability ${rating} of 5"><span>${'★'.repeat(rating)}</span><i>${'☆'.repeat(5-rating)}</i></span><span class="fm-swap-stat">${fitness}</span><span class="fm-swap-stat">${sharp}</span><span class="fm-swap-stat${mood!=='–'&&mood<55?' is-low':''}">${mood}</span></button>`;}).join(''):`<p class="fm-swap-empty">No ${i===0?'goalkeeper':'substitute'} available for this position.</p>`}${i>0&&p?`<footer class="fm-swap-foot"><button type="button" data-marker-remove="${i}">Remove ${e(p.name.split(' ').filter(Boolean).pop())} from position</button></footer>`:''}</div>`:''}</div>`;
+      return `<div class="fm-pitch-marker${isSelected?' is-selected':''}${dockX?' '+dockX:''}${dockY?' '+dockY:''}" style="left:${left}%;bottom:${bottom}%;z-index:${menuOpen(i)?320:isSelected?160:120-Math.round(bottom)}"><div class="fm-marker-card" data-group="${groupOf(chosenRole)}"><button type="button" title="${e(label)} · Drag to move or swap; click to select" data-slot="${i}" data-player-id="${e(p?.id||'')}" class="shirt-marker${i===0?' keeper':''}${p?'':' vacant'}${isSelected?' selected':''}" aria-label="Select ${e(role)} · ${e(label)} · shirt ${e(n)}" aria-pressed="${isSelected}">${jersey(n)}</button>${rows}</div></div>`;
     }).join('');
     const fieldSvg=wide?`<svg class="board-lines" viewBox="0 0 140 100" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width=".6"><rect x="1" y="1" width="138" height="98"/><path d="M70 1v98M1 20h21V80H1M1 37h8v26H1M139 20h-21v60h21m0-43h-8v26h8"/><circle cx="70" cy="50" r="11"/></g></svg>`:fieldLines;
     const markersInZone=withZones?`<div class="fm-zone-overlay" aria-label="Select a tactical pitch zone">${zoneCells.map(z=>`<button type="button" data-board="zone|0|${z.id}" aria-label="${e(z.label)}" aria-pressed="${zone===z.id}"></button>`).join('')}</div>`:'';
@@ -16388,7 +16520,7 @@ function render(s,players){
   const undoSelection=plan.previousXI?.shape===s.tactic&&plan.previousXI.scope===(s.kitScope||'')?'<button type="button" data-board="undoXI">Undo selection</button>':'';const quickSelect=undoSelection?`<div class="fm-quick-actions">${undoSelection}</div>`:'';
   const viewSummary=`<div class="fm-phase-caption"><span>${phase==='attack'?'IN POSSESSION':phase==='both'?'PHASE COMPARISON':phase==='combined'?'AVERAGE POSITIONS':'OUT OF POSSESSION'}</span><b>${e(defenseLabel)} OOP · ${e(attackLabel)} IP</b></div>`;
   const shapeToolbar=()=>`<div class="fm-shape-toolbar">${phaseButtons()}</div>`;
-  const shapeContent=phase==='both'?`<div class="fm-both-view">${shapeToolbar()}<div class="fm-both-pitches"><section class="fm-pitch-card"><header><b>Out of Possession</b><small>${e(defenseLabel)}</small></header>${field('defense','wide')}</section><section class="fm-pitch-card"><header><b>In Possession</b><small>${e(attackLabel)}</small></header>${field('attack','wide')}</section></div>${squad()}${quickSelect}</div>`:`<div class="fm-shape-workspace"><div class="fm-shape-main"><section class="fm-pitch-card fm-primary-pitch"><div class="fm-pitch-phases">${phaseButtons()}</div><h3 class="sr-only">${phase==='attack'?'In Possession':phase==='combined'?'Combined · average player positions':'Out of Possession'}</h3>${field(phase==='attack'?'attack':phase==='combined'?'combined':'defense')}${quickSelect}</section></div><aside class="fm-shape-side">${squad()}</aside></div>`;
+  const shapeContent=phase==='both'?`<div class="fm-both-view">${shapeToolbar()}<div class="fm-both-pitches"><section class="fm-pitch-card${markerMenu?.key==='defense:wide'?' is-swap-open':''}"><header><b>Out of Possession</b><small>${e(defenseLabel)}</small></header>${field('defense','wide')}</section><section class="fm-pitch-card${markerMenu?.key==='attack:wide'?' is-swap-open':''}"><header><b>In Possession</b><small>${e(attackLabel)}</small></header>${field('attack','wide')}</section></div>${squad()}${quickSelect}</div>`:`<div class="fm-shape-workspace"><div class="fm-shape-main"><section class="fm-pitch-card fm-primary-pitch${markerMenu!==null?' is-swap-open':''}"><div class="fm-pitch-phases">${phaseButtons()}</div><h3 class="sr-only">${phase==='attack'?'In Possession':phase==='combined'?'Combined · average player positions':'Out of Possession'}</h3>${field(phase==='attack'?'attack':phase==='combined'?'combined':'defense')}${quickSelect}</section></div><aside class="fm-shape-side">${squad()}</aside></div>`;
   const selectedZoneLabel=zoneCells.find(z=>z.id===selectedZone)?.label||'Middle third · Centre';
   const zoneLabel=(row,col)=>`${zoneNames[row]} · ${zoneSide[col]}`;
   const selectedZonePositions=slots.filter((v,i)=>zoneOf((phase==='attack'?v.attack||v:v),i)===selectedZone);
@@ -16457,7 +16589,7 @@ function bind(root,change,draw){
   for(const key of ['top','bottom','left','right','transform','maxHeight'])menu.style.removeProperty(key);
   menu.classList.remove('menu-up','menu-start','menu-end');
   const wr=wrap.getBoundingClientRect(),cb=card.getBoundingClientRect(),pr=pitch.getBoundingClientRect();
-  const gap=4,pad=4,edgeLeft=pr.left+pad,edgeRight=Math.min(pr.right,innerWidth)-pad,edgeTop=pr.top+pad,edgeBottom=Math.min(pr.bottom,innerHeight)-pad;
+  const gap=5,pad=6,edgeLeft=pr.left+pad,edgeRight=Math.min(pr.right,innerWidth)-pad,edgeTop=pad,edgeBottom=innerHeight-pad;
   const roomBelow=edgeBottom-cb.bottom-gap,roomAbove=cb.top-edgeTop-gap,height=menu.getBoundingClientRect().height;
   const up=roomBelow<height&&roomAbove>roomBelow;
   if(up){menu.style.setProperty('top','auto');menu.style.setProperty('bottom',Math.round(Math.max(0,wr.bottom-cb.top)+gap)+'px');}
@@ -16490,14 +16622,16 @@ function bind(root,change,draw){
   if(b?.hasAttribute('data-tactic-export')){const name=root.querySelector('[data-preset-select]')?.selectedOptions?.[0]?.textContent||`${s.tactic} ${B().active(s).system||'Custom'}`,data={version:1,name,formation:Object.hasOwn(g.TLData.FORMATIONS,B().active(s).defenseFormation)?B().active(s).defenseFormation:s.tactic,plan:B().copyPlan(B().active(s))},blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'tactic'}.json`;a.click();URL.revokeObjectURL(url);return;}
   if(b?.dataset.board){act(b.dataset.board);return;}
   if(b?.hasAttribute('data-clear-slot')){selected=null;selectedBench=null;draw();return;}
-  if(b?.hasAttribute('data-marker-substitute')&&b.classList.contains('fm-marker-player-trigger')){const i=Number(b.dataset.markerSubstitute);markerMenu=markerMenu===i?null:i;draw();if(markerMenu!==null){root.querySelector(`[data-marker-substitute="${i}"]`)?.focus?.({preventScroll:true});afterPaint(placeMenu);}return;}
+  if(b?.hasAttribute('data-marker-substitute')&&b.classList.contains('fm-marker-player-trigger')){const i=Number(b.dataset.markerSubstitute),fieldEl=ev.target.closest?.('.shape-field'),viewKey=fieldEl?`${fieldEl.dataset.phaseView||''}:${fieldEl.dataset.orientation||''}`:null;markerMenu=markerMenu&&markerMenu.slot===i&&markerMenu.key===viewKey?null:{slot:i,key:viewKey};draw();if(markerMenu!==null){root.querySelector(`[data-marker-substitute="${i}"]`)?.focus?.({preventScroll:true});afterPaint(placeMenu);}return;}
   if(b?.hasAttribute('data-marker-pick')){const i=b.dataset.markerSlot,pick=b.dataset.markerPick;markerMenu=null;act(`pick|${i}|${pick}`);draw();return;}
+  if(b?.hasAttribute('data-marker-close')){const i=Number(b.dataset.markerClose);markerMenu=null;draw();root.querySelector(`[data-marker-substitute="${i}"]`)?.focus?.({preventScroll:true});return;}
+  if(b?.hasAttribute('data-marker-remove')){const i=Number(b.dataset.markerRemove);markerMenu=null;selected=null;selectedBench=null;act(`clear|${i}`);draw();return;}
   const cardTap=ev.target.closest('.fm-pitch-marker .fm-marker-card');
   if(cardTap&&!ev.target.closest('button,select,label,input')){const tapSlot=cardTap.querySelector('[data-slot]')?.dataset.slot;if(tapSlot!=null){const i=+tapSlot;if(selectedBench)act(`pick|${i}|${selectedBench}`);else{selected=selected===i?null:i;draw();}}return;}
   if(row||b?.hasAttribute('data-slot')){const target=row||b,i=+target.dataset.slot;if(selectedBench)act(`pick|${i}|${selectedBench}`);else{selected=selected===i?null:i;draw();}return;}
  });
  root.addEventListener('keydown',ev=>{
-  if(ev.key==='Escape'&&markerMenu!==null){const i=markerMenu;markerMenu=null;draw();root.querySelector(`[data-marker-substitute="${i}"]`)?.focus?.();return;}
+  if(ev.key==='Escape'&&markerMenu!==null){const i=markerMenu.slot;markerMenu=null;draw();root.querySelector(`[data-marker-substitute="${i}"]`)?.focus?.();return;}
   if(ev.key==='Escape'&&rolePicker){const target=rolePicker;rolePicker=null;draw();root.querySelector(`[data-role-picker-open="${target.slot}"][data-role-picker-phase="${target.phase}"]`)?.focus?.();return;}
   if(ev.key==='Tab'&&rolePicker){const items=[...root.querySelectorAll('.fm-role-dialog button:not(:disabled)')],first=items[0],last=items.at(-1);if(ev.shiftKey&&ev.target===first){ev.preventDefault();last?.focus();return;}if(!ev.shiftKey&&ev.target===last){ev.preventDefault();first?.focus();return;}}
   if(ev.target.closest('select,input,textarea,button,[contenteditable="true"]'))return;
