@@ -133,7 +133,12 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   a.equal(plan.playerInstructions[playerId].defense.pressing, instruction.value, 'phase-specific instruction updates the engine plan');
   const starterPosition=TLMatchBoard.sheet(s.tactic,plan,pool).slots[3].position,roleChoice=TLZones.choices(starterPosition).find(name=>name!==TLMatchBoard.sheet(s.tactic,plan,pool).slots[3].job[0]),openRole={dataset:{rolePickerOpen:'3',rolePickerPhase:'defense'},hasAttribute:name=>name==='data-role-picker-open'};
   handlers.click({target:{closest:selector=>selector==='button'?openRole:null}});
-  const guide=TLBoardRoom.render(s,pool);a.match(guide,/role="dialog" aria-modal="true"/);a.match(guide,/Key attributes/);a.match(guide,/Tactical behaviour/);a.match(guide,/Good fit|Excellent fit|Useful fit|Limited fit/);
+  const guide=TLBoardRoom.render(s,pool);
+  a.match(guide,/class="fm-role-menu" role="dialog"/,'the role cell opens an in-game sheet, not a modal or a native select');
+  a.match(guide,/class="fm-role-menu-row[^"]*" data-role-choice="/,'each role is a row in that sheet');
+  a.match(guide,/Key attributes: [^"]+ Behaviour: /,'the row tooltip still carries the attributes and behaviour');
+  a.match(guide,/<strong>\d\.\d\/5<i>Good fit|Excellent fit|Useful fit|Limited fit<\/i><\/strong>/,'every row shows the five-point suitability');
+  a.match(guide,/fm-role-menu-row is-current/,'the role in place is marked as current');
   const roleCard={dataset:{roleChoice:roleChoice,roleChoiceSlot:'3',roleChoicePhase:'defense'},hasAttribute:name=>name==='data-role-choice'};
   handlers.click({target:{closest:selector=>selector==='button'?roleCard:null}});a.equal(plan.phaseRoles[3].defense.job,roleChoice,'the role guide assigns the selected role to the tactical position');
   const replacement=TLMatchBoard.sheet(s.tactic,plan,pool).bench.find(p=>p.pos!=='GK'),subControl={dataset:{markerPick:replacement.id,markerSlot:'3'},hasAttribute:name=>name==='data-marker-pick'};
@@ -383,32 +388,44 @@ test('player names and phase-specific role-fit warnings remain available in the 
   a.match(css, /fm-shape-intel>div:last-child span\{display:block;[^}]*overflow:visible/);
 });
 
-test('the sidebar stays a dismissible drawer on Tactics, exactly as on every other screen', () => {
-  // Ported from the tactics branch, whose shell pins a 215px rail. This branch's shell has no
-  // rail at any width: the drawer IS the navigation, so Tactics must not resurrect a pinned one.
-  const css = fs.readFileSync(path.join(__dirname, '../src/reading.css'), 'utf8'), homeCss = fs.readFileSync(path.join(__dirname, '../src/home.css'), 'utf8'), home = fs.readFileSync(path.join(__dirname, '../src/home.js'), 'utf8'), desk = fs.readFileSync(path.join(__dirname, '../src/manager-desk.js'), 'utf8');
-  a.doesNotMatch(css, /#homeScreen\.hc-shell:has\(\.fm-tactics-workspace\)\{display:grid!important;grid-template-columns:215px/, 'Tactics does not pin a rail the rest of the app does not have');
-  a.doesNotMatch(css, /\.hc-shell\.hc-rail-collapsed\{grid-template-columns:0 minmax\(0,1fr\)\}/, 'no rail means no rail-collapse rule');
-  a.match(css, /@media\(max-width:980px\)\{[\s\S]*?\.hc-sidebar\.hc-open\{visibility:visible!important;transform:translateX\(0\)!important\}/);
-  a.doesNotMatch(css, /\.hc-sidebar\{display:flex!important;position:relative!important/);
-  a.match(homeCss, /\.hc-sidebar\{position:fixed;inset:0 auto 0 0;[\s\S]{0,200}visibility:hidden;transform:translateX\(-100%\)/);
-  a.match(homeCss, /\.hc-sidebar\.hc-open\{visibility:visible;transform:translateX\(0\)/);
-  a.match(desk, /if\(b\.id==='homeMenu'\|\|b\.id==='homeScrim'\)\{toggleDrawer\(b\.id==='homeMenu',true\);return;\}/, 'the hamburger opens the drawer and the scrim closes it');
-  a.match(home, /function toggleDrawer\(open,focus=false\)\{[\s\S]{0,300}\$\('homeSidebar'\)\.classList\.toggle\('hc-open',open\)/);
-
-  const makeClassList=()=>{const set=new Set();return{toggle:(name,on)=>on?set.add(name):set.delete(name),contains:name=>set.has(name),remove:name=>set.delete(name)};};
-  const els={homeScreen:{classList:makeClassList()},homeSidebar:{classList:makeClassList()},homeScrim:{hidden:true},homeFrame:{inert:false},homeMenu:{attrs:{},setAttribute(k,v){this.attrs[k]=v;},focus(){this.focused=true;}},homeNav:{querySelector:()=>({focus(){}})}};
-  let toggleDrawer,keydown;
-  const browser={TLHomeData:{},TLSeasonCalendar:{},TLSeasonState:{},TLCalendarProgress:{},TLClubUI:{esc:String,icon:()=>''},TLClubOffice:{},TLManagerDesk:{install:api=>{toggleDrawer=api.toggleDrawer;}},document:{readyState:'complete',getElementById:id=>els[id]},matchMedia:()=>({matches:true,addEventListener(){}}),addEventListener:(type,fn)=>{if(type==='keydown')keydown=fn;}};
-  vm.runInNewContext(home,{window:browser,document:browser.document,matchMedia:browser.matchMedia});
-  toggleDrawer(true,true);
-  a.ok(els.homeSidebar.classList.contains('hc-open')&&!els.homeScrim.hidden&&els.homeFrame.inert,'opening the drawer shows it and blocks the tactics page beneath');
-  toggleDrawer(false,true);
-  a.ok(!els.homeSidebar.classList.contains('hc-open')&&els.homeScrim.hidden&&!els.homeFrame.inert,'closing the drawer restores access to the page');
-  toggleDrawer(true,true);toggleDrawer(false,true);
-  a.ok(!els.homeSidebar.classList.contains('hc-open')&&els.homeScrim.hidden,'repeated toggles always land on the drawer state that was asked for');
+test('the rail is gone, and the mark, club, manager and club menu live in the header bar', () => {
+  const read = name => fs.readFileSync(path.join(__dirname, '../src', name), 'utf8');
+  const html = read('home.html'), homeCss = read('home.css'), css = read('reading.css'), desk = read('manager-desk.js'), home = read('home.js');
+  a.doesNotMatch(html, /hc-sidebar|homeSidebar|homeScrim|hc-scrim|hc-mobile-menu|id="homeMenu"/, 'no drawer markup survives anywhere in the shell');
+  a.doesNotMatch(homeCss + css, /\.hc-sidebar|\.hc-scrim\b|hc-mobile-menu|hc-rail-collapsed|hc-open/, 'no drawer styling survives either');
+  a.doesNotMatch(home, /toggleDrawer|homeSidebar|homeScrim|state\.drawer/, 'the drawer controller is deleted, not merely hidden');
+  a.doesNotMatch(desk, /toggleDrawer/, 'nothing still calls the drawer');
+  a.match(html, /<div class="hc-chrome" id="hcChrome">/, 'the header bar owns a chrome cluster');
+  for (const [sel, label] of [['tl-brand', 'the mark'], ['tl-club-card', 'the club card'], ['tl-manager', 'the manager chip']])
+    a.match(html, new RegExp(`<button class="${sel} hc-chrome-item"[^>]*>`), `${label} moved into the bar`);
+  const moreButton = html.slice(html.indexOf('id="homeMore"') - 60, html.indexOf('id="homeMore"') + 220);
+  a.ok(moreButton.includes('aria-controls="homeMorePanel"') && moreButton.includes('aria-expanded="false"'), 'the club menu is a real disclosure button');
+  const panel = html.slice(html.indexOf('id="homeMorePanel"'), html.indexOf('</div>', html.indexOf('id="homeMorePanel"')));
+  for (const item of ['Manager profile', 'Main menu', 'Cloud saves', 'Full screen', 'Open in new tab'])
+    a.ok(panel.includes(item), `the club menu offers ${item}`);
+  a.match(home, /function mountChrome\(\)\{[\s\S]{0,520}matchMedia\('\(max-width:980px\)'\)[\s\S]{0,260}rail\.appendChild\(chrome\):bar\.insertBefore\(chrome,bar\.firstChild\)/, 'narrow screens park the chrome in the nav row, wide screens in the bar');
+  a.match(home, /function toggleMore\(\)\{[\s\S]{0,320}panel\.hidden=!open/, 'the club menu opens and closes');
+  a.match(homeCss, /\.hc-more-panel\{[^}]*position:absolute[^}]*\}/, 'the club menu is a panel under its button');
+  a.match(homeCss, /\.hc-chrome\{[^}]*display:flex[^}]*\}/, 'the chrome cluster is a flex row');
+  a.match(css, /#homeScreen:has\(\.fm-tactics-workspace\) \.hc-tabs\{display:none!important\}/, 'Tactics still drops the section tab strip');
+  a.doesNotMatch(css, /#homeScreen:has\(\.fm-tactics-workspace\) \.hc-bar\{display:none!important\}/, 'and never hides the header bar again');
+  const tactics = read('tactics-desk.css');
+  a.match(tactics, /#homeScreen\.hc-shell:has\(\.fm-tactics-workspace\) \.hc-header\s*\{[^}]*position:\s*relative[^}]*z-index:\s*90/, 'the header sits above the tactics page');
 });
 
+test('the in-possession and out-of-possession role cells open the same in-game role sheet', () => {
+  const board = fs.readFileSync(path.join(__dirname, '../src/board-room.js'), 'utf8'), css = fs.readFileSync(path.join(__dirname, '../src/tactics-desk.css'), 'utf8');
+  a.doesNotMatch(board, /fm-role-dialog|<select[^>]*data-role-choice/, 'role choices are not a modal and not an operating-system select');
+  a.match(board, /const roleMenu=rolePicker\?\(\(\)=>\{[\s\S]{0,900}class="fm-role-menu" role="dialog"/, 'the role picker renders as an anchored sheet');
+  a.match(board, /class="fm-role-menu-row\$\{current===name\?' is-current':''\}"/, 'the current role is marked in the list');
+  a.match(board, /data-role-choice="\$\{e\(name\)\}" data-role-choice-slot="\$\{index\}" data-role-choice-phase="\$\{phaseName\}"/, 'each row carries the slot, phase and role it sets');
+  a.match(board, /data-role-picker-open="\$\{index\}" data-role-picker-phase="\$\{phaseName\}"[^>]*aria-expanded="\$\{rolePicker\?\.slot===index/, 'the sheet cell reports whether its list is open');
+  a.match(board, /function placeRoleMenu\(\)\{[\s\S]{0,900}const sel=rolePicker\.kind==='marker'[\s\S]{0,520}const cr=cell\?\.getBoundingClientRect\(\)\|\|rolePicker\.anchor/, 'the sheet pins itself to the control that was clicked, marker or team-sheet cell');
+  a.match(board, /if\(b\?\.hasAttribute\('data-role-picker-open'\)\)\{[\s\S]{0,700}afterPaint\(placeRoleMenu\)/, 'opening places the sheet after paint');
+  a.match(board, /if\(rolePicker&&!ev\.target\.closest\?\.\('\.fm-role-menu'\)&&!ev\.target\.closest\?\.\('\[data-role-picker-open\]'\)/, 'a click outside closes the role sheet');
+  a.match(css, /\.fm-role-menu\s*\{[^}]*position:\s*fixed[^}]*background:\s*#08201a/, 'the role sheet wears the same dark green as the swap sheet');
+  a.match(css, /\.fm-role-menu-row\.is-current\s*\{\s*box-shadow:\s*inset 2px 0 0 #f2c14e/, 'the current role carries the amber edge');
+});
 test('status and squad metrics are legible text, with team-instruction responsibilities wrapping cleanly', () => {
   const s = career(); s.id = 'tactics-status-layout';
   const html = TLBoardRoom.render(s, pool);

@@ -594,7 +594,7 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 
 /* FM26 tactical workstation takeover: the active tactics route becomes the whole career viewport. */
 #homeScreen:has(.fm-tactics-workspace){--fm-bg:#0a111b;--fm-panel:#111c29;--fm-line:#2b3c50;background:var(--fm-bg)!important}
-#homeScreen:has(.fm-tactics-workspace) .hc-sidebar,#homeScreen:has(.fm-tactics-workspace) .hc-bar,#homeScreen:has(.fm-tactics-workspace) .hc-tabs{display:none!important}
+#homeScreen:has(.fm-tactics-workspace) .hc-tabs{display:none!important}
 #homeScreen:has(.fm-tactics-workspace) .hc-shell{display:block!important;background:var(--fm-bg)}
 #homeScreen:has(.fm-tactics-workspace) .hc-main{display:block!important;min-width:0;height:100dvh}
 #homeScreen:has(.fm-tactics-workspace) #homeFrame{height:100dvh!important;min-height:0!important}
@@ -654,11 +654,9 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 /* Navigation remains available on Tactics: retain the career rail and header while keeping the tactical module expansive. */
 /* The shell no longer has a fixed rail: Tactics keeps the same column as every other screen. */
 #homeScreen.hc-shell:has(.fm-tactics-workspace){display:flex!important;flex-direction:column!important;width:100%!important;max-width:none!important}
-/* the sidebar stays a drawer on Tactics, exactly as everywhere else */
+/* the header stays put on Tactics, exactly as everywhere else */
 #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-main{display:flex!important;flex-direction:column!important;width:auto!important;min-width:0!important;height:100dvh!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-bar{display:flex!important;flex:none!important}
-#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-mobile-menu{display:grid!important}
-#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-tabs{display:flex!important;flex:none!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) #homeFrame{width:auto!important;max-width:none!important;height:auto!important;min-height:0!important;flex:1 1 0!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) #clubPage{height:100%!important;max-height:none!important;min-width:0!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) #clubPage>.life-desk{width:100%!important;max-width:none!important}
@@ -1079,15 +1077,10 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 .dossier-rail button:hover{background:#294942;border-color:#88ac87;color:#def6a7}
 .dossier-rail button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .world-club-file .tl-trail,.world-manager-file .tl-trail{padding-top:2px}
-#homeScreen.hc-shell.hc-rail-collapsed:has(.fm-tactics-workspace){grid-template-columns:0 minmax(0,1fr)!important}
-#homeScreen.hc-shell.hc-rail-collapsed:has(.fm-tactics-workspace) .hc-sidebar{display:none!important}
 @media(max-width:980px){
  #homeScreen.hc-shell:has(.fm-tactics-workspace){display:flex!important;flex-direction:column!important;grid-template-columns:1fr!important}
- #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-sidebar{position:fixed!important;inset:0 auto 0 0!important;z-index:22!important;width:min(265px,calc(100% - 58px))!important;visibility:hidden!important;transform:translateX(-100%)!important;transition:transform .19s ease-out,visibility .19s!important;box-shadow:10px 0 38px #050a14aa!important}
- #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-sidebar.hc-open{visibility:visible!important;transform:translateX(0)!important}
  #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-main{width:100%!important;height:auto!important;min-height:0!important;flex:1 1 0!important}
  #homeScreen.hc-shell:has(.fm-tactics-workspace) #homeFrame{width:100%!important;max-width:none!important;min-height:0!important;flex:1 1 0!important}
- #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-scrim:not([hidden]){display:block!important;position:fixed!important;inset:0!important;z-index:21!important;border:0!important;background:#050a14be!important}
 }
 
 /* Tactical controls: clearer replacement, drop feedback, and resilient instruction layout. */

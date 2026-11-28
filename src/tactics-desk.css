@@ -2685,3 +2685,240 @@ tr.fm-drag-placeholder { display: table-row !important; min-height: 0; }
     min-height: 430px;
   }
 }
+
+/* The rail is gone: the header keeps the mark, club, manager and club menu on every screen. */
+#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-header {
+  position: relative;
+  z-index: 90;
+  background: #0a111b !important;
+  border-bottom: 1px solid #1f2c3c;
+}
+#homeScreen.hc-shell:has(.fm-tactics-workspace) #clubPage {
+  position: relative;
+  z-index: 0;
+}
+.tl-topnav.hc-rail-chrome {
+  display: flex;
+  align-items: center;
+  padding-right: var(--ui-page-inset, 14px);
+}
+.tl-topnav.hc-rail-chrome #homeNav {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-right: 6px;
+}
+.tl-topnav .hc-chrome {
+  flex: none;
+  margin: 0;
+}
+.tl-topnav .hc-chrome .hc-chrome-item {
+  min-height: 28px;
+  padding: 0 7px;
+}
+.tl-topnav .hc-chrome .tl-brand b,
+.tl-topnav .hc-chrome .tl-club-card b,
+.tl-topnav .hc-chrome .tl-manager b {
+  display: none;
+}
+.tl-topnav .hc-chrome .hc-more {
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+}
+.tl-topnav .hc-more-panel {
+  top: calc(100% + 6px);
+}
+@media (max-width: 1420px) {
+  .hc-bar .hc-chrome .tl-club-card b {
+    display: none;
+  }
+  .hc-bar .hc-chrome .tl-brand b {
+    font-size: 11px;
+  }
+}
+@media (max-width: 1180px) {
+  .hc-bar .hc-chrome .tl-manager {
+    display: none;
+  }
+}
+@media (max-width: 1040px) {
+  .hc-bar .hc-chrome .tl-brand b {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .tl-topnav .hc-chrome .tl-manager {
+    display: none;
+  }
+  .tl-topnav.hc-rail-chrome .tl-hubs {
+    gap: 3px;
+  }
+  .tl-topnav.hc-rail-chrome .tl-hub {
+    min-height: 30px;
+    padding: 0 6px;
+  }
+  .tl-topnav.hc-rail-chrome #homeNav {
+    padding-right: 4px;
+  }
+  .tl-topnav .hc-chrome {
+    gap: 4px;
+  }
+  .tl-topnav .hc-chrome .hc-chrome-item {
+    padding: 0 5px;
+  }
+}
+@media (max-width: 400px) {
+  .tl-topnav .hc-chrome .tl-club-card {
+    display: none;
+  }
+}
+
+/* Role choices: the same in-game sheet as the player swap list, pinned to the role cell. */
+.fm-role-menu {
+  position: fixed;
+  z-index: 420;
+  display: grid;
+  grid-auto-rows: min-content;
+  width: min(268px, 92vw);
+  padding: 0;
+  overflow: auto;
+  border: 1px solid #0d3b2c;
+  border-radius: 9px;
+  background: #08201a;
+  box-shadow: 0 18px 34px #020d09e6;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.fm-role-menu > header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 9px;
+  border-bottom: 1px solid #14402f;
+  background: #0b2a21;
+}
+.fm-role-menu > header div { display: grid; gap: 2px; min-width: 0; }
+.fm-role-menu > header small {
+  overflow: hidden;
+  color: #7fa596;
+  font: 800 7.5px/1 system-ui, sans-serif;
+  letter-spacing: .1em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.fm-role-menu > header b {
+  color: #f2f8f5;
+  font: 750 11px/1.2 system-ui, sans-serif;
+}
+.fm-role-menu > header button {
+  position: relative !important;
+  inset: auto !important;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  min-width: 0;
+  min-height: 0 !important;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 5px;
+  background: #123a2c !important;
+  color: #cfe3da;
+  font: 700 12px/1 system-ui, sans-serif;
+  transform: none !important;
+  cursor: pointer;
+}
+.fm-role-menu > header button:hover { background: #1b5540 !important; color: #fff; }
+.fm-role-menu-list { display: grid; }
+.fm-role-menu-row {
+  position: relative !important;
+  inset: auto !important;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-height: 0 !important;
+  padding: 6px 9px;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: inset 0 1px 0 #0d3125;
+  color: #eaf3ee;
+  font: 650 10.5px/1.2 system-ui, sans-serif;
+  text-align: left;
+  transform: none !important;
+  cursor: pointer;
+}
+.fm-role-menu-row > span { display: flex; align-items: baseline; gap: 5px; min-width: 0; }
+.fm-role-menu-row b { overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.fm-role-menu-row i {
+  flex: none;
+  color: #6f9587;
+  font: 800 7.5px/1 system-ui, sans-serif;
+  font-style: normal;
+  letter-spacing: .08em;
+}
+.fm-role-menu-row strong {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  color: #cfe3da;
+  font: 700 10px/1.1 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.fm-role-menu-row strong i {
+  color: #6f9587;
+  font: 650 7.5px/1 system-ui, sans-serif;
+  font-style: normal;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.fm-role-menu-row strong.is-blank { color: #6f9587; font-size: 8.5px; font-weight: 650; }
+.fm-role-menu-row:is(:hover, :focus-visible) { background: #1b5540 !important; box-shadow: inset 0 0 0 1px #2a6f52; outline: 0; }
+.fm-role-menu-row.is-current { box-shadow: inset 2px 0 0 #f2c14e, inset 0 1px 0 #0d3125; }
+.fm-role-menu-row.is-current b { color: #f6e4b6; }
+@media (max-width: 700px) {
+  .fm-role-menu { width: min(250px, 94vw); }
+  .fm-role-menu-row { padding: 6px 8px; font-size: 10px; }
+}
+
+/* The role columns read as dropdowns: same chevron as the player column. */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell {
+  position: relative;
+  padding-right: 14px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button {
+  display: block;
+  width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  top: 8px;
+  width: 5px;
+  height: 5px;
+  border-right: 1.5px solid #55707f;
+  border-bottom: 1.5px solid #55707f;
+  transform: rotate(45deg);
+  pointer-events: none;
+  transition: border-color .12s ease;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell:hover::after {
+  border-color: #cfe2ec;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell:has(button[aria-expanded="true"])::after {
+  border-color: var(--tac-teal, #61c9c3);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell:has(button[aria-expanded="true"]) button {
+  color: var(--tac-teal, #61c9c3);
+}

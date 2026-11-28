@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="90c3b3e46f5c8766f313">
+  <meta name="tl-build" content="5e45b9d01431dc0ccc3e">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -445,12 +445,14 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
 .hc-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 .hc-shell :is(button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--tl-lime);outline-offset:-2px}
 .hc-shell button{transition:background-color .16s,color .16s,border-color .16s,box-shadow .16s}
-.hc-sidebar{display:flex;flex-direction:column;gap:9px;min-height:0;background:var(--tl-side);border-right:1px solid #263447;padding:17px 12px 10px;overflow:hidden}
-.tl-brand,.tl-club-card,.tl-manager{width:100%;min-width:0;flex:none;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;text-align:left;border:0;background:none;padding:0;color:var(--tl-ink)}
-.tl-brand{padding:0 5px 9px;gap:9px}.tl-brandmark{display:grid;place-items:center;width:35px;height:35px;border-radius:9px;background:var(--tl-lime);color:#192514;box-shadow:0 1px 10px #d7f88914}
-.tl-brandmark>.hc-icon{width:25px;height:25px}.tl-brand b{font:700 24px/.92 var(--tl-display);letter-spacing:.035em;white-space:nowrap}.tl-brand b span{padding-left:2px;color:var(--tl-lime)}
-.tl-brand small{display:block;margin-top:5px;color:var(--tl-muted);font-size:11px;font-weight:750;letter-spacing:.13em;white-space:nowrap}
-.tl-club-card{border:1px solid #324660;background:linear-gradient(115deg,#1c3047,#182636);padding:9px 8px;border-radius:9px;min-height:51px}.tl-club-card:hover{border-color:#6587ad;background:#213653}.tl-club-card .hc-crest{display:block;width:33px;height:33px}.tl-club-card b,.tl-manager b{font-size:12px;display:block;line-height:1.25}.tl-club-card small,.tl-manager small{display:block;color:var(--tl-muted);font-size:11px;margin-top:3px}.tl-club-card>.hc-icon,.tl-manager>.hc-icon{width:13px;height:13px;color:var(--tl-muted)}
+.hc-chrome{position:relative;display:flex;align-items:center;gap:6px;flex:none;min-width:0}
+.hc-chrome-item{width:auto;min-width:0;flex:none;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:7px;text-align:left;border:1px solid #28394c;border-radius:9px;background:#0f1a26;padding:0 9px;min-height:34px;color:var(--tl-ink);cursor:pointer}
+.hc-chrome-item:hover{border-color:#4d6b8b;background:#18293a}
+.tl-brand,.tl-club-card,.tl-manager{min-width:0;flex:none;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;text-align:left;border:0;background:none;padding:0;color:var(--tl-ink)}
+.tl-brand{padding:0;gap:8px}.tl-brandmark{display:grid;place-items:center;width:20px;height:20px;border-radius:6px;background:var(--tl-lime);color:#192514;box-shadow:none}
+.tl-brandmark>.hc-icon{width:15px;height:15px}.tl-brand b{font:700 12px/1 var(--tl-display);letter-spacing:.05em;white-space:nowrap;display:block}.tl-brand b span{padding-left:2px;color:var(--tl-lime)}
+.tl-brand small{display:none}
+.tl-club-card .hc-crest{display:block;width:18px;height:18px}.tl-club-card b,.tl-manager b{font-size:11.5px;display:block;line-height:1.2;white-space:nowrap}.tl-club-card small,.tl-manager small{display:none}.tl-club-card>.hc-icon,.tl-manager>.hc-icon{width:13px;height:13px;color:var(--tl-muted)}
 #homeNav{min-height:0;overflow:auto;flex:1;scrollbar-width:thin;scrollbar-color:#334559 transparent;overscroll-behavior:contain}
 .hc-nav-group{margin-bottom:5px}.hc-nav-group:last-child{margin-bottom:0}.hc-nav-group>p{color:#90a2ba;font-size:11px;font-weight:740;letter-spacing:.12em;text-transform:uppercase;margin:7px 10px 4px;line-height:1.45}
 .hc-nav-button{position:relative;display:flex;align-items:center;gap:9px;min-height:31px;width:100%;border:1px solid transparent;border-radius:7px;background:none;color:#b6c2d3;text-align:left;padding:4px 9px;font-size:11.75px;font-weight:580;white-space:nowrap}
@@ -459,46 +461,50 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
 .hc-inbox-badge{border-radius:5px;background:#293a4e;color:#b9dbfc;font-size:9px;padding:1px 5px;font-weight:800;margin-left:auto}.hc-nav-button[aria-current=page] .hc-inbox-badge{margin-right:5px}
 .tl-manager{padding:9px 5px 1px;border-top:1px solid var(--tl-edge);margin-top:auto}.tl-manager:hover b{color:var(--tl-lime)}.tl-initials{width:32px;height:32px;display:grid;place-items:center;border-radius:8px;border:1px solid #46546f;background:#29384e;color:#dceaff;font-size:10px;font-weight:800}
 .hc-main{display:flex;flex-direction:column;min-width:0;min-height:0}.hc-header{position:relative;flex:none;min-width:0;z-index:2;background:#111a26;border-bottom:1px solid var(--tl-edge)}
-.hc-bar,.hc-tabs{display:flex;align-items:center}.hc-bar{height:62px;gap:13px;padding:0 var(--tl-page-inset);min-width:0}.hc-history{display:flex;align-items:center;gap:3px;margin-left:-3px;flex:none}.hc-back .hc-icon{transform:scaleX(-1)}
+.hc-bar,.hc-tabs{display:flex;align-items:center}.hc-bar{height:62px;gap:13px;padding:0 var(--tl-page-inset);min-width:0}.hc-more{display:grid;place-items:center;width:34px;min-width:34px;height:34px;padding:0;border-radius:9px;border:1px solid #28394c;background:#0f1a26;color:#c8d7e4;cursor:pointer}
+.hc-more:hover{border-color:#4d6b8b;background:#18293a;color:#eef5fa}
+.hc-more[aria-expanded=true]{border-color:var(--tl-lime);color:var(--tl-lime)}
+.hc-more>.hc-icon{width:18px;height:18px}
+.hc-more-panel{position:absolute;top:calc(100% + 8px);right:0;z-index:60;display:grid;gap:2px;min-width:194px;padding:6px;border:1px solid #2c4256;border-radius:11px;background:#0d1822;box-shadow:0 18px 42px #04090fcc}
+.hc-more-panel[hidden]{display:none}
+.hc-more-panel :is(button,a){display:block;width:100%;text-align:left;padding:9px 10px;border:0;border-radius:7px;background:none;color:#dbe7f0;font:inherit;font-size:12.5px;font-weight:650;text-decoration:none;cursor:pointer}
+.hc-more-panel :is(button,a):hover,.hc-more-panel :is(button,a):focus-visible{background:#1b2c3c;color:#f2f8fc}
+.hc-history{display:flex;align-items:center;gap:3px;margin-left:-3px;flex:none}.hc-back .hc-icon{transform:scaleX(-1)}
 .hc-tool{display:grid;place-items:center;flex:none;width:32px;height:34px;padding:0;border:1px solid transparent;border-radius:7px;background:none;color:#afc1d7}.hc-tool:hover:not(:disabled){background:var(--tl-raised);border-color:var(--tl-edge);color:var(--tl-ink)}.hc-tool:disabled{color:#7d90a6}
-.hc-mobile-menu{display:none}.hc-location{min-width:0;flex:1}.hc-location h1{font:760 17px/1.1 Inter,sans-serif;letter-spacing:-.02em;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hc-location p{font-size:11px;font-weight:720;letter-spacing:.095em;text-transform:uppercase;color:var(--tl-dim);margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hc-location{min-width:0;flex:1}.hc-location h1{font:760 17px/1.1 Inter,sans-serif;letter-spacing:-.02em;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hc-location p{font-size:11px;font-weight:720;letter-spacing:.095em;text-transform:uppercase;color:var(--tl-dim);margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hc-search{display:flex;justify-content:flex-start;gap:8px;width:142px;padding:0 11px;color:var(--tl-muted);border-color:var(--tl-edge);background:#16212e;font-size:11px;white-space:nowrap}.hc-search>.hc-icon{width:15px;height:15px}.hc-global-search{position:relative;z-index:8;width:clamp(150px,24vw,280px);height:35px;flex:none;padding:0 9px;background:#16212e}.hc-global-search input{flex:1 1 0;width:0;min-width:0;border:0;outline:0;background:transparent;color:var(--tl-ink);font:inherit;font-size:11px}.hc-global-search input::placeholder{color:#8e9fb4}.hc-global-search input:focus-visible{outline:0}.hc-global-results{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:min(470px,calc(100vw - 24px));max-height:min(68vh,560px);overflow:auto;padding:6px;border:1px solid #405772;border-radius:10px;background:#121d2a;box-shadow:0 15px 44px #050a12d9}.hc-global-results[hidden]{display:none}.hc-global-result-row{display:flex;align-items:center;gap:8px;padding:2px;border-bottom:1px solid #26364a}.hc-global-result-row:last-child{border-bottom:0}.hc-global-result{display:grid;gap:3px;flex:1;min-width:0;padding:8px 9px;border:0;border-radius:6px;background:transparent;color:var(--tl-ink);text-align:left;white-space:normal}.hc-global-result:hover,.hc-global-result:focus-visible{background:#203147}.hc-global-result strong{font-size:12px;font-weight:730}.hc-global-result small{color:#a8b9ce;font-size:11px;line-height:1.35}.hc-global-squad{flex:none;padding:6px 8px;border:0;border-radius:6px;background:#1d3040;color:#bdddf2;font-size:11px;cursor:pointer}.hc-global-squad:hover{background:#2a4658;color:#eff8ff}.hc-global-empty{padding:10px;color:var(--tl-muted);font-size:11px}.hc-help{width:26px;margin-left:-5px}
 .hc-bar .hc-clock-link{display:flex;align-items:center;flex:none;gap:8px;padding:5px 8px;border:1px solid transparent;border-radius:8px;background:none;text-align:left;color:var(--tl-ice)}.hc-bar .hc-clock-link:hover{border-color:var(--tl-edge);background:#1b2a3b}.hc-clock-link>.hc-icon{width:16px;height:16px}.hc-clock{display:flex;flex-direction:column;gap:1px;white-space:nowrap;color:#a9bacf;font-size:11px;line-height:1.2;font-variant-numeric:tabular-nums}.hc-clock strong{color:var(--tl-ink);font-size:12px}
 .hc-continue{display:flex;align-items:center;justify-content:center;gap:11px;min-width:120px;max-width:175px;height:37px;padding:0 13px;flex:none;border:1px solid #d6f687;border-radius:8px;background:var(--tl-lime);color:#182311;font-size:12px;line-height:1.15;font-weight:830;white-space:nowrap}.hc-continue:hover:not(:disabled){background:#ebffb0;border-color:#ebffb0;box-shadow:0 0 14px #d7f8892a}.hc-continue .hc-icon{width:15px;height:15px;stroke-width:2.3}
 .hc-continue[data-action=required],.hc-continue[data-action=stop]{color:#241907;background:#f0c38a;border-color:#f0c38a}.hc-continue[data-action=required]:hover,.hc-continue[data-action=stop]:hover{background:#ffdaa8;border-color:#ffdaa8}.hc-continue[data-action=meeting]{color:#19250f;background:var(--tl-lime);border-color:var(--tl-lime)}.hc-continue[data-action=next-unread]{color:#101e2f;background:var(--tl-ice);border-color:var(--tl-ice)}.hc-continue:disabled{color:#b4c3d3;background:#253142;border-color:#354355}
 .hc-tabs{min-height:35px;gap:21px;padding:0 var(--tl-page-inset);overflow:auto;scrollbar-width:none;background:#111a26;box-shadow:inset 0 1px #25324480}.hc-tabs::-webkit-scrollbar{display:none}
 .hc-tab{position:relative;display:flex;align-items:center;gap:4px;flex:none;min-height:35px;padding:0 1px;border:0;background:transparent;color:#aebdd1;font-size:11.75px;font-weight:640;white-space:nowrap}.hc-tab:hover,.hc-tab[aria-current=page]{color:var(--tl-lime)}.hc-tab[aria-current=page]::after{position:absolute;content:'';height:2px;bottom:0;left:0;right:0;border-radius:2px;background:var(--tl-lime)}
-.hc-scrim{display:none}.hc-content{display:flex;flex:1;flex-direction:column;min-height:0;min-width:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#3f566d transparent;padding:21px var(--tl-page-inset) 24px}
+.hc-content{display:flex;flex:1;flex-direction:column;min-height:0;min-width:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#3f566d transparent;padding:21px var(--tl-page-inset) 24px}
 .hc-dialog{--cc-card:var(--tl-card);--cc-under:var(--tl-base);--cc-edge:var(--tl-edge);--cc-muted:var(--tl-muted);--cc-ink:var(--tl-ink);--cc-soft:var(--tl-muted);color:var(--tl-ink);background:var(--tl-card);width:min(660px,calc(100% - 24px));max-height:calc(90dvh - 8px);border:1px solid #49647e;border-radius:13px;padding:0;box-shadow:0 18px 65px #040910bd;overscroll-behavior:contain;scrollbar-width:thin}.hc-dialog::backdrop{background:#080f1abf;backdrop-filter:blur(3px)}
 .hc-dialog-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 19px;background:var(--tl-deep);border-bottom:1px solid var(--tl-edge)}.hc-dialog-head h2{font-size:23px;line-height:1.15;letter-spacing:-.025em;margin:2px 0}.hc-dialog-head p{color:var(--tl-lime);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em}.hc-dialog-body{padding:16px 19px;overflow-wrap:anywhere;line-height:1.5}.hc-dialog-body>*+*{margin-top:8px}
 .hc-datum{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--tl-edge);font-size:13px}.hc-datum span{color:var(--tl-muted)}.hc-dialog-link{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;margin:3px 0;width:100%;border:1px solid var(--tl-edge);border-radius:7px;background:var(--tl-deep);color:var(--tl-ink);text-align:left}.hc-dialog-link:hover{background:var(--tl-raised)}.hc-notebook,.hc-search-field{display:block;width:100%;padding:9px 11px;border:1px solid #3e526b;border-radius:7px;color:var(--tl-ink);background:var(--tl-deep);font:inherit}.hc-notebook{resize:vertical;min-height:164px}.hc-details-list{padding-left:19px}.hc-details-list li+li{margin-top:6px}.hc-shell kbd{border:1px solid #48596f;background:#2a384a;color:#dce7f5;border-radius:4px;padding:1px 4px;font-size:11px;white-space:nowrap}
-.hc-shell[data-processing=true] .hc-sidebar{opacity:.57}.hc-shell[data-processing=true] :is(.hc-tabs,.cc-workspace,.tl-home){display:none}.hc-shell[data-processing=true] :is(.hc-history,.hc-mobile-menu,.hc-search,.hc-help){opacity:.5}
+.hc-shell[data-processing=true] .hc-chrome{opacity:.57}.hc-shell[data-processing=true] :is(.hc-tabs,.cc-workspace,.tl-home){display:none}.hc-shell[data-processing=true] :is(.hc-history,.hc-search,.hc-help){opacity:.5}
 @keyframes tl-enter{from{opacity:.55;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-@media(min-width:1550px){.hc-shell{grid-template-columns:229px minmax(0,1fr)}.hc-sidebar{padding-inline:14px}}
-@media(max-height:790px) and (min-width:981px){.hc-sidebar{padding-top:11px;gap:5px}.hc-nav-button{min-height:27px;padding-block:2px}.hc-nav-group{margin-bottom:2px}.hc-nav-group>p{margin-top:6px;margin-bottom:3px}.tl-manager{padding-top:6px}.tl-brand{padding-bottom:5px}}
+@media(max-height:790px) and (min-width:981px){.hc-nav-button{min-height:27px;padding-block:2px}.hc-nav-group{margin-bottom:2px}.hc-nav-group>p{margin-top:6px;margin-bottom:3px}}
 @media(max-width:980px){
-  .hc-shell{display:flex;flex-direction:column}.hc-main{flex:1}.hc-sidebar{position:fixed;inset:0 auto 0 0;z-index:22;width:min(265px,calc(100% - 58px));visibility:hidden;transform:translateX(-100%);transition:transform .19s ease-out,visibility .19s;box-shadow:10px 0 38px #050a14aa}.hc-sidebar.hc-open{visibility:visible;transform:translateX(0)}
-  .hc-scrim:not([hidden]){display:block;position:fixed;inset:0;z-index:21;border:0;background:#050a14be;animation:tl-enter .17s ease-out}
-  .hc-mobile-menu{display:grid;margin-left:-2px}.hc-history{margin-left:0}
+  .hc-shell{display:flex;flex-direction:column}.hc-main{flex:1}.hc-history{margin-left:0}
 }
 @media(max-width:660px){
   :root{--tl-page-inset:13px}.hc-bar{height:57px;gap:7px}.hc-history{display:none}.hc-search{width:27px;justify-content:center;padding:0;background:none;border:0}.hc-search span{display:none}.hc-global-search{width:clamp(112px,29vw,185px);height:32px;padding:0 7px;justify-content:flex-start;background:#16212e;border:1px solid var(--tl-edge)}.hc-global-search input{font-size:11px}.hc-global-results{position:fixed;top:65px;left:12px;right:12px;width:auto;max-height:calc(100dvh - 78px)}.hc-global-squad{max-width:42%;white-space:normal;line-height:1.2}.hc-help{display:none}.hc-location h1{font-size:15px}.hc-location p{font-size:11px}.hc-bar .hc-clock-link{gap:4px;padding-inline:4px}.hc-clock-link>.hc-icon{display:none}.hc-clock strong{font-size:11px}.hc-clock{font-size:11px}.hc-continue{min-width:80px;max-width:125px;padding-inline:9px;gap:5px;font-size:11px;white-space:normal}.hc-continue .hc-icon{width:12px;height:12px}.hc-tabs{gap:16px}.hc-tab{font-size:11.5px}.hc-content{padding-top:14px}
 }
-@media(max-width:375px){:root{--tl-page-inset:11px}.hc-bar{gap:4px}.hc-location h1{font-size:14px}.hc-continue{min-width:70px;max-width:94px}.hc-search{width:24px}.hc-global-search{width:clamp(100px,30vw,122px)}.hc-tool.hc-mobile-menu{width:28px}.hc-bar .hc-clock-link{padding-inline:2px}}
-@media(prefers-reduced-motion:reduce){.hc-sidebar{transition:none}}
+@media(max-width:375px){:root{--tl-page-inset:11px}.hc-bar{gap:4px}.hc-location h1{font-size:14px}.hc-continue{min-width:70px;max-width:94px}.hc-search{width:24px}.hc-global-search{width:clamp(100px,30vw,122px)}.hc-bar .hc-clock-link{padding-inline:2px}}
+@media(prefers-reduced-motion:reduce){.hc-chrome{transition:none}}
 
 
 /* --- B1/B2/B3 (UI audit): a header that fits every width, and no duplicate Back --- */
 @media(max-width:980px){
   /* Two fixed rows: page title, then tools. A grid cannot wrap, so Continue can never be
      pushed off-screen and the title can never be squeezed to zero width (B1, B2). */
-  .hc-bar{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;
-    grid-template-areas:"title title title title title" "menu search clock wallet continue";
+  .hc-bar{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;
+    grid-template-areas:"title title title title" "search clock wallet continue";
     height:auto;min-height:52px;row-gap:2px;column-gap:6px;padding-block:5px}
   .hc-location{grid-area:title;display:flex;align-items:baseline;gap:8px;min-width:0;flex:none}
   .hc-location p{margin:0;font-size:11px}
   .hc-location h1{font-size:14px;min-width:0}
-  .hc-mobile-menu{grid-area:menu}
   /* Back/Forward move to the page tab strip below, so exactly one Back control exists (B3). */
   .hc-bar .hc-history,.hc-bar .hc-help{display:none}
   .hc-bar .hc-search,.hc-bar .hc-global-search{grid-area:search;width:auto;min-width:0;max-width:none;flex:none}
@@ -509,13 +515,19 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
 @media(max-width:660px){
   /* The wallet is designed to survive here (reading.css #headerWallet), so it rides on the
      title row instead of competing with Continue for the tool row (B1). */
-  .hc-bar{grid-template-columns:auto minmax(0,1fr) auto auto;
-    grid-template-areas:"title title title wallet" "menu search clock continue"}
+  .hc-bar{grid-template-columns:minmax(0,1fr) auto auto;
+    grid-template-areas:"title title wallet" "search clock continue"}
   .hc-bar .hc-wallet{justify-self:end}
   .hc-bar .hc-clock #homeDay{display:none}
 }
 @media(max-width:480px){
-  #homeScreen .hc-header .hc-bar #headerWallet:not([hidden]){max-width:92px}
+  #homeScreen .hc-header .hc-bar #headerWallet:not([hidden]){max-width:106px}
+}
+@media(max-width:420px){
+  /* No drawer any more, so the tool row has one fewer control to fit. */
+  .hc-bar{column-gap:4px}
+  .hc-bar .hc-continue{padding-inline:8px}
+  #homeScreen .hc-header .hc-bar #headerWallet:not([hidden]){max-width:106px}
 }
 @media(max-width:380px){
   .hc-bar .hc-continue{min-width:64px;padding-inline:7px;gap:4px}
@@ -588,9 +600,6 @@ select{width:100%;min-width:0;border:1px solid #425a48;background:#101b14;color:
    its job on a phone (a drawer) and its content is reachable from the menu button at any width.
    ----------------------------------------------------------------------------------------- */
 .hc-shell{grid-template-columns:minmax(0,1fr)}
-.hc-sidebar{position:fixed;inset:0 auto 0 0;z-index:22;width:min(265px,calc(100% - 58px));visibility:hidden;transform:translateX(-100%);transition:transform .19s ease-out,visibility 0s linear .19s;box-shadow:10px 0 38px #050a14aa;opacity:1}
-.hc-sidebar.hc-open{visibility:visible;transform:translateX(0);transition:transform .19s ease-out,visibility 0s linear 0s}
-.hc-mobile-menu{display:grid}
 
 .tl-topnav{position:relative;z-index:3;background:var(--ui-surface-1);border-bottom:1px solid var(--ui-edge)}
 .tl-topnav #homeNav{display:flex;align-items:center;gap:var(--ui-space-2);width:100%;min-width:0;padding:5px var(--ui-page-inset);overflow:visible;flex:none;mask-image:none;-webkit-mask-image:none}
@@ -2952,7 +2961,7 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 
 /* FM26 tactical workstation takeover: the active tactics route becomes the whole career viewport. */
 #homeScreen:has(.fm-tactics-workspace){--fm-bg:#0a111b;--fm-panel:#111c29;--fm-line:#2b3c50;background:var(--fm-bg)!important}
-#homeScreen:has(.fm-tactics-workspace) .hc-sidebar,#homeScreen:has(.fm-tactics-workspace) .hc-bar,#homeScreen:has(.fm-tactics-workspace) .hc-tabs{display:none!important}
+#homeScreen:has(.fm-tactics-workspace) .hc-tabs{display:none!important}
 #homeScreen:has(.fm-tactics-workspace) .hc-shell{display:block!important;background:var(--fm-bg)}
 #homeScreen:has(.fm-tactics-workspace) .hc-main{display:block!important;min-width:0;height:100dvh}
 #homeScreen:has(.fm-tactics-workspace) #homeFrame{height:100dvh!important;min-height:0!important}
@@ -3012,11 +3021,9 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 /* Navigation remains available on Tactics: retain the career rail and header while keeping the tactical module expansive. */
 /* The shell no longer has a fixed rail: Tactics keeps the same column as every other screen. */
 #homeScreen.hc-shell:has(.fm-tactics-workspace){display:flex!important;flex-direction:column!important;width:100%!important;max-width:none!important}
-/* the sidebar stays a drawer on Tactics, exactly as everywhere else */
+/* the header stays put on Tactics, exactly as everywhere else */
 #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-main{display:flex!important;flex-direction:column!important;width:auto!important;min-width:0!important;height:100dvh!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-bar{display:flex!important;flex:none!important}
-#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-mobile-menu{display:grid!important}
-#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-tabs{display:flex!important;flex:none!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) #homeFrame{width:auto!important;max-width:none!important;height:auto!important;min-height:0!important;flex:1 1 0!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) #clubPage{height:100%!important;max-height:none!important;min-width:0!important}
 #homeScreen.hc-shell:has(.fm-tactics-workspace) #clubPage>.life-desk{width:100%!important;max-width:none!important}
@@ -3437,15 +3444,10 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 .dossier-rail button:hover{background:#294942;border-color:#88ac87;color:#def6a7}
 .dossier-rail button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .world-club-file .tl-trail,.world-manager-file .tl-trail{padding-top:2px}
-#homeScreen.hc-shell.hc-rail-collapsed:has(.fm-tactics-workspace){grid-template-columns:0 minmax(0,1fr)!important}
-#homeScreen.hc-shell.hc-rail-collapsed:has(.fm-tactics-workspace) .hc-sidebar{display:none!important}
 @media(max-width:980px){
  #homeScreen.hc-shell:has(.fm-tactics-workspace){display:flex!important;flex-direction:column!important;grid-template-columns:1fr!important}
- #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-sidebar{position:fixed!important;inset:0 auto 0 0!important;z-index:22!important;width:min(265px,calc(100% - 58px))!important;visibility:hidden!important;transform:translateX(-100%)!important;transition:transform .19s ease-out,visibility .19s!important;box-shadow:10px 0 38px #050a14aa!important}
- #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-sidebar.hc-open{visibility:visible!important;transform:translateX(0)!important}
  #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-main{width:100%!important;height:auto!important;min-height:0!important;flex:1 1 0!important}
  #homeScreen.hc-shell:has(.fm-tactics-workspace) #homeFrame{width:100%!important;max-width:none!important;min-height:0!important;flex:1 1 0!important}
- #homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-scrim:not([hidden]){display:block!important;position:fixed!important;inset:0!important;z-index:21!important;border:0!important;background:#050a14be!important}
 }
 
 /* Tactical controls: clearer replacement, drop feedback, and resilient instruction layout. */
@@ -6265,6 +6267,243 @@ tr.fm-drag-placeholder { display: table-row !important; min-height: 0; }
     min-height: 430px;
   }
 }
+
+/* The rail is gone: the header keeps the mark, club, manager and club menu on every screen. */
+#homeScreen.hc-shell:has(.fm-tactics-workspace) .hc-header {
+  position: relative;
+  z-index: 90;
+  background: #0a111b !important;
+  border-bottom: 1px solid #1f2c3c;
+}
+#homeScreen.hc-shell:has(.fm-tactics-workspace) #clubPage {
+  position: relative;
+  z-index: 0;
+}
+.tl-topnav.hc-rail-chrome {
+  display: flex;
+  align-items: center;
+  padding-right: var(--ui-page-inset, 14px);
+}
+.tl-topnav.hc-rail-chrome #homeNav {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-right: 6px;
+}
+.tl-topnav .hc-chrome {
+  flex: none;
+  margin: 0;
+}
+.tl-topnav .hc-chrome .hc-chrome-item {
+  min-height: 28px;
+  padding: 0 7px;
+}
+.tl-topnav .hc-chrome .tl-brand b,
+.tl-topnav .hc-chrome .tl-club-card b,
+.tl-topnav .hc-chrome .tl-manager b {
+  display: none;
+}
+.tl-topnav .hc-chrome .hc-more {
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+}
+.tl-topnav .hc-more-panel {
+  top: calc(100% + 6px);
+}
+@media (max-width: 1420px) {
+  .hc-bar .hc-chrome .tl-club-card b {
+    display: none;
+  }
+  .hc-bar .hc-chrome .tl-brand b {
+    font-size: 11px;
+  }
+}
+@media (max-width: 1180px) {
+  .hc-bar .hc-chrome .tl-manager {
+    display: none;
+  }
+}
+@media (max-width: 1040px) {
+  .hc-bar .hc-chrome .tl-brand b {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .tl-topnav .hc-chrome .tl-manager {
+    display: none;
+  }
+  .tl-topnav.hc-rail-chrome .tl-hubs {
+    gap: 3px;
+  }
+  .tl-topnav.hc-rail-chrome .tl-hub {
+    min-height: 30px;
+    padding: 0 6px;
+  }
+  .tl-topnav.hc-rail-chrome #homeNav {
+    padding-right: 4px;
+  }
+  .tl-topnav .hc-chrome {
+    gap: 4px;
+  }
+  .tl-topnav .hc-chrome .hc-chrome-item {
+    padding: 0 5px;
+  }
+}
+@media (max-width: 400px) {
+  .tl-topnav .hc-chrome .tl-club-card {
+    display: none;
+  }
+}
+
+/* Role choices: the same in-game sheet as the player swap list, pinned to the role cell. */
+.fm-role-menu {
+  position: fixed;
+  z-index: 420;
+  display: grid;
+  grid-auto-rows: min-content;
+  width: min(268px, 92vw);
+  padding: 0;
+  overflow: auto;
+  border: 1px solid #0d3b2c;
+  border-radius: 9px;
+  background: #08201a;
+  box-shadow: 0 18px 34px #020d09e6;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.fm-role-menu > header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 9px;
+  border-bottom: 1px solid #14402f;
+  background: #0b2a21;
+}
+.fm-role-menu > header div { display: grid; gap: 2px; min-width: 0; }
+.fm-role-menu > header small {
+  overflow: hidden;
+  color: #7fa596;
+  font: 800 7.5px/1 system-ui, sans-serif;
+  letter-spacing: .1em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.fm-role-menu > header b {
+  color: #f2f8f5;
+  font: 750 11px/1.2 system-ui, sans-serif;
+}
+.fm-role-menu > header button {
+  position: relative !important;
+  inset: auto !important;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  min-width: 0;
+  min-height: 0 !important;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 5px;
+  background: #123a2c !important;
+  color: #cfe3da;
+  font: 700 12px/1 system-ui, sans-serif;
+  transform: none !important;
+  cursor: pointer;
+}
+.fm-role-menu > header button:hover { background: #1b5540 !important; color: #fff; }
+.fm-role-menu-list { display: grid; }
+.fm-role-menu-row {
+  position: relative !important;
+  inset: auto !important;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-height: 0 !important;
+  padding: 6px 9px;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: inset 0 1px 0 #0d3125;
+  color: #eaf3ee;
+  font: 650 10.5px/1.2 system-ui, sans-serif;
+  text-align: left;
+  transform: none !important;
+  cursor: pointer;
+}
+.fm-role-menu-row > span { display: flex; align-items: baseline; gap: 5px; min-width: 0; }
+.fm-role-menu-row b { overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.fm-role-menu-row i {
+  flex: none;
+  color: #6f9587;
+  font: 800 7.5px/1 system-ui, sans-serif;
+  font-style: normal;
+  letter-spacing: .08em;
+}
+.fm-role-menu-row strong {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  color: #cfe3da;
+  font: 700 10px/1.1 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.fm-role-menu-row strong i {
+  color: #6f9587;
+  font: 650 7.5px/1 system-ui, sans-serif;
+  font-style: normal;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.fm-role-menu-row strong.is-blank { color: #6f9587; font-size: 8.5px; font-weight: 650; }
+.fm-role-menu-row:is(:hover, :focus-visible) { background: #1b5540 !important; box-shadow: inset 0 0 0 1px #2a6f52; outline: 0; }
+.fm-role-menu-row.is-current { box-shadow: inset 2px 0 0 #f2c14e, inset 0 1px 0 #0d3125; }
+.fm-role-menu-row.is-current b { color: #f6e4b6; }
+@media (max-width: 700px) {
+  .fm-role-menu { width: min(250px, 94vw); }
+  .fm-role-menu-row { padding: 6px 8px; font-size: 10px; }
+}
+
+/* The role columns read as dropdowns: same chevron as the player column. */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell {
+  position: relative;
+  padding-right: 14px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button {
+  display: block;
+  width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  top: 8px;
+  width: 5px;
+  height: 5px;
+  border-right: 1.5px solid #55707f;
+  border-bottom: 1.5px solid #55707f;
+  transform: rotate(45deg);
+  pointer-events: none;
+  transition: border-color .12s ease;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell:hover::after {
+  border-color: #cfe2ec;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell:has(button[aria-expanded="true"])::after {
+  border-color: var(--tac-teal, #61c9c3);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell:has(button[aria-expanded="true"]) button {
+  color: var(--tac-teal, #61c9c3);
+}
 </style>
 </head>
 <body>
@@ -6328,20 +6567,22 @@ tr.fm-drag-placeholder { display: table-row !important; min-height: 0; }
 
   <section id="careerStart" class="career-start" aria-label="Start your career"><div id="careerScene" aria-hidden="true"></div><nav class="display-controls" aria-label="Screen size"><button type="button" data-cloud>Cloud saves</button><button type="button" data-fullscreen>Full screen</button><a href="" target="_blank" rel="noopener">Open in new tab </a></nav><main id="careerEntry"></main></section>
 <div hidden class="hc-shell" id="homeScreen">
-  <aside class="hc-sidebar" id="homeSidebar" aria-label="Club navigation">
-    <button class="tl-brand" type="button" data-hc-open="home" aria-label="Touchline 26 home"><span class="tl-brandmark"><svg class="hc-icon" aria-hidden="true"><use href="#tl-i-mark"/></svg></span><span><b>TOUCHLINE<span>26</span></b><small>FOOTBALL MANAGEMENT</small></span></button>
-    <button class="tl-club-card" type="button" data-hc-open="club"><span id="homeHeaderCrest"></span><span><b>Independent manager</b><small>Season 2026/27</small></span></button>
-    <nav id="homeNav" aria-label="Sections"></nav>
-    <div class="display-controls" aria-label="Screen size"><button type="button" data-fullscreen>Full screen</button><a href="" target="_blank" rel="noopener">New tab </a></div>
-    <button type="button" id="newManager" class="cc-btn cc-btn-outline">Main menu</button>
-    <button type="button" data-cloud class="cc-btn cc-btn-outline">Cloud saves</button>
-    <button class="tl-manager" type="button" data-hc-open="profile"><span class="tl-initials" aria-hidden="true">◇</span><span><b>Manager</b><small>Independent</small></span></button>
-  </aside>
-  <button class="hc-scrim" type="button" id="homeScrim" aria-label="Close club navigation" hidden></button>
   <div class="hc-main" id="homeFrame">
     <header class="hc-header">
       <div class="hc-bar">
-        <button type="button" class="hc-tool hc-mobile-menu" id="homeMenu" aria-expanded="false" aria-controls="homeSidebar" aria-label="Club navigation"><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-menu"/></svg></button>
+        <div class="hc-chrome" id="hcChrome">
+          <button class="tl-brand hc-chrome-item" type="button" data-hc-open="home" aria-label="Touchline 26 home"><span class="tl-brandmark"><svg class="hc-icon" aria-hidden="true"><use href="#tl-i-mark"/></svg></span><span><b>TOUCHLINE<span>26</span></b><small>FOOTBALL MANAGEMENT</small></span></button>
+          <button class="tl-club-card hc-chrome-item" type="button" data-hc-open="club"><span id="homeHeaderCrest"></span><span><b>Independent manager</b><small>Season 2026/27</small></span></button>
+          <button class="tl-manager hc-chrome-item" type="button" data-hc-open="profile"><span class="tl-initials" aria-hidden="true">◇</span><span><b>Manager</b><small>Independent</small></span></button>
+          <button class="hc-tool hc-more" type="button" id="homeMore" aria-expanded="false" aria-controls="homeMorePanel" aria-label="Club menu" title="Club menu"><svg class="hc-icon" aria-hidden="true"><use href="#hc-i-menu"/></svg></button>
+          <div class="hc-more-panel" id="homeMorePanel" hidden>
+            <button type="button" data-hc-open="profile">Manager profile</button>
+            <button type="button" id="newManager">Main menu</button>
+            <button type="button" data-cloud>Cloud saves</button>
+            <button type="button" data-fullscreen>Full screen</button>
+            <a href="" target="_blank" rel="noopener">Open in new tab</a>
+          </div>
+        </div>
         <div class="hc-history" aria-label="Navigation history">
           <button class="hc-tool hc-back" type="button" id="homeBack" disabled aria-label="Back">Back</button>
           <button class="hc-tool" type="button" id="homeForward" disabled aria-label="Forward">Forward</button>
@@ -6353,6 +6594,7 @@ tr.fm-drag-placeholder { display: table-row !important; min-height: 0; }
         <button type="button" hidden id="headerWallet" class="hc-wallet" data-life="go" data-v="finance" aria-label="Personal wallet. Open accounts"></button>
         <button class="hc-continue" id="homeContinue" type="button"><span>Continue</span><span class="continue-ball" aria-hidden="true">⚽</span><svg hidden aria-hidden="true"><use id="homeContinueIcon"/></svg></button>
       </div>
+      <nav id="homeNav" aria-label="Sections"></nav>
       <nav class="hc-tabs" id="homeTabs" aria-label="Section tabs"></nav>
     </header>
     <main class="hc-content tl-home" id="homeMain" aria-labelledby="homeTitle"></main>
@@ -16534,7 +16776,7 @@ function render(s,players){
     return `<section class="fm-player-editor"><header class="fm-player-editor-head"><div><h3>${e(p.name)}</h3><p>${e(p.pos)} · Shirt ${e(numbers[p.id]??p.num??'—')}</p></div><div class="fm-player-readiness">${starsOf(p)} ${status(p)} <b>${readiness[p.id]?.fitness??'—'}% condition</b></div><button type="button" data-league-player="${e(p.id)}">Player profile</button></header><div class="fm-player-phase-grid">${phasePanel('attack')}${phasePanel('defense')}</div><footer><small>Familiarity ${slot.experience||0}/20 · Out of possession ${Z.fitRating(Z.fit(p,slot.position,slot.job[0],s.boardReps?.[p.id]))}/5 · In possession ${Z.fitRating(Z.fit(p,slot.attackPosition||slot.position,slot.attackJob[0],s.boardReps?.[p.id]))}/5</small></footer></section>`;
   };
   const playerPicker=(slot,i)=>`<button type="button" class="fm-player-picker" data-player-pick="${i}" aria-haspopup="dialog" aria-expanded="${sheetMenu===i}" aria-label="Choose a player for ${e(slot.position)}" title="Choose a player for ${e(slot.position)}"></button>`;
-  const roleCell=(slot,index,phaseName)=>{const attack=phaseName==='attack',position=attack?(slot.attackPosition||slot.position):slot.position,job=attack?slot.attackJob[0]:slot.job[0],player=slot.player,fit=player?Z.fit(player,position,job,s.boardReps?.[player.id]):null;return `<div class="fm-role-cell"><button type="button" data-role-picker-open="${index}" data-role-picker-phase="${phaseName}" aria-haspopup="dialog" aria-label="Choose ${phaseName==='attack'?'In Possession':'Out of Possession'} role for ${e(player?.name||position)}">${e(job)}</button>${fit==null?'<small>Awaiting player</small>':`<small>${Z.fitRating(fit)}/5 · ${e(Z.fitBand(fit))}</small>`}</div>`;};
+  const roleCell=(slot,index,phaseName)=>{const attack=phaseName==='attack',position=attack?(slot.attackPosition||slot.position):slot.position,job=attack?slot.attackJob[0]:slot.job[0],player=slot.player,fit=player?Z.fit(player,position,job,s.boardReps?.[player.id]):null;return `<div class="fm-role-cell"><button type="button" data-role-picker-open="${index}" data-role-picker-phase="${phaseName}" aria-haspopup="dialog" aria-expanded="${rolePicker?.slot===index&&rolePicker?.phase===phaseName}" aria-label="${e(job)} · ${phaseName==='attack'?'In possession':'Out of possession'} role for ${e(player?.name||position)} · change">${e(job)}</button>${fit==null?'<small>Awaiting player</small>':`<small>${Z.fitRating(fit)}/5 · ${e(Z.fitBand(fit))}</small>`}</div>`;};
   const row=(slot,i)=>{
     const p=slot.player,attack=phase==='attack',combined=phase==='combined',averaged=combined?location(slot,i,'combined'):null,pos=combined?averaged.role:attack&&slot.attack?slot.attackPosition:slot.position,ready=p?readiness[p.id]:null;
     const fitDefense=p?Z.fit(p,slot.position,slot.job?.[0],s.boardReps?.[p.id]):null,fitAttack=p?Z.fit(p,slot.attackPosition||slot.position,slot.attackJob?.[0]||slot.job?.[0],s.boardReps?.[p.id]):null;
@@ -16546,7 +16788,7 @@ function render(s,players){
   const SHEET_COLUMNS=['POS','In possession role','Out of possession role','Ability','Player','Fit · IP / OOP','Status','Cond.'];
   const sheetRows=()=>slots.map((slot,index)=>row(slot,index)).join('');
   const squad=(title='First-team selection')=>`<aside class="fm-squad-panel${benchOpen?' is-bench-open':''}" id="tactic-roles"><header class="fm-panel-head"><div><small>TEAM SHEET</small><h3>${title}</h3></div><div class="fm-panel-actions"><button type="button" class="fm-btn-quiet" data-board="rotate" ${bench.some(p=>!p.red&&!readiness[p.id]?.knock)?'':'disabled'}>Rotate squad</button><button type="button" data-board="bestXI">Auto-pick best XI</button></div></header><div class="fm-squad-table" data-tl-bar><table class="fm-sheet-table" data-sort-table="teamsheet" data-sort-default="off" data-column-options="player" data-phone-sort="off" data-col-min="44"><caption class="sr-only">First-team selection</caption><thead><tr>${SHEET_COLUMNS.map(label=>`<th scope="col">${label}</th>`).join('')}</tr></thead><tbody>${sheetRows()}<tr class="fm-sheet-divider"><th scope="colgroup" colspan="${SHEET_COLUMNS.length}"><button type="button" class="fm-squad-subhead" data-bench-toggle aria-expanded="${benchOpen}"><span>SUBSTITUTES · ${bench.length}</span><small>${benchOpen?'Hide':'Show'}</small></button></th></tr>${bench.map(subRow).join('')||`<tr><td class="fm-empty" colspan="${SHEET_COLUMNS.length}">No substitutes available.</td></tr>`}</tbody></table></div>${sheetMenu!==null?swapSheet(sheetMenu,{position:slots[sheetMenu]?.position,role:slots[sheetMenu]?.job?.[0],duty:slots[sheetMenu]?.job?.[2],anchor:'sheet'}):''}${selected!=null?instructionEditor(slots[selected]):''}</aside>`;
-  const roleDialog=rolePicker?(()=>{const {slot:index,phase:phaseName}=rolePicker,slot=slots[index];if(!slot)return '';const attack=phaseName==='attack',position=attack?(slot.attackPosition||slot.position):slot.position,current=attack?slot.attackJob[0]:slot.job[0],candidates=Z.choices(position).map(name=>({name,fit:slot.player?Z.fit(slot.player,position,name,s.boardReps?.[slot.player.id]):null,info:Z.roleInfo(name)})).sort((a,b)=>a.fit==null?0:b.fit==null?-1:b.fit-a.fit||a.name.localeCompare(b.name));return `<div class="fm-role-dialog-backdrop"><section class="fm-role-dialog" role="dialog" aria-modal="true" aria-labelledby="fm-role-dialog-title"><header><div><small>TOUCHLINE ROLE GUIDE · ${attack?'IN POSSESSION':'OUT OF POSSESSION'}</small><h2 id="fm-role-dialog-title">Choose a role for ${e(slot.player?.name||position)}</h2><p>${e(position)} position · roles are saved to this tactical position, so a replacement inherits its instructions.</p></div><button type="button" data-role-picker-close aria-label="Close role guide">×</button></header><div class="fm-role-dialog-list">${candidates.map(({name,fit,info})=>`<button type="button" class="fm-role-option${current===name?' is-current':''}" data-role-choice="${e(name)}" data-role-choice-slot="${index}" data-role-choice-phase="${phaseName}" aria-pressed="${current===name}"><span class="fm-role-option-head"><b>${e(name)}</b><strong>${fit==null?'Player fit shown after selection':`${Z.fitRating(fit)}/5 · ${Z.fitBand(fit)} (${fit}%)`}</strong></span><span>${e(info.description)}</span><small>Key attributes · ${e(info.attributes.join(' · '))}</small><small>Tactical behaviour · ${e(info.behaviour)}</small>${current===name?'<i>Current role</i>':'<em>Select role</em>'}</button>`).join('')}</div></section></div>`;})():'';
+  const roleMenu=rolePicker?(()=>{const {slot:index,phase:phaseName}=rolePicker,slot=slots[index];if(!slot)return '';const attack=phaseName==='attack',position=attack?(slot.attackPosition||slot.position):slot.position,current=attack?slot.attackJob[0]:slot.job[0],candidates=Z.choices(position).map(name=>({name,fit:slot.player?Z.fit(slot.player,position,name,s.boardReps?.[slot.player.id]):null,info:Z.roleInfo(name)})).sort((a,b)=>a.fit==null?0:b.fit==null?-1:b.fit-a.fit||a.name.localeCompare(b.name));return `<div class="fm-role-menu" role="dialog" aria-label="Choose a role"><header><div><small>${e(position)} · ${attack?'IN POSSESSION':'OUT OF POSSESSION'}</small><b>Choose a role</b></div><button type="button" data-role-picker-close aria-label="Close role choices">×</button></header><div class="fm-role-menu-list">${candidates.map(({name,fit,info})=>{const code=info.code||info.abbr||'';return `<button type="button" class="fm-role-menu-row${current===name?' is-current':''}" data-role-choice="${e(name)}" data-role-choice-slot="${index}" data-role-choice-phase="${phaseName}" aria-pressed="${current===name}" title="${e(`${info.description} Key attributes: ${info.attributes.join(', ')}. Behaviour: ${info.behaviour}`)}"><span><b>${e(name)}</b>${code?`<i>${e(code)}</i>`:''}</span>${fit==null?'<strong class="is-blank">No player</strong>':`<strong>${Z.fitRating(fit)}/5<i>${e(Z.fitBand(fit))}</i></strong>`}</button>`;}).join('')}</div></div>`;})():'';
   const phaseButtons=()=>`<div class="fm-shape-switch" role="group" aria-label="Team shape view">${[['combined','Combined'],['attack','In Possession'],['base','Out of Possession'],['both','Both']].map(([v,label])=>`<button type="button" data-board="phase|0|${v}" aria-pressed="${phase===v}">${label}</button>`).join('')}</div>`;
   const defenseOptions=[...Object.keys(D.FORMATIONS),'Custom'],attackChoices=B().phaseFormationOptions();
   const shapeFormationControls=`<div class="fm-shape-controls">${picker('Out of possession','tactic',defenseOptions,defenseChoice,v=>v==='Custom'&&defenseCustomNumber?`Custom (${defenseCustomNumber})`:v)}<label><span>In-possession formation</span><select aria-label="In-possession formation" data-attack-formation>${options(attackChoices,attackChoice,v=>v==='Custom'&&attackCustomNumber?`Custom (${attackCustomNumber})`:v)}</select></label>${picker('Mentality','mentality',['Very Defensive','Defensive','Cautious','Balanced','Positive','Attacking','Very Attacking'],s.mentality||'Balanced')}<label><span>Team system</span><select aria-label="Team system" data-system><option value="">${e(s.style||'Balanced shape')}</option>${options(Object.keys(Z.systems),plan.system)}</select></label></div>`;
@@ -16583,7 +16825,7 @@ function render(s,players){
   const attentionActions=(g.TLDeskAttention&&g.TLDeskAttention.badges?(g.TLDeskAttention.badges(s,'tactics').actions||{}):{});const reviewEntries=Object.entries(attentionActions).filter(([,v])=>Number(v)>0);const reviewCount=reviewEntries.reduce((n,[,v])=>n+Number(v),0);const reviewTarget=reviewEntries.length?(reviewEntries[0][0]==='home'?'interviewDesk':reviewEntries[0][0]):'';const reviewBadge=reviewCount?`<button type="button" class="fm-review-badge" data-life="go" data-v="${reviewTarget}" title="${reviewCount} to review · open" aria-label="${reviewCount} to review · open">${reviewCount}</button>`:'';const workspaceNav=`<div class="fm-desk-bar"><nav class="fm-workspace-nav" aria-label="Tactical workspace">${nav.map(([id,label])=>`<button type="button" data-workspace-tab="${id}" aria-current="${workspaceTab===id?'page':'false'}">${label}</button>`).join('')}</nav><div class="fm-header-metrics">${reviewBadge}<span><small>Familiarity</small><b>${familiarity.position}%</b><i><b style="width:${familiarity.position}%"></b></i></span><span><small>Intensity</small><b>${intensity}%</b><i><b style="width:${intensity}%"></b></i></span><span class="fm-status-chip ${warnings.length?'has-risks':'is-clear'}" role="status" title="${e(reviewHelp)}">${e(reviewLabel)}</span></div></div>`;
   const content=workspaceTab==='instructions'?instructionContent:workspaceTab==='players'?playerContent:shapeContent;
   const strip=`<div class="fm-tactics-strip"><span class="fm-strip-label">TOUCHLINE 26 <i aria-hidden="true">/</i> MATCH PREPARATION</span><div class="fm-strip-controls">${shapeFormationControls}</div></div>`;
-  return `<section class="board-room fm-tactics-workspace">${strip}${header}${workspaceNav}<main class="fm-workspace-content" data-workspace="${workspaceTab}">${content}</main>${roleDialog}</section>`;
+  return `<section class="board-room fm-tactics-workspace">${strip}${header}${workspaceNav}<main class="fm-workspace-content" data-workspace="${workspaceTab}">${content}</main>${roleMenu}</section>`;
 }
 function bind(root,change,draw){
  let drag=null,suppressUntil=0,sheetGuard=0;
@@ -16627,6 +16869,25 @@ function bind(root,change,draw){
   menu.style.setProperty('top',Math.round(top)+'px');
   menu.style.setProperty('max-height',Math.max(120,Math.min(430,innerHeight-top-pad))+'px');
  }
+ function placeRoleMenu(){
+  const menu=root.querySelector('.fm-role-menu');
+  if(!menu||!rolePicker)return;
+  /* a pitch marker and a team-sheet cell can share a slot, so match the kind that was clicked */
+  const sel=rolePicker.kind==='marker'?'.shape-field [data-role-picker-open]':'.fm-role-cell button[data-role-picker-open]';
+  const cell=[...root.querySelectorAll(sel)].find(el=>el.dataset.rolePickerOpen===String(rolePicker.slot)&&el.dataset.rolePickerPhase===rolePicker.phase);
+  for(const key of ['left','top','bottom','right','transform','maxHeight'])menu.style.removeProperty(key);
+  const cr=cell?.getBoundingClientRect()||rolePicker.anchor;
+  if(!cr){menu.style.setProperty('left','50%');menu.style.setProperty('transform','translateX(-50%)');menu.style.setProperty('top',Math.round(innerHeight*.12)+'px');return;}
+  const width=menu.offsetWidth||272,height=menu.offsetHeight||300,pad=8;
+  /* phones carry the dock, so the sheet must clear it */
+  const bottom=innerHeight-(innerWidth<=760?84:pad);
+  let left=Math.min(Math.max(pad,cr.left),Math.max(pad,innerWidth-width-pad));
+  let top=cr.bottom+5;
+  if(top+height>bottom-pad){const above=cr.top-height-5;top=above>=pad?above:Math.max(pad,bottom-height);}
+  menu.style.setProperty('left',Math.round(left)+'px');
+  menu.style.setProperty('top',Math.round(top)+'px');
+  menu.style.setProperty('max-height',Math.max(140,Math.min(430,bottom-top))+'px');
+ }
  function placeMenu(){
   const menu=root.querySelector('.fm-marker-player.is-open > .fm-marker-menu');
   if(!menu)return;
@@ -16650,6 +16911,7 @@ function bind(root,change,draw){
   if(performance.now()<suppressUntil&&ev.target.closest('.shape-field,.fm-squad-panel .fm-row'))return;
   if(markerMenu!==null&&!ev.target.closest?.('.fm-marker-player')){markerMenu=null;draw();}
   if(sheetMenu!==null&&!ev.target.closest?.('.is-sheet-menu')&&!ev.target.closest?.('[data-player-pick]')){sheetMenu=null;draw();}
+  if(rolePicker&&!ev.target.closest?.('.fm-role-menu')&&!ev.target.closest?.('[data-role-picker-open]')&&!ev.target.closest?.('[data-role-choice]')){rolePicker=null;draw();}
   const pickTrigger=ev.target.closest?.('[data-player-pick]');
   if(pickTrigger){const index=Number(pickTrigger.dataset.playerPick);sheetMenu=sheetMenu===index?null:index;markerMenu=null;sheetGuard=performance.now()+600;draw();if(sheetMenu!==null){root.querySelector(`[data-player-pick="${index}"]`)?.focus?.({preventScroll:true});afterPaint(placeSheetMenu);}return;}
   if(ev.target.closest('[data-player-pick]')||ev.target.closest('select'))return;
@@ -16661,10 +16923,9 @@ function bind(root,change,draw){
   const b=ev.target.closest('button');
   if(b?.hasAttribute('data-bench-toggle')){benchOpen=!benchOpen;const panel=root.querySelector('.fm-squad-panel');panel?.classList.toggle('is-bench-open',benchOpen);b.setAttribute('aria-expanded',String(benchOpen));const hint=b.querySelector('small');if(hint)hint.textContent=benchOpen?'Hide':'Show';return;}
   if(b?.hasAttribute('data-library-toggle')){libraryOpen=!libraryOpen;root.querySelector('.fm-workspace-header')?.classList.toggle('is-library-open',libraryOpen);b.setAttribute('aria-expanded',String(libraryOpen));if(libraryOpen)root.querySelector('#fm-tactic-name')?.focus?.();return;}
-  if(b?.hasAttribute('data-role-picker-open')){markerMenu=null;rolePicker={slot:Number(b.dataset.rolePickerOpen),phase:b.dataset.rolePickerPhase==='attack'?'attack':'defense'};draw();root.querySelector('[data-role-picker-close]')?.focus?.();return;}
-  if(b?.hasAttribute('data-role-picker-close')){const target=rolePicker;rolePicker=null;draw();root.querySelector(`[data-role-picker-open="${target?.slot}"][data-role-picker-phase="${target?.phase}"]`)?.focus?.();return;}
+  if(b?.hasAttribute('data-role-picker-open')){const open=rolePicker&&rolePicker.slot===Number(b.dataset.rolePickerOpen)&&rolePicker.phase===(b.dataset.rolePickerPhase==='attack'?'attack':'defense'),box=typeof b.getBoundingClientRect==='function'?b.getBoundingClientRect():null;markerMenu=null;sheetMenu=null;rolePicker=open?null:{slot:Number(b.dataset.rolePickerOpen),phase:b.dataset.rolePickerPhase==='attack'?'attack':'defense',kind:typeof b.closest==='function'&&b.closest('.shape-field')?'marker':'cell',anchor:box?{left:box.left,right:box.right,top:box.top,bottom:box.bottom}:null};if(rolePicker)sheetGuard=performance.now()+600;draw();if(rolePicker){afterPaint(placeRoleMenu);setTimeout(()=>{if(rolePicker)placeRoleMenu();},60);(root.querySelector('.fm-role-menu .is-current')||root.querySelector('.fm-role-menu-row'))?.focus?.({preventScroll:true});}return;}
+  if(b?.hasAttribute('data-role-picker-close')){const target=rolePicker;rolePicker=null;draw();root.querySelector(`[data-role-picker-open="${target?.slot}"][data-role-picker-phase="${target?.phase}"]`)?.focus?.({preventScroll:true});return;}
   if(b?.hasAttribute('data-role-choice')){const slot=b.dataset.roleChoiceSlot,phase=b.dataset.roleChoicePhase,job=b.dataset.roleChoice;rolePicker=null;act(`phaseJob|${phase}|${slot}|${job}`);draw();root.querySelector(`[data-role-picker-open="${slot}"][data-role-picker-phase="${phase}"]`)?.focus?.();return;}
-  if(ev.target.classList?.contains('fm-role-dialog-backdrop')){rolePicker=null;draw();return;}
   if(b?.dataset.workspaceTab){workspaceTab=b.dataset.workspaceTab;selected=null;selectedBench=null;rolePicker=null;draw();return;}
   if(b?.dataset.tacticJump){root.querySelector('#tactic-'+b.dataset.tacticJump)?.scrollIntoView({behavior:'smooth',block:'start'});return;}
   if(b?.dataset.libraryAction){const id=root.querySelector('[data-preset-select]')?.value,name=root.querySelector('[data-preset-name]')?.value?.trim()||'',action=b.dataset.libraryAction;if(action==='save')act(`savePreset|0|${name}`);else if(!id)return;else if(action==='load')act(`loadPreset|0|${id}`);else if(action==='rename')act(`renamePreset|0|${id}|${name}`);else if(action==='duplicate')act(`duplicatePreset|0|${id}|${name}`);else if(action==='delete')act(`deletePreset|0|${id}`);return;}
@@ -16684,7 +16945,6 @@ function bind(root,change,draw){
   if(ev.key==='Escape'&&sheetMenu!==null){const index=sheetMenu;sheetMenu=null;draw();root.querySelector(`[data-player-pick="${index}"]`)?.focus?.({preventScroll:true});return;}
   if(ev.key==='Escape'&&markerMenu!==null){const i=markerMenu.slot;markerMenu=null;draw();root.querySelector(`[data-marker-substitute="${i}"]`)?.focus?.();return;}
   if(ev.key==='Escape'&&rolePicker){const target=rolePicker;rolePicker=null;draw();root.querySelector(`[data-role-picker-open="${target.slot}"][data-role-picker-phase="${target.phase}"]`)?.focus?.();return;}
-  if(ev.key==='Tab'&&rolePicker){const items=[...root.querySelectorAll('.fm-role-dialog button:not(:disabled)')],first=items[0],last=items.at(-1);if(ev.shiftKey&&ev.target===first){ev.preventDefault();last?.focus();return;}if(!ev.shiftKey&&ev.target===last){ev.preventDefault();first?.focus();return;}}
   if(ev.target.closest('select,input,textarea,button,[contenteditable="true"]'))return;
   const benchRow=ev.target.closest('.fm-sub[data-board][role="button"]');
   if(benchRow&&['Enter',' '].includes(ev.key)){ev.preventDefault();act(benchRow.dataset.board);return;}
@@ -16699,7 +16959,8 @@ function bind(root,change,draw){
   if((!shirt&&!row)||(row&&(!row.dataset.playerId||ev.target.closest('select,input,option'))))return;
   drag={id:ev.pointerId,kind:shirt?'shirt':'player',shirt,row,playerId:shirt?.dataset.playerId||row?.dataset.playerId,playerLabel:row?.querySelector('.fm-person span')?.textContent||row?.dataset.playerId,x:ev.clientX,y:ev.clientY,source:shirt||row,markerCard:shirt?.closest('.fm-pitch-marker'),origin:shirt?.closest('.fm-pitch-marker')?.getBoundingClientRect?.()||shirt?.getBoundingClientRect?.()||row?.getBoundingClientRect?.()||null,moving:false,hover:null};
  }
- root.addEventListener('scroll',ev=>{if(sheetMenu!==null&&performance.now()>sheetGuard&&!ev.target?.closest?.('.is-sheet-menu')){sheetMenu=null;draw();}},true);
+ root.addEventListener('scroll',ev=>{if(performance.now()<=sheetGuard)return;let shut=false;if(sheetMenu!==null&&!ev.target?.closest?.('.is-sheet-menu')){sheetMenu=null;shut=true;}if(rolePicker&&!ev.target?.closest?.('.fm-role-menu')){rolePicker=null;shut=true;}if(shut)draw();},true);
+ if(typeof g.addEventListener==='function')g.addEventListener('resize',()=>{if(rolePicker)placeRoleMenu();});
  root.addEventListener('pointerdown',begin);
  root.addEventListener('pointermove',ev=>{
   if(drag?.id!==ev.pointerId)return;
@@ -20333,10 +20594,10 @@ function openSearchResult(button,root){const target=button.dataset;if(target.sea
  else if(target.searchPage){page=target.searchPage;}
  else return false;
  closeGlobalSearch(root,true);notice='';draw();$('clubPage').scrollTop=0;$('homeTitle').focus({preventScroll:true});return true;}
-function start({navigation,toggleDrawer}){if(!s)return false;navigation();const root=$('homeScreen'),nav=$('homeNav');nav.innerHTML=g.TLScreenHead.topbar();g.TLShellNav?.mount();root.querySelector('[data-cloud]').hidden=false;mountGlobalSearch(root);root.querySelector('.hc-help').hidden=false;$('homeMain').hidden=true;$('clubPage').hidden=false;$('homeBack').disabled=true;$('homeForward').disabled=true;root.querySelector('.tl-manager b').textContent=s.profile.name;root.querySelector('.tl-manager small').textContent=s.profile.job;root.querySelector('.tl-initials').innerHTML=avatar();
+function start({navigation,closeMore}){if(!s)return false;navigation();const root=$('homeScreen'),nav=$('homeNav');nav.innerHTML=g.TLScreenHead.topbar();g.TLShellNav?.mount();root.querySelector('[data-cloud]').hidden=false;mountGlobalSearch(root);root.querySelector('.hc-help').hidden=false;$('homeMain').hidden=true;$('clubPage').hidden=false;$('homeBack').disabled=true;$('homeForward').disabled=true;root.querySelector('.tl-manager b').textContent=s.profile.name;root.querySelector('.tl-manager small').textContent=s.profile.job;root.querySelector('.tl-initials').innerHTML=avatar();
  const token=Math.random().toString(36),state=()=>({page,squadId,dossierView:{...dossierView},recruitment:{...recruitment},competition:{...competition},organiser:{...organiser},transferView:{...transferView},profileView:{...profileView},feedTab,atlasCode,atlasTown,atlasView,atlasContinent,worldClub,worldManager,worldManagerClub});let depth=0,furthest=0,previous=JSON.stringify(state());history.replaceState({careerId:s.id,token,depth,view:state()},'');
  const checkpoint=()=>{if(history.state?.token===token)try{sessionStorage.setItem('touchline.desk.place',JSON.stringify({token,view:{page},top:$('clubPage').scrollTop}));}catch{}};window.addEventListener('pagehide',checkpoint);document.addEventListener('visibilitychange',()=>{if(document.hidden)checkpoint();});
- window.addEventListener('popstate',ev=>{const h=ev.state;if(h?.token!==token)return;depth=h.depth;page=h.view.page;squadId=h.view.squadId;for(const [target,source] of [[recruitment,h.view.recruitment],[competition,h.view.competition],[organiser,h.view.organiser],[transferView,h.view.transferView],[profileView,h.view.profileView],[dossierView,h.view.dossierView]]){for(const k of Object.keys(target))delete target[k];Object.assign(target,source);}({feedTab,atlasCode,atlasTown,worldClub,worldManager,worldManagerClub}=h.view);previous=JSON.stringify(state());notice='';toggleDrawer(false);draw();$('clubPage').scrollTop=0;});
+ window.addEventListener('popstate',ev=>{const h=ev.state;if(h?.token!==token)return;depth=h.depth;page=h.view.page;squadId=h.view.squadId;for(const [target,source] of [[recruitment,h.view.recruitment],[competition,h.view.competition],[organiser,h.view.organiser],[transferView,h.view.transferView],[profileView,h.view.profileView],[dossierView,h.view.dossierView]]){for(const k of Object.keys(target))delete target[k];Object.assign(target,source);}({feedTab,atlasCode,atlasTown,worldClub,worldManager,worldManagerClub}=h.view);previous=JSON.stringify(state());notice='';closeMore();draw();$('clubPage').scrollTop=0;});
  let mailPlace=null;let painted='',arrivals=new Set();function draw(){const opening=painted!==page,desk=$('clubPage'),restore=!opening&&g.TLDeskScroll.remember(desk,page==='tactics'?'.shape-field':null);painted=page;const snap=state(),serial=JSON.stringify(snap);if(serial!==previous){previous=serial;furthest=++depth;history.pushState({careerId:s.id,token,depth,view:snap},'');}$('homeBack').disabled=!depth;$('homeForward').disabled=depth>=furthest;const b=nav.querySelector(`[data-hc-open="${page}"]`);for(const item of nav.querySelectorAll('button'))item.removeAttribute('aria-current');b?.setAttribute('aria-current','page');$('homeTitle').textContent=b?.querySelector('span')?.textContent||({jobs:'Job market',interviewDesk:(s.pressConferences||[]).some(c=>c.status==='invited')&&!s.interview?'Media room':'Board interview',groundPass:'Ground invitation',legacy:'Health & legacy',household:'Household',people:'People & promises',district:'District life',squadPlayer:'Player profile',profile:'Manager profile',worldManager:'Manager profile',worldClub:'Club profile',connections:'Contacts & connections',intelligence:'Football intelligence',create:'Club registration',day:'Calendar',atlas:'World atlas'}[page])||page;$('homeSection').hidden=true;const wallet=$('headerWallet');wallet.hidden=false;wallet.textContent='Wallet '+W.money(s.cash);wallet.setAttribute('aria-label','Personal wallet: '+W.money(s.cash)+'. Open accounts');root.querySelector('.tl-club-card b').textContent=s.club?.name||'Independent manager';$('homeHeaderCrest').textContent=s.club?.emblem||'◇';const iso=W.date(s.day),date=new Date(iso+'T12:00:00Z'),hour=String(g.TLDistrictLife.state(s).hour).padStart(2,'0')+':00';$('homeDay').textContent=date.toLocaleDateString('en-GB',{weekday:'long',timeZone:'UTC'})+' · '+hour;$('homeDate').textContent=date.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});$('homeClock').dateTime=iso+'T'+hour;$('homeCalendarLink').setAttribute('aria-label',iso+' '+hour+' · Open calendar');const {counts,actions,dirty,fresh,details}=g.TLDeskAttention.badges(s,page);if(opening)arrivals.clear();for(const [id] of fresh)arrivals.add(id);const items=[...arrivals].map(id=>details.get(id)).filter(Boolean);if(dirty){try{save();}catch{notice='Read status could not be saved.';}}for(const node of nav.querySelectorAll('[data-hc-open]')){const k=node.dataset.hcOpen,badge=node.querySelector('small');badge.textContent=[counts[k]?(counts[k]+(k==='inbox'?' unread':' new')):'',actions[k]?actions[k]+' to review':''].filter(Boolean).join(' · ');badge.hidden=!badge.textContent;}for(const group of nav.querySelectorAll('details'))group.querySelector('summary').classList.toggle('desk-updated',!!group.querySelector('.desk-badge:not([hidden])'));$('homeTabs').innerHTML=(depth?'<button class="hc-tab manager-return" data-manager-back aria-label="Back to previous screen"> Back</button>':'')+[['home','home','Overview'],['day','calendar','Calendar'],['inbox','calendar','Inbox'+(counts.inbox?' · '+counts.inbox+' unread':'')],['profile','team','Profile']].map(([dest,ic,label])=>`<button class="hc-tab life-nav-tile" data-life="go" data-v="${dest}" ${page===dest?'aria-current="page"':''}>${U.icon(ic)} ${label}</button>`).join('');$('clubPage').innerHTML=`<div class="life-desk ${opening?'opening-page':''} ${page==='home'?'life-home':''}"><p role="status">${esc(notice)}</p>${Object.entries(actions).filter(([,v])=>v&&page!=='tactics').map(([k,v])=>`<button class="desk-alert" data-life="go" data-v="${k==='home'?'interviewDesk':k}">${v} to review · ${{create:'Club entry deadline',home:'Board interview',kitOffice:'Registration deadlines',bids:'Transfer talks',neighbourhood:'Community invitation'}[k]}</button>`).join('')}${page==='transfers'&&items.length?`<details open class="tc-brief"><summary>Desk briefing · ${items.length} new</summary>${g.TLDeskAttention.digest(items)}</details>`:g.TLDeskAttention.digest(items)}${views(items)}</div>`;g.TLEntityLinks?.link(root,s);g.TLDeskAttention.mark($('clubPage'),s,page,items);g.TLTableHeadings.bind(desk,s.id,page);g.TLListPager?.apply(desk,page+'::'+s.id);if(restore)restore();else desk.scrollTop=0;}
  function stageCrest(id){
   const club=g.TLHomeData?.clubs?.[id], label=club?.short||club?.name?.slice(0,3)||'FC', fill=club?.primary||'#245b82', ink=club?.secondary||'#f2d78b';
@@ -20394,7 +20655,7 @@ function start({navigation,toggleDrawer}){if(!s)return false;navigation();const 
  if(cmd==='recViewOpen'){const v=g.TLScoutCentre.views(s)[Number(b.dataset.v)];if(v){for(const k of FILTERS)recruitment[k]=v[k];recruitment.only=!!v.only;recruitment.page=0;recruitment.id=null;msg='View opened · '+v.name;}}
  if(cmd==='recViewForget'){const n=Number(b.dataset.v),list=g.TLScoutCentre.views(s),gone=list[n];g.TLScoutCentre.setViews(s,list.filter((_,i)=>i!==n));msg=gone?'View forgotten · '+gone.name:'View forgotten.';}
  if(cmd==='recViewSave'){const input=root.querySelector('[data-rec-view-save] input'),name=(input?(input.value||'').trim():'').slice(0,28)||((recruitment.nation||s.profile.nation)+' · '+({GK:'Goalkeeper',DC:'Centre-back',FB:'Full-back',DM:'Holding midfielder',CM:'Central midfielder',AM:'Attacking midfielder',W:'Winger',ST:'Striker'}[recruitment.pos]||'All positions'));g.TLScoutCentre.setViews(s,[...g.TLScoutCentre.views(s).filter(v=>v.name!==name),{name,nation:recruitment.nation||s.profile.nation,age:recruitment.age,source:recruitment.source,query:recruitment.query,pos:recruitment.pos||'',order:recruitment.order,category:recruitment.category,only:!!recruitment.only}]);msg='View saved · '+name;}
- notice=msg;draw();if(cmd==='recOpen'||cmd==='recBack')$('clubPage').scrollTop=0;return;}if(b.id==='homeMenu'||b.id==='homeScrim'){toggleDrawer(b.id==='homeMenu',true);return;}const dest=b.dataset.hcOpen||(b.dataset.life==='go'?b.dataset.v:b.id==='homeCalendarLink'?'day':null);if(dest){page=dest;notice='';toggleDrawer(false);draw();$('clubPage').scrollTop=0;}else if(b.id==='homeContinue')continueCareer();else if(b.dataset.tlDo==='continue')continueCareer();else if(b.dataset.life)change(b.dataset.life,b.dataset.v);});function worksheet(form){const v=Object.fromEntries(new FormData(form));s.faWorksheet=v;const issues=g.TLFAHearing.blockers(s,v,W.emblems);form.querySelector('#faStatus').textContent=issues.join(' ')||'Ready to submit.';try{save();}catch{form.querySelector('#faStatus').textContent+=' Draft kept in this session only.';}return issues;}
+ notice=msg;draw();if(cmd==='recOpen'||cmd==='recBack')$('clubPage').scrollTop=0;return;}if(b.id==='homeMore')return;const dest=b.dataset.hcOpen||(b.dataset.life==='go'?b.dataset.v:b.id==='homeCalendarLink'?'day':null);if(dest){page=dest;notice='';closeMore();draw();$('clubPage').scrollTop=0;}else if(b.id==='homeContinue')continueCareer();else if(b.dataset.tlDo==='continue')continueCareer();else if(b.dataset.life)change(b.dataset.life,b.dataset.v);});function worksheet(form){const v=Object.fromEntries(new FormData(form));s.faWorksheet=v;const issues=g.TLFAHearing.blockers(s,v,W.emblems);form.querySelector('#faStatus').textContent=issues.join(' ')||'Ready to submit.';try{save();}catch{form.querySelector('#faStatus').textContent+=' Draft kept in this session only.';}return issues;}
  root.addEventListener('input',e=>{if(e.target.form?.id==='faForm')worksheet(e.target.form);if(e.target.hasAttribute?.('data-board-search')){const q=e.target.value.trim().toLowerCase();board.query=e.target.value;const table=root.querySelector('[data-board-table="holders"]'),count=root.querySelector('[data-board-count]');if(table){const rows=[...table.tBodies[0].rows];let shown=0;for(const tr of rows){const hit=!q||tr.textContent.toLowerCase().includes(q);tr.hidden=!hit;if(hit)shown+=1;}const none=root.querySelector('.br-none');if(none)none.hidden=!!shown;if(count)count.textContent=q?`Showing ${shown} of ${rows.length} holders`:`${rows.length} ${rows.length===1?'holder':'holders'}`;}}});root.addEventListener('submit',e=>{if(e.target.matches('[data-dossier-search-form]')){e.preventDefault();dossierView.query=e.target.querySelector('[data-dossier-search]').value;dossierView.selected='';delete dossierView.limit;draw();return;}if(e.target.matches('[data-board-interview]')){e.preventDefault();const f=e.target;change('answer',{priority:f.elements.priority.value,motivation:f.elements.motivation.value});return;}if(e.target.matches('[data-staff-cap]')){e.preventDefault();change('staffBudget',new FormData(e.target).get('cap'));return;}if(e.target.matches('[data-appointment]')){e.preventDefault();const f=new FormData(e.target);change('bookTime',{day:organiser.day??s.day,hour:+f.get('hour'),id:f.get('id')});return;}if(e.target.matches('[data-network-post]')){e.preventDefault();const f=e.target,text=f.elements.text.value,role=g.TLTerraceTrials.suggest(text),fields=f.querySelector('[data-trial-fields]');if(role||!fields.hidden){if(fields.hidden)f.elements.role.value=role;fields.hidden=false;f.elements.role.focus({preventScroll:true});}else change('networkPost',text);return;}if(e.target.matches('[data-network-join],[data-network-reply]')){e.preventDefault();const f=e.target,v=new FormData(f);if(f.hasAttribute('data-network-join'))change('networkJoin',v.get('handle'));else change('networkReply',{id:f.dataset.networkReply,text:v.get('text')});return;}if(e.target.matches('[data-fa-appeal]')){e.preventDefault();const f=e.target;change('faAppeal',{id:f.dataset.faAppeal,grounds:f.elements.grounds.value});return;}if(e.target.id==='faForm'){e.preventDefault();if(worksheet(e.target).length){e.target.querySelector('#faStatus').focus();return;}change('register',s.faWorksheet);}});draw();showEncounter();return true;}
 g.TLManagerDesk={install,start};})(window);
 
@@ -20408,7 +20669,7 @@ g.TLManagerDesk={install,start};})(window);
   const portraitImages={"forward":"data:image/webp;base64,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","winger":"data:image/webp;base64,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","defender":"data:image/webp;base64,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","midfielder":"data:image/webp;base64,UklGRqIIAABXRUJQVlA4IJYIAABwJQCdASqAAIAAPlEkjkSjoiEWCqzkOAUEoAyYZhXF6m/tPPRur+d4UY6ncjPF8wD9Yf1E69Hma83z/c+rL/g+n/1QnoAfrd1tn96oI/Q38nmcXGfZAPuvFT1FpQ0zysQIVha1aXKabtZL7Pea8sElKdmGox1L1Wez50+q8sNxuWNxAgoKBeMnpswOFaRrnDG8hmQmRtkqwA9mNRdtNl7ftBxxmE063QFl8P1JbYhB5idd9MHNuLF3I/3GOVgbcXByzcY3323AR3f/h++pri+LppzEX1t9faGSafMjKVAWtwn7NQgXrsmST3ePrRJVTx9IV3LBYT5HC/7Jny254C4gMadz5K7Ct7CUHmJXllsqQ66MnvFUz5EfLCEINMjq1QTYNMKljdBVF0PCnRlxzFeVsq0CgAD+/K5OAiWXrUsiAaCuAHCt0lvRuNlvTrg9hu9+kqX9RMoA8GOR1OzfI6dgCpjqK/xs14RjgdrNveXTba2wgNuvYCoyODaQIGaiefwY10oJ4EGuuK0QPAz2WHUDzBOu8vhoqmFIRuRU/1GUUL7/3vTFcvbWBC4W85rkf/dS9FlIBaEEVqHvxZaj6zdl3BH/UvbMJ8tEzra7ifOgIWmbGrL9RreFA2EaJiyf3M+D74XquhGJYyin4ycQZRzV58LNAH3/dCL4NLt8WFecdPsXEAN5Wl8tTO70lFaXKDlYwg5Dhr2LnDX6qRfR0ORcKFIuSNhIB7gWKDthM6hq6bU4tfJ5A6FEtRPckZ+CMp1AQZKvWgOoVBlZiv2ga1z3obSiwRCBOsdJZEqgdWKbeSt7WB3YiUnS8jkn0l9j3C024PWBut38CDjn/H0xX5wo2L2raUnnkbX28/6c5ryl6bbVYGP08c9Zb3H/J+S5LROdAbCpwxtwYNYZVTxrV9AsFw2qoaSbPsV2E8ORODf0iVbRjJlu7Ug0AzNrgB9HqMgT1diNzDyGbhbsGSHjNzKpBxvNHi8315C6G+TzPZr5R6uSHAMl2gH2GynNSytbcZxNReyDos4+VGZzYLCiy1wNnTPsXFi7tKZZP68JLJ30jGMiWd4ieNkqc+92sOGyoLR/MqNGJQTv8bSms+yoo3q+giYc0fTfbfBMQGYSukZp/VaqqA4Z0Zxd6xDnF+2EHKcv7xlI18f0nJl8RGJhk4MtSsI3FUfSd5yNDDuHE3wVJ6HwpUdoqHfvaAM6q2/3lYKIkVJNOPipSILXP/jr13VL0bXMu7FUraGy/QSJtXtLr9OTqH9432abi/BLNRrHtOCo7ZCmshkowG6PrjCexJV3WLBBHhVRlrCUrx0T4jyFVxxz/W4wZXrAVnfI+oa391eFzTpF4u4mVJiqLlVivzRBC6rOswd0/2/cMTSLVmeBEa6mlq3KMhlcnMvzSbYs4dFrZnfbCsTxbwCZS1hdQhDiTw7Cyzqu6niuUcyUEHW44XQmGtYuR99LXizBixDkM6vvFr0G6GZdsi439ujwkOubYU0Q40OnQcZNZZ+Sr1Yb+wYsIpf6xxgKnVKZHd+lWvda8lseP5viovFDB6+ZJwuMoy3p6JKDYndgqfOmPiD4xd7jfqDwl91zPHTX2dHKpmo1N6Vd9Vh43pBspB5s7LOXBwaxzZu9Jmz5GzefZoJxXpJUlxFzIJXxyfuXmxIbm8DhUyZ21OTcZCFv9jvGVXRTfVwr78IGybxpsYhjXnwHLiQJf/EmhZKzNPmP1cn6Al4p2YzE/82F8Drx3r2k/XaqrqmKkBari6iFKhjXuZ3GlXOVrOLTdeiDy5/IepRNTFreKwRTvIcTUdbW8L6uxQnsdpar9zOzGOJ9fO0ol1PYeYQ/3OYf+nArMNaco0nyzrItBTbO0WoK9z8xe3+3x5+R3ZEgRXuxKDShgQEoPCe6NhCbqX3EmMxzb/oAg/ZDpyP0ZLCR2XxF15W9fJg6fpCdkjOcy6VzYABOGz1eGbDMolJx3krquw1LVce6DD9B/okYcRojVI35hgnFlN2tJUSdXOEda3sII7VWFOLnzZ6tnCRaBcfFuR+06lpaq/V6IdMaem8mW9QzkbCcVMb1hKjKdNqFXCfeS23mgUYoQITFIt1bcJYO3YXNJBHv7gUxDIYNdf/VyGArzlmgpSUvej+TGaFkJSVMjeTGN/pdKT0wnKUSiuWTuOoT5Owp4cE0ydwSHrsUJ+X+WX8DPlHR4ot+2SJ1/m8EDuTHAvM+DcPXWNukFlBBab5o++CrMQirJxK8osa2AiXil99Bp9boxMIKoR7C1QU85osjRJTLaQe74WLGtlxbgKrRQjP/3JmlU2mJIwVXXL0EjjqkGuIGGS0e7RqOyaPb7zEuhff3oKpMEjEeXIF/yxVL50xBoRhvl/y5q7K2M9jUQT4CLLA/reEAKL9lmbae9Cj7vWX6jlnv//mfU/b5VclKVNNTRQ9jWhN6ViLzPfkuP+Z6TaMfJ02aA7fFYwikGZ5b+2oN35W1uUI4o5S+WnJF0CG3+I9RI7MhUea7Tf/ke0lQjbsd6ac7ePwqI1kRUlkYs4dx+DJh4BIr9EVfaL/fT3gLabHq1SqmRYKfpPBbd9JDW0W4llo1Ddx5CTfNEu69HwFdog+3bQ/FHFfPFyxxgxmJj440wLpMDP+hSZGq0Y+iNXFJB/wb0soyJiP1romyjxRXT7zmvlyBliEprdKb3mWGY6mM9JTHFbxUKexvoNd6/hILaAP23PClT2KIHUvz+uVKq+CuT+Y7JqySuMYb1KpKGq9P2i1CzAW+b/Lk4nYnp356PaA7jieO/GhBmzUISJtg8XdED4rEPovsSnB9VjEARElfnzBYnCXI1N7+kgj3ERgrIa7BykofK55amPLCQHyu6lN1kTjZtY7MZXFZ49s3/lqRVNkSHKN61PNVi/iJAkz08AEW5s9oa/MVxch4xlLKHzQAHvLWZoAAAA=="};
   const $=id=>document.getElementById(id);
   const text=(id,value)=>{$(id).textContent=value;};
-  const state={drawer:false,note:'',target:null,last:null,homeSnapshot:null};
+  const state={note:'',target:null,last:null,homeSnapshot:null};
   let desk,season,match,processor;
   const NOTE_KEY='touchline26.2026.clubhouse.notebook', PAUSE_KEY='touchline26.2026.calendar-pause.v1';
   const nav=[
@@ -20472,7 +20733,9 @@ g.TLManagerDesk={install,start};})(window);
     homeTabs();
   }
   function homeTabs(){
+    const host=$('homeTabs').querySelector('#hcChrome');
     $('homeTabs').innerHTML=tabs.map(([label,id])=>`<button class="hc-tab" type="button" data-hc-open="${id}"${id==='home'?' aria-current="page"':''}>${label}</button>`).join('');
+    if(host)mountChrome();
   }
   const datum=(label,value)=>`<p class="hc-datum"><strong>${esc(value)}</strong><span>${esc(label)}</span></p>`;
   function search(){
@@ -20481,7 +20744,7 @@ g.TLManagerDesk={install,start};})(window);
     $('homeSearchResults').innerHTML=results.length?results.map(([id,label])=>`<button class="hc-dialog-link" type="button" data-hc-open="${id}">${esc(label)}</button>`).join(''):'<p class="cc-empty">No matching sections.</p>';
   }
   function showPanel(title,body){
-    toggleDrawer(false);
+    closeMore();
     text('homeDialogTitle',title);$('homeDialogBody').innerHTML=body;
     const dlg=$('homeDialog');if(!dlg.open)dlg.showModal();
     $('homeDialogBody').scrollTop=0;
@@ -20489,7 +20752,7 @@ g.TLManagerDesk={install,start};})(window);
   function openPanel(id){
     if(Object.hasOwn(routes,id)){
       const [,page,tab,key]=routes[id];
-      toggleDrawer(false,state.drawer&&desk.route().page===page);
+      closeMore();
       return desk.go(page,tab,key);
     }
     if(!Object.hasOwn(modalTitles,id))return;
@@ -20544,13 +20807,19 @@ g.TLManagerDesk={install,start};})(window);
       state.homeSnapshot={s,club:c.s};$('homeMain').innerHTML=Office.clubhouse(c);
     }
   }
-  function toggleDrawer(open,focus=false){
-    if(open&&processor?.running)return;
-    const wasOpen=state.drawer;state.drawer=open;
-    $('homeSidebar').classList.toggle('hc-open',open);$('homeScrim').hidden=!open;$('homeFrame').inert=open;
-    $('homeMenu').setAttribute('aria-expanded',String(open));
-    if(open&&focus)($('homeNav').querySelector('[aria-current=page]')||$('homeNav').querySelector('button')).focus();
-    else if(wasOpen&&focus)$('homeMenu').focus();
+  function closeMore(focus=false){
+    const panel=$('homeMorePanel'), button=$('homeMore');
+    if(!panel||panel.hidden)return false;
+    panel.hidden=true;button.setAttribute('aria-expanded','false');
+    if(focus)button.focus({preventScroll:true});
+    return true;
+  }
+  function toggleMore(){
+    const panel=$('homeMorePanel'), button=$('homeMore');
+    if(!panel)return;
+    const open=panel.hidden;
+    panel.hidden=!open;button.setAttribute('aria-expanded',String(open));
+    if(open)(panel.querySelector('button')||panel).focus({preventScroll:true});
   }
   function dayDesk(focus=true){
     const s=season.value, tab=K.onDate(s,s.now).length?'fixtures':'today', r=desk.route();
@@ -20568,8 +20837,25 @@ g.TLManagerDesk={install,start};})(window);
   function processingUI(on){
     const root=$('homeScreen'), pane=$('homeProcessing');
     root.dataset.processing=String(on);pane.hidden=!on;
-    for(const id of ['homeSidebar','homeTabs','homeMain','clubPage','homeCalendarLink','homeMenu','homeBack','homeForward'])$(id).inert=on;
-    for(const control of root.querySelectorAll('.hc-bar [data-hc-open]'))control.inert=on;
+    for(const id of ['homeTabs','homeMain','clubPage','homeCalendarLink','homeBack','homeForward'])$(id).inert=on;
+    for(const control of root.querySelectorAll('.hc-bar [data-hc-open],#hcChrome [data-hc-open]'))control.inert=on;
+    if(on)closeMore();
+  }
+  /* The rail is gone: the mark, the club, the manager and the club menu live in the header. */
+  function mountChrome(){
+    const shell=$('homeScreen'),bar=shell.querySelector('.hc-bar'),chrome=$('hcChrome'),rail=shell.querySelector('.tl-topnav');
+    if(!bar||!chrome)return;
+    const narrow=global.matchMedia('(max-width:980px)').matches;
+    const home=narrow&&rail?rail:bar;
+    if(chrome.parentElement!==home)(narrow&&rail?rail.appendChild(chrome):bar.insertBefore(chrome,bar.firstChild));
+    if(narrow&&rail)rail.classList.add('hc-rail-chrome');else rail?.classList.remove('hc-rail-chrome');
+    shell.classList.toggle('hc-tactics-live',!!shell.querySelector('.fm-tactics-workspace'));
+  }
+  function watchChrome(){
+    mountChrome();
+    const page=$('clubPage');if(!page)return;
+    let queued=false;
+    new MutationObserver(()=>{if(queued)return;queued=true;setTimeout(()=>{queued=false;mountChrome();},0);}).observe(page,{childList:true,subtree:true});
   }
   function drawProgress(frame){
     if(!frame.days){state.last=null;processingUI(true);syncClub();$('homeProcessing').scrollTop=0;$('homeContinue').focus({preventScroll:true});}
@@ -20585,7 +20871,7 @@ g.TLManagerDesk={install,start};})(window);
     processingUI(false);dayDesk();
   }
   function progress(){
-    if($('homeScreen').hidden||$('homeDialog').open||state.drawer)return;
+    if($('homeScreen').hidden||$('homeDialog').open||!$('homeMorePanel')?.hidden)return;
     const [,cmd]=action();
     if(cmd==='stop')return processor.stop();
     if(cmd==='next-unread')return desk.act('next-unread');
@@ -20594,7 +20880,12 @@ g.TLManagerDesk={install,start};})(window);
     if(cmd==='day')return processor.start();
   }
   function init(){
-    global.TLManagerDesk.install({navigation,toggleDrawer});
+    global.TLManagerDesk.install({navigation,closeMore});
+    watchChrome();
+    $('homeMore')?.addEventListener('click',toggleMore);
+    document.addEventListener('click',e=>{if(!e.target.closest('#hcChrome'))closeMore();});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&closeMore())e.stopPropagation();});
+    global.matchMedia('(max-width:980px)').addEventListener('change',()=>mountChrome());
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })(window);

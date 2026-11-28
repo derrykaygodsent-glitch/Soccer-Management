@@ -6,7 +6,7 @@
   const portraitImages=/* @HOME_PORTRAITS@ */ {};
   const $=id=>document.getElementById(id);
   const text=(id,value)=>{$(id).textContent=value;};
-  const state={drawer:false,note:'',target:null,last:null,homeSnapshot:null};
+  const state={note:'',target:null,last:null,homeSnapshot:null};
   let desk,season,match,processor;
   const NOTE_KEY='touchline26.2026.clubhouse.notebook', PAUSE_KEY='touchline26.2026.calendar-pause.v1';
   const nav=[
@@ -70,7 +70,9 @@
     homeTabs();
   }
   function homeTabs(){
+    const host=$('homeTabs').querySelector('#hcChrome');
     $('homeTabs').innerHTML=tabs.map(([label,id])=>`<button class="hc-tab" type="button" data-hc-open="${id}"${id==='home'?' aria-current="page"':''}>${label}</button>`).join('');
+    if(host)mountChrome();
   }
   const datum=(label,value)=>`<p class="hc-datum"><strong>${esc(value)}</strong><span>${esc(label)}</span></p>`;
   function search(){
@@ -79,7 +81,7 @@
     $('homeSearchResults').innerHTML=results.length?results.map(([id,label])=>`<button class="hc-dialog-link" type="button" data-hc-open="${id}">${esc(label)}</button>`).join(''):'<p class="cc-empty">No matching sections.</p>';
   }
   function showPanel(title,body){
-    toggleDrawer(false);
+    closeMore();
     text('homeDialogTitle',title);$('homeDialogBody').innerHTML=body;
     const dlg=$('homeDialog');if(!dlg.open)dlg.showModal();
     $('homeDialogBody').scrollTop=0;
@@ -87,7 +89,7 @@
   function openPanel(id){
     if(Object.hasOwn(routes,id)){
       const [,page,tab,key]=routes[id];
-      toggleDrawer(false,state.drawer&&desk.route().page===page);
+      closeMore();
       return desk.go(page,tab,key);
     }
     if(!Object.hasOwn(modalTitles,id))return;
@@ -142,13 +144,19 @@
       state.homeSnapshot={s,club:c.s};$('homeMain').innerHTML=Office.clubhouse(c);
     }
   }
-  function toggleDrawer(open,focus=false){
-    if(open&&processor?.running)return;
-    const wasOpen=state.drawer;state.drawer=open;
-    $('homeSidebar').classList.toggle('hc-open',open);$('homeScrim').hidden=!open;$('homeFrame').inert=open;
-    $('homeMenu').setAttribute('aria-expanded',String(open));
-    if(open&&focus)($('homeNav').querySelector('[aria-current=page]')||$('homeNav').querySelector('button')).focus();
-    else if(wasOpen&&focus)$('homeMenu').focus();
+  function closeMore(focus=false){
+    const panel=$('homeMorePanel'), button=$('homeMore');
+    if(!panel||panel.hidden)return false;
+    panel.hidden=true;button.setAttribute('aria-expanded','false');
+    if(focus)button.focus({preventScroll:true});
+    return true;
+  }
+  function toggleMore(){
+    const panel=$('homeMorePanel'), button=$('homeMore');
+    if(!panel)return;
+    const open=panel.hidden;
+    panel.hidden=!open;button.setAttribute('aria-expanded',String(open));
+    if(open)(panel.querySelector('button')||panel).focus({preventScroll:true});
   }
   function dayDesk(focus=true){
     const s=season.value, tab=K.onDate(s,s.now).length?'fixtures':'today', r=desk.route();
@@ -166,8 +174,25 @@
   function processingUI(on){
     const root=$('homeScreen'), pane=$('homeProcessing');
     root.dataset.processing=String(on);pane.hidden=!on;
-    for(const id of ['homeSidebar','homeTabs','homeMain','clubPage','homeCalendarLink','homeMenu','homeBack','homeForward'])$(id).inert=on;
-    for(const control of root.querySelectorAll('.hc-bar [data-hc-open]'))control.inert=on;
+    for(const id of ['homeTabs','homeMain','clubPage','homeCalendarLink','homeBack','homeForward'])$(id).inert=on;
+    for(const control of root.querySelectorAll('.hc-bar [data-hc-open],#hcChrome [data-hc-open]'))control.inert=on;
+    if(on)closeMore();
+  }
+  /* The rail is gone: the mark, the club, the manager and the club menu live in the header. */
+  function mountChrome(){
+    const shell=$('homeScreen'),bar=shell.querySelector('.hc-bar'),chrome=$('hcChrome'),rail=shell.querySelector('.tl-topnav');
+    if(!bar||!chrome)return;
+    const narrow=global.matchMedia('(max-width:980px)').matches;
+    const home=narrow&&rail?rail:bar;
+    if(chrome.parentElement!==home)(narrow&&rail?rail.appendChild(chrome):bar.insertBefore(chrome,bar.firstChild));
+    if(narrow&&rail)rail.classList.add('hc-rail-chrome');else rail?.classList.remove('hc-rail-chrome');
+    shell.classList.toggle('hc-tactics-live',!!shell.querySelector('.fm-tactics-workspace'));
+  }
+  function watchChrome(){
+    mountChrome();
+    const page=$('clubPage');if(!page)return;
+    let queued=false;
+    new MutationObserver(()=>{if(queued)return;queued=true;setTimeout(()=>{queued=false;mountChrome();},0);}).observe(page,{childList:true,subtree:true});
   }
   function drawProgress(frame){
     if(!frame.days){state.last=null;processingUI(true);syncClub();$('homeProcessing').scrollTop=0;$('homeContinue').focus({preventScroll:true});}
@@ -183,7 +208,7 @@
     processingUI(false);dayDesk();
   }
   function progress(){
-    if($('homeScreen').hidden||$('homeDialog').open||state.drawer)return;
+    if($('homeScreen').hidden||$('homeDialog').open||!$('homeMorePanel')?.hidden)return;
     const [,cmd]=action();
     if(cmd==='stop')return processor.stop();
     if(cmd==='next-unread')return desk.act('next-unread');
@@ -192,7 +217,12 @@
     if(cmd==='day')return processor.start();
   }
   function init(){
-    global.TLManagerDesk.install({navigation,toggleDrawer});
+    global.TLManagerDesk.install({navigation,closeMore});
+    watchChrome();
+    $('homeMore')?.addEventListener('click',toggleMore);
+    document.addEventListener('click',e=>{if(!e.target.closest('#hcChrome'))closeMore();});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&closeMore())e.stopPropagation();});
+    global.matchMedia('(max-width:980px)').addEventListener('change',()=>mountChrome());
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })(window);
