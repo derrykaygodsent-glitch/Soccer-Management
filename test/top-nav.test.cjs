@@ -106,7 +106,9 @@ test('the team-sheet role cell behaves like the player cell: no ring, no underli
   a.doesNotMatch(css, /td\.fm-sheet-player:hover \.fm-player-name \{[^}]*underline/, 'and none on the player column either');
   a.match(css, /\.fm-sheet-table \.fm-role-cell button::before \{[^}]*position: absolute;[^}]*inset: 0;/, 'the whole cell answers the pointer, so the arrow is part of the control');
   a.match(css, /\.fm-sheet-table \.fm-role-cell \{[^}]*position: relative;[^}]*padding-right: 0;/, 'the cell no longer reserves a dead strip for the arrow');
-  a.match(css, /:has\(button\[aria-expanded="true"\]\)::after \{[^}]*transform: rotate\(225deg\)/, 'the arrow turns over while its sheet is open');
+  a.doesNotMatch(css, /:has\(button\[aria-expanded="true"\]\)/, 'the open cell is not dressed up: no arrow flip, no colour change, exactly like the player cell');
+  const sheetHover = css.slice(css.indexOf('.fm-sheet-table .fm-role-cell button,'), css.indexOf('.fm-sheet-table .fm-role-cell button,') + 620);
+  a.ok(!sheetHover.includes('--tac-teal'), 'hovering an open or idle sheet cell keeps its text colour: only the arrow reacts');
   /* the sheet clears the whole cell, name and fit line, instead of covering them */
   a.match(board, /const anchorEl=rolePicker\.kind==='marker'\?cell:cell\?\.closest\('\.fm-role-cell'\)\|\|cell;/, 'the sheet is placed from the cell block, not the single line of text');
 });

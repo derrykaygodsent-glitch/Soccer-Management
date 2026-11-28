@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="6343a3cdd1615820cbec">
+  <meta name="tl-build" content="bcb56c8c7cb25b958fb2">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -6182,7 +6182,7 @@ th[data-col-id] > .column-sort::after { flex: none; }
   transition: border-color .12s ease;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player:hover::after { border-color: #cfe2ec; }
-#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player:hover .fm-player-name { color: #dff0f7; }
+
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player:has(.fm-player-picker:focus-visible) {
   outline: 2px solid #61c9c3; outline-offset: -2px;
 }
@@ -6505,26 +6505,20 @@ tr.fm-drag-placeholder { display: table-row !important; min-height: 0; }
   pointer-events: none;
   transition: border-color .12s ease;
 }
-/* the sheet cells are text dropdowns: no ring, no underline, the arrow is the affordance */
+/* exactly the player cell: no ring, no underline, no colour change, no open state.
+   The arrow merely brightens under the pointer and the click toggles the sheet. */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button,
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button:hover,
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button:focus-visible,
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button[aria-expanded="true"] {
   border-color: transparent;
   background: none;
   outline: 0;
-  color: var(--tac-teal, #61c9c3);
+  color: var(--tac-body);
   text-decoration: none;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell:hover::after {
   border-color: #cfe2ec;
-}
-#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell:has(button[aria-expanded="true"])::after {
-  border-color: var(--tac-teal, #61c9c3);
-  transform: rotate(225deg);
-  margin-top: -1px;
-}
-#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell:has(button[aria-expanded="true"]) button {
-  color: var(--tac-teal, #61c9c3);
 }
 
 /* No underlines anywhere in the game: links and text buttons read through colour, weight
