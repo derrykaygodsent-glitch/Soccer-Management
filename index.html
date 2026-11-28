@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="eac1a6a99bab4011f12f">
+  <meta name="tl-build" content="17fe27e97280d92092a5">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -4268,7 +4268,8 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 #homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head small { color: var(--tac-dim); font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-editor-head h3 { margin: 2px 0; color: var(--tac-ink); font-size: 17px; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-phase { border: 0; border-top: 1px solid var(--tac-line); border-radius: 0; background: none; padding: 10px 0; }
-#homeScreen:has(.fm-tactics-workspace) .fm-player-phase > header { padding-bottom: 6px; margin-bottom: 6px; border-bottom: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-phase > header { display: flex; align-items: baseline; justify-content: flex-start; gap: 8px; padding-bottom: 6px; margin-bottom: 6px; border-bottom: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-phase > header > span { color: var(--tac-dim); font-size: 10px; font-weight: 700; letter-spacing: .08em; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-phase > header b { color: var(--tac-ink); font-size: 12px; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-instruction-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 10px; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-instruction-grid label { color: var(--tac-dim); font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
@@ -4320,8 +4321,17 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual { --tac-inst-pitch: clamp(320px, calc(100vh - 452px), 700px); }
 #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field { margin: 0 auto; }
-#homeScreen:has(.fm-tactics-workspace) .fm-instruction-phase { max-width: calc(var(--tac-inst-pitch) * 0.862); }
-#homeScreen:has(.fm-tactics-workspace) .fm-instruction-phase > button { flex: 1 1 0; padding-inline: 4px; white-space: nowrap; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-phase { width: 100%; max-width: calc(var(--tac-inst-pitch) * 0.96); margin-inline: auto; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-phase > button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 6px 4px;
+  font-size: 10px;
+  letter-spacing: 0;
+  line-height: 1.2;
+  white-space: normal;
+  text-align: center;
+}
 /* short desktops: pitch, controls and data sit side by side instead of stacking */
 @media (min-width: 951px) and (max-height: 920px) {
   #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace { grid-template-columns: auto minmax(0, 1fr); }
@@ -4584,12 +4594,13 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 
 #homeScreen:has(.fm-tactics-workspace) .fm-player-workspace {
   display: grid;
-  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  grid-template-columns: minmax(240px, 318px) minmax(0, 1fr);
   align-items: start;
-  gap: 20px;
+  gap: 20px 28px;
+  min-height: 0 !important;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-list,
-#homeScreen:has(.fm-tactics-workspace) .fm-player-detail { border: 0; background: none; overflow: visible; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-detail { border: 0; background: none; overflow: visible; min-height: 0 !important; padding: 0 !important; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-list > header { padding: 0 0 8px; border: 0; border-bottom: 1px solid var(--tac-line); background: none; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-list > header small { color: var(--tac-dim); font-size: 9px; letter-spacing: .14em; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-list > header h3 { margin: 3px 0 2px; color: var(--tac-ink); font-size: 15px; font-weight: 650; }
@@ -4616,6 +4627,76 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 #homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-stars,
 #homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-status,
 #homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-row > .fm-stat { display: none !important; }
+/* the assignments list is a real table now: position, player, fit */
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-squad-table {
+  max-height: clamp(240px, calc(100dvh - 438px), 700px) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table caption {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table thead,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table tbody { display: block; width: 100%; border: 0; background: none; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table tr {
+  display: grid !important;
+  grid-template-columns: 32px minmax(0, 1fr) 56px;
+  align-items: center;
+  column-gap: 8px;
+  min-height: 36px;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 1px solid var(--tac-line);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table thead tr {
+  min-height: 24PX;
+  border-bottom: 1px solid var(--tac-line);
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table th {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--tac-dim);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table td {
+  padding: 0;
+  border: 0 !important;
+  background: none;
+  color: var(--tac-body);
+  font-size: 11.5px;
+  vertical-align: middle;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table td:nth-child(2),
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table td:nth-child(3),
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table td:nth-child(4),
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table td:nth-child(7),
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table td:nth-child(8) { display: none !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table .fm-row:hover { background: #14232f; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table .fm-row.on,
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table .fm-row[aria-pressed="true"] { background: #17303a; outline: 0 !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table .fm-suitability { justify-self: end; color: var(--tac-body); font-size: 10.5px; font-variant-numeric: tabular-nums; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table .fm-player-picker { display: none; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table .fm-number { color: var(--tac-dim); font-style: normal; font-size: 10px; margin-right: 6px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table .fm-player-name { color: var(--tac-ink); font-size: 11.5px; font-weight: 600; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table .position-tag { color: var(--tac-teal); font-size: 10px; font-weight: 800; letter-spacing: .06em; }
+/* substitutes are swapped on the sheet, not here */
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table tr.fm-sub { display: none !important; }
+/* selects fill their column, the fit header lines up with its numbers */
+#homeScreen:has(.fm-tactics-workspace) .fm-player-instruction-grid select { width: 100%; }
+#homeScreen:has(.fm-tactics-workspace) .fm-player-list .fm-player-table th:nth-child(3) { text-align: right; }
+
 #homeScreen:has(.fm-tactics-workspace) .fm-player-detail .fm-player-editor { padding: 0; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-detail .fm-player-phase-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-detail .fm-player-editor.empty h3 { color: var(--tac-ink); font-size: 17px; }
@@ -16008,13 +16089,13 @@ function render(s,players){
   const posSelect=(slot,phaseName)=>{
     if(!slot?.player)return '<p class="fm-editor-empty">Select a player to edit their assignment.</p>';
     const attack=phaseName==='attack',job=attack?slot.attackJob:slot.job,fit=Z.fit(slot.player,attack?(slot.attackPosition||slot.position):slot.position,job[0],s.boardReps?.[slot.player.id]);
-    return `<div class="fm-assignment-row"><div><span>${attack?'In-possession role':'Out-of-possession role'}</span><button type="button" data-role-picker-open="${selected}" data-role-picker-phase="${phaseName}" aria-haspopup="dialog">${e(job[0])} · ${Z.fitRating(fit)}/5 ${e(Z.fitBand(fit))}</button></div></div>`;
+    return `<div class="fm-assignment-row"><div><button type="button" data-role-picker-open="${selected}" data-role-picker-phase="${phaseName}" aria-haspopup="dialog" title="${attack?'In-possession':'Out-of-possession'} role">${e(job[0])} · ${Z.fitRating(fit)}/5 ${e(Z.fitBand(fit))}</button></div></div>`;
   };
   const instructionEditor=slot=>{
-    if(!slot?.player)return '<div class="fm-player-editor empty"><h3>Player instructions</h3><p>Select a player on the pitch or in the team sheet. Their In Possession and Out of Possession roles and personal instructions will appear here.</p></div>';
+    if(!slot?.player)return '<div class="fm-player-editor empty"><p>Select a player.</p></div>';
     const p=slot.player;
     const phasePanel=phaseName=>{const groups=Object.entries(Z.individualInstructions).filter(([k])=>Z.individualInstructionChoices(phaseName,k).length);return `<section class="fm-player-phase"><header><b>${phaseName==='attack'?'In Possession':'Out of Possession'}</b><span>${phaseName==='attack'?code(slot.attackPosition||slot.position,slot.attackJob[0],slot.attackJob[2]):code(slot.position,slot.job[0],slot.job[2])}</span></header>${posSelect(slot,phaseName)}<div class="fm-player-instruction-grid">${groups.map(([k])=>{const choices=Z.individualInstructionChoices(phaseName,k);return `<label>${({position:'Positioning',risk:'Passing risk',shooting:'Shooting',dribbling:'Dribbling',pressing:'Pressing'})[k]}<select data-player-instruction="${phaseName}|${e(p.id)}|${k}">${options(choices,slot.instructions?.[phaseName]?.[k]||'Team default')}</select></label>`;}).join('')}</div></section>`;};
-    return `<section class="fm-player-editor"><header class="fm-player-editor-head"><div><small>PLAYER DETAILS · ${e(slot.position)}</small><h3>${e(p.name)}</h3><p>${e(p.club||s.club?.name||'First team')} · ${e(p.pos)} · Shirt ${e(numbers[p.id]??p.num??'—')}</p></div><div class="fm-player-readiness">${starsOf(p)} ${status(p)} <b>${readiness[p.id]?.fitness??'—'}% condition</b></div><button type="button" data-league-player="${e(p.id)}">Player profile</button></header><div class="fm-player-phase-grid">${phasePanel('attack')}${phasePanel('defense')}</div><footer><small>Role familiarity · ${slot.experience||0}/20 sessions · Out of Possession ${Z.fitRating(Z.fit(p,slot.position,slot.job[0],s.boardReps?.[p.id]))}/5 · ${Z.fitBand(Z.fit(p,slot.position,slot.job[0],s.boardReps?.[p.id]))} · In Possession ${Z.fitRating(Z.fit(p,slot.attackPosition||slot.position,slot.attackJob[0],s.boardReps?.[p.id]))}/5 · ${Z.fitBand(Z.fit(p,slot.attackPosition||slot.position,slot.attackJob[0],s.boardReps?.[p.id]))}</small></footer></section>`;
+    return `<section class="fm-player-editor"><header class="fm-player-editor-head"><div><h3>${e(p.name)}</h3><p>${e(p.pos)} · Shirt ${e(numbers[p.id]??p.num??'—')}</p></div><div class="fm-player-readiness">${starsOf(p)} ${status(p)} <b>${readiness[p.id]?.fitness??'—'}% condition</b></div><button type="button" data-league-player="${e(p.id)}">Player profile</button></header><div class="fm-player-phase-grid">${phasePanel('attack')}${phasePanel('defense')}</div><footer><small>Familiarity ${slot.experience||0}/20 · Out of possession ${Z.fitRating(Z.fit(p,slot.position,slot.job[0],s.boardReps?.[p.id]))}/5 · In possession ${Z.fitRating(Z.fit(p,slot.attackPosition||slot.position,slot.attackJob[0],s.boardReps?.[p.id]))}/5</small></footer></section>`;
   };
   const playerPicker=(slot,i)=>`<select class="fm-player-picker" data-player-pick="${i}" aria-label="Choose player for ${e(slot.position)}" title="Choose a player for ${e(slot.position)}"><option value="">Pick</option>${players.filter(p=>!p.red&&!readiness[p.id]?.knock).map(p=>`<option value="${e(p.id)}"${slot.player?.id===p.id?' selected':''}>${e(p.name)} · ${e(p.pos)}</option>`).join('')}</select>`;
   const roleCell=(slot,index,phaseName)=>{const attack=phaseName==='attack',position=attack?(slot.attackPosition||slot.position):slot.position,job=attack?slot.attackJob[0]:slot.job[0],player=slot.player,fit=player?Z.fit(player,position,job,s.boardReps?.[player.id]):null;return `<div class="fm-role-cell"><button type="button" data-role-picker-open="${index}" data-role-picker-phase="${phaseName}" aria-haspopup="dialog" aria-label="Choose ${phaseName==='attack'?'In Possession':'Out of Possession'} role for ${e(player?.name||position)}">${e(job)}</button>${fit==null?'<small>Awaiting player</small>':`<small>${Z.fitRating(fit)}/5 · ${e(Z.fitBand(fit))}</small>`}</div>`;};
@@ -16058,7 +16139,7 @@ function render(s,players){
   const zoneOverlay=instructionPhase==='transition'?`<div class="fm-transition-visual"><section><b>Possession lost</b></section><i aria-hidden="true">THEN</i><section><b>Possession won</b></section></div>`:field(instructionPhase,'portrait',true);
   const overview=()=>`<aside class="fm-tactical-overview"><dl><div><dt>Formation</dt><dd>${e(defenseLabel)}${plan.attackFormation?` / ${e(attackLabel)}`:''}</dd></div><div><dt>Mentality</dt><dd>${e(s.mentality||'Balanced')}</dd></div><div><dt>Pressing</dt><dd>${e(inst.club?.trigger||inst.trigger||'System default')}</dd></div><div><dt>Familiarity</dt><dd>${familiarity.position}% <small>positions</small></dd></div></dl><section class="fm-overview-risks">${warnings.length?`<b>Priority review</b>${shortRisks.map(t=>`<p class="fm-warning" title="${e(t.full)}">${e(t.short)}</p>`).join('')}`:''}</section></aside>`;
   const instructionContent=`<section class="fm-instruction-workspace"><aside class="fm-instruction-visual"><div class="fm-instruction-phase"><button type="button" data-board="phase|0|attack" aria-pressed="${instructionPhase==='attack'}">In Possession</button><button type="button" data-board="phase|0|transition" aria-pressed="${instructionPhase==='transition'}">Transitions</button><button type="button" data-board="phase|0|base" aria-pressed="${instructionPhase==='defense'}">Out of Possession</button></div>${zoneOverlay}</aside><div class="fm-instruction-side"><section class="fm-context-controls"><header><h3>${instructionPhase==='transition'?'Transitions & goalkeeper distribution':`${instructionPhase==='attack'?'In Possession':'Out of Possession'} · ${e(selectedZoneLabel)}`}</h3></header><div class="fm-context-control-list">${contextualGroups||'<p>No team instruction is assigned to this context.</p>'}</div>${instructionPhase==='transition'?'':`<section class="fm-player-context"><h4>Players in this area</h4>${selectedZonePositions.length?selectedZonePositions.map(v=>`<button type="button" data-slot="${slots.indexOf(v)}">${e(v.player?.name||'Open slot')} <small>${e(v.attackPosition||v.position)} · ${e(v.attackJob?.[0]||v.job[0])}</small></button>`).join(''):'<p>Choose another zone to inspect its assigned players.</p>'}</section>`}</section>${overview()}</div></section>${selected!=null?`<section class="fm-instruction-player-detail">${instructionEditor(slots[selected])}</section>`:''}`;
-  const playerContent=`<section class="fm-player-workspace"><div class="fm-player-list"><header><small>FIRST TEAM</small><h3>Player assignments</h3><p>Select a player to edit their phase-specific role and instructions.</p></header>${slots.map(row).join('')}${bench.map(subRow).join('')}</div><div class="fm-player-detail">${instructionEditor(slots[selected==null?0:selected])}</div></section>`;
+  const playerContent=`<section class="fm-player-workspace"><div class="fm-player-list"><header><h3>Player assignments</h3></header><div class="fm-squad-table"><table class="fm-sheet-table fm-player-table"><caption class="sr-only">Player assignments</caption><thead><tr>${['POS','Player','Fit'].map(label=>`<th scope="col">${label}</th>`).join('')}</tr></thead><tbody>${slots.map(row).join('')}${bench.map(subRow).join('')}</tbody></table></div></div><div class="fm-player-detail">${instructionEditor(slots[selected==null?0:selected])}</div></section>`;
   const library=B().presetLibrary(s),savedOptions=library.map(x=>`<option value="${e(x.id)}"${s.activeTacticPreset===x.id?' selected':''}>${e(x.name)}</option>`).join('');
   const nav=[['shape','Team Shape'],['instructions','Team Instructions'],['players','Player Instructions']];
   const reviewLabel=warnings.length?`Needs review · ${warnings.length}`:'Ready for review',reviewHelp=warnings.length?warnings.map(w=>w.text).join('\n'):'No structural risks are currently flagged.';
