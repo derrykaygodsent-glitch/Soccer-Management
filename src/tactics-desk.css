@@ -759,18 +759,16 @@
   #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual { --tac-inst-pitch: clamp(268px, calc(100vh - 450px), 430px); }
 }
 
-/* ---- markers: one uniform plate per jersey, FM style ---------------------
-   Every shirt carries the same two-row plate: the role and its duty on top,
-   tinted by the line the player plays in, and the player on a neutral base.
-   Selecting a player lights the shirt behind the plate instead of growing a
-   card around it. */
+/* ---- markers: the jersey owns one card, FM style ------------------------
+   Shirt, role line and player line live inside a single rounded card, so the
+   whole thing moves, selects and drags as one piece. The role line is tinted
+   by the line the player holds; the player line is neutral on every marker. */
 
 #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.is-selected {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  gap: 3px !important;
   width: 17% !important;
   max-width: none !important;
   min-width: 0 !important;
@@ -783,99 +781,124 @@
 }
 #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.is-selected[class*="dock-"] { transform: translate(-50%, 50%) !important; }
 
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker .fm-marker-plate {
-  position: relative;
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card {
   box-sizing: border-box;
   display: grid;
-  grid-template-rows: 19px 18px;
+  grid-template-rows: 28px 16px 15px;
   gap: 1px;
   width: 100%;
-  max-width: 104px;
+  max-width: 84px;
   min-width: 0;
-  margin-top: 1px;
-  padding: 1px;
-  border: 1px solid #050c12;
-  border-radius: 4px;
-  background: #050c12;
-  overflow: hidden;
+  padding: 2px;
+  border: 1px solid #061a12;
+  border-radius: 6px;
+  background: #0b2b21;
+  box-shadow: 0 4px 10px #04100a66;
 }
 
-/* role row: tinted by the line the player holds */
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate > .fm-marker-role {
+/* the shirt sits inside the card and follows it around */
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .shirt-marker {
   position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  display: grid;
+  place-items: center;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 3px;
+  background: none !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+  cursor: grab;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .shirt-marker > svg {
+  width: 30px;
+  height: 26px;
+}
+
+/* role line: tinted by the line the player holds, caret pinned to the edge */
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .fm-marker-role {
+  position: relative;
   inset: auto !important;
   transform: none !important;
   display: flex;
   align-items: center;
-  position: relative;
   justify-content: center;
   width: 100%;
   height: 100%;
   min-height: 0;
-  padding: 0 14px;
+  padding: 0 12px;
   border: 0 !important;
-  border-radius: 2px;
-  color: #f2f7f9;
-  font-size: 10px;
+  border-radius: 3px;
+  background: #4a5666;
+  color: #f4f8fa;
+  font-size: 9px;
   font-weight: 800;
-  letter-spacing: .03em;
+  letter-spacing: .02em;
   line-height: 1;
   text-align: center;
   cursor: pointer;
-  background: #43566a !important;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate[data-group="gk"] > .fm-marker-role { background: #5b5470 !important; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate[data-group="def"] > .fm-marker-role { background: #3f5468 !important; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate[data-group="mid"] > .fm-marker-role { background: #3d5a55 !important; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate[data-group="att"] > .fm-marker-role { background: #4c5370 !important; }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-role:hover { filter: brightness(1.18); }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-role > span {
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card[data-group="gk"] > .fm-marker-role { background: #5a523c; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card[data-group="def"] > .fm-marker-role { background: #41546a; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card[data-group="mid"] > .fm-marker-role { background: #3d5b55; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card[data-group="att"] > .fm-marker-role { background: #4d5270; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .fm-marker-role:hover { filter: brightness(1.16); }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .fm-marker-role > span {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-role::after {
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .fm-marker-role::after {
   content: "";
   position: absolute;
-  top: 50%;
+  top: 0;
+  bottom: 0;
   right: 4px;
   width: 0;
   height: 0;
-  margin-top: -2px;
+  margin: auto 0;
   border-left: 3px solid transparent;
   border-right: 3px solid transparent;
-  border-top: 4px solid #dbe7ef;
+  border-top: 3.5px solid #dce7ee;
+  opacity: .9;
 }
 
-/* player row: neutral on every marker, and the substitute list lives here */
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player {
+/* player line: one neutral base on every marker, holding the substitute list */
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .fm-marker-player {
   position: relative;
   display: grid;
   grid-template-columns: 12px minmax(0, 1fr);
   align-items: center;
   gap: 4px;
+  width: 100%;
   height: 100%;
-  padding: 0 12px 0 4px;
-  border-radius: 2px;
-  background: #16222e;
+  padding: 0 11px 0 3px;
+  border-radius: 3px;
+  background: #123028;
 }
 #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player > svg {
   width: 11px;
   height: 11px;
-  fill: #a9c0ce;
+  fill: #a4bcc4;
 }
 #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player::after {
   content: "";
   position: absolute;
-  top: 50%;
+  top: 0;
+  bottom: 0;
   right: 4px;
   width: 0;
   height: 0;
-  margin-top: -2px;
+  margin: auto 0;
   border-left: 3px solid transparent;
   border-right: 3px solid transparent;
-  border-top: 4px solid #93a9ba;
+  border-top: 3.5px solid #9fb6bf;
   pointer-events: none;
 }
 #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player select {
@@ -889,8 +912,8 @@
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
-  color: #eef3f6 !important;
-  font: 600 9.5px/1 system-ui, sans-serif !important;
+  color: #eef4f2 !important;
+  font: 600 9px/1 system-ui, sans-serif !important;
   text-align: left;
   text-overflow: ellipsis;
   appearance: none;
@@ -899,35 +922,34 @@
 }
 #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player select:focus-visible { outline: 1px solid #cfe0e6; outline-offset: 1px; }
 
-/* selection: the shirt sits on a light pad and its plate gets the edge */
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.is-selected > .shirt-marker {
-  background: #ffffff1f !important;
-  border-radius: 5px;
-  box-shadow: inset 0 0 0 1px #ffffff5c !important;
-  outline: 0 !important;
+/* selection wraps the whole card, end to end */
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.is-selected > .fm-marker-card {
+  border-color: #dbe7ec;
+  background: #10382a;
+  box-shadow: 0 0 0 1px #dbe7ec, 0 10px 20px #04101a99;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.is-selected .fm-marker-plate {
-  border-color: #dce8ef;
-  box-shadow: 0 8px 18px #04101a8c;
-}
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.is-selected .fm-marker-role { filter: brightness(1.22); }
 
-/* phones: the plate keeps the role and the surname, but at a size that fits
-   the narrower pitch without cutting the label in half */
+/* phones: same card, tighter type so nothing ellipsizes */
 @media (max-width: 1099px) {
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate { grid-template-rows: 17px 16px; }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate > .fm-marker-role { padding: 0 9px; font-size: 8px; letter-spacing: 0; }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate > .fm-marker-role::after {
-    right: 3px;
-    margin-top: -1.5px;
-    border-left-width: 2.5px;
-    border-right-width: 2.5px;
-    border-top-width: 3.5px;
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card {
+    grid-template-rows: 26px 15px 14px;
+    padding: 2px;
+    border-radius: 6px;
   }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player { grid-template-columns: minmax(0, 1fr); padding: 0 10px 0 4px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .shirt-marker > svg { width: 24px; height: 22px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .fm-marker-role { padding: 0 10px; font-size: 8px; letter-spacing: 0; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .fm-marker-role::after { right: 3px; border-left-width: 2.5px; border-right-width: 2.5px; border-top-width: 3px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .fm-marker-player { grid-template-columns: minmax(0, 1fr); padding: 0 10px 0 3px; }
   #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player > svg { display: none; }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player select { font-size: 8.5px !important; }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player::after { right: 3px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player select { height: 13px; min-height: 13px !important; font-size: 8.5px !important; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player::after { right: 3px; border-left-width: 2.5px; border-right-width: 2.5px; border-top-width: 3px; }
+}
+
+/* small phones: one row keeps the cards from stacking on each other; the
+   squad sheet below still carries the substitute picker */
+@media (max-width: 600px) {
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card { grid-template-rows: 26px 16px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .fm-marker-player { display: none; }
 }
 
 /* the visualiser pitch places its markers like the shape pitch does */

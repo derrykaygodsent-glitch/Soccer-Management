@@ -109,8 +109,8 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   a.match(selected, /data-player-instruction="defense\|p/);
   a.match(selected,/class="fm-pitch-marker[^\"]*is-selected/,'the selected jersey is flagged on the pitch');
   a.match(selected,/data-marker-substitute="3"/);
-  a.match(selected,/class="fm-marker-plate" data-group="def"/,'the plate is tinted for the line the player holds');
-  a.equal((selected.match(/class="fm-marker-plate"/g)||[]).length,(selected.match(/class="shirt-marker/g)||[]).length,'every jersey carries its own plate');
+  a.match(selected,/class="fm-marker-card" data-group="def"/,'the plate is tinted for the line the player holds');
+  a.equal((selected.match(/class="fm-marker-card"/g)||[]).length,(selected.match(/class="shirt-marker/g)||[]).length,'every jersey carries its own plate');
   a.match(selected,/data-role-picker-open="3" data-role-picker-phase="attack"/,'the plate opens the role picker for the shown phase');
   a.ok(!/Substitution<|Player role · /.test(selected),'the plate carries no labelled rows');
   a.ok(!/ROLE \/ DUTY|Defensive duty|data-phase-duty|Role duty/.test(selected),'player tactics no longer presents legacy role duties');

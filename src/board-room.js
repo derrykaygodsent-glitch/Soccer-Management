@@ -54,8 +54,8 @@ function render(s,players){
     const markers=slots.map((v,i)=>{
       const {point,role,job}=location(v,i,mode),p=v.player,n=numbers[p?.id]??p?.num??defaults[i]??'–',label=p?.name||'Open position',isSelected=selected===i,left=wide?project(point.x):8+84*point.y,bottom=wide?8+84*(1-point.y):project(point.x),rolePhase=mode==='attack'||mode==='combined'?'attack':'defense',chosenRole=rolePhase==='attack'?(v.attackPosition||v.position):v.position,chosenJob=rolePhase==='attack'?v.attackJob:v.job,substitutes=bench.filter(q=>(q.pos==='GK')===(i===0)&&!q.red&&!readiness[q.id]?.knock).sort((a,b)=>Z.fit(b,chosenRole,chosenJob?.[0],s.boardReps)-Z.fit(a,chosenRole,chosenJob?.[0],s.boardReps)||(stars[b.id]||0)-(stars[a.id]||0)||a.name.localeCompare(b.name)),dockX=left<28?'dock-left':left>72?'dock-right':'',dockY=bottom<18?'dock-above':bottom>82?'dock-below':'';
       const platePhase=rolePhase==='attack'?'In possession':'Out of possession',plateCode=code(chosenRole,chosenJob?.[0],chosenJob?.[2]),plateDuty=(chosenJob?.[2]||'').slice(0,2),groupOf=pos=>{const c=(pos||'').toUpperCase();if(c==='GK')return 'gk';if(/^(CB|LB|RB|WB|LWB|RWB|FB|SW|LIB|CD|BPD|NNCB|IFB|COV|STOP)/.test(c))return 'def';if(/^(ST|CF|PF|AF|LW|RW|LF|RF|W|S)$/.test(c))return 'att';return 'mid';};
-      const plate=`<div class="fm-marker-plate" data-group="${groupOf(chosenRole)}"><button type="button" class="fm-marker-role" data-role-picker-open="${i}" data-role-picker-phase="${rolePhase}" aria-haspopup="dialog" title="${e(plateCode)}${plateDuty?' - '+e(plateDuty):''} · ${platePhase} role" aria-label="${platePhase} role: ${e(chosenJob?.[0]||chosenRole)}. Choose a role"><span>${e(plateCode)}${plateDuty?` - ${e(plateDuty)}`:''}</span></button><label class="fm-marker-player" title="${e(label)} · Choose a substitute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.2 4.2 0 1 0 0-8.4A4.2 4.2 0 0 0 12 12Zm0 2.1c-4.1 0-7.4 2.2-7.4 4.9V21h14.8v-2c0-2.7-3.3-4.9-7.4-4.9Z"/></svg><select data-marker-substitute="${i}" aria-label="Substitute ${e(label)}" ${substitutes.length?'':'disabled'}><option value="">${e(p?p.name.split(' ').filter(Boolean).pop():label)}</option>${substitutes.map(q=>`<option value="${e(q.id)}">${e(q.name)} · ${e(q.pos)}</option>`).join('')}</select></label></div>`;
-      return `<div class="fm-pitch-marker${isSelected?' is-selected':''}${dockX?' '+dockX:''}${dockY?' '+dockY:''}" style="left:${left}%;bottom:${bottom}%;z-index:${isSelected?160:120-Math.round(bottom)}"><button type="button" title="${e(label)} · Drag to move or swap; click to select" data-slot="${i}" data-player-id="${e(p?.id||'')}" class="shirt-marker${i===0?' keeper':''}${p?'':' vacant'}${isSelected?' selected':''}" aria-label="Select ${e(role)} · ${e(label)} · shirt ${e(n)}" aria-pressed="${isSelected}">${jersey(n)}</button>${plate}</div>`;
+      const rows=`<button type="button" class="fm-marker-role" data-role-picker-open="${i}" data-role-picker-phase="${rolePhase}" aria-haspopup="dialog" title="${e(plateCode)}${plateDuty?' - '+e(plateDuty):''} · ${platePhase} role" aria-label="${platePhase} role: ${e(chosenJob?.[0]||chosenRole)}. Choose a role"><span>${e(plateCode)}${plateDuty?` - ${e(plateDuty)}`:''}</span></button><label class="fm-marker-player" title="${e(label)} · Choose a substitute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.2 4.2 0 1 0 0-8.4A4.2 4.2 0 0 0 12 12Zm0 2.1c-4.1 0-7.4 2.2-7.4 4.9V21h14.8v-2c0-2.7-3.3-4.9-7.4-4.9Z"/></svg><select data-marker-substitute="${i}" aria-label="Substitute ${e(label)}" ${substitutes.length?'':'disabled'}><option value="">${e(p?p.name.split(' ').filter(Boolean).pop():label)}</option>${substitutes.map(q=>`<option value="${e(q.id)}">${e(q.name)} · ${e(q.pos)}</option>`).join('')}</select></label>`;
+      return `<div class="fm-pitch-marker${isSelected?' is-selected':''}${dockX?' '+dockX:''}${dockY?' '+dockY:''}" style="left:${left}%;bottom:${bottom}%;z-index:${isSelected?160:120-Math.round(bottom)}"><div class="fm-marker-card" data-group="${groupOf(chosenRole)}"><button type="button" title="${e(label)} · Drag to move or swap; click to select" data-slot="${i}" data-player-id="${e(p?.id||'')}" class="shirt-marker${i===0?' keeper':''}${p?'':' vacant'}${isSelected?' selected':''}" aria-label="Select ${e(role)} · ${e(label)} · shirt ${e(n)}" aria-pressed="${isSelected}">${jersey(n)}</button>${rows}</div></div>`;
     }).join('');
     const fieldSvg=wide?`<svg class="board-lines" viewBox="0 0 140 100" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width=".6"><rect x="1" y="1" width="138" height="98"/><path d="M70 1v98M1 20h21V80H1M1 37h8v26H1M139 20h-21v60h21m0-43h-8v26h8"/><circle cx="70" cy="50" r="11"/></g></svg>`:fieldLines;
     const markersInZone=withZones?`<div class="fm-zone-overlay" aria-label="Select a tactical pitch zone">${zoneCells.map(z=>`<button type="button" data-board="zone|0|${z.id}" aria-label="${e(z.label)}" aria-pressed="${zone===z.id}"></button>`).join('')}</div>`:'';
@@ -192,7 +192,7 @@ function bind(root,change,draw){
   if(!ev.isPrimary||ev.button!==0)return;
   const shirt=ev.target.closest('.shape-field [data-slot]'),row=shirt?null:ev.target.closest('.fm-squad-panel .fm-row[data-player-id]');
   if((!shirt&&!row)||(row&&(!row.dataset.playerId||ev.target.closest('select,input,option'))))return;
-  drag={id:ev.pointerId,kind:shirt?'shirt':'player',shirt,row,playerId:shirt?.dataset.playerId||row?.dataset.playerId,playerLabel:row?.querySelector('.fm-person span')?.textContent||row?.dataset.playerId,x:ev.clientX,y:ev.clientY,source:shirt||row,markerCard:shirt?.closest('.fm-pitch-marker'),origin:shirt?.getBoundingClientRect?.()||row?.getBoundingClientRect?.()||null,moving:false,hover:null};
+  drag={id:ev.pointerId,kind:shirt?'shirt':'player',shirt,row,playerId:shirt?.dataset.playerId||row?.dataset.playerId,playerLabel:row?.querySelector('.fm-person span')?.textContent||row?.dataset.playerId,x:ev.clientX,y:ev.clientY,source:shirt||row,markerCard:shirt?.closest('.fm-pitch-marker'),origin:shirt?.closest('.fm-pitch-marker')?.getBoundingClientRect?.()||shirt?.getBoundingClientRect?.()||row?.getBoundingClientRect?.()||null,moving:false,hover:null};
  }
  root.addEventListener('pointerdown',begin);
  root.addEventListener('pointermove',ev=>{
@@ -201,7 +201,7 @@ function bind(root,change,draw){
   if(!drag.moving){root.setPointerCapture?.(ev.pointerId);drag.captured=true;}
   drag.moving=true;drag.markerCard?.classList.add('fm-marker-dragging');
   if(drag.kind==='player'&&!drag.rowDetached){
-   const r=drag.source.getBoundingClientRect(),isRow=drag.source.tagName==='TR',placeholder=document.createElement(isRow?'tr':'div'),cellWidths=isRow?[...drag.source.cells].map(()=>0):[];
+   const detach=drag.source,r=detach.getBoundingClientRect(),isRow=detach.tagName==='TR',placeholder=document.createElement(isRow?'tr':'div'),cellWidths=isRow?[...detach.cells].map(()=>0):[];
    placeholder.className='fm-drag-placeholder';
    if(isRow){const spacer=document.createElement('td');spacer.colSpan=cellWidths.length||99;spacer.style.height=`${r.height}px`;placeholder.append(spacer);}
    else{placeholder.style.height=`${r.height}px`;placeholder.style.width=`${r.width}px`;}
@@ -230,14 +230,14 @@ function bind(root,change,draw){
   if(drag.hover!==hover){drag.hover?.classList.remove('fm-drop-target','fm-drop-invalid');drag.hover=hover;}
   if(hover)hover.classList.add(valid?'fm-drop-target':'fm-drop-invalid');
   const targetRect=valid?hover?.getBoundingClientRect?.():null;
-  const mover=drag.holder||drag.source;
+  const mover=(drag.kind==='shirt'&&drag.markerCard)||drag.detached||drag.holder||drag.source;
   if(drag.kind==='shirt'&&drag.origin&&targetRect){mover.classList.add('fm-snap-preview');mover.style.translate=`${targetRect.left+targetRect.width/2-drag.origin.left-drag.origin.width/2}px ${targetRect.top+targetRect.height/2-drag.origin.top-drag.origin.height/2}px`;}
   else{mover.classList.remove('fm-snap-preview');mover.style.translate=drag.ghostOffset?`${ev.clientX-drag.ghostOffset.x}px ${ev.clientY-drag.ghostOffset.y}px`:`${ev.clientX-drag.x}px ${ev.clientY-drag.y}px`;}
   drag.drop={field,marker:exact,preview,valid};
  });
  function restore(d){
-  const mover=d.holder||d.source;
-  if(d.rowDetached&&d.placeholder?.parentNode){d.placeholder.parentNode.insertBefore(d.source,d.placeholder);d.placeholder.remove();for(const key of ['position','left','top','width','margin','zIndex','pointerEvents'])d.source.style[key]='';if(d.holder){d.holder.remove();d.holder=null;}d.source.classList.remove('fm-drag-hidden');d.ghostOffset=null;}
+  const back=d.detached||d.source,mover=(d.kind==='shirt'&&d.markerCard)||d.detached||d.holder||d.source;
+  if(d.rowDetached&&d.placeholder?.parentNode){d.placeholder.parentNode.insertBefore(back,d.placeholder);d.placeholder.remove();for(const key of ['position','left','top','width','height','transform','margin','zIndex','pointerEvents'])back.style[key]='';if(d.holder){d.holder.remove();d.holder=null;}back.classList.remove('fm-drag-hidden');d.detached=null;d.ghostOffset=null;}
   d.activeField?.classList?.remove('fm-dragging');d.markerCard?.classList.remove('fm-marker-dragging');mover.style.translate='';mover.classList.remove('fm-drag-source','fm-snap-preview');
  }
  function finish(ev,cancel){
