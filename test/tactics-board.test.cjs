@@ -74,9 +74,10 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   a.match(zoneRule, /transform:none/);
   const instructionScreen = overlayScreen;
   a.match(instructionScreen, /fm-tactical-overview/);
-  a.match(instructionScreen, /Match plan/);
   a.match(instructionScreen, /Central area/);
-  a.match(instructionScreen, /Tactical risks/);
+  a.match(instructionScreen, /fm-overview-risks/, 'the overview keeps only flagged risks');
+  a.doesNotMatch(instructionScreen, /TACTICAL VISUALISER|CONTEXTUAL TEAM INSTRUCTIONS|Nine-zone responsibilities/,
+    'the instruction desk carries no restated chrome');
   a.ok(!instructionScreen.includes('Active team orders'), 'overview prioritizes concise, actionable data');
 
   const zoneButton = { dataset: { board: 'zone|0|attack-left' }, hasAttribute: name => name === 'data-board' };
@@ -682,7 +683,7 @@ test('player instructions expose only settings that have an effect in the select
 test('Team Instructions has a distinct transition and distribution panel without rewriting either phase shape',()=>{
  const s=career();s.id='team-transition-instructions';const before={tactic:s.tactic,plan:JSON.parse(JSON.stringify(TLMatchBoard.active(s)))},handlers={};const root={addEventListener:(kind,fn)=>handlers[kind]=fn,querySelector:()=>null};TLBoardRoom.bind(root,(action,value)=>{if(action==='matchBoard')TLMatchBoard.update(s,value,pool);},()=>{});TLBoardRoom.render(s,pool);
  handlers.click({target:{closest:selector=>selector==='button'?{dataset:{workspaceTab:'instructions'},hasAttribute:()=>false}:null}});TLBoardRoom.render(s,pool);TLMatchBoard.update(s,'phase|0|transition',pool);let html=TLBoardRoom.render(s,pool);
- for(const group of ['lost','won','gk','target','delivery'])a.match(html,new RegExp(`data-order="${group}"`));for(const label of ['When possession is lost','When possession is won','Goalkeeper distribution · when the goalkeeper has the ball','Transitions & goalkeeper distribution'])a.ok(html.includes(label),`missing ${label}`);
+ for(const group of ['lost','won','gk','target','delivery'])a.match(html,new RegExp(`data-order="${group}"`));for(const label of ['When possession is lost','When possession is won','Goalkeeper distribution','Transitions & goalkeeper distribution'])a.ok(html.includes(label),`missing ${label}`);
  for(const [group,value] of [['lost','Counter-press'],['won','Play forward immediately'],['gk','Distribute quickly'],['target','Flanks'],['delivery','Take long kicks']])handlers.change({target:{value,dataset:{order:group},hasAttribute:name=>name==='data-order'}});
  const saved=JSON.parse(JSON.stringify(s)),plan=TLMatchBoard.active(saved);a.deepEqual(plan.orders,{lost:'Counter-press',won:'Play forward immediately',gk:'Distribute quickly',target:'Flanks',delivery:'Take long kicks'});a.equal(saved.boardPhase,'transition');a.equal(saved.tactic,before.tactic);for(const key of ['defenseFormation','attackFormation','phaseCoordinates','playerInstructions','instructions'])a.deepEqual(plan[key],before.plan[key],`transition settings preserve ${key}`);
  TLMatchBoard.update(saved,'phase|0|attack',pool);a.equal(TLMatchBoard.active(saved).orders.lost,'Counter-press');a.equal(TLMatchBoard.active(saved).orders.won,'Play forward immediately');

@@ -38,6 +38,9 @@
    come back as soon as it closes */
 #homeScreen:has(.fm-tactics-workspace) #homeTabs { display: none !important; }
 
+/* on short screens the desk scrolls instead of cutting the last panel off */
+#homeScreen:has(.fm-tactics-workspace) { overflow-y: auto; overflow-x: hidden; }
+
 #homeScreen:has(.fm-tactics-workspace) .board-room.fm-tactics-workspace {
   display: flex;
   flex-direction: column;
@@ -711,13 +714,17 @@
 
 #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
-  grid-template-areas: "visual context" "visual overview";
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
-  gap: 16px 20px;
+  gap: 16px 24px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-side {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  min-width: 0;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual {
-  grid-area: visual;
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) !important;
   align-content: start;
@@ -731,26 +738,91 @@
   max-width: 520px;
   margin-inline: auto;
 }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual { --tac-inst-pitch: clamp(320px, calc(100vh - 452px), 700px); }
 #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field { margin: 0 auto; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-phase { max-width: calc(var(--tac-inst-pitch) * 0.862); }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-phase > button { flex: 1 1 0; padding-inline: 4px; white-space: nowrap; }
+/* short desktops: pitch, controls and data sit side by side instead of stacking */
+@media (min-width: 951px) and (max-height: 920px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace { grid-template-columns: auto minmax(0, 1fr); }
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-side { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual { --tac-inst-pitch: clamp(268px, calc(100vh - 450px), 430px); }
+}
 
-#homeScreen:has(.fm-tactics-workspace) .fm-context-controls { grid-area: context; min-width: 0; }
-#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview { grid-area: overview; min-width: 0; }
-#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual > header,
-#homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header,
-#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header {
+/* the visualiser pitch places its markers like the shape pitch does */
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field .fm-pitch-marker {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  bottom: 0;
+  width: 17%;
+  transform: translate(-50%, 50%);
   display: grid;
+  justify-items: center;
   gap: 3px;
-  padding: 0 0 8px !important;
+  box-sizing: border-box;
+  overflow: visible;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field .fm-pitch-marker > .shirt-marker {
+  position: relative !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field .tactic-shirt { width: clamp(18px, 4.6cqw, 40px) !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field .shirt-marker b { font-size: clamp(8px, 1.5cqw, 11px) !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field .shirt-marker small { font-size: clamp(8px, 1.5cqw, 10px) !important; white-space: nowrap; }
+
+/* the nine zone hit areas must not paint over the turf */
+#homeScreen:has(.fm-tactics-workspace) .fm-zone-overlay button {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-zone-overlay button:hover { background-color: #c9e7d51f !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-zone-overlay button[aria-pressed="true"] { background-color: #c9e7d52e !important; }
+
+@media (min-width: 951px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field {
+    height: var(--tac-inst-pitch);
+    min-height: 0;
+    max-height: none;
+    width: auto;
+    max-width: 100%;
+    aspect-ratio: 100 / 116;
+  }
+}
+
+#homeScreen:has(.fm-tactics-workspace) .fm-context-controls { min-width: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview { min-width: 0; }
+/* the three panels are not cards: flat surfaces on the desk, like the sheet */
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual,
+#homeScreen:has(.fm-tactics-workspace) .fm-context-controls,
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview {
+  padding: 0 !important;
   border: 0 !important;
-  border-bottom: 1px solid var(--tac-line) !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview { padding-top: 0 !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header {
+  display: block;
+  padding: 0 0 6px !important;
+  border: 0 !important;
   background: none !important;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual > header small,
 #homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header small,
 #homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header small { color: var(--tac-dim); font-size: 9px; letter-spacing: .14em; }
-#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual > header h3,
-#homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header h3,
-#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header h3 { margin: 0; color: var(--tac-ink); font-size: 14px; font-weight: 650; }
+#homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header h3 { margin: 0; color: var(--tac-dim); font-size: 11px; font-weight: 700; letter-spacing: .04em; }
 #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual > header p,
 #homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header p { margin: 0; color: var(--tac-dim); font-size: 10.5px; line-height: 1.45; }
 #homeScreen:has(.fm-tactics-workspace) .fm-instruction-phase {
@@ -790,6 +862,53 @@
   font-size: 11.5px;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-context-control-list > *:last-child { border-bottom: 0; }
+/* transition phase: two quiet tiles, no framed poster */
+#homeScreen:has(.fm-tactics-workspace) .fm-transition-visual {
+  min-height: 0;
+  padding: 0;
+  gap: 8px;
+  background: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-transition-visual section {
+  padding: 12px 10px;
+  background: #121d29 !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px;
+  text-align: left;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-transition-visual section b { font-size: 11.5px; color: var(--tac-ink); }
+
+/* transition phase: one quiet group label, then plain rows */
+#homeScreen:has(.fm-tactics-workspace) .fm-context-control-list > .fm-transition-control-group {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  padding: 10px 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-transition-control-group > h4 {
+  margin: 0 0 4px;
+  color: var(--tac-dim);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-transition-control-group > label {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 5px 0;
+  border: 0 !important;
+  font-size: 11.5px;
+}
 #homeScreen:has(.fm-tactics-workspace) .fm-player-context { padding: 10px 0 0; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-context h4 { margin: 0 0 6px; color: var(--tac-dim); font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-context button {
@@ -815,7 +934,7 @@
   margin: 0;
   padding: 4px 0 0;
 }
-#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--tac-line); }
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border: 0; }
 #homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview dt { color: var(--tac-dim); font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 #homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview dd { margin: 0; color: var(--tac-body); font-size: 11.5px; font-variant-numeric: tabular-nums; }
 #homeScreen:has(.fm-tactics-workspace) .fm-review-state { padding: 4px 9px; border-radius: 999px; background: #2a2114; color: #f0cd93; font-size: 10px; font-weight: 700; }
@@ -831,14 +950,16 @@
   text-transform: uppercase;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-overview-risks p {
-  margin: 0 0 7px;
-  padding: 0 0 0 10px;
+  margin: 0;
+  padding: 3px 0;
   border: 0;
-  border-left: 2px solid #4a3b23;
   background: none;
   color: var(--tac-muted);
   font-size: 11px;
-  line-height: 1.5;
+  line-height: 1.45;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-overview-risks p.fm-high { border-left-color: #7a4a3a; }
 #homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > button {

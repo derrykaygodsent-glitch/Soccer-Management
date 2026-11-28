@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="b386736d9c1149bd14cd">
+  <meta name="tl-build" content="eac1a6a99bab4011f12f">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -3618,6 +3618,9 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
    come back as soon as it closes */
 #homeScreen:has(.fm-tactics-workspace) #homeTabs { display: none !important; }
 
+/* on short screens the desk scrolls instead of cutting the last panel off */
+#homeScreen:has(.fm-tactics-workspace) { overflow-y: auto; overflow-x: hidden; }
+
 #homeScreen:has(.fm-tactics-workspace) .board-room.fm-tactics-workspace {
   display: flex;
   flex-direction: column;
@@ -4291,13 +4294,17 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
 
 #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
-  grid-template-areas: "visual context" "visual overview";
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
-  gap: 16px 20px;
+  gap: 16px 24px;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-side {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  min-width: 0;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual {
-  grid-area: visual;
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) !important;
   align-content: start;
@@ -4311,26 +4318,91 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   max-width: 520px;
   margin-inline: auto;
 }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual { --tac-inst-pitch: clamp(320px, calc(100vh - 452px), 700px); }
 #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field { margin: 0 auto; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-phase { max-width: calc(var(--tac-inst-pitch) * 0.862); }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-phase > button { flex: 1 1 0; padding-inline: 4px; white-space: nowrap; }
+/* short desktops: pitch, controls and data sit side by side instead of stacking */
+@media (min-width: 951px) and (max-height: 920px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace { grid-template-columns: auto minmax(0, 1fr); }
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-side { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual { --tac-inst-pitch: clamp(268px, calc(100vh - 450px), 430px); }
+}
 
-#homeScreen:has(.fm-tactics-workspace) .fm-context-controls { grid-area: context; min-width: 0; }
-#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview { grid-area: overview; min-width: 0; }
-#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual > header,
-#homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header,
-#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header {
+/* the visualiser pitch places its markers like the shape pitch does */
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field .fm-pitch-marker {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  bottom: 0;
+  width: 17%;
+  transform: translate(-50%, 50%);
   display: grid;
+  justify-items: center;
   gap: 3px;
-  padding: 0 0 8px !important;
+  box-sizing: border-box;
+  overflow: visible;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field .fm-pitch-marker > .shirt-marker {
+  position: relative !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field .tactic-shirt { width: clamp(18px, 4.6cqw, 40px) !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field .shirt-marker b { font-size: clamp(8px, 1.5cqw, 11px) !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field .shirt-marker small { font-size: clamp(8px, 1.5cqw, 10px) !important; white-space: nowrap; }
+
+/* the nine zone hit areas must not paint over the turf */
+#homeScreen:has(.fm-tactics-workspace) .fm-zone-overlay button {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-zone-overlay button:hover { background-color: #c9e7d51f !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-zone-overlay button[aria-pressed="true"] { background-color: #c9e7d52e !important; }
+
+@media (min-width: 951px) {
+  #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual .shape-field {
+    height: var(--tac-inst-pitch);
+    min-height: 0;
+    max-height: none;
+    width: auto;
+    max-width: 100%;
+    aspect-ratio: 100 / 116;
+  }
+}
+
+#homeScreen:has(.fm-tactics-workspace) .fm-context-controls { min-width: 0; }
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview { min-width: 0; }
+/* the three panels are not cards: flat surfaces on the desk, like the sheet */
+#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual,
+#homeScreen:has(.fm-tactics-workspace) .fm-context-controls,
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview {
+  padding: 0 !important;
   border: 0 !important;
-  border-bottom: 1px solid var(--tac-line) !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview { padding-top: 0 !important; }
+#homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header {
+  display: block;
+  padding: 0 0 6px !important;
+  border: 0 !important;
   background: none !important;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual > header small,
 #homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header small,
 #homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header small { color: var(--tac-dim); font-size: 9px; letter-spacing: .14em; }
-#homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual > header h3,
-#homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header h3,
-#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > header h3 { margin: 0; color: var(--tac-ink); font-size: 14px; font-weight: 650; }
+#homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header h3 { margin: 0; color: var(--tac-dim); font-size: 11px; font-weight: 700; letter-spacing: .04em; }
 #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual > header p,
 #homeScreen:has(.fm-tactics-workspace) .fm-context-controls > header p { margin: 0; color: var(--tac-dim); font-size: 10.5px; line-height: 1.45; }
 #homeScreen:has(.fm-tactics-workspace) .fm-instruction-phase {
@@ -4370,6 +4442,53 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   font-size: 11.5px;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-context-control-list > *:last-child { border-bottom: 0; }
+/* transition phase: two quiet tiles, no framed poster */
+#homeScreen:has(.fm-tactics-workspace) .fm-transition-visual {
+  min-height: 0;
+  padding: 0;
+  gap: 8px;
+  background: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-transition-visual section {
+  padding: 12px 10px;
+  background: #121d29 !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px;
+  text-align: left;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-transition-visual section b { font-size: 11.5px; color: var(--tac-ink); }
+
+/* transition phase: one quiet group label, then plain rows */
+#homeScreen:has(.fm-tactics-workspace) .fm-context-control-list > .fm-transition-control-group {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  padding: 10px 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-transition-control-group > h4 {
+  margin: 0 0 4px;
+  color: var(--tac-dim);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+#homeScreen:has(.fm-tactics-workspace) .fm-transition-control-group > label {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 5px 0;
+  border: 0 !important;
+  font-size: 11.5px;
+}
 #homeScreen:has(.fm-tactics-workspace) .fm-player-context { padding: 10px 0 0; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-context h4 { margin: 0 0 6px; color: var(--tac-dim); font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
 #homeScreen:has(.fm-tactics-workspace) .fm-player-context button {
@@ -4395,7 +4514,7 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   margin: 0;
   padding: 4px 0 0;
 }
-#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--tac-line); }
+#homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border: 0; }
 #homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview dt { color: var(--tac-dim); font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 #homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview dd { margin: 0; color: var(--tac-body); font-size: 11.5px; font-variant-numeric: tabular-nums; }
 #homeScreen:has(.fm-tactics-workspace) .fm-review-state { padding: 4px 9px; border-radius: 999px; background: #2a2114; color: #f0cd93; font-size: 10px; font-weight: 700; }
@@ -4411,14 +4530,16 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   text-transform: uppercase;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-overview-risks p {
-  margin: 0 0 7px;
-  padding: 0 0 0 10px;
+  margin: 0;
+  padding: 3px 0;
   border: 0;
-  border-left: 2px solid #4a3b23;
   background: none;
   color: var(--tac-muted);
   font-size: 11px;
-  line-height: 1.5;
+  line-height: 1.45;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-overview-risks p.fm-high { border-left-color: #7a4a3a; }
 #homeScreen:has(.fm-tactics-workspace) .fm-tactical-overview > button {
@@ -15850,6 +15971,8 @@ function render(s,players){
   const picker=(label,cmd,values,current,display=v=>v)=>`<label><span>${label}</span><select aria-label="${label}" data-plan="${cmd}">${options(values,current,display)}</select></label>`;
   const familiarity=g.TLTacticalAnalysis?.familiarity(slots,s.boardReps)||{position:0,role:0,coordination:0};
   const warnings=g.TLTacticalAnalysis?.evaluate(slots,plan,{reps:s.boardReps,readiness:g.TLDynamics.snapshot(s,players).players,familiarity:true})||[];
+  /* one line per player: the full sentence stays in the tooltip */
+  const shortRisks=(()=>{const seen=new Set(),out=[];for(const w of warnings||[]){const m=/^(.+?) has a (\d+)% fit for (.+?) (out of possession|in possession);/.exec(w.text||'');const label=(w.text||'').match(/sustain the selected press/)?'press workload':(w.text||'').match(/no holding midfielder/)?'no holding midfielder':(w.text||'').match(/Counter-pressing immediately/)?'conflicting transitions':(w.text||'').match(/little shared rehearsal/)?'low familiarity':(w.text||'').split(';')[0].slice(0,52);const short=m?`${m[1]} · ${m[3]} · ${m[2]}% fit`:`${w.player?w.player+' · ':''}${label}`;if(!short||seen.has(short))continue;seen.add(short);out.push({short,full:w.text||short});if(out.length===3)break;}return out;})();
   const readiness=g.TLDynamics.snapshot(s,players).players,selectedZone=s.tacticZone||'middle-centre';
   const zoneCols=['left','centre','right'],zoneNames={defense:'Own third',middle:'Middle third',attack:'Final third'},zoneSide={left:'Left channel',centre:'Central area',right:'Right channel'};
   const zoneCells=['attack','middle','defense'].flatMap(row=>zoneCols.map(col=>({id:`${row}-${col}`,row,col,label:`${zoneNames[row]} · ${zoneSide[col]}`})));
@@ -15931,10 +16054,10 @@ function render(s,players){
     const values=Z.choicesTeam[k]||[];if(!values.length)return '';
     const chosen=inst.club?.[k],custom=Object.hasOwn(plan.orders||{},k);return `<label class="fm-instruction-control" data-customized="${custom}"><span>${labels[k]||k}${custom?'<i>EDITED</i>':''}</span><select data-order="${k}"><option value=""${chosen?'':' selected'}>Use system default</option>${options(values,chosen)}</select></label>`;
   };
-  const contextualGroups=instructionPhase==='transition'?`<section class="fm-transition-control-group"><h4>When possession is lost</h4>${instructionControl('lost')}</section><section class="fm-transition-control-group"><h4>When possession is won</h4>${instructionControl('won')}</section><section class="fm-transition-control-group"><h4>Goalkeeper distribution · when the goalkeeper has the ball</h4>${instructionControl('gk')}${instructionControl('target')}${instructionControl('delivery')}</section>`:instructionKeys.map(k=>instructionControl(k)).filter(Boolean).join('');
-  const zoneOverlay=instructionPhase==='transition'?`<div class="fm-transition-visual"><section><b>Possession lost</b><span>Transition to defensive shape</span></section><i aria-hidden="true">THEN</i><section><b>Possession won</b><span>Transition to attack</span></section><small>Goalkeeper distribution settings apply only when your goalkeeper controls the ball.</small></div>`:field(instructionPhase,'portrait',true);
-  const overview=()=>`<aside class="fm-tactical-overview"><header><div><small>TACTICAL OVERVIEW</small><h3>Match plan</h3></div><span class="fm-review-state ${warnings.length?'has-risks':'is-clear'}">${warnings.length?`${warnings.length} review${warnings.length===1?'':'s'}`:'Shape checked'}</span></header><dl><div><dt>Formation</dt><dd>${e(defenseLabel)}${plan.attackFormation?` / ${e(attackLabel)}`:''}</dd></div><div><dt>Mentality</dt><dd>${e(s.mentality||'Balanced')}</dd></div><div><dt>Pressing</dt><dd>${e(inst.club?.trigger||inst.trigger||'System default')}</dd></div><div><dt>Familiarity</dt><dd>${familiarity.position}% <small>positions</small></dd></div></dl><section class="fm-overview-risks"><b>${warnings.length?'Priority review':'Tactical risks'}</b>${warnings.length?warnings.slice(0,2).map(w=>`<p class="fm-warning fm-${e(w.level)}" title="${e(w.text)}">${e(w.text)}</p>`).join(''):'<p>No flagged structural risks.</p>'}</section><button type="button" data-tactic-jump="opposition">Opposition report</button></aside>`;
-  const instructionContent=`<section class="fm-instruction-workspace"><aside class="fm-instruction-visual"><header><small>TACTICAL VISUALISER</small><h3>${instructionPhase==='attack'?'In Possession':instructionPhase==='transition'?'Transitions & distribution':'Out of Possession'}</h3><p>${instructionPhase==='transition'?'Set team behaviour around a change of possession.':'Choose a pitch zone to focus the coaching view.'}</p></header><div class="fm-instruction-phase"><button type="button" data-board="phase|0|attack" aria-pressed="${instructionPhase==='attack'}">In Possession</button><button type="button" data-board="phase|0|transition" aria-pressed="${instructionPhase==='transition'}">Transitions</button><button type="button" data-board="phase|0|base" aria-pressed="${instructionPhase==='defense'}">Out of Possession</button></div>${zoneOverlay}${instructionPhase==='transition'?'':`<div class="fm-zone-analysis"><b>Nine-zone responsibilities · ${e(selectedZoneLabel)}</b><div>${selectedZonePositions.length?selectedZonePositions.map(v=>{const job=instructionPhase==='attack'?v.attackJob:v.job;return `<span><b>${e(v.player?.name||'Open slot')}</b> · ${e(instructionPhase==='attack'?v.attackPosition||v.position:v.position)} · ${e(job[0])}</span>`;}).join(''):'No starters currently occupy this area.'}</div></div>`}</aside><section class="fm-context-controls"><header><small>CONTEXTUAL TEAM INSTRUCTIONS</small><h3>${instructionPhase==='transition'?'Transitions & goalkeeper distribution':`${instructionPhase==='attack'?'In Possession':'Out of Possession'} · ${e(selectedZoneLabel)}`}</h3><p>${instructionPhase==='transition'?'These team-wide settings apply at the transition or goalkeeper distribution moment shown.':'Changes apply to the active possession phase and selected pitch zone.'}</p></header><div class="fm-context-control-list">${contextualGroups||'<p>No team instruction is assigned to this context.</p>'}</div>${instructionPhase==='transition'?'':`<section class="fm-player-context"><h4>Players in this area</h4>${selectedZonePositions.length?selectedZonePositions.map(v=>`<button type="button" data-slot="${slots.indexOf(v)}">${e(v.player?.name||'Open slot')} <small>${e(v.attackPosition||v.position)} · ${e(v.attackJob?.[0]||v.job[0])}</small></button>`).join(''):'<p>Choose another zone to inspect its assigned players.</p>'}</section>`}</section>${overview()}</section>${selected!=null?`<section class="fm-instruction-player-detail"><div><small>SELECTED PLAYER</small><p>Personal instructions stay linked to the same squad assignment.</p></div>${instructionEditor(slots[selected])}</section>`:''}`;
+  const contextualGroups=instructionPhase==='transition'?`${instructionControl('lost')}${instructionControl('won')}<section class="fm-transition-control-group"><h4>Goalkeeper distribution</h4>${instructionControl('gk')}${instructionControl('target')}${instructionControl('delivery')}</section>`:instructionKeys.map(k=>instructionControl(k)).filter(Boolean).join('');
+  const zoneOverlay=instructionPhase==='transition'?`<div class="fm-transition-visual"><section><b>Possession lost</b></section><i aria-hidden="true">THEN</i><section><b>Possession won</b></section></div>`:field(instructionPhase,'portrait',true);
+  const overview=()=>`<aside class="fm-tactical-overview"><dl><div><dt>Formation</dt><dd>${e(defenseLabel)}${plan.attackFormation?` / ${e(attackLabel)}`:''}</dd></div><div><dt>Mentality</dt><dd>${e(s.mentality||'Balanced')}</dd></div><div><dt>Pressing</dt><dd>${e(inst.club?.trigger||inst.trigger||'System default')}</dd></div><div><dt>Familiarity</dt><dd>${familiarity.position}% <small>positions</small></dd></div></dl><section class="fm-overview-risks">${warnings.length?`<b>Priority review</b>${shortRisks.map(t=>`<p class="fm-warning" title="${e(t.full)}">${e(t.short)}</p>`).join('')}`:''}</section></aside>`;
+  const instructionContent=`<section class="fm-instruction-workspace"><aside class="fm-instruction-visual"><div class="fm-instruction-phase"><button type="button" data-board="phase|0|attack" aria-pressed="${instructionPhase==='attack'}">In Possession</button><button type="button" data-board="phase|0|transition" aria-pressed="${instructionPhase==='transition'}">Transitions</button><button type="button" data-board="phase|0|base" aria-pressed="${instructionPhase==='defense'}">Out of Possession</button></div>${zoneOverlay}</aside><div class="fm-instruction-side"><section class="fm-context-controls"><header><h3>${instructionPhase==='transition'?'Transitions & goalkeeper distribution':`${instructionPhase==='attack'?'In Possession':'Out of Possession'} · ${e(selectedZoneLabel)}`}</h3></header><div class="fm-context-control-list">${contextualGroups||'<p>No team instruction is assigned to this context.</p>'}</div>${instructionPhase==='transition'?'':`<section class="fm-player-context"><h4>Players in this area</h4>${selectedZonePositions.length?selectedZonePositions.map(v=>`<button type="button" data-slot="${slots.indexOf(v)}">${e(v.player?.name||'Open slot')} <small>${e(v.attackPosition||v.position)} · ${e(v.attackJob?.[0]||v.job[0])}</small></button>`).join(''):'<p>Choose another zone to inspect its assigned players.</p>'}</section>`}</section>${overview()}</div></section>${selected!=null?`<section class="fm-instruction-player-detail">${instructionEditor(slots[selected])}</section>`:''}`;
   const playerContent=`<section class="fm-player-workspace"><div class="fm-player-list"><header><small>FIRST TEAM</small><h3>Player assignments</h3><p>Select a player to edit their phase-specific role and instructions.</p></header>${slots.map(row).join('')}${bench.map(subRow).join('')}</div><div class="fm-player-detail">${instructionEditor(slots[selected==null?0:selected])}</div></section>`;
   const library=B().presetLibrary(s),savedOptions=library.map(x=>`<option value="${e(x.id)}"${s.activeTacticPreset===x.id?' selected':''}>${e(x.name)}</option>`).join('');
   const nav=[['shape','Team Shape'],['instructions','Team Instructions'],['players','Player Instructions']];
