@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="885a708819faac681f63">
+  <meta name="tl-build" content="e89ca03b7bbac06750df">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -4337,6 +4337,177 @@ button.world-entity-link:focus-visible,button.guide-inline-link:focus-visible,bu
   #homeScreen:has(.fm-tactics-workspace) .fm-instruction-workspace { grid-template-columns: auto minmax(0, 1fr); }
   #homeScreen:has(.fm-tactics-workspace) .fm-instruction-side { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
   #homeScreen:has(.fm-tactics-workspace) .fm-instruction-visual { --tac-inst-pitch: clamp(268px, calc(100vh - 450px), 430px); }
+}
+
+/* ---- markers: one uniform plate per jersey, FM style ---------------------
+   Every shirt carries the same two-row plate: the role and its duty on top,
+   tinted by the line the player plays in, and the player on a neutral base.
+   Selecting a player lights the shirt behind the plate instead of growing a
+   card around it. */
+
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.is-selected {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 3px !important;
+  width: 17% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  transform: translate(-50%, 50%) !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.is-selected[class*="dock-"] { transform: translate(-50%, 50%) !important; }
+
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker .fm-marker-plate {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: 19px 18px;
+  gap: 1px;
+  width: 100%;
+  max-width: 104px;
+  min-width: 0;
+  margin-top: 1px;
+  padding: 1px;
+  border: 1px solid #050c12;
+  border-radius: 4px;
+  background: #050c12;
+  overflow: hidden;
+}
+
+/* role row: tinted by the line the player holds */
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate > .fm-marker-role {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  display: flex;
+  align-items: center;
+  position: relative;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0 14px;
+  border: 0 !important;
+  border-radius: 2px;
+  color: #f2f7f9;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .03em;
+  line-height: 1;
+  text-align: center;
+  cursor: pointer;
+  background: #43566a !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate[data-group="gk"] > .fm-marker-role { background: #5b5470 !important; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate[data-group="def"] > .fm-marker-role { background: #3f5468 !important; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate[data-group="mid"] > .fm-marker-role { background: #3d5a55 !important; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate[data-group="att"] > .fm-marker-role { background: #4c5370 !important; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-role:hover { filter: brightness(1.18); }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-role > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-role::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  width: 0;
+  height: 0;
+  margin-top: -2px;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 4px solid #dbe7ef;
+}
+
+/* player row: neutral on every marker, and the substitute list lives here */
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player {
+  position: relative;
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  padding: 0 12px 0 4px;
+  border-radius: 2px;
+  background: #16222e;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player > svg {
+  width: 11px;
+  height: 11px;
+  fill: #a9c0ce;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  width: 0;
+  height: 0;
+  margin-top: -2px;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 4px solid #93a9ba;
+  pointer-events: none;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 16px;
+  min-height: 16px !important;
+  align-self: center;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #eef3f6 !important;
+  font: 600 9.5px/1 system-ui, sans-serif !important;
+  text-align: left;
+  text-overflow: ellipsis;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player select:focus-visible { outline: 1px solid #cfe0e6; outline-offset: 1px; }
+
+/* selection: the shirt sits on a light pad and its plate gets the edge */
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.is-selected > .shirt-marker {
+  background: #ffffff1f !important;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px #ffffff5c !important;
+  outline: 0 !important;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.is-selected .fm-marker-plate {
+  border-color: #dce8ef;
+  box-shadow: 0 8px 18px #04101a8c;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.is-selected .fm-marker-role { filter: brightness(1.22); }
+
+/* phones: the plate keeps the role and the surname, but at a size that fits
+   the narrower pitch without cutting the label in half */
+@media (max-width: 1099px) {
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate { grid-template-rows: 17px 16px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate > .fm-marker-role { padding: 0 9px; font-size: 8px; letter-spacing: 0; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-plate > .fm-marker-role::after {
+    right: 3px;
+    margin-top: -1.5px;
+    border-left-width: 2.5px;
+    border-right-width: 2.5px;
+    border-top-width: 3.5px;
+  }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player { grid-template-columns: minmax(0, 1fr); padding: 0 10px 0 4px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player > svg { display: none; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player select { font-size: 8.5px !important; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player::after { right: 3px; }
 }
 
 /* the visualiser pitch places its markers like the shape pitch does */
@@ -16080,9 +16251,10 @@ function render(s,players){
     const anchorsX=[.14,.32,.45,.59,.75,.9],anchorsY=[.12,.32,.5,.68,.88],gridTargets=anchorsX.flatMap(x=>anchorsY.map(y=>({x,y,job:Z.choices(Z.zone(x,y))[0],hidden:true}))),visibleAt=new Set(roleTargets.map(t=>`${t.x},${t.y}`)),hiddenTargets=gridTargets.filter(t=>!visibleAt.has(`${t.x},${t.y}`)),allTargets=[...roleTargets,...hiddenTargets];
     const targets=allTargets.length&&!withZones?allTargets.map((target,index)=>{const left=wide?project(target.x):8+84*target.y,bottom=wide?8+84*(1-target.y):project(target.x),slot=target.keeper?0:slots.slice(1).reduce((best,v,j)=>{const point=location(v,j+1,mode).point,current=location(slots[best],best,mode).point;return Math.hypot(point.x-target.x,point.y-target.y)<Math.hypot(current.x-target.x,current.y-target.y)?j+1:best;},1),hidden=target.hidden,code=target.code||'',label=code?`${code} · ${target.job}${target.flexible?' · additional line position':''}`:hidden?'Hidden pitch position':'Additional pitch position';return `<button type="button" tabindex="-1" class="${hidden?'fm-hidden-position-target':'fm-role-target'+(target.keeper?' keeper':'')+(target.flexible?' flexible':'')}" data-role-target="${index}" data-role-code="${code}" data-role-slot="${slot}" data-role-x="${target.x}" data-role-y="${target.y}" data-role-job="${e(target.job)}" data-role-phase="${mode}" data-role-keeper="${target.keeper?'true':'false'}" aria-label="${e(label)}" title="${e(label)}" style="left:${left}%;bottom:${bottom}%">${code?`<span>${e(code)}</span>`:''}</button>`;}).join(''):'';
     const markers=slots.map((v,i)=>{
-      const {point,role,job}=location(v,i,mode),p=v.player,n=numbers[p?.id]??p?.num??defaults[i]??'–',label=p?.name||'Open position',isSelected=selected===i,left=wide?project(point.x):8+84*point.y,bottom=wide?8+84*(1-point.y):project(point.x),rolePhase=mode==='attack'?'attack':'defense',chosenRole=rolePhase==='attack'?(v.attackPosition||v.position):v.position,chosenJob=rolePhase==='attack'?v.attackJob:v.job,substitutes=bench.filter(q=>(q.pos==='GK')===(i===0)&&!q.red&&!readiness[q.id]?.knock).sort((a,b)=>Z.fit(b,chosenRole,chosenJob?.[0],s.boardReps)-Z.fit(a,chosenRole,chosenJob?.[0],s.boardReps)||(stars[b.id]||0)-(stars[a.id]||0)||a.name.localeCompare(b.name)),showControls=isSelected&&(phase!=='both'||mode==='defense'),cardPhases=mode==='combined'||phase==='both'?[['attack',v.attackJob],['defense',v.job]]:[[rolePhase,chosenJob]],dockX=left<28?'dock-left':left>72?'dock-right':'',dockY=bottom<18?'dock-above':bottom>82?'dock-below':'';
-      const controls=showControls?`<div class="fm-marker-controls${cardPhases.length>1?' has-two-roles':''}"><label><span>Substitution</span><select data-marker-substitute="${i}" aria-label="Substitute ${e(label)}" ${substitutes.length?'':'disabled'}><option value="">Choose player</option>${substitutes.map(q=>`<option value="${e(q.id)}">${e(q.name)} · ${e(q.pos)}</option>`).join('')}</select></label>${cardPhases.map(([cardPhase,cardJob])=>`<div class="fm-marker-role"><span>Player role · ${cardPhase==='attack'?'In possession':'Out of possession'}</span><button type="button" title="${e(cardJob?.[0]||'Choose role')}" data-role-picker-open="${i}" data-role-picker-phase="${cardPhase}" aria-haspopup="dialog"><span>${e(cardJob?.[0]||'Choose role')}</span><small>Edit</small></button></div>`).join('')}</div>`:'';
-      return `<div class="fm-pitch-marker${isSelected?' is-selected':''}${dockX?' '+dockX:''}${dockY?' '+dockY:''}" style="left:${left}%;bottom:${bottom}%"><button type="button" title="${e(label)} · Drag to move or swap; click to select" data-slot="${i}" data-player-id="${e(p?.id||'')}" class="shirt-marker${i===0?' keeper':''}${p?'':' vacant'}${isSelected?' selected':''}" aria-label="Select ${e(role)} · ${e(label)} · shirt ${e(n)}" aria-pressed="${isSelected}">${jersey(n)}<b>${e(code(role,job?.[0],job?.[2]))}</b><small>${e(label)}</small></button>${controls}</div>`;
+      const {point,role,job}=location(v,i,mode),p=v.player,n=numbers[p?.id]??p?.num??defaults[i]??'–',label=p?.name||'Open position',isSelected=selected===i,left=wide?project(point.x):8+84*point.y,bottom=wide?8+84*(1-point.y):project(point.x),rolePhase=mode==='attack'||mode==='combined'?'attack':'defense',chosenRole=rolePhase==='attack'?(v.attackPosition||v.position):v.position,chosenJob=rolePhase==='attack'?v.attackJob:v.job,substitutes=bench.filter(q=>(q.pos==='GK')===(i===0)&&!q.red&&!readiness[q.id]?.knock).sort((a,b)=>Z.fit(b,chosenRole,chosenJob?.[0],s.boardReps)-Z.fit(a,chosenRole,chosenJob?.[0],s.boardReps)||(stars[b.id]||0)-(stars[a.id]||0)||a.name.localeCompare(b.name)),dockX=left<28?'dock-left':left>72?'dock-right':'',dockY=bottom<18?'dock-above':bottom>82?'dock-below':'';
+      const platePhase=rolePhase==='attack'?'In possession':'Out of possession',plateCode=code(chosenRole,chosenJob?.[0],chosenJob?.[2]),plateDuty=(chosenJob?.[2]||'').slice(0,2),groupOf=pos=>{const c=(pos||'').toUpperCase();if(c==='GK')return 'gk';if(/^(CB|LB|RB|WB|LWB|RWB|FB|SW|LIB|CD|BPD|NNCB|IFB|COV|STOP)/.test(c))return 'def';if(/^(ST|CF|PF|AF|LW|RW|LF|RF|W|S)$/.test(c))return 'att';return 'mid';};
+      const plate=`<div class="fm-marker-plate" data-group="${groupOf(chosenRole)}"><button type="button" class="fm-marker-role" data-role-picker-open="${i}" data-role-picker-phase="${rolePhase}" aria-haspopup="dialog" title="${e(plateCode)}${plateDuty?' - '+e(plateDuty):''} · ${platePhase} role" aria-label="${platePhase} role: ${e(chosenJob?.[0]||chosenRole)}. Choose a role"><span>${e(plateCode)}${plateDuty?` - ${e(plateDuty)}`:''}</span></button><label class="fm-marker-player" title="${e(label)} · Choose a substitute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.2 4.2 0 1 0 0-8.4A4.2 4.2 0 0 0 12 12Zm0 2.1c-4.1 0-7.4 2.2-7.4 4.9V21h14.8v-2c0-2.7-3.3-4.9-7.4-4.9Z"/></svg><select data-marker-substitute="${i}" aria-label="Substitute ${e(label)}" ${substitutes.length?'':'disabled'}><option value="">${e(p?p.name.split(' ').filter(Boolean).pop():label)}</option>${substitutes.map(q=>`<option value="${e(q.id)}">${e(q.name)} · ${e(q.pos)}</option>`).join('')}</select></label></div>`;
+      return `<div class="fm-pitch-marker${isSelected?' is-selected':''}${dockX?' '+dockX:''}${dockY?' '+dockY:''}" style="left:${left}%;bottom:${bottom}%;z-index:${isSelected?160:120-Math.round(bottom)}"><button type="button" title="${e(label)} · Drag to move or swap; click to select" data-slot="${i}" data-player-id="${e(p?.id||'')}" class="shirt-marker${i===0?' keeper':''}${p?'':' vacant'}${isSelected?' selected':''}" aria-label="Select ${e(role)} · ${e(label)} · shirt ${e(n)}" aria-pressed="${isSelected}">${jersey(n)}</button>${plate}</div>`;
     }).join('');
     const fieldSvg=wide?`<svg class="board-lines" viewBox="0 0 140 100" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width=".6"><rect x="1" y="1" width="138" height="98"/><path d="M70 1v98M1 20h21V80H1M1 37h8v26H1M139 20h-21v60h21m0-43h-8v26h8"/><circle cx="70" cy="50" r="11"/></g></svg>`:fieldLines;
     const markersInZone=withZones?`<div class="fm-zone-overlay" aria-label="Select a tactical pitch zone">${zoneCells.map(z=>`<button type="button" data-board="zone|0|${z.id}" aria-label="${e(z.label)}" aria-pressed="${zone===z.id}"></button>`).join('')}</div>`:'';

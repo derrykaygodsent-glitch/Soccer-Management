@@ -107,10 +107,12 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   a.match(selected, /fm-player-editor/);
   a.match(selected,/data-role-picker-open="3" data-role-picker-phase="attack"/);
   a.match(selected, /data-player-instruction="defense\|p/);
-  a.match(selected,/class="fm-pitch-marker[^\"]*is-selected/,'the selected jersey opens its opaque editor card');
+  a.match(selected,/class="fm-pitch-marker[^\"]*is-selected/,'the selected jersey is flagged on the pitch');
   a.match(selected,/data-marker-substitute="3"/);
-  a.match(selected,/data-role-picker-open="3" data-role-picker-phase="defense"/);
-  a.match(selected,/Substitution[\s\S]*Player role · Out of possession/);
+  a.match(selected,/class="fm-marker-plate" data-group="def"/,'the plate is tinted for the line the player holds');
+  a.equal((selected.match(/class="fm-marker-plate"/g)||[]).length,(selected.match(/class="shirt-marker/g)||[]).length,'every jersey carries its own plate');
+  a.match(selected,/data-role-picker-open="3" data-role-picker-phase="attack"/,'the plate opens the role picker for the shown phase');
+  a.ok(!/Substitution<|Player role · /.test(selected),'the plate carries no labelled rows');
   a.ok(!/ROLE \/ DUTY|Defensive duty|data-phase-duty|Role duty/.test(selected),'player tactics no longer presents legacy role duties');
   const starterSheet=TLMatchBoard.sheet(s.tactic,plan,pool),starter=starterSheet.slots[3],subSelect=selected.match(/<select data-marker-substitute="3"[^>]*>([\s\S]*?)<\/select>/)?.[1]||'',listed=[...subSelect.matchAll(/<option value="([^"]+)"/g)].map(m=>m[1]).filter(Boolean),suitability=p=>TLZones.fit(p,starter.position,starter.job[0],s.boardReps),stars=TLDynamics.squadStars(pool),expectedSubs=starterSheet.bench.filter(p=>(p.pos==='GK')===false&&!p.red&&!TLDynamics.snapshot(s,pool).players[p.id]?.knock).sort((x,y)=>suitability(y)-suitability(x)||(stars[y.id]||0)-(stars[x.id]||0)||x.name.localeCompare(y.name)).map(p=>p.id);
   a.ok(!listed.includes(starter.player.id),'the player being replaced is never offered as their own substitute');
@@ -180,18 +182,18 @@ test('Both view supports an ordinary click to select either phase without captur
   a.deepEqual(captures, [], 'pointer capture starts only after movement crosses the drag threshold');
   const selectedHtml = TLBoardRoom.render(s, pool);
   a.equal((selectedHtml.match(/class="shirt-marker[^\"]* selected"/g)||[]).length, 2, 'the same player is selected on both phase pitches');
-  a.match(selectedHtml, /Player role · In possession[\s\S]*Player role · Out of possession/, 'the selected player card in Both exposes both phase-specific role controls');
+  for (const phase of ['defense','attack']) a.match(selectedHtml, new RegExp(`data-role-picker-phase="${phase}"`), `the Both view exposes the ${phase} role on its own pitch`);
 });
 
-test('Combined opens the quick-controls card only on an intentional marker click and shows both roles', () => {
+test('Combined selects a marker on an intentional click and its plate edits the in-possession role', () => {
   const s = career(); s.id = 'combined-card-click'; s.boardPhase = 'combined';
   const handlers = {}, root = { addEventListener: (kind, fn) => { handlers[kind] = fn; }, querySelector: () => null };
   TLBoardRoom.bind(root, () => {}, () => {}); TLBoardRoom.render(s, pool);
   const marker = { dataset: { slot: '5', playerId: 'p6' }, hasAttribute: name => name === 'data-slot', closest: selector => selector === 'button' || selector === '.shape-field [data-slot]' ? marker : null };
   handlers.click({ target: marker });
   const html = TLBoardRoom.render(s, pool);
-  a.match(html, /Player role · In possession/);
-  a.match(html, /Player role · Out of possession/);
+  a.match(html, /class="fm-pitch-marker[^\"]*is-selected/,'the click selects the player');
+  a.match(html, /data-role-picker-open="5" data-role-picker-phase="attack"/,'the plate edits the in-possession role');
   a.match(html, /data-marker-substitute="5"/);
 });
 
@@ -211,7 +213,7 @@ test('dragging in Combined repositions both phases without auto-opening the mark
     const after = TLMatchBoard.sheet(s.tactic, plan, pool).slots[5];
     a.notDeepEqual({x:after.x,y:after.y},{x:before.x,y:before.y},'defensive position moved');
     a.notDeepEqual(after.attack,{x:before.x,y:before.y},'attacking position moved with it');
-    a.doesNotMatch(TLBoardRoom.render(s,pool),/fm-marker-controls/,'the drag does not auto-open a selector card');
+    a.doesNotMatch(TLBoardRoom.render(s,pool),/class="fm-pitch-marker[^\"]*is-selected/,'the drag does not select the marker');
   } finally { global.document = oldDocument; }
 });
 
