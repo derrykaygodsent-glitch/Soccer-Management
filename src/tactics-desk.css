@@ -784,12 +784,12 @@
 #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card {
   box-sizing: border-box;
   display: grid;
-  grid-template-rows: 28px 16px 15px;
-  gap: 1px;
-  width: 100%;
-  max-width: 84px;
+  grid-template-rows: 34px 18px 17px;
+  gap: 2px;
+  width: 104px;
+  max-width: none;
   min-width: 0;
-  padding: 2px;
+  padding: 3px;
   border: 1px solid transparent;
   border-radius: 6px;
   background: transparent;
@@ -816,8 +816,8 @@
   cursor: grab;
 }
 #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .shirt-marker > svg {
-  width: 30px;
-  height: 26px;
+  width: 40px;
+  height: 34px;
 }
 
 /* role line: tinted by the line the player holds, caret pinned to the edge */
@@ -869,26 +869,58 @@
   opacity: .9;
 }
 
-/* player line: one neutral base on every marker, holding the substitute list */
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .fm-marker-player {
+/* player line: neutral on every marker, the surname centred in the card.
+   Tapping it drops a game-style list instead of a system dropdown. */
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player {
   position: relative;
-  display: grid;
-  grid-template-columns: 12px minmax(0, 1fr);
-  align-items: center;
-  gap: 4px;
   width: 100%;
   height: 100%;
-  padding: 0 11px 0 3px;
   border-radius: 3px;
   background: #123028;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player > svg {
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0 !important;
+  padding: 0 15px;
+  border: 0 !important;
+  border-radius: 3px;
+  background: transparent !important;
+  color: #eef4f2;
+  font: 700 10px/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+/* the shared pitch rules push buttons with translate(-50%,50%) and the press
+   state swaps in a bare scale — either one slides the row out from under the
+   finger. The grid already places this row, so kill both. */
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player-trigger,
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player-trigger:is(:hover,:focus,:active) {
+  transform: none !important;
+  transform-origin: center;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player.is-open > .fm-marker-player-trigger { background: #1b4534 !important; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player-trigger > svg {
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  margin-top: -5.5px;
   width: 11px;
   height: 11px;
   fill: #a4bcc4;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player::after {
-  content: "";
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player-trigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player-trigger > i {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -899,28 +931,67 @@
   border-left: 3px solid transparent;
   border-right: 3px solid transparent;
   border-top: 3.5px solid #9fb6bf;
-  pointer-events: none;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player select {
-  box-sizing: border-box;
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player-trigger:focus-visible { outline: 1px solid #cfe0e6; outline-offset: 1px; }
+
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  z-index: 6;
+  display: grid;
+  gap: 1px;
+  width: max-content;
+  min-width: 138px;
+  max-width: 210px;
+  max-height: 208px;
+  overflow: auto;
+  padding: 3px;
+  border: 1px solid #0a3a2b;
+  border-radius: 7px;
+  background: #08201a;
+  box-shadow: 0 14px 28px #02100ad9;
+  transform: translateX(-50%);
+  overscroll-behavior: contain;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.dock-above .fm-marker-menu {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu > button {
+  position: relative !important;
+  inset: auto !important;
+  transform: none !important;
+  transform-origin: center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   width: 100%;
-  min-width: 0;
-  height: 16px;
-  min-height: 16px !important;
-  align-self: center;
-  padding: 0 !important;
+  min-height: 0 !important;
+  padding: 6px 8px;
   border: 0 !important;
-  border-radius: 0 !important;
+  border-radius: 4px;
   background: transparent !important;
-  color: #eef4f2 !important;
-  font: 600 9px/1 system-ui, sans-serif !important;
+  color: #eaf3ee;
+  font: 650 10.5px/1.2 system-ui, sans-serif;
   text-align: left;
-  text-overflow: ellipsis;
-  appearance: none;
-  -webkit-appearance: none;
   cursor: pointer;
 }
-#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-player select:focus-visible { outline: 1px solid #cfe0e6; outline-offset: 1px; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu > button:is(:hover,:focus-visible,:active) { transform: none !important; background: #1b5540 !important; outline: 0; }
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu > button small {
+  flex: none;
+  color: #8fb2a4;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .05em;
+}
+#homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu > p {
+  margin: 0;
+  padding: 8px;
+  color: #9db8ab;
+  font-size: 10px;
+}
 
 /* selecting grows the dark body around the shirt; nothing else changes */
 #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.is-selected > .fm-marker-card {
@@ -932,11 +1003,12 @@
 /* phones: same card, tighter type so nothing ellipsizes */
 @media (max-width: 1099px) {
   #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card {
-    grid-template-rows: 26px 15px 14px;
+    grid-template-rows: 30px 16px 15px;
+    width: 92px;
     padding: 2px;
     border-radius: 6px;
   }
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .shirt-marker > svg { width: 24px; height: 22px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .shirt-marker > svg { width: 34px; height: 30px; }
   #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .fm-marker-role { padding: 0 10px; font-size: 8px; letter-spacing: 0; }
   #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .fm-marker-role::after { right: 3px; border-left-width: 2.5px; border-right-width: 2.5px; border-top-width: 3px; }
   #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .fm-marker-player { grid-template-columns: minmax(0, 1fr); padding: 0 10px 0 3px; }
@@ -947,7 +1019,11 @@
 
 /* small phones: the same three lines, one step smaller */
 @media (max-width: 600px) {
-  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card { grid-template-rows: 24px 15px 14px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card { grid-template-rows: 26px 15px 14px; width: 78px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-card > .shirt-marker > svg { width: 28px; height: 24px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu { min-width: 118px; max-width: 168px; max-height: 188px; padding: 2px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu > button { gap: 8px; padding: 5px 7px; font-size: 10px; }
+  #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-marker-menu > button small { font-size: 8.5px; }
 }
 
 /* the visualiser pitch places its markers like the shape pitch does */

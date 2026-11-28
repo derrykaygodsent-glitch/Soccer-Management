@@ -1,4 +1,4 @@
-(function(g){'use strict';let selected=null,selectedBench=null,context='',workspaceTab='shape',rolePicker=null,benchOpen=false,libraryOpen=false;const B=()=>g.TLMatchBoard,e=x=>g.TLClubUI.esc(String(x??''));
+(function(g){'use strict';let selected=null,selectedBench=null,context='',workspaceTab='shape',rolePicker=null,benchOpen=false,libraryOpen=false,markerMenu=null;const B=()=>g.TLMatchBoard,e=x=>g.TLClubUI.esc(String(x??''));
 // Match coordinates describe compact playing positions. Stretch the lines on the chalkboard
 // without changing the underlying tactic, and invert the same projection for touch placement.
 const depth=[[0,5],[.035,8],[.10,24],[.32,41],[.45,56],[.59,72],[.75,89],[1,95]];
@@ -21,7 +21,7 @@ function jersey(n){return `<svg class="tactic-shirt" viewBox="0 0 42 38" aria-hi
 function render(s,players){
   const stars=g.TLDynamics.squadStars(players),lists=g.TLKit.current(s).filter(r=>r.day<=s.day),filed=lists.find(r=>r.title===s.kitScope),numbers=(filed||lists.find(r=>r.title===g.TLKit.league))?.numbers||{},defaults=positionalNumbers(s.tactic);
   if(filed)players=players.filter(p=>filed.numbers[p.id]);
-  const key=[s.id,s.boardIndex,s.tactic,s.kitScope].join(':');if(context!==key){selected=null;selectedBench=null;workspaceTab='shape';rolePicker=null;context=key;}
+  const key=[s.id,s.boardIndex,s.tactic,s.kitScope].join(':');if(context!==key){selected=null;selectedBench=null;workspaceTab='shape';rolePicker=null;markerMenu=null;context=key;}
   const {slots,bench}=B().sheet(s.tactic,B().active(s),players),W=g.TLManagerLife,Z=g.TLZones,D=g.TLData,plan=B().active(s),phaseRaw=s.boardPhase||'base',phase=phaseRaw==='transition'?'base':phaseRaw,inst=Z.settings(plan),visualMode=phase,defenseName=Object.hasOwn(D.FORMATIONS,plan.defenseFormation)?plan.defenseFormation:s.tactic,defenseCustomNumber=B().formationNumber(slots.slice(1).map(v=>({x:v.x,y:v.y}))),attackCustomNumber=B().formationNumber(slots.slice(1).map(v=>v.attack||v)),defenseChoice=plan.defenseFormation==='Custom'?'Custom':defenseName,attackName=plan.attackFormation||'Same as defensive shape',attackChoice=plan.attackFormation||((plan.attack||Object.keys(plan.attackByPlayer||{}).length||plan.phaseCoordinates?.attack)?'Custom':'Same as defensive shape'),defenseLabel=defenseChoice==='Custom'?`Custom${defenseCustomNumber?` (${defenseCustomNumber})`:''}`:defenseName,attackLabel=attackChoice==='Custom'?`Custom${attackCustomNumber?` (${attackCustomNumber})`:''}`:attackName;
   const options=(values,current,display=v=>v)=>values.map(v=>`<option value="${e(v)}"${v===current?' selected':''}>${e(display(v))}</option>`).join('');
   const picker=(label,cmd,values,current,display=v=>v)=>`<label><span>${label}</span><select aria-label="${label}" data-plan="${cmd}">${options(values,current,display)}</select></label>`;
@@ -54,8 +54,8 @@ function render(s,players){
     const markers=slots.map((v,i)=>{
       const {point,role,job}=location(v,i,mode),p=v.player,n=numbers[p?.id]??p?.num??defaults[i]??'–',label=p?.name||'Open position',isSelected=selected===i,left=wide?project(point.x):8+84*point.y,bottom=wide?8+84*(1-point.y):project(point.x),rolePhase=mode==='attack'||mode==='combined'?'attack':'defense',chosenRole=rolePhase==='attack'?(v.attackPosition||v.position):v.position,chosenJob=rolePhase==='attack'?v.attackJob:v.job,substitutes=bench.filter(q=>(q.pos==='GK')===(i===0)&&!q.red&&!readiness[q.id]?.knock).sort((a,b)=>Z.fit(b,chosenRole,chosenJob?.[0],s.boardReps)-Z.fit(a,chosenRole,chosenJob?.[0],s.boardReps)||(stars[b.id]||0)-(stars[a.id]||0)||a.name.localeCompare(b.name)),dockX=left<28?'dock-left':left>72?'dock-right':'',dockY=bottom<18?'dock-above':bottom>82?'dock-below':'';
       const platePhase=rolePhase==='attack'?'In possession':'Out of possession',plateCode=code(chosenRole,chosenJob?.[0],chosenJob?.[2]),plateDuty=(chosenJob?.[2]||'').slice(0,2),groupOf=pos=>{const c=(pos||'').toUpperCase();if(c==='GK')return 'gk';if(/^(CB|LB|RB|WB|LWB|RWB|FB|SW|LIB|CD|BPD|NNCB|IFB|COV|STOP)/.test(c))return 'def';if(/^(ST|CF|PF|AF|LW|RW|LF|RF|W|S)$/.test(c))return 'att';return 'mid';};
-      const rows=`<button type="button" class="fm-marker-role" data-role-picker-open="${i}" data-role-picker-phase="${rolePhase}" aria-haspopup="dialog" title="${e(plateCode)}${plateDuty?' - '+e(plateDuty):''} · ${platePhase} role" aria-label="${platePhase} role: ${e(chosenJob?.[0]||chosenRole)}. Choose a role"><span>${e(plateCode)}${plateDuty?` - ${e(plateDuty)}`:''}</span></button><label class="fm-marker-player" title="${e(label)} · Choose a substitute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.2 4.2 0 1 0 0-8.4A4.2 4.2 0 0 0 12 12Zm0 2.1c-4.1 0-7.4 2.2-7.4 4.9V21h14.8v-2c0-2.7-3.3-4.9-7.4-4.9Z"/></svg><select data-marker-substitute="${i}" aria-label="Substitute ${e(label)}" ${substitutes.length?'':'disabled'}><option value="">${e(p?p.name.split(' ').filter(Boolean).pop():label)}</option>${substitutes.map(q=>`<option value="${e(q.id)}">${e(q.name)} · ${e(q.pos)}</option>`).join('')}</select></label>`;
-      return `<div class="fm-pitch-marker${isSelected?' is-selected':''}${dockX?' '+dockX:''}${dockY?' '+dockY:''}" style="left:${left}%;bottom:${bottom}%;z-index:${isSelected?160:120-Math.round(bottom)}"><div class="fm-marker-card" data-group="${groupOf(chosenRole)}"><button type="button" title="${e(label)} · Drag to move or swap; click to select" data-slot="${i}" data-player-id="${e(p?.id||'')}" class="shirt-marker${i===0?' keeper':''}${p?'':' vacant'}${isSelected?' selected':''}" aria-label="Select ${e(role)} · ${e(label)} · shirt ${e(n)}" aria-pressed="${isSelected}">${jersey(n)}</button>${rows}</div></div>`;
+      const rows=`<button type="button" class="fm-marker-role" data-role-picker-open="${i}" data-role-picker-phase="${rolePhase}" aria-haspopup="dialog" title="${e(plateCode)}${plateDuty?' - '+e(plateDuty):''} · ${platePhase} role" aria-label="${platePhase} role: ${e(chosenJob?.[0]||chosenRole)}. Choose a role"><span>${e(plateCode)}${plateDuty?` - ${e(plateDuty)}`:''}</span></button><div class="fm-marker-player${markerMenu===i?' is-open':''}" data-marker-player="${i}"><button type="button" class="fm-marker-player-trigger" data-marker-substitute="${i}" aria-haspopup="listbox" aria-expanded="${markerMenu===i}" title="${e(label)} · Choose a substitute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.2 4.2 0 1 0 0-8.4A4.2 4.2 0 0 0 12 12Zm0 2.1c-4.1 0-7.4 2.2-7.4 4.9V21h14.8v-2c0-2.7-3.3-4.9-7.4-4.9Z"/></svg><span>${e(p?p.name.split(' ').filter(Boolean).pop():label)}</span><i aria-hidden="true"></i></button>${markerMenu===i?`<div class="fm-marker-menu" role="listbox" aria-label="Substitutes for ${e(role)}">${substitutes.length?substitutes.map(q=>`<button type="button" role="option" aria-selected="false" data-marker-pick="${e(q.id)}" data-marker-slot="${i}"><span>${e(q.name)}</span><small>${e(q.pos)}</small></button>`).join(''):'<p>No substitute available</p>'}</div>`:''}</div>`;
+      return `<div class="fm-pitch-marker${isSelected?' is-selected':''}${dockX?' '+dockX:''}${dockY?' '+dockY:''}" style="left:${left}%;bottom:${bottom}%;z-index:${markerMenu===i?320:isSelected?160:120-Math.round(bottom)}"><div class="fm-marker-card" data-group="${groupOf(chosenRole)}"><button type="button" title="${e(label)} · Drag to move or swap; click to select" data-slot="${i}" data-player-id="${e(p?.id||'')}" class="shirt-marker${i===0?' keeper':''}${p?'':' vacant'}${isSelected?' selected':''}" aria-label="Select ${e(role)} · ${e(label)} · shirt ${e(n)}" aria-pressed="${isSelected}">${jersey(n)}</button>${rows}</div></div>`;
     }).join('');
     const fieldSvg=wide?`<svg class="board-lines" viewBox="0 0 140 100" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width=".6"><rect x="1" y="1" width="138" height="98"/><path d="M70 1v98M1 20h21V80H1M1 37h8v26H1M139 20h-21v60h21m0-43h-8v26h8"/><circle cx="70" cy="50" r="11"/></g></svg>`:fieldLines;
     const markersInZone=withZones?`<div class="fm-zone-overlay" aria-label="Select a tactical pitch zone">${zoneCells.map(z=>`<button type="button" data-board="zone|0|${z.id}" aria-label="${e(z.label)}" aria-pressed="${zone===z.id}"></button>`).join('')}</div>`:'';
@@ -139,7 +139,6 @@ function bind(root,change,draw){
  };
  root.addEventListener('change',ev=>{
   if(ev.target.hasAttribute('data-tactic-import')){const file=ev.target.files?.[0];if(file)file.text().then(text=>change('matchBoard',`importPreset|0|${encodeURIComponent(text)}`)).catch(()=>change('matchBoard','importPreset|0|invalid'));return;}
-  if(ev.target.hasAttribute('data-marker-substitute')){if(ev.target.value)act(`pick|${ev.target.dataset.markerSubstitute}|${ev.target.value}`);}
   else if(ev.target.hasAttribute('data-plan')){if(ev.target.dataset.plan==='tactic')act(`formation|0|${ev.target.value}`);else if(ev.target.dataset.plan==='mentality')act(`mentality|0|${ev.target.value}`);}
   else if(ev.target.hasAttribute('data-marker-role')){const [rolePhase,index]=ev.target.dataset.markerRole.split('|');if(rolePhase==='attack')act(`phaseJob|attack|${index}|${ev.target.value}`);else act(`job|${index}|${ev.target.value}`);}
   else if(ev.target.hasAttribute('data-attack-formation'))act(`attackFormation|0|${ev.target.value}`);
@@ -154,8 +153,29 @@ function bind(root,change,draw){
   else if(ev.target.hasAttribute('data-arm'))act(`skipper|${ev.target.dataset.arm}|${ev.target.value}`);
   else if(ev.target.hasAttribute('data-player-pick'))act(`pick|${ev.target.dataset.playerPick}|${ev.target.value}`);
  });
+ const afterPaint=fn=>{if(typeof requestAnimationFrame==='function')requestAnimationFrame(fn);else fn();};
+ function placeMenu(){
+  const menu=root.querySelector('.fm-marker-player.is-open > .fm-marker-menu');
+  if(!menu)return;
+  const card=menu.closest('.fm-marker-card'),pitch=menu.closest('.shape-field')||card,wrap=menu.parentElement;
+  if(!card||!wrap)return;
+  for(const key of ['top','bottom','left','right','transform','maxHeight'])menu.style.removeProperty(key);
+  menu.classList.remove('menu-up','menu-start','menu-end');
+  const wr=wrap.getBoundingClientRect(),cb=card.getBoundingClientRect(),pr=pitch.getBoundingClientRect();
+  const gap=4,pad=4,edgeLeft=pr.left+pad,edgeRight=Math.min(pr.right,innerWidth)-pad,edgeTop=pr.top+pad,edgeBottom=Math.min(pr.bottom,innerHeight)-pad;
+  const roomBelow=edgeBottom-cb.bottom-gap,roomAbove=cb.top-edgeTop-gap,height=menu.getBoundingClientRect().height;
+  const up=roomBelow<height&&roomAbove>roomBelow;
+  if(up){menu.style.setProperty('top','auto');menu.style.setProperty('bottom',Math.round(Math.max(0,wr.bottom-cb.top)+gap)+'px');}
+  else menu.style.setProperty('bottom','auto');
+  const room=Math.max(0,up?roomAbove:roomBelow);
+  if(height>room)menu.style.setProperty('max-height',Math.max(72,Math.floor(room))+'px');
+  let box=menu.getBoundingClientRect();
+  if(box.left<edgeLeft){menu.style.setProperty('left',Math.round(edgeLeft-wr.left)+'px');menu.style.setProperty('transform','none');}
+  else if(box.right>edgeRight){menu.style.setProperty('left',Math.round(edgeRight-wr.left-box.width)+'px');menu.style.setProperty('transform','none');}
+ }
  root.addEventListener('click',ev=>{
   if(performance.now()<suppressUntil&&ev.target.closest('.shape-field,.fm-squad-panel .fm-row'))return;
+  if(markerMenu!==null&&!ev.target.closest?.('.fm-marker-player')){markerMenu=null;draw();}
   if(ev.target.closest('[data-player-pick]')||ev.target.closest('select'))return;
   const field=ev.target.closest?.('.shape-field');
   if(field&&!ev.target.closest('.shape-field [data-slot],.shape-field [data-role-target],.fm-zone-overlay,.fm-pitch-marker')){if(selected!==null||selectedBench){selected=null;selectedBench=null;draw();}return;}
@@ -165,7 +185,7 @@ function bind(root,change,draw){
   const b=ev.target.closest('button');
   if(b?.hasAttribute('data-bench-toggle')){benchOpen=!benchOpen;const panel=root.querySelector('.fm-squad-panel');panel?.classList.toggle('is-bench-open',benchOpen);b.setAttribute('aria-expanded',String(benchOpen));const hint=b.querySelector('small');if(hint)hint.textContent=benchOpen?'Hide':'Show';return;}
   if(b?.hasAttribute('data-library-toggle')){libraryOpen=!libraryOpen;root.querySelector('.fm-workspace-header')?.classList.toggle('is-library-open',libraryOpen);b.setAttribute('aria-expanded',String(libraryOpen));if(libraryOpen)root.querySelector('#fm-tactic-name')?.focus?.();return;}
-  if(b?.hasAttribute('data-role-picker-open')){rolePicker={slot:Number(b.dataset.rolePickerOpen),phase:b.dataset.rolePickerPhase==='attack'?'attack':'defense'};draw();root.querySelector('[data-role-picker-close]')?.focus?.();return;}
+  if(b?.hasAttribute('data-role-picker-open')){markerMenu=null;rolePicker={slot:Number(b.dataset.rolePickerOpen),phase:b.dataset.rolePickerPhase==='attack'?'attack':'defense'};draw();root.querySelector('[data-role-picker-close]')?.focus?.();return;}
   if(b?.hasAttribute('data-role-picker-close')){const target=rolePicker;rolePicker=null;draw();root.querySelector(`[data-role-picker-open="${target?.slot}"][data-role-picker-phase="${target?.phase}"]`)?.focus?.();return;}
   if(b?.hasAttribute('data-role-choice')){const slot=b.dataset.roleChoiceSlot,phase=b.dataset.roleChoicePhase,job=b.dataset.roleChoice;rolePicker=null;act(`phaseJob|${phase}|${slot}|${job}`);draw();root.querySelector(`[data-role-picker-open="${slot}"][data-role-picker-phase="${phase}"]`)?.focus?.();return;}
   if(ev.target.classList?.contains('fm-role-dialog-backdrop')){rolePicker=null;draw();return;}
@@ -175,11 +195,14 @@ function bind(root,change,draw){
   if(b?.hasAttribute('data-tactic-export')){const name=root.querySelector('[data-preset-select]')?.selectedOptions?.[0]?.textContent||`${s.tactic} ${B().active(s).system||'Custom'}`,data={version:1,name,formation:Object.hasOwn(g.TLData.FORMATIONS,B().active(s).defenseFormation)?B().active(s).defenseFormation:s.tactic,plan:B().copyPlan(B().active(s))},blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'tactic'}.json`;a.click();URL.revokeObjectURL(url);return;}
   if(b?.dataset.board){act(b.dataset.board);return;}
   if(b?.hasAttribute('data-clear-slot')){selected=null;selectedBench=null;draw();return;}
+  if(b?.hasAttribute('data-marker-substitute')&&b.classList.contains('fm-marker-player-trigger')){const i=Number(b.dataset.markerSubstitute);markerMenu=markerMenu===i?null:i;draw();if(markerMenu!==null){root.querySelector(`[data-marker-substitute="${i}"]`)?.focus?.({preventScroll:true});afterPaint(placeMenu);}return;}
+  if(b?.hasAttribute('data-marker-pick')){const i=b.dataset.markerSlot,pick=b.dataset.markerPick;markerMenu=null;act(`pick|${i}|${pick}`);draw();return;}
   const cardTap=ev.target.closest('.fm-pitch-marker .fm-marker-card');
   if(cardTap&&!ev.target.closest('button,select,label,input')){const tapSlot=cardTap.querySelector('[data-slot]')?.dataset.slot;if(tapSlot!=null){const i=+tapSlot;if(selectedBench)act(`pick|${i}|${selectedBench}`);else{selected=selected===i?null:i;draw();}}return;}
   if(row||b?.hasAttribute('data-slot')){const target=row||b,i=+target.dataset.slot;if(selectedBench)act(`pick|${i}|${selectedBench}`);else{selected=selected===i?null:i;draw();}return;}
  });
  root.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'&&markerMenu!==null){const i=markerMenu;markerMenu=null;draw();root.querySelector(`[data-marker-substitute="${i}"]`)?.focus?.();return;}
   if(ev.key==='Escape'&&rolePicker){const target=rolePicker;rolePicker=null;draw();root.querySelector(`[data-role-picker-open="${target.slot}"][data-role-picker-phase="${target.phase}"]`)?.focus?.();return;}
   if(ev.key==='Tab'&&rolePicker){const items=[...root.querySelectorAll('.fm-role-dialog button:not(:disabled)')],first=items[0],last=items.at(-1);if(ev.shiftKey&&ev.target===first){ev.preventDefault();last?.focus();return;}if(!ev.shiftKey&&ev.target===last){ev.preventDefault();first?.focus();return;}}
   if(ev.target.closest('select,input,textarea,button,[contenteditable="true"]'))return;
