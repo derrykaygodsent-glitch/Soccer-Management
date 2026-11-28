@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0d141e">
-  <meta name="tl-build" content="fb686e6f3916d5f58c07">
+  <meta name="tl-build" content="f183b62509f81b1c8aac">
   <title>Touchline 26</title>
   <style>/* ============================================================================
    Touchline 26 — canonical design tokens (Phase 0)
@@ -2448,6 +2448,79 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
   .personal-accounts .venture-grid{grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr))}
   .personal-accounts .luma-cover,.personal-accounts .org-cover{grid-column:1/-1}
 }
+/* Matches: one fixture in focus beside the six jobs that prepare it. */
+.matches-desk{max-width:1160px;width:100%;margin:auto;display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+.match-nav{display:flex;gap:4px;border-bottom:1px solid #2a3543;flex-wrap:wrap}
+.match-nav button{appearance:none;background:none;border:0;border-bottom:2px solid transparent;color:#93a1b1;font:inherit;font-weight:600;padding:10px 14px;min-height:44px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.match-nav button[aria-pressed="true"]{color:#eef4fb;border-bottom-color:#c8f169}
+.match-nav button small{color:inherit;opacity:.7;font-weight:600}
+.match-body{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+.match-next{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+.match-hero{background:#141c26;border:1px solid #2a3543;border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;gap:8px}
+.match-hero-empty h2{font-size:26px}
+.match-eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#93a1b1;font-weight:700}
+.match-hero h2{font-size:30px;line-height:1.15;margin:0}
+.match-hero h2 em{font-style:normal;color:#93a1b1;font-weight:500;padding:0 4px}
+.match-hero p{margin:0;color:#93a1b1}
+.match-hero-today{border-color:#c8f169}
+.match-when{font-size:15px}
+.match-count b{color:#eef4fb}
+.match-prep{background:#141c26;border:1px solid #2a3543;border-radius:14px;padding:16px 18px;display:grid;gap:10px;align-content:start}
+.match-prep header{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.match-prep h3{margin:0;font-size:15px}
+.match-prep header p{margin:0;color:#93a1b1;font-size:13px}
+.match-prep ul{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.match-job{width:100%;text-align:left;appearance:none;background:none;border:0;border-radius:10px;padding:9px 10px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 10px;font:inherit;color:inherit;cursor:pointer;min-height:44px}
+.match-job:hover,.match-job:focus-visible{background:rgba(255,255,255,.04)}
+.match-job b{font-size:14px;font-weight:600}
+.match-job span{grid-column:1;color:#93a1b1;font-size:13px}
+.match-job small{grid-column:2;grid-row:1/3;font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#c8f169}
+.match-inline-form{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:4px}
+.match-inline-form small{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#93a1b1;font-weight:700}
+.match-inline-form>span{color:#93a1b1;font-size:13px}
+.match-chips{display:flex;gap:6px}
+.match-chip{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;font-size:12px;font-weight:700;background:rgba(255,255,255,.06)}
+.match-chip-w{background:rgba(200,241,105,.16);color:#c8f169}
+.match-chip-l{background:rgba(255,120,120,.14);color:#ff9d9d}
+.match-record{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;background:#141c26;border:1px solid #2a3543;border-radius:14px;padding:14px 18px}
+.match-record div{display:grid;gap:2px}
+.match-record small{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#93a1b1;font-weight:700}
+.match-record b{font-size:20px}
+.match-upcoming,.match-results{background:#141c26;border:1px solid #2a3543;border-radius:14px;padding:14px 18px}
+.match-upcoming h3,.match-results h3{margin:0 0 6px;font-size:15px}
+.match-results header{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.match-results header p{margin:0;color:#93a1b1;font-size:13px}
+.match-upcoming ul,.match-list{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.match-row{display:grid;grid-template-columns:110px 140px minmax(0,1fr) 56px 74px;gap:10px;align-items:center;padding:9px 6px;border-top:1px solid rgba(255,255,255,.06);font-size:14px}
+.match-row:first-child{border-top:0}
+.match-row time{color:#93a1b1;font-variant-numeric:tabular-nums}
+.match-comp{color:#93a1b1;font-size:13px}
+.match-row b{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.match-side{color:#93a1b1;font-size:13px}
+.match-score{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:#93a1b1}
+.match-score-w{color:#c8f169}
+.match-score-l{color:#ff9d9d}
+.match-none,.match-upcoming p{margin:0;color:#93a1b1}
+@media(min-width:1000px){
+  .match-next{grid-template-columns:minmax(0,1.55fr) minmax(330px,1fr);align-items:stretch}
+  .match-hero{min-height:214px}
+}
+@media(max-width:860px){
+  .match-hero{padding:18px 16px}
+  .match-hero h2{font-size:24px}
+  .match-record{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .match-row{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"when score" "comp comp" "teams side";gap:2px 10px;padding:10px 4px}
+  .match-row time{grid-area:when}
+  .match-comp{grid-area:comp}
+  .match-row b{grid-area:teams;white-space:normal}
+  .match-side{grid-area:side;text-align:right}
+  .match-score{grid-area:score}
+}
+.match-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.07)}
+.match-facts div{display:grid;gap:3px}
+.match-facts dt{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#93a1b1;font-weight:700}
+.match-facts dd{margin:0;font-size:14px;color:#eef4fb}
+@media(max-width:600px){.match-facts{grid-template-columns:minmax(0,1fr);gap:8px}}
 
 /* Shared reading rhythm. Never change the typeface, size, match canvas, table rows or HUD. */
 :root{--read-gap:.85rem;--read-line:1.58;--read-edge:#9bbdc029;--read-wash:#9fc3c409}
@@ -20613,6 +20686,183 @@ g.TLFootballDossiers={render,tabs,playerDossier};if(typeof module!=='undefined')
 })(typeof window === 'undefined' ? globalThis : window);
 
 ;
+/* ===== matches-desk.js ===== */
+/* Matches is the manager's match week: one fixture in focus, the six jobs that prepare it, and the season behind it. */
+(function(g){
+  'use strict';
+  const W=g.TLManagerLife||require('./manager-life'), F=g.TLFASeason||require('./fa-season'), Y=g.TLTurnover||require('./season-turnover');
+  const C=g.TLCups||require('./cup-circuit'), Q=g.TLLeagueMatchday||require('./league-matchday'), K=g.TLSeasonCalendar||require('./season-calendar');
+  const D=g.TLData||require('./data'), B=g.TLMatchBoard||require('./match-board'), Dyn=g.TLDynamics||require('./team-dynamics');
+  const Kit=g.TLKit||require('./squad-registration'), FA=g.TLFAOffice||require('./fa-office');
+  const SECTIONS=[['next','Next match'],['season','Season']];
+  const esc=v=>g.TLClubUI.esc(v);
+  const stamp=day=>new Date(W.date(day)+'T12:00:00Z').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});
+  const long=day=>new Date(W.date(day)+'T12:00:00Z').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
+  const short=day=>new Date(W.date(day)+'T12:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'});
+  const ago=(s,day)=>day===s.day?'Today':day===s.day+1?'Tomorrow':day===s.day-1?'Yesterday':day>s.day?`In ${day-s.day} days`:`${s.day-day} days ago`;
+  const memo=new Map();
+
+  function nation(s){
+    const club=s.club?.name;
+    if(!club)return null;
+    if(s.club.owner)return s.profile.nation;
+    return Object.keys(W.nations||{}).find(k=>(W.nations[k]||[]).includes(club))||null;
+  }
+
+  /* Every fixture the club has a result for, and every one still to play, from league, cups and friendlies. */
+  function ledger(s){
+    const club=s.club?.name, out={played:[],ahead:[]};
+    if(!club)return out;
+    const key=[s.id,s.day,Object.keys(s.leagueScores||{}).length,JSON.stringify(s.cupScores||{}).length,(s.friendlyHistory||[]).length].join('|');
+    if(memo.has(key))return memo.get(key);
+    const seen=new Set();
+    const add=row=>{
+      if(!row.team||!row.host||![row.team,row.host].includes(club))return;
+      const stamp=[row.kind,row.key||'',row.day,row.team,row.host].join('|');
+      if(seen.has(stamp))return;
+      seen.add(stamp);
+      row.own=row.team===club?0:1;
+      if(row.score)out.played.push(row); else out.ahead.push(row);
+    };
+    const n=nation(s);
+    if(n){
+      const year=Y.season(s.day);
+      for(const y of [year-1,year,year+1]){
+        let rows=[];
+        try{rows=F.fixtures(s,n,y)||[];}catch{rows=[];}
+        for(const f of rows)add({kind:'league',comp:F.leagueName(s,n,y)||'District league',day:f.day,key:f.key,team:f.team,host:f.host,kickoff:f.kickoff||'',score:s.leagueScores?.[f.key]?.score||null,pens:s.leagueScores?.[f.key]?.pens||null});
+      }
+    }
+    let cups=[];
+    try{cups=C.circuit(s,W.pool)||[];}catch{cups=[];}
+    for(const cup of cups){
+      if(cup.national)continue;
+      for(const round of cup.rounds||[])for(const f of round||[])add({kind:'cup',comp:cup.title,day:f.day,key:f.key,team:f.team,host:f.host,kickoff:f.kickoff||'',score:f.result?.score||null,pens:f.result?.pens||null});
+    }
+    for(const f of s.friendlyHistory||[])add({kind:'friendly',comp:'Friendly',day:f.day,team:f.team,host:f.host,score:f.result||null,pens:null});
+    if(s.friendly&&!s.friendly.result)add({kind:'friendly',comp:'Friendly',day:s.friendly.day,team:s.friendly.team,host:s.friendly.host,score:null,pens:null});
+    out.played.sort((a,b)=>b.day-a.day);
+    out.ahead=out.ahead.filter(r=>r.day>=s.day).sort((a,b)=>a.day-b.day);
+    memo.set(key,out);
+    if(memo.size>12)memo.delete(memo.keys().next().value);
+    return out;
+  }
+
+  const goalsFor=f=>f.score?f.score[f.own]:null;
+  const goalsAgainst=f=>f.score?f.score[1-f.own]:null;
+  const result=f=>f.score?`${goalsFor(f)}–${goalsAgainst(f)}`:'';
+  const verdict=f=>!f.score?'':goalsFor(f)>goalsAgainst(f)?'W':goalsFor(f)===goalsAgainst(f)?'D':'L';
+
+  function form(s,L){
+    return L.played.filter(f=>f.kind==='league').slice(0,5).map(verdict);
+  }
+
+  function jobs(s,L){
+    let board={};
+    try{board=(s.boards?.[s.boardIndex||0])||{};}catch{board={};}
+    const named=(board.ids||[]).filter(Boolean);
+    const roster=W.pool.filter(p=>s.roster.includes(p.id));
+    let inside={};
+    try{inside=Dyn.snapshot(s,roster).players||{};}catch{inside={};}
+    const out=roster.filter(p=>inside[p.id]&&inside[p.id].injuredUntil>s.day);
+    const fit=roster.filter(p=>!out.includes(p));
+    const heavy=fit.filter(p=>inside[p.id]&&inside[p.id].fitness<80);
+    const next=L.ahead[0];
+    let numbers={};
+    try{numbers=Kit.matchNumbers(s,W.pool,Y.season(s.day),'League',next?.day??s.day)||{};}catch{numbers={};}
+    const missing=named.filter(id=>!numbers[id]);
+    let banned=[];
+    try{banned=next&&next.kind==='league'?FA.suspendedPlayers(s,s.club?.name,next.key)||[]:[];}catch{banned=[];}
+    const lastPractice=(s.practices||[]).slice(-1)[0];
+    const practiceDays=s.practices?.length||0;
+    const rows=[
+      {id:'selection',label:'Team selection',state:named.length?`${named.length} of 11 named`:'No starting XI named yet',needs:named.length!==11,go:'tactics'},
+      {id:'shape',label:'Shape and orders',state:`${board.defenseFormation||s.tactic||'No shape'}${board.system?` · ${board.system}`:''}`,needs:false,go:'tactics'},
+      {id:'condition',label:'Condition',state:`${fit.length} available${heavy.length?` · ${heavy.length} under 80%`:''}${out.length?` · ${out.length} out`:''}`,needs:fit.length<11,go:'medical'},
+      {id:'numbers',label:'Squad numbers',state:named.length?(missing.length?`${missing.length} named player${missing.length===1?' has':'s have'} no number`:'Every named player is numbered'):'Name a starting XI first',needs:!!named.length&&!!missing.length,go:'kitOffice'},
+      {id:'discipline',label:'Discipline',state:banned.length?`${banned.length} suspension${banned.length===1?'':'s'} for this fixture`:'No suspension for this fixture',needs:!!banned.length,go:'faOffice'},
+      {id:'training',label:'Training',state:lastPractice?`Last session ${stamp(lastPractice.day??s.day)} · ${practiceDays} this season`:'No session recorded yet',needs:false,go:'training'}
+    ];
+    const open=rows.filter(r=>r.needs).length;
+    return {rows,open,ready:rows.length-open,banned,missing,out};
+  }
+
+  function hero(s,L){
+    const f=L.ahead[0];
+    if(!f){
+      const friendly=(()=>{try{return g.TLFieldwork?.friendlyView?.(s)||'';}catch{return '';}})();
+      return `<article class="match-hero match-hero-empty"><span class="match-eyebrow">NEXT MATCH</span><h2>No fixture scheduled</h2><p>${s.club?`The league has not put ${esc(s.club.name)} on a date yet. Competitions lists every round as soon as it is drawn.`:'You have no club, so there is no fixture to prepare.'}</p><div class="org-actions"><button type="button" data-life="go" data-v="${s.club?'league':'jobs'}">${s.club?'Open competitions':'Find a club'}</button></div></article>${friendly}`;
+    }
+    const today=f.day===s.day, home=f.own===0;
+    let primary='';
+    if(today&&f.kind==='league')primary=`<button type="button" class="cc-btn cc-btn-primary" data-life="leagueMatch">${s.leagueSession?.ticks?'Resume the match':'Enter matchday'}</button>`;
+    else if(today&&f.kind==='cup')primary=`<button type="button" class="cc-btn cc-btn-primary" data-cup-match="${esc(f.key)}">Enter cup match</button>`;
+    else if(today&&f.kind==='friendly')primary=`<button type="button" class="cc-btn cc-btn-primary" data-life="friendlyMatch">Enter friendly match</button>`;
+    else primary=`<button type="button" class="cc-btn cc-btn-primary" data-life="go" data-v="tactics">Open tactics</button>`;
+    const meetings=L.played.filter(p=>[p.team,p.host].includes(f.team)&&[p.team,p.host].includes(f.host));
+    const last=meetings[0];
+    const books=meetings.length?`${meetings.filter(m=>verdict(m)==='W').length}W ${meetings.filter(m=>verdict(m)==='D').length}D ${meetings.filter(m=>verdict(m)==='L').length}L`:'';
+    const facts=`<dl class="match-facts"><div><dt>Last meeting</dt><dd>${last?`${stamp(last.day)} · ${last.own===0?'Home':'Away'} · ${result(last)}`:'First meeting in the book'}</dd></div><div><dt>Against them</dt><dd>${books||'Nothing played against them yet'}</dd></div></dl>`;
+    return `<article class="match-hero${today?' match-hero-today':''}"><span class="match-eyebrow">NEXT MATCH　 /　 ${esc(f.comp)}</span>
+      <h2><span>${esc(f.team)}</span> <em>v</em> <span>${esc(f.host)}</span></h2>
+      <p class="match-when">${long(f.day)}${f.kickoff?` · ${esc(f.kickoff)}`:''} · ${home?'Home':'Away'}</p>
+      <p class="match-count">${today?'<b>Today</b> · the fixture is due before the day ends':ago(s,f.day)}</p>
+      <div class="org-actions">${primary}<button type="button" data-life="go" data-v="league">Competitions</button></div>
+      ${formStrip(s,L)}
+      ${facts}
+    </article>`;
+  }
+
+  function prep(s,L){
+    const j=jobs(s,L);
+    return `<aside class="match-prep" aria-label="Preparations"><header><h3>Preparations</h3><p>${j.ready} ready · ${j.open} to look at</p></header><ul>${j.rows.map(r=>`<li><button type="button" class="match-job${r.needs?' match-job-open':''}" data-life="go" data-v="${r.go}"><b>${esc(r.label)}</b><span>${esc(r.state)}</span>${r.needs?'<small>Needs you</small>':''}</button></li>`).join('')}</ul></aside>`;
+  }
+
+  function formStrip(s,L){
+    const chips=form(s,L);
+    if(!chips.length)return '';
+    return `<div class="match-inline-form"><small>Last five league matches</small><div class="match-chips">${chips.map(v=>`<span class="match-chip match-chip-${v.toLowerCase()}">${v}</span>`).join('')}</div><span>${chips.filter(v=>v==='W').length}W ${chips.filter(v=>v==='D').length}D ${chips.filter(v=>v==='L').length}L</span></div>`;
+  }
+
+  function nextView(s,L){
+    if(s.legacy?.exit)return `<article class="match-hero match-hero-empty"><span class="match-eyebrow">MATCHES</span><h2>Your management duties have ended</h2><p>No fixture will be prepared from this desk again. The career record stays open.</p><div class="org-actions"><button type="button" data-life="go" data-v="legacy">Open health and legacy</button></div></article>`;
+    return `<div class="match-next">${hero(s,L)}${prep(s,L)}</div>`;
+  }
+
+  function record(s,L){
+    const rows=L.played.filter(f=>f.kind==='league');
+    const w=rows.filter(f=>verdict(f)==='W').length, d=rows.filter(f=>verdict(f)==='D').length, l=rows.filter(f=>verdict(f)==='L').length;
+    const gf=rows.reduce((n,f)=>n+goalsFor(f),0), ga=rows.reduce((n,f)=>n+goalsAgainst(f),0);
+    return `<section class="match-record"><div><small>Played</small><b>${rows.length}</b></div><div><small>Won</small><b>${w}</b></div><div><small>Drawn</small><b>${d}</b></div><div><small>Lost</small><b>${l}</b></div><div><small>Goals</small><b>${gf}–${ga}</b></div></section>`;
+  }
+
+  function row(s,f){
+    const home=f.own===0, res=result(f);
+    return `<li class="match-row"><time datetime="${W.date(f.day)}">${stamp(f.day)}</time><span class="match-comp">${esc(f.comp)}</span><b>${esc(f.team)} v ${esc(f.host)}</b><span class="match-side">${home?'Home':'Away'}</span>${res?`<span class="match-score match-score-${verdict(f).toLowerCase()}">${res}${f.pens?` <small>pens ${f.pens.join('–')}</small>`:''}</span>`:`<span class="match-score">${ago(s,f.day)}</span>`}</li>`;
+  }
+
+  function seasonView(s,L){
+    const ahead=L.ahead.slice(0,5), played=L.played;
+    return `${record(s,L)}
+      ${ahead.length?`<section class="match-upcoming"><h3>Coming up</h3><ul>${ahead.map(f=>row(s,f)).join('')}</ul></section>`:''}
+      <section class="match-results"><header><h3>Played</h3><p>${played.length?`${played.length} match${played.length===1?'':'es'} in the book`:'Nothing has been played yet'}</p></header>
+        ${played.length?`<ul class="match-list" data-wire-stream="season" data-wire-key="matches:season" data-wire-size="14" data-wire-size-phone="8" data-wire-noun="matches">${played.map(f=>row(s,f)).join('')}</ul>`:'<p class="match-none">Results appear here as soon as a match is settled.</p>'}
+      </section>`;
+  }
+
+  function render(s,view){
+    const here=SECTIONS.some(([id])=>id===view)?view:'next';
+    const L=ledger(s);
+    const nav=`<nav class="match-nav" aria-label="Matches sections">${SECTIONS.map(([id,label])=>`<button type="button" data-match-tab="${id}" aria-pressed="${here===id}">${label}</button>`).join('')}</nav>`;
+    return `<section class="matches-desk">${nav}<div class="match-body">${here==='season'?seasonView(s,L):nextView(s,L)}</div></section>`;
+  }
+
+  const api={render,SECTIONS,ledger,jobs};
+  g.TLMatchesDesk=api;
+  if(typeof module!=='undefined')module.exports=api;
+})(typeof window==='undefined'?globalThis:window);
+
+;
 /* ===== shell-nav.js ===== */
 /* The shell a manager already knows: sections along the top, pinned screens, a command palette
    and a thumb dock on a phone. Every destination stays reachable in one or two clicks. */
@@ -20906,7 +21156,7 @@ const actionTile=(cmd,glyph,label,hint,val='')=>`<button type="button" class="li
 const photoLink=(dest,image,label,glyph)=>`<button type="button" class="hub-link" data-life="go" data-v="${dest}">${U.art(image)}<span>${U.icon(glyph)} ${label}</span></button>`;
 let squadId,squadCompare=null,squadTab='roster',rivalRead,staffTab='overview',staffFocus=null,staffRole=null;
 function playerFocus(){if(!squadId||page==='squadPlayer')return '';const p=W.pool.find(x=>x.id===squadId);return p&&g.TLSquadRoom?.context?g.TLSquadRoom.context(s,p):'';}
-let terraceClub='';let feedTab='For you';let houseView='overview';let accountView='overview';
+let terraceClub='';let feedTab='For you';let houseView='overview';let accountView='overview';let matchView='next';
 const recruitment={},competition={},organiser={},board={query:'',sel:'',sel2:''},moneyView={period:'30',view:'chart'};
 const save=()=>localStorage.setItem(key,JSON.stringify(slots));
 function enter(career,resume){transferView={};profileView={};dossierView={tab:'players',query:'',selected:''};worldClub='';worldManager='';worldManagerClub='';page=career.boardIntroductions&&!career.club?'interviewDesk':'home';if(resume?.view){const v=resume.view;page=v.page||page;squadId=v.squadId;worldClub=v.worldClub||'';worldManager=v.worldManager||'';worldManagerClub=v.worldManagerClub||'';atlasCode=v.atlasCode;atlasTown=v.atlasTown;atlasView=v.atlasView||'list';atlasContinent=v.atlasContinent||'';feedTab=v.feedTab||'Discussions';for(const [dest,src] of [[recruitment,v.recruitment],[competition,v.competition],[organiser,v.organiser],[profileView,v.profileView],[transferView,v.transferView],[dossierView,v.dossierView]])Object.assign(dest,src);}
@@ -20928,7 +21178,8 @@ function views(updates=[]){const p=s.profile,roster=s.roster.map(id=>W.pool.find
  case 'dynamics':return g.TLDynamics.render(s,roster);
  case 'training':return g.TLTrainingRoom?.render?g.TLTrainingRoom.render(s,roster):card('Team training',roster.length?btn('train','Schedule team practice tomorrow'):'No players to train yet.');
  case 'medical':return g.TLDynamics.render(s,roster,true);
- case 'fixtures':case 'day':return g.TLFieldwork.friendlyView(s)+btn('advance','Advance one day')+g.TLLeagueMatchday.card(s)+g.TLOfficeOrganiser.calendar(s,organiser);
+ case 'fixtures':return g.TLMatchesDesk.render(s,matchView);
+ case 'day':return btn('advance','Advance one day')+g.TLOfficeOrganiser.calendar(s,organiser);
  case 'atlas':return g.TLWorldGuide.atlas(s,{view:atlasView,code:atlasCode,town:atlasTown});
  case 'league':return g.TLCompetitionRoom.render(s,competition);
  case 'scouting':return g.TLScoutCentre.render(s,recruitment);
@@ -21007,7 +21258,7 @@ function start({navigation,closeMore}){if(!s)return false;navigation();const roo
  if(back){list?.querySelector(`[data-mail="${mailPlace?.id}"]`)?.focus({preventScroll:true});}
  else if(article&&(readerStep||fromAlert||!list?.offsetWidth)){article.setAttribute('tabindex','-1');article.focus({preventScroll:true});article.scrollIntoView({block:'start',behavior:'instant'});}
  else list?.querySelector(`[data-mail="${organiser.mail}"]`)?.focus({preventScroll:true});
- return;}if(b.dataset.unbook){change('cancelTime',{day:organiser.day??s.day,hour:+b.dataset.unbook});return;}if(b.dataset.attend){const a=g.TLOfficePlanner.today(s);if(!a)return;change('attendTime',+b.dataset.attend);if(!s.appointments?.some(x=>x.day===a.day&&x.hour===a.hour)){page=a.id.startsWith('shift:')?'jobs':a.id;draw();}return;}if(b.dataset.book){change('bookDiary',{task:b.dataset.book,day:organiser.day});return;}if(b.id==='homeBack'||b.hasAttribute('data-manager-back')){if(depth)history.back();return;}if(b.id==='homeForward'){if(depth<furthest)history.forward();return;}if(b.dataset.lmPeriod){moneyView.period=b.dataset.lmPeriod;draw();root.querySelector(`[data-lm-period="${moneyView.period}"]`)?.focus({preventScroll:true});return;}if(b.dataset.lmView){moneyView.view=b.dataset.lmView;draw();root.querySelector(`[data-lm-view="${moneyView.view}"]`)?.focus({preventScroll:true});return;}if(b.dataset.lmAccount||b.dataset.lmMore){const panel=b.closest('.lm-statement'),account=b.dataset.lmAccount||b.dataset.lmCurrent;panel.outerHTML=g.TLLuma.statement(s,account,Number(b.dataset.lmMore)||3,g.TLLuma.windowFrom(s,moneyView.period),g.TLLuma.windowLabel(s,moneyView.period));root.querySelector(b.dataset.lmMore?'.lm-more':`[data-lm-account="${account}"]`)?.focus({preventScroll:true});return;}if(b.dataset.transferScope){transferView.scope=b.dataset.transferScope;transferView.tab=b.dataset.transferScope==='world'?'world':(transferView.tab==='out'?'out':'in');transferView.index=0;transferView.page=0;draw();return;}if(b.dataset.transferPage){transferView.page=Math.max(0,(Number(transferView.page)||0)+Number(b.dataset.transferPage));transferView.index=transferView.page*g.TLTransferCentre.per;draw();return;}if(b.dataset.transferTab||b.hasAttribute('data-transfer-index')){if(b.dataset.transferTab){transferView.tab=b.dataset.transferTab;transferView.index=0;transferView.page=0;}else transferView.index=Number(b.dataset.transferIndex);draw();return;}if(b.dataset.profileView||b.dataset.profileKind||b.hasAttribute('data-profile-more')){if(b.dataset.profileView)profileView.tab=b.dataset.profileView;if(b.dataset.profileKind){profileView.kind=b.dataset.profileKind;profileView.limit=30;}if(b.hasAttribute('data-profile-more'))profileView.limit=(profileView.limit||30)+30;draw();return;}if(b.dataset.fixFilter){competition.fixFilter=b.dataset.fixFilter;delete competition.fixRound;draw();root.querySelector(`[data-fix-filter="${competition.fixFilter}"]`)?.focus({preventScroll:true});return;}if(b.dataset.fixRound){const step=Number(b.dataset.fixRound),shown=root.querySelector('.fix-head b')?.textContent||'',at=Number((shown.match(/(\d+)/)||[])[1]);competition.fixRound=Math.max(1,at+step);draw();root.querySelector(`.fix-head [data-fix-round="${step}"]`)?.focus({preventScroll:true});return;}if(b.dataset.leaderPage){const shown=root.querySelector('.lead-pager span')?.textContent||'',at=Number((shown.match(/Page (\d+)/)||[])[1])||1;competition.leaderPage=Math.max(0,at-1+Number(b.dataset.leaderPage));draw();root.querySelector(`[data-leader-page="${b.dataset.leaderPage}"]`)?.focus({preventScroll:true});return;}if(b.dataset.compTab||b.dataset.compMetric){const tabView=!!b.dataset.compTab;competition[tabView?'tab':'metric']=b.dataset.compTab||b.dataset.compMetric;competition.leaderPage=0;draw();root.querySelector(tabView?`[data-comp-tab="${competition.tab}"]`:`[data-comp-metric="${competition.metric}"]`)?.focus({preventScroll:true});return;}if(b.dataset.rivalRead){rivalRead=b.dataset.rivalRead;draw();return;}if(b.dataset.newsTopic||b.dataset.hideStory||b.dataset.showStory){g.TLWorldService.adjust(s,b.dataset.newsTopic?'topic':b.dataset.hideStory?'hide':'show',b.dataset.newsTopic||b.dataset.hideStory||b.dataset.showStory,b.dataset.storyLabel);try{save();}catch{notice='Feed settings not saved on this device.';}draw();return;}if(b.hasAttribute('data-trial-edit')){const f=b.form;f.querySelector('[data-trial-fields]').hidden=false;f.elements.role.value=g.TLTerraceTrials.suggest(f.elements.text.value)||'ANY';return;}if(b.hasAttribute('data-trial-confirm')||b.hasAttribute('data-trial-plain')){const f=b.form;if(!f.reportValidity())return;const text=f.elements.text.value,trial=b.hasAttribute('data-trial-confirm')?{role:f.elements.role.value,days:+f.elements.days.value}:null;change('networkPost',{text,trial});return;}if(b.dataset.inviteTrialist){change('networkInvite',{post:b.dataset.trialSource,id:b.dataset.inviteTrialist});return;}if(b.dataset.accountTab){accountView=b.dataset.accountTab;draw();if(!e.detail)root.querySelector(`[data-account-tab="${accountView}"]`)?.focus?.({preventScroll:true});return;}if(b.dataset.houseTab){houseView=b.dataset.houseTab;draw();if(!e.detail)root.querySelector(`[data-house-tab="${houseView}"]`)?.focus?.({preventScroll:true});return;}if(b.hasAttribute('data-thread-toggle')){const id=b.dataset.threadFor||'';s.networkFocus=s.networkFocus===id?null:id;draw();root.querySelector(`[data-thread-for="${s.networkFocus||''}"]`)?.focus?.({preventScroll:true});return;}if(b.dataset.clubAccount||b.hasAttribute('data-terrace-home')){terraceClub=b.dataset.clubAccount||'';draw();root.querySelector('.terrace-directory')?.scrollIntoView({block:'start'});return;}if(b.hasAttribute('data-mail-terrace')){page='social';feedTab='Discussions';terraceClub='';notice='';draw();const post=[...root.querySelectorAll('[data-terrace-post]')].find(p=>p.dataset.terracePost===b.dataset.mailTerrace),app=post&&[...post.querySelectorAll('[data-trial-applicant]')].find(a=>a.dataset.trialApplicant===b.dataset.mailApplicant);if(app)app.focus({preventScroll:true});(app||post||root.querySelector('.terrace'))?.scrollIntoView({block:'center'});return;}if(b.dataset.networkStory){terraceClub='';feedTab='Discussions';s.networkFocus=b.dataset.networkStory;draw();return;}if(b.dataset.pulseTab){feedTab=b.dataset.pulseTab;draw();return;}if(b.dataset.pulseLike){const id=b.dataset.pulseLike,likes=s.pulseLikes||[];s.pulseLikes=likes.includes(id)?likes.filter(x=>x!==id):[...likes,id];try{save();}catch{notice='Reaction not saved to this device.';}draw();return;}if((s.legacy?.exit||s.legacy?.until>s.day)&&['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){notice='Your management duties are paused or ended.';draw();return;}if(s.trip&&['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){notice='You are scouting abroad until '+W.date(s.trip.end)+'.';draw();return;}if(b.dataset.life==='visitGround'&&!s.practice&&g.TLDistrict.visit(s)&&s.practices?.at(-1)?.day!==s.day){if(g.TLDistrictLife.state(s).place!=='ground'){page='district';notice='Choose Community ground to travel to practice.';draw();return;}if(!g.TLDistrictLife.state(s).done.includes('practice')){try{const next=W.act(s,'districtPractice');slots=slots.map(x=>x.id===s.id?next:x);s=next;save();}catch(err){notice=err.message;draw();return;}}}if(b.dataset.cupMatch||['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){openMatch(b.dataset.life,b.dataset.cupMatch);return;}if(['boardSel','boardPick'].includes(b.dataset.life)){if(b.dataset.life==='boardSel')board.sel=b.dataset.v;else board.sel2=b.dataset.v;notice='';draw();return;}if(b.dataset.life?.startsWith('rec')){const cmd=b.dataset.life;let msg='';const FILTERS=['nation','age','source','query','pos','order','category'];
+ return;}if(b.dataset.unbook){change('cancelTime',{day:organiser.day??s.day,hour:+b.dataset.unbook});return;}if(b.dataset.attend){const a=g.TLOfficePlanner.today(s);if(!a)return;change('attendTime',+b.dataset.attend);if(!s.appointments?.some(x=>x.day===a.day&&x.hour===a.hour)){page=a.id.startsWith('shift:')?'jobs':a.id;draw();}return;}if(b.dataset.book){change('bookDiary',{task:b.dataset.book,day:organiser.day});return;}if(b.id==='homeBack'||b.hasAttribute('data-manager-back')){if(depth)history.back();return;}if(b.id==='homeForward'){if(depth<furthest)history.forward();return;}if(b.dataset.lmPeriod){moneyView.period=b.dataset.lmPeriod;draw();root.querySelector(`[data-lm-period="${moneyView.period}"]`)?.focus({preventScroll:true});return;}if(b.dataset.lmView){moneyView.view=b.dataset.lmView;draw();root.querySelector(`[data-lm-view="${moneyView.view}"]`)?.focus({preventScroll:true});return;}if(b.dataset.lmAccount||b.dataset.lmMore){const panel=b.closest('.lm-statement'),account=b.dataset.lmAccount||b.dataset.lmCurrent;panel.outerHTML=g.TLLuma.statement(s,account,Number(b.dataset.lmMore)||3,g.TLLuma.windowFrom(s,moneyView.period),g.TLLuma.windowLabel(s,moneyView.period));root.querySelector(b.dataset.lmMore?'.lm-more':`[data-lm-account="${account}"]`)?.focus({preventScroll:true});return;}if(b.dataset.transferScope){transferView.scope=b.dataset.transferScope;transferView.tab=b.dataset.transferScope==='world'?'world':(transferView.tab==='out'?'out':'in');transferView.index=0;transferView.page=0;draw();return;}if(b.dataset.transferPage){transferView.page=Math.max(0,(Number(transferView.page)||0)+Number(b.dataset.transferPage));transferView.index=transferView.page*g.TLTransferCentre.per;draw();return;}if(b.dataset.transferTab||b.hasAttribute('data-transfer-index')){if(b.dataset.transferTab){transferView.tab=b.dataset.transferTab;transferView.index=0;transferView.page=0;}else transferView.index=Number(b.dataset.transferIndex);draw();return;}if(b.dataset.profileView||b.dataset.profileKind||b.hasAttribute('data-profile-more')){if(b.dataset.profileView)profileView.tab=b.dataset.profileView;if(b.dataset.profileKind){profileView.kind=b.dataset.profileKind;profileView.limit=30;}if(b.hasAttribute('data-profile-more'))profileView.limit=(profileView.limit||30)+30;draw();return;}if(b.dataset.fixFilter){competition.fixFilter=b.dataset.fixFilter;delete competition.fixRound;draw();root.querySelector(`[data-fix-filter="${competition.fixFilter}"]`)?.focus({preventScroll:true});return;}if(b.dataset.fixRound){const step=Number(b.dataset.fixRound),shown=root.querySelector('.fix-head b')?.textContent||'',at=Number((shown.match(/(\d+)/)||[])[1]);competition.fixRound=Math.max(1,at+step);draw();root.querySelector(`.fix-head [data-fix-round="${step}"]`)?.focus({preventScroll:true});return;}if(b.dataset.leaderPage){const shown=root.querySelector('.lead-pager span')?.textContent||'',at=Number((shown.match(/Page (\d+)/)||[])[1])||1;competition.leaderPage=Math.max(0,at-1+Number(b.dataset.leaderPage));draw();root.querySelector(`[data-leader-page="${b.dataset.leaderPage}"]`)?.focus({preventScroll:true});return;}if(b.dataset.compTab||b.dataset.compMetric){const tabView=!!b.dataset.compTab;competition[tabView?'tab':'metric']=b.dataset.compTab||b.dataset.compMetric;competition.leaderPage=0;draw();root.querySelector(tabView?`[data-comp-tab="${competition.tab}"]`:`[data-comp-metric="${competition.metric}"]`)?.focus({preventScroll:true});return;}if(b.dataset.rivalRead){rivalRead=b.dataset.rivalRead;draw();return;}if(b.dataset.newsTopic||b.dataset.hideStory||b.dataset.showStory){g.TLWorldService.adjust(s,b.dataset.newsTopic?'topic':b.dataset.hideStory?'hide':'show',b.dataset.newsTopic||b.dataset.hideStory||b.dataset.showStory,b.dataset.storyLabel);try{save();}catch{notice='Feed settings not saved on this device.';}draw();return;}if(b.hasAttribute('data-trial-edit')){const f=b.form;f.querySelector('[data-trial-fields]').hidden=false;f.elements.role.value=g.TLTerraceTrials.suggest(f.elements.text.value)||'ANY';return;}if(b.hasAttribute('data-trial-confirm')||b.hasAttribute('data-trial-plain')){const f=b.form;if(!f.reportValidity())return;const text=f.elements.text.value,trial=b.hasAttribute('data-trial-confirm')?{role:f.elements.role.value,days:+f.elements.days.value}:null;change('networkPost',{text,trial});return;}if(b.dataset.inviteTrialist){change('networkInvite',{post:b.dataset.trialSource,id:b.dataset.inviteTrialist});return;}if(b.dataset.matchTab){matchView=b.dataset.matchTab;draw();if(!e.detail)root.querySelector(`[data-match-tab="${matchView}"]`)?.focus?.({preventScroll:true});return;}if(b.dataset.accountTab){accountView=b.dataset.accountTab;draw();if(!e.detail)root.querySelector(`[data-account-tab="${accountView}"]`)?.focus?.({preventScroll:true});return;}if(b.dataset.houseTab){houseView=b.dataset.houseTab;draw();if(!e.detail)root.querySelector(`[data-house-tab="${houseView}"]`)?.focus?.({preventScroll:true});return;}if(b.hasAttribute('data-thread-toggle')){const id=b.dataset.threadFor||'';s.networkFocus=s.networkFocus===id?null:id;draw();root.querySelector(`[data-thread-for="${s.networkFocus||''}"]`)?.focus?.({preventScroll:true});return;}if(b.dataset.clubAccount||b.hasAttribute('data-terrace-home')){terraceClub=b.dataset.clubAccount||'';draw();root.querySelector('.terrace-directory')?.scrollIntoView({block:'start'});return;}if(b.hasAttribute('data-mail-terrace')){page='social';feedTab='Discussions';terraceClub='';notice='';draw();const post=[...root.querySelectorAll('[data-terrace-post]')].find(p=>p.dataset.terracePost===b.dataset.mailTerrace),app=post&&[...post.querySelectorAll('[data-trial-applicant]')].find(a=>a.dataset.trialApplicant===b.dataset.mailApplicant);if(app)app.focus({preventScroll:true});(app||post||root.querySelector('.terrace'))?.scrollIntoView({block:'center'});return;}if(b.dataset.networkStory){terraceClub='';feedTab='Discussions';s.networkFocus=b.dataset.networkStory;draw();return;}if(b.dataset.pulseTab){feedTab=b.dataset.pulseTab;draw();return;}if(b.dataset.pulseLike){const id=b.dataset.pulseLike,likes=s.pulseLikes||[];s.pulseLikes=likes.includes(id)?likes.filter(x=>x!==id):[...likes,id];try{save();}catch{notice='Reaction not saved to this device.';}draw();return;}if((s.legacy?.exit||s.legacy?.until>s.day)&&['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){notice='Your management duties are paused or ended.';draw();return;}if(s.trip&&['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){notice='You are scouting abroad until '+W.date(s.trip.end)+'.';draw();return;}if(b.dataset.life==='visitGround'&&!s.practice&&g.TLDistrict.visit(s)&&s.practices?.at(-1)?.day!==s.day){if(g.TLDistrictLife.state(s).place!=='ground'){page='district';notice='Choose Community ground to travel to practice.';draw();return;}if(!g.TLDistrictLife.state(s).done.includes('practice')){try{const next=W.act(s,'districtPractice');slots=slots.map(x=>x.id===s.id?next:x);s=next;save();}catch(err){notice=err.message;draw();return;}}}if(b.dataset.cupMatch||['visitGround','leagueMatch','friendlyMatch'].includes(b.dataset.life)){openMatch(b.dataset.life,b.dataset.cupMatch);return;}if(['boardSel','boardPick'].includes(b.dataset.life)){if(b.dataset.life==='boardSel')board.sel=b.dataset.v;else board.sel2=b.dataset.v;notice='';draw();return;}if(b.dataset.life?.startsWith('rec')){const cmd=b.dataset.life;let msg='';const FILTERS=['nation','age','source','query','pos','order','category'];
  if(cmd==='recReset'){for(const k of FILTERS)delete recruitment[k];recruitment.page=0;}
  if(cmd==='recOpen'){recruitment.id=b.dataset.v;recruitment.tab='Report';}
  if(cmd==='recBack')recruitment.id=null;
