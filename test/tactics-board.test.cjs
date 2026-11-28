@@ -110,7 +110,9 @@ test('tactics workspace gives shape, squad and instructions dedicated space', ()
   a.match(selected,/class="fm-pitch-marker[^\"]*is-selected/,'the selected jersey opens its opaque editor card');
   a.match(selected,/data-marker-substitute="3"/);
   a.match(selected,/data-role-picker-open="3" data-role-picker-phase="defense"/);
-  a.match(selected,/Substitution[\s\S]*Player role · Out of possession/);
+  const quickCard=(selected.match(/<div class="fm-marker-controls[\s\S]*?<\/div>/)||[''])[0];
+  a.match(quickCard,/fm-marker-role[\s\S]*fm-marker-player/,'the jersey card is role · duty, then the player');
+  a.ok(!/Substitution|Player role · In possession/.test(selected),'the card carries no labelled rows');
   a.ok(!/ROLE \/ DUTY|Defensive duty|data-phase-duty|Role duty/.test(selected),'player tactics no longer presents legacy role duties');
   const starterSheet=TLMatchBoard.sheet(s.tactic,plan,pool),starter=starterSheet.slots[3],subSelect=selected.match(/<select data-marker-substitute="3"[^>]*>([\s\S]*?)<\/select>/)?.[1]||'',listed=[...subSelect.matchAll(/<option value="([^"]+)"/g)].map(m=>m[1]).filter(Boolean),suitability=p=>TLZones.fit(p,starter.position,starter.job[0],s.boardReps),stars=TLDynamics.squadStars(pool),expectedSubs=starterSheet.bench.filter(p=>(p.pos==='GK')===false&&!p.red&&!TLDynamics.snapshot(s,pool).players[p.id]?.knock).sort((x,y)=>suitability(y)-suitability(x)||(stars[y.id]||0)-(stars[x.id]||0)||x.name.localeCompare(y.name)).map(p=>p.id);
   a.ok(!listed.includes(starter.player.id),'the player being replaced is never offered as their own substitute');
@@ -180,7 +182,7 @@ test('Both view supports an ordinary click to select either phase without captur
   a.deepEqual(captures, [], 'pointer capture starts only after movement crosses the drag threshold');
   const selectedHtml = TLBoardRoom.render(s, pool);
   a.equal((selectedHtml.match(/class="shirt-marker[^\"]* selected"/g)||[]).length, 2, 'the same player is selected on both phase pitches');
-  a.match(selectedHtml, /Player role · In possession[\s\S]*Player role · Out of possession/, 'the selected player card in Both exposes both phase-specific role controls');
+  a.match(selectedHtml, /data-role-picker-phase="attack"[\s\S]*data-role-picker-phase="defense"/, 'the selected player card in Both exposes both phase-specific role controls');
 });
 
 test('Combined opens the quick-controls card only on an intentional marker click and shows both roles', () => {
@@ -190,8 +192,8 @@ test('Combined opens the quick-controls card only on an intentional marker click
   const marker = { dataset: { slot: '5', playerId: 'p6' }, hasAttribute: name => name === 'data-slot', closest: selector => selector === 'button' || selector === '.shape-field [data-slot]' ? marker : null };
   handlers.click({ target: marker });
   const html = TLBoardRoom.render(s, pool);
-  a.match(html, /Player role · In possession/);
-  a.match(html, /Player role · Out of possession/);
+  a.match(html, /data-role-picker-phase="attack"/);
+  a.match(html, /data-role-picker-phase="defense"/);
   a.match(html, /data-marker-substitute="5"/);
 });
 
