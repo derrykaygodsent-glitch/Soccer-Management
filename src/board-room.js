@@ -175,6 +175,8 @@ function bind(root,change,draw){
   if(b?.hasAttribute('data-tactic-export')){const name=root.querySelector('[data-preset-select]')?.selectedOptions?.[0]?.textContent||`${s.tactic} ${B().active(s).system||'Custom'}`,data={version:1,name,formation:Object.hasOwn(g.TLData.FORMATIONS,B().active(s).defenseFormation)?B().active(s).defenseFormation:s.tactic,plan:B().copyPlan(B().active(s))},blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'tactic'}.json`;a.click();URL.revokeObjectURL(url);return;}
   if(b?.dataset.board){act(b.dataset.board);return;}
   if(b?.hasAttribute('data-clear-slot')){selected=null;selectedBench=null;draw();return;}
+  const cardTap=ev.target.closest('.fm-pitch-marker .fm-marker-card');
+  if(cardTap&&!ev.target.closest('button,select,label,input')){const tapSlot=cardTap.querySelector('[data-slot]')?.dataset.slot;if(tapSlot!=null){const i=+tapSlot;if(selectedBench)act(`pick|${i}|${selectedBench}`);else{selected=selected===i?null:i;draw();}}return;}
   if(row||b?.hasAttribute('data-slot')){const target=row||b,i=+target.dataset.slot;if(selectedBench)act(`pick|${i}|${selectedBench}`);else{selected=selected===i?null:i;draw();}return;}
  });
  root.addEventListener('keydown',ev=>{

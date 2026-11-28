@@ -924,9 +924,8 @@
 
 /* selection wraps the whole card, end to end */
 #homeScreen:has(.fm-tactics-workspace) .shape-field .fm-pitch-marker.is-selected > .fm-marker-card {
-  border-color: #dbe7ec;
   background: #10382a;
-  box-shadow: 0 0 0 1px #dbe7ec, 0 10px 20px #04101a99;
+  box-shadow: 0 0 0 2px #eaf4f8, 0 10px 22px #04101a99;
 }
 
 /* phones: same card, tighter type so nothing ellipsizes */
