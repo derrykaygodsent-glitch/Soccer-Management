@@ -1624,7 +1624,8 @@
 #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .fm-pitch-phases { display: block !important; }
 #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .fm-pitch-phases .fm-shape-switch {
   display: grid !important;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  /* the long phase label gets extra room so it stays on one line */
+  grid-template-columns: .85fr 1fr 1.5fr .85fr !important;
   gap: 2px !important;
   width: 100% !important;
   align-items: stretch !important;
@@ -1632,6 +1633,8 @@
 #homeScreen:has(.fm-tactics-workspace) .fm-primary-pitch .fm-pitch-phases .fm-shape-switch button {
   width: auto !important;
   flex: none !important;
+  white-space: nowrap !important;
+  padding: 0 4px !important;
 }
 
 /* the pitch column keeps the pitch a sane size now that it hugs the frame */
