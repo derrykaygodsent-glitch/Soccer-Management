@@ -465,3 +465,40 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
 .rec-board .tl-table-sort button{width:auto;display:inline-flex;grid-template-columns:none;align-items:center;justify-content:center;min-height:44px;padding:8px 14px;border:1px solid #465962;border-radius:8px;background:#21323d;color:inherit;font-weight:700;white-space:nowrap}
 .rec-board .tl-table-sort label{width:auto;color:#adbfbc}
 .rec-board .tl-table-sort select{min-height:44px}
+
+/* Wire and Terrace: every stream states its range and turns pages, so a feed never unrolls
+   twenty-six posts behind a masthead. Two lines of chrome, no new colours. */
+.wire-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:14px 0 2px;padding-top:12px;border-top:1px solid #96b9ba26}
+.wire-pager .tl-range{margin:0;font-size:11.5px;color:#93a9c0;letter-spacing:.01em}
+.wire-page-nav{display:flex;align-items:center;gap:8px}
+.wire-page-nav button{width:auto;min-height:44px;padding:8px 14px;border:1px solid #3f5b61;border-radius:9px;background:#16262c;color:#e8f1f5;font-size:12px;font-weight:700}
+.wire-page-nav button:disabled{opacity:.42;cursor:not-allowed}
+.wire-page-nav span{font-size:11.5px;color:#bfd4cf;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pulse nav [data-pulse-tab], .pulse nav button{white-space:nowrap}
+.pulse-stream>[hidden], .terrace-stream>[hidden]{display:none!important}
+.wire-watch{border-top:1px solid #96b9ba26;padding-top:10px;margin-bottom:12px}
+.wire-watch-link{width:auto;padding:8px 12px;min-height:40px;font-size:11.5px}
+@media(max-width:640px){
+  .wire-pager{gap:8px}
+  .wire-page-nav{width:100%}
+  .wire-page-nav button{flex:1}
+}
+/* The Wire's standing column: one league table on a desk, its leading lines on a phone. */
+.wire-watch{padding:12px 0 4px;border-top:1px solid #96b9ba26}
+.wire-watch small{font-size:10px;letter-spacing:.15em;font-weight:800;color:#93a9c0}
+.wire-watch h3{margin:2px 0 6px;font-size:15px}
+.wire-watch p{margin:0 0 4px;font-size:11.5px;line-height:1.5;color:#bfd4cf}
+
+/* A phone keeps the scope row on one line and the club-account strip to one row. */
+@media(max-width:640px){
+  .pulse nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px;padding:8px 0}
+  .pulse nav::-webkit-scrollbar{display:none}
+  .pulse nav button{min-height:40px;padding:6px 13px;font-size:12px;flex:none}
+  .terrace-directory{padding:10px 12px;margin-bottom:10px}
+  .terrace-directory label{display:flex;align-items:center;gap:8px;font-size:11px;white-space:nowrap}
+  .terrace-directory select{margin:0;flex:1;min-width:0;height:40px}
+  .terrace-directory header{margin:8px 0 0}
+  .terrace-directory>small{display:none}
+  .terrace-directory p{margin:6px 0 0;font-size:11.5px}
+  .terrace-compose{padding-bottom:4px}
+}
