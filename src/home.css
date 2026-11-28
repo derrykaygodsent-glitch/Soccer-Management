@@ -121,7 +121,7 @@
 .tl-head{display:flex;align-items:center;gap:var(--ui-space-2) var(--ui-space-4);flex-wrap:wrap;min-width:0;padding:0 0 var(--ui-space-3);border-bottom:1px solid var(--ui-edge-soft)}
 .tl-crumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:22px;min-width:0}
 .tl-crumb-link{appearance:none;background:none;border:0;padding:1px 0;cursor:pointer;color:var(--ui-ink-2);font:inherit;font-size:var(--ui-text-s);letter-spacing:var(--ui-tracking-label);text-transform:uppercase;font-weight:650}
-.tl-crumb-link:hover{color:var(--ui-ink);text-decoration:underline;text-underline-offset:2px}
+.tl-crumb-link:hover{color:var(--ui-ink);}
 .tl-crumb-sep{color:var(--ui-muted);font-size:var(--ui-text-s)}
 .tl-crumb-sep::before{content:'/'}
 .tl-crumb-here{color:var(--ui-ink);font-size:var(--ui-text-s);letter-spacing:var(--ui-tracking-label);text-transform:uppercase;font-weight:650}

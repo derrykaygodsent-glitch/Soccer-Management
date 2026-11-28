@@ -99,9 +99,24 @@ test('touch and keyboard still open a section menu by activating the button', ()
   a.deepEqual(h.focused, ['item'], 'the keyboard lands on the first destination');
 });
 
-test('the team-sheet role cell no longer draws a boxed ring when hovered or opened', () => {
-  const css = read('tactics-desk.css'), reading = read('reading.css');
-  a.match(reading, /\.fm-role-cell button:hover,\.fm-role-cell button:focus-visible\{border-color:#b8d19a;background:#263e3e;outline:1px solid #b8d19a\}/, 'the boxed cue still exists for role cells outside the sheet');
-  a.match(css, /\.fm-sheet-table \.fm-role-cell button:hover,\s*\n?[\s\S]{0,60}\.fm-sheet-table \.fm-role-cell button:focus-visible \{[^}]*border-color: transparent[^}]*background: none[^}]*outline: 0/, 'the sheet cells replace the ring with text feedback');
-  a.match(css, /\.fm-sheet-table \.fm-role-cell button:hover,[\s\S]{0,320}text-decoration: underline/, 'the hover cue is the same underline the player column uses');
+test('the team-sheet role cell behaves like the player cell: no ring, no underline, a live arrow', () => {
+  const css = read('tactics-desk.css'), board = read('board-room.js');
+  a.match(css, /\.fm-sheet-table \.fm-role-cell button:hover,[\s\S]{0,320}border-color: transparent[^}]*background: none[^}]*outline: 0[^}]*text-decoration: none/, 'the sheet cells drop the ring and the underline alike');
+  a.doesNotMatch(css, /\.fm-sheet-table \.fm-role-cell button:hover,[^}]*underline/, 'no hover underline anywhere on the role cells');
+  a.doesNotMatch(css, /td\.fm-sheet-player:hover \.fm-player-name \{[^}]*underline/, 'and none on the player column either');
+  a.match(css, /\.fm-sheet-table \.fm-role-cell button::before \{[^}]*position: absolute;[^}]*inset: 0;/, 'the whole cell answers the pointer, so the arrow is part of the control');
+  a.match(css, /\.fm-sheet-table \.fm-role-cell \{[^}]*position: relative;[^}]*padding-right: 0;/, 'the cell no longer reserves a dead strip for the arrow');
+  a.match(css, /:has\(button\[aria-expanded="true"\]\)::after \{[^}]*transform: rotate\(225deg\)/, 'the arrow turns over while its sheet is open');
+  /* the sheet clears the whole cell, name and fit line, instead of covering them */
+  a.match(board, /const anchorEl=rolePicker\.kind==='marker'\?cell:cell\?\.closest\('\.fm-role-cell'\)\|\|cell;/, 'the sheet is placed from the cell block, not the single line of text');
+});
+
+test('no link or text button in the game is underlined', () => {
+  const css = read('tactics-desk.css');
+  a.match(css, /\/\* No underlines anywhere in the game[\s\S]*?a:hover,[\s\S]{0,400}text-decoration: none !important;/, 'the bundle ends with a blanket rule for links and buttons');
+  for (const name of ['style.css', 'home.css', 'club.css', 'matchday.css', 'season.css', 'office.css', 'reading.css', 'tactics-desk.css']) {
+    const sheet = read(name);
+    const leftovers = sheet.split('\n').filter(line => /text-decoration\s*:\s*(underline|underline\s)/.test(line));
+    a.deepEqual(leftovers, [], `${name} declares no underline`);
+  }
 });

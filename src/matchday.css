@@ -1,6 +1,6 @@
 /* Shared Riverside tactics, profile, editorial and room components. */
 .hc-leader-player{display:inline;padding:0;border:0;background:none;color:inherit;text-align:left;font:inherit;line-height:inherit}
-.hc-leader-player:hover{text-decoration:underline;text-underline-offset:3px;color:var(--hc-aqua)}
+.hc-leader-player:hover{color:var(--hc-aqua)}
 .md-matchday,.md-profile,.md-calendar,.md-review,.md-dressing,.md-touchline,.md-fixture-view{display:grid;gap:11px;min-width:0;align-content:start}
 .md-matchday{--md-pale:#b6c4dc;--md-navy:#192031;--md-cyan:#55e3ed;--md-home:#6d9bfa;--md-away:#e8b354}
 .md-matchday .cc-btn:not(.cc-btn-text),.md-tactics-board .cc-btn,.md-roster .cc-btn:not(.cc-btn-text){min-height:30px}

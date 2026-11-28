@@ -578,7 +578,7 @@
   white-space: nowrap;
   cursor: pointer;
 }
-#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-role-cell button:hover { color: var(--tac-teal); text-decoration: underline; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-role-cell button:hover { color: var(--tac-teal); }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-role-cell small { color: var(--tac-dim); font-size: 9px; }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-person { display: flex; align-items: center; gap: 7px; min-width: 0; }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-number { color: var(--tac-dim); font-size: 10px; font-style: normal; font-variant-numeric: tabular-nums; }
@@ -2600,7 +2600,7 @@ th[data-col-id] > .column-sort::after { flex: none; }
   transition: border-color .12s ease;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player:hover::after { border-color: #cfe2ec; }
-#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player:hover .fm-player-name { text-decoration: underline; text-underline-offset: 2px; }
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player:hover .fm-player-name { color: #dff0f7; }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table td.fm-sheet-player:has(.fm-player-picker:focus-visible) {
   outline: 2px solid #61c9c3; outline-offset: -2px;
 }
@@ -2891,11 +2891,21 @@ tr.fm-drag-placeholder { display: table-row !important; min-height: 0; }
 /* The role columns read as dropdowns: same chevron as the player column. */
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell {
   position: relative;
-  padding-right: 14px;
+  padding-right: 0;
+}
+/* the whole cell answers the pointer, exactly like the player cell: the text button
+   stretches over the cell (and under the chevron) through its own overlay */
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button {
+  position: static;
   display: block;
   width: 100%;
+  padding-right: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
@@ -2913,22 +2923,46 @@ tr.fm-drag-placeholder { display: table-row !important; min-height: 0; }
   pointer-events: none;
   transition: border-color .12s ease;
 }
-/* the sheet cells are text dropdowns: no boxed ring on hover or focus, just the words */
+/* the sheet cells are text dropdowns: no ring, no underline, the arrow is the affordance */
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button:hover,
-#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button:focus-visible {
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button:focus-visible,
+#homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell button[aria-expanded="true"] {
   border-color: transparent;
   background: none;
   outline: 0;
   color: var(--tac-teal, #61c9c3);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell:hover::after {
   border-color: #cfe2ec;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell:has(button[aria-expanded="true"])::after {
   border-color: var(--tac-teal, #61c9c3);
+  transform: rotate(225deg);
+  margin-top: -1px;
 }
 #homeScreen:has(.fm-tactics-workspace) .fm-squad-panel .fm-sheet-table .fm-role-cell:has(button[aria-expanded="true"]) button {
   color: var(--tac-teal, #61c9c3);
+}
+
+/* No underlines anywhere in the game: links and text buttons read through colour, weight
+   and the pointer, never through a ruled line. This is the last rule in the bundle. */
+a,
+a:any-link,
+a:hover,
+a:focus,
+a:focus-visible,
+a:active,
+a:visited,
+button,
+button:hover,
+button:focus,
+button:focus-visible,
+summary,
+[role="link"],
+[role="button"] {
+  text-decoration: none !important;
+  text-decoration-line: none !important;
+  text-decoration-thickness: auto !important;
+  text-underline-offset: 0 !important;
 }

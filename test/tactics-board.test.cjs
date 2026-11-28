@@ -420,7 +420,7 @@ test('the in-possession and out-of-possession role cells open the same in-game r
   a.match(board, /class="fm-role-menu-row\$\{current===name\?' is-current':''\}"/, 'the current role is marked in the list');
   a.match(board, /data-role-choice="\$\{e\(name\)\}" data-role-choice-slot="\$\{index\}" data-role-choice-phase="\$\{phaseName\}"/, 'each row carries the slot, phase and role it sets');
   a.match(board, /data-role-picker-open="\$\{index\}" data-role-picker-phase="\$\{phaseName\}"[^>]*aria-expanded="\$\{rolePicker\?\.slot===index/, 'the sheet cell reports whether its list is open');
-  a.match(board, /function placeRoleMenu\(\)\{[\s\S]{0,900}const sel=rolePicker\.kind==='marker'[\s\S]{0,520}const cr=cell\?\.getBoundingClientRect\(\)\|\|rolePicker\.anchor/, 'the sheet pins itself to the control that was clicked, marker or team-sheet cell');
+  a.match(board, /function placeRoleMenu\(\)\{[\s\S]{0,900}const sel=rolePicker\.kind==='marker'[\s\S]{0,700}const cr=anchorEl\?\.getBoundingClientRect\(\)\|\|rolePicker\.anchor/, 'the sheet pins itself to the control that was clicked, marker or team-sheet cell');
   a.match(board, /if\(b\?\.hasAttribute\('data-role-picker-open'\)\)\{[\s\S]{0,700}afterPaint\(placeRoleMenu\)/, 'opening places the sheet after paint');
   a.match(board, /if\(rolePicker&&!ev\.target\.closest\?\.\('\.fm-role-menu'\)&&!ev\.target\.closest\?\.\('\[data-role-picker-open\]'\)/, 'a click outside closes the role sheet');
   a.match(css, /\.fm-role-menu\s*\{[^}]*position:\s*fixed[^}]*background:\s*#08201a/, 'the role sheet wears the same dark green as the swap sheet');
